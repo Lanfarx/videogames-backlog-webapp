@@ -1,51 +1,46 @@
-# 🎮 Backlog Videoludico 
+# Getting Started with Create React App
 
-**Backlog Videoludico** è un'applicazione web che permette agli utenti di gestire il proprio backlog di videogiochi.  
-Questa repository contiene il **frontend** sviluppato in **React**, con un'interfaccia moderna, dark mode e componenti UI responsive.  
-Il progetto è in fase di sviluppo e prevede l'integrazione con API esterne e un backend realizzato in .NET.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## 🚀 Funzionalità principali (in sviluppo)
+## Available Scripts
 
-- Visualizzazione della propria **libreria di giochi**
-- Aggiunta, modifica e rimozione dei giochi dal backlog
-- Filtri per **stato**, **piattaforma**, **genere**, **titolo**, ecc.
-- Dashboard personale con **statistiche** sui giochi giocati
-- Integrazione con **API videoludiche** (es. RAWG.io, Steam)
-- Interfaccia responsive e supporto alla **dark mode**
+In the project directory, you can run:
 
-## 🛠️ Tecnologie pianificate di utilizzo
+### `npm start`
 
-- [React](https://react.dev/)
-- [PrimeReact](https://primereact.org/) – libreria UI
-- [Lucide](https://lucide.dev/) – icone SVG moderne
-- [React Router DOM](https://reactrouter.com/) – routing
-- [Axios](https://axios-http.com/) – chiamate API
-- [SCSS](https://sass-lang.com/) – stili personalizzati
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-## 📁 Struttura del progetto
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-src/ ├── assets/ # Icone, immagini, temi ├── components/ # Componenti riutilizzabili (bottoni, card, ecc.) ├── pages/ # Pagine principali dell'app (Home, Libreria, ecc.) ├── services/ # Gestione chiamate API e interazioni esterne ├── utils/ # Funzioni di utilità e helpers ├── App.jsx # Componente root └── main.jsx # Punto di ingresso dell'app
+### `npm test`
 
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## ▶️ Avvio del progetto
+### `npm run build`
 
-Assicurati di avere [Node.js](https://nodejs.org/) installato (versione consigliata: 18.x o superiore).
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-```bash
-git clone https://github.com/Lanfarx/videogames-backlog-webapp.git
-cd videogames-backlog-webapp
-npm install
-npm run dev
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-🔜 Integrazioni future
-Backend in .NET con API REST
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-Salvataggio dati su database NoSQL o relazionale
+### `npm run eject`
 
-Autenticazione utente con token JWT
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-Dashboard con dati sincronizzati lato server
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-📄 Licenza
-Questo progetto è distribuito sotto licenza MIT.
-Consulta il file LICENSE per maggiori informazioni.
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
