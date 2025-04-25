@@ -1,16 +1,22 @@
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import LibraryPage from './pages/LibraryPage';
+import SettingsPage from './pages/SettingsPage';
+import DiarioPage from './pages/DiarioPage';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to the React App</h1>
-      </header>
       <main>
-        <p>This is a simple React application.</p>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/diario" element={<DiarioPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Routes>
       </main>
-      <footer>
-        <p>&copy; 2023 Your Company</p>
-      </footer>
     </div>
   );
 }
