@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema chiaro (default) */
+:root {
+  --primary-bg: 255, 255, 255;
+  --secondary-bg: 248, 248, 248;
+  --tertiary-bg: 240, 240, 240;
+
+  --accent-primary: 251, 126, 0;
+  --accent-secondary: 255, 204, 63;
+  --accent-success: 159, 192, 137;
+  --accent-light-success: 209, 223, 210;
+  --accent-danger: 244, 67, 54;
+  --accent-platinum: 147, 112, 219;
+
+  --text-primary: 34, 34, 34;
+  --text-secondary: 102, 102, 102;
+  --text-disabled: 153, 153, 153;
+
+  --border-color: 224, 224, 224;
+}
+
+/* Tema scuro */
+.dark {
+  --primary-bg: 18, 18, 18;
+  --secondary-bg: 30, 30, 30;
+  --tertiary-bg: 42, 42, 42;
+
+  --accent-primary: 251, 126, 0;
+  --accent-secondary: 255, 204, 63;
+  --accent-success: 159, 192, 137;
+  --accent-light-success: 209, 223, 210;
+  --accent-danger: 244, 67, 54;
+  --accent-platinum: 147, 112, 219;
+
+  --text-primary: 224, 224, 224;
+  --text-secondary: 160, 160, 160;
+  --text-disabled: 102, 102, 102;
+
+  --border-color: 51, 51, 51;
+}
+
+/* Utility classes personalizzate */
+.bg-primary-bg {
+  background-color: rgb(var(--primary-bg));
+}
+
+.bg-secondary-bg {
+  background-color: rgb(var(--secondary-bg));
+}
+
+.bg-tertiary-bg {
+  background-color: rgb(var(--tertiary-bg));
+}
+
+.text-text-primary {
+  color: rgb(var(--text-primary));
+}
+
+.text-text-secondary {
+  color: rgb(var(--text-secondary));
+}
+
+.text-text-disabled {
+  color: rgb(var(--text-disabled));
+}
+
+.border-border-color {
+  border-color: rgb(var(--border-color));
+}
+
+.bg-accent-primary {
+  background-color: rgb(var(--accent-primary));
+}
+
+.bg-accent-secondary {
+  background-color: rgb(var(--accent-secondary));
+}
+
+.bg-accent-success {
+  background-color: rgb(var(--accent-success));
+}
+
+.bg-accent-light-success {
+  background-color: rgb(var(--accent-light-success));
+}
+
+.bg-accent-danger {
+  background-color: rgb(var(--accent-danger));
+}
+
+.bg-accent-platinum {
+  background-color: rgb(var(--accent-platinum));
+}
+
+.text-accent-primary {
+  color: rgb(var(--accent-primary));
+}
+
+.text-accent-secondary {
+  color: rgb(var(--accent-secondary));
+}
+
+.text-accent-success {
+  color: rgb(var(--accent-success));
+}
+
+.text-accent-danger {
+  color: rgb(var(--accent-danger));
+}
+
+.text-accent-platinum {
+  color: rgb(var(--accent-platinum));
+}
+
+.border-accent-primary {
+  border-color: rgb(var(--accent-primary));
+}
+
+.hover\:bg-accent-primary\/90:hover {
+  background-color: rgba(var(--accent-primary), 0.9);
+}
+
+.hover\:text-accent-primary:hover {
+  color: rgb(var(--accent-primary));
+}
+
+.hover\:text-accent-primary\/80:hover {
+  color: rgba(var(--accent-primary), 0.8);
+}
+
+.hover\:border-accent-primary:hover {
+  border-color: rgb(var(--accent-primary));
+}
+
+.focus\:border-accent-primary:focus {
+  border-color: rgb(var(--accent-primary));
+}
+
+.focus\:ring-accent-primary\/30:focus {
+  --tw-ring-color: rgba(var(--accent-primary), 0.3);
+}
