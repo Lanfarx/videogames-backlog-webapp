@@ -1,0 +1,224 @@
+import { Game, GameStatus } from '../types/game';
+
+// Dati di esempio per i giochi
+export const gamesData: Game[] = [
+    {
+      id: 1,
+      title: "The Legend of Zelda: Breath of the Wild",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Nintendo EPD",
+      publisher: "Nintendo",
+      releaseYear: 2017,
+      genres: ["Action", "Adventure", "Open World"],
+      platform: "Nintendo Switch",
+      hoursPlayed: 42,
+      status: "in-progress",
+      rating: 5,
+      purchaseDate: "2023-01-15",
+      price: 59.99,
+      notes: "Uno dei migliori giochi open world che abbia mai giocato. L'esplorazione è incredibile!"
+    },
+    {
+      id: 2,
+      title: "Cyberpunk 2077",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "CD Projekt Red",
+      publisher: "CD Projekt",
+      releaseYear: 2020,
+      genres: ["RPG", "Action", "Open World"],
+      platform: "PC",
+      hoursPlayed: 28,
+      status: "not-started",
+      rating: 4,
+      purchaseDate: "2022-12-10",
+      price: 49.99,
+      notes: "Dopo i vari aggiornamenti, il gioco è molto migliorato. Devo esplorare Night City più a fondo."
+    },
+    {
+      id: 3,
+      title: "God of War Ragnarök",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Santa Monica Studio",
+      publisher: "Sony Interactive Entertainment",
+      releaseYear: 2022,
+      genres: ["Action", "Adventure"],
+      platform: "PS5",
+      hoursPlayed: 15,
+      status: "completed",
+      rating: 5,
+      purchaseDate: "2022-11-15",
+      price: 69.99,
+      notes: "Sequel eccezionale, la storia tra Kratos e Atreus è emozionante. I combattimenti sono spettacolari."
+    },
+    {
+      id: 4,
+      title: "Elden Ring",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "FromSoftware",
+      publisher: "Bandai Namco Entertainment",
+      releaseYear: 2022,
+      genres: ["RPG", "Action", "Open World"],
+      platform: "Xbox Series X",
+      hoursPlayed: 50,
+      status: "in-progress",
+      rating: 5,
+      purchaseDate: "2022-03-10",
+      price: 59.99,
+      notes: "Il mio primo soulslike. Difficile ma incredibilmente gratificante. L'esplorazione è fantastica."
+    },
+    {
+      id: 5,
+      title: "Baldur's Gate 3",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Larian Studios",
+      publisher: "Larian Studios",
+      releaseYear: 2023,
+      genres: ["RPG", "Strategy"],
+      platform: "PC",
+      hoursPlayed: 60,
+      status: "completed",
+      rating: 5,
+      purchaseDate: "2023-08-05",
+      price: 59.99,
+      notes: "Uno dei migliori RPG che abbia mai giocato. La libertà di scelta è incredibile."
+    },
+    {
+      id: 6,
+      title: "Starfield",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Bethesda Game Studios",
+      publisher: "Bethesda Softworks",
+      releaseYear: 2023,
+      genres: ["RPG", "Adventure", "Sci-Fi"],
+      platform: "Xbox Series X",
+      hoursPlayed: 0,
+      status: "not-started",
+      rating: 0,
+      purchaseDate: "2023-09-10",
+      price: 69.99,
+      notes: "Appena acquistato, non vedo l'ora di esplorare lo spazio!"
+    },
+    {
+      id: 7,
+      title: "Final Fantasy XVI",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Square Enix",
+      publisher: "Square Enix",
+      releaseYear: 2023,
+      genres: ["RPG", "Action"],
+      platform: "PS5",
+      hoursPlayed: 5,
+      status: "abandoned",
+      rating: 3,
+      purchaseDate: "2023-06-25",
+      price: 69.99,
+      notes: "Non mi ha preso come speravo. Il sistema di combattimento è buono ma la storia non mi ha coinvolto."
+    },
+    {
+      id: 8,
+      title: "Hogwarts Legacy",
+      coverImage: "/placeholder.svg?height=280&width=280",
+      developer: "Avalanche Software",
+      publisher: "Warner Bros. Games",
+      releaseYear: 2023,
+      genres: ["RPG", "Adventure"],
+      platform: "PC",
+      hoursPlayed: 0,
+      status: "wishlist",
+      rating: 0,
+      purchaseDate: "",
+      price: 49.99,
+      notes: "Nella wishlist, aspetto che scenda di prezzo."
+    },
+  ]
+
+// Funzioni di utilità per accedere ai dati in modo tipizzato
+
+/**
+ * Restituisce tutti i giochi
+ */
+export function getAllGames(): Game[] {
+  return gamesData
+}
+
+/**
+ * Restituisce un gioco specifico per ID
+ */
+export function getGameById(id: number): Game | null {
+  return gamesData.find((game) => game.id === id) || null
+}
+
+/**
+ * Restituisce i giochi filtrati per stato
+ */
+export function getGamesByStatus(status: GameStatus): Game[] {
+  return gamesData.filter((game) => game.status === status)
+}
+
+/**
+ * Restituisce i giochi in corso
+ */
+export function getGamesInProgress(): Game[] {
+  return getGamesByStatus('in-progress')
+}
+
+/**
+ * Restituisce i giochi completati
+ */
+export function getCompletedGames(): Game[] {
+  return getGamesByStatus('completed')
+}
+
+/**
+ * Restituisce i giochi non ancora iniziati
+ */
+export function getNotStartedGames(): Game[] {
+  return getGamesByStatus('not-started')
+}
+
+/**
+ * Restituisce i giochi abbandonati
+ */
+export function getAbandonedGames(): Game[] {
+  return getGamesByStatus('abandoned')
+}
+
+/**
+ * Restituisce i giochi nella wishlist
+ */
+export function getWishlistGames(): Game[] {
+  return getGamesByStatus('wishlist')
+}
+
+/**
+ * Restituisce i giochi platinati
+ */
+export function getPlatinumGames(): Game[] {
+  return getGamesByStatus('platinum')
+}
+
+/**
+ * Restituisce le statistiche aggregate dei giochi
+ */
+export function getGamesStats() {
+  const total = gamesData.length
+  const inProgress = getGamesInProgress().length
+  const completed = getCompletedGames().length
+  const notStarted = getNotStartedGames().length
+  const abandoned = getAbandonedGames().length
+  const wishlist = getWishlistGames().length
+  const platinum = getPlatinumGames().length
+  
+  const totalHours = gamesData.reduce((acc, game) => acc + game.hoursPlayed, 0)
+  
+  return {
+    total,
+    inProgress,
+    completed,
+    notStarted,
+    abandoned,
+    wishlist,
+    platinum,
+    totalHours
+  }
+}

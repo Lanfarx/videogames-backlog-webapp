@@ -1,11 +1,18 @@
 import React from 'react';
+import Layout from '../components/layout/Layout';
+import HeroSection from '../components/home/HeroSection';
+import ContinuePlayingSection from '../components/home/ContinuePlayingSection';
+import RecentActivitiesSection from '../components/home/RecentActivitiesSection';
 
 const HomePage = () => {
     return (
-        <div>
-            <h1>Welcome to the Home Page</h1>
-            <p>This is the homepage of the Video Games Backlog Web App.</p>
-        </div>
+        <Layout>
+            <div className="space-y-6">
+                <HeroSection username="Utente" />
+                <ContinuePlayingSection />
+                <RecentActivitiesSection />
+            </div>
+        </Layout>
     );
 };
 
