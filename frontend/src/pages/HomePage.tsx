@@ -1,12 +1,31 @@
 import React from 'react';
+import Layout from '../components/layout/Layout';
+import SearchBar from '../components/ui/SearchBar';
+import AddGameButton from '../components/ui/AddGameButton';
+import HeroSection from '../components/home/HeroSection';
+import ContinuePlayingSection from '../components/home/ContinuePlayingSection';
+import RecentActivitiesSection from '../components/home/RecentActivitiesSection';
 
 const HomePage = () => {
     return (
-        <div>
-            <h1>Welcome to the Home Page</h1>
-            <p>This is the homepage of the Video Games Backlog Web App.</p>
+        <Layout>
+                <div className=" py-6 px-6 flex items-center">
+                    <div className="relative w-full flex items-center">
+                    <div className="flex-1 max-w-xl">
+          <SearchBar />
         </div>
-    );
+                        <div className="ml-4">
+                            <AddGameButton />
+                        </div>
+                    </div>
+                </div>
+            <div className="flex-grow">
+                <HeroSection username="Utente " />
+                <ContinuePlayingSection />
+                <RecentActivitiesSection />
+            </div>
+        </Layout>
+    );  
 };
 
 export default HomePage;
