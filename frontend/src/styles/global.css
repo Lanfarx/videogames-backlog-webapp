@@ -4,6 +4,7 @@
 
 /* Tema chiaro (default) */
 :root {
+  /* Colori */
   --primary-bg: 255, 255, 255;
   --secondary-bg: 248, 248, 248;
   --tertiary-bg: 240, 240, 240;
@@ -20,6 +21,10 @@
   --text-disabled: 153, 153, 153;
 
   --border-color: 224, 224, 224;
+
+  /* Font */
+  --font-primary: 'Montserrat', sans-serif;
+  --font-secondary: 'Roboto', sans-serif;
 }
 
 /* Tema scuro */
@@ -40,6 +45,8 @@
   --text-disabled: 102, 102, 102;
 
   --border-color: 51, 51, 51;
+
+  /* I font rimangono gli stessi nel tema scuro */
 }
 
 /* Utility classes personalizzate */
@@ -141,4 +148,13 @@
 
 .focus\:ring-accent-primary\/30:focus {
   --tw-ring-color: rgba(var(--accent-primary), 0.3);
+}
+
+/* Utility classes per i font */
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+.font-secondary {
+  font-family: var(--font-secondary);
 }
