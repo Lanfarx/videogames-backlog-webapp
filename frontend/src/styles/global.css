@@ -142,3 +142,33 @@
 .focus\:ring-accent-primary\/30:focus {
   --tw-ring-color: rgba(var(--accent-primary), 0.3);
 }
+
+/* Utility classes per i font */
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+.font-secondary {
+  font-family: var(--font-secondary);
+}
+
+/* Classi per i colori accent */
+.accent-arancione {
+  --accent-primary: 251, 126, 0;
+}
+
+.accent-blu {
+  --accent-primary: 45, 125, 246;
+}
+
+.accent-verde {
+  --accent-primary: 16, 185, 129;
+}
+
+.accent-rosso {
+  --accent-primary: 239, 68, 68;
+}
+
+.accent-viola {
+  --accent-primary: 138, 92, 246;
+}
