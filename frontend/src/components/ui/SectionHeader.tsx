@@ -16,16 +16,16 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   return (
     <div className="flex items-baseline justify-between mb-4">
       <div>
-        <h2 className="text-2xl font-semibold text-[#222222] font-['Montserrat']">{title}</h2>
+        <h2 className="text-2xl font-semibold text-text-primary font-['Montserrat']">{title}</h2>
         {subtitle && (
-          <p className="text-sm text-[#666666] mt-1 font-['Roboto']">{subtitle}</p>
+          <p className="text-sm text-text-secondary mt-1 font-['Roboto']">{subtitle}</p>
         )}
       </div>
       
       {seeAllLink && (
         <Link 
           to={seeAllLink} 
-          className="flex items-center text-sm font-medium text-[#FB7E00] hover:text-[#FB7E00]/80 font-['Roboto']"
+          className="flex items-center text-sm font-medium text-accent-primary hover:text-accent-primary/80 font-['Roboto']"
         >
           Vedi tutti
           <ChevronRight className="h-4 w-4 ml-1" />

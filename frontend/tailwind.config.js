@@ -7,36 +7,40 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primaryBg: 'rgb(var(--primary-bg))',
-        secondaryBg: 'rgb(var(--secondary-bg))',
-        tertiaryBg: 'rgb(var(--tertiary-bg))',
-        accentPrimary: 'rgb(var(--accent-primary))',
-        accentSecondary: 'rgb(var(--accent-secondary))',
-        accentSuccess: 'rgb(var(--accent-success))',
-        accentLightSuccess: 'rgb(var(--accent-light-success))',
-        accentDanger: 'rgb(var(--accent-danger))',
-        accentPlatinum: 'rgb(var(--accent-platinum))',
-        textPrimary: 'rgb(var(--text-primary))',
-        textSecondary: 'rgb(var(--text-secondary))',
-        textDisabled: 'rgb(var(--text-disabled))',
-        borderColor: 'rgb(var(--border-color))',
+        // Base colors
+        'primaryBg': 'rgb(var(--primary-bg))',
+        'secondaryBg': 'rgb(var(--secondary-bg))',
+        'tertiaryBg': 'rgb(var(--tertiary-bg))',
+        
+        // Accent colors
+        'accent-primary': 'rgb(var(--accent-primary))',
+        'accent-secondary': 'rgb(var(--accent-secondary))',
+        'accent-success': 'rgb(var(--accent-success))',
+        'accent-light-success': 'rgb(var(--accent-light-success))',
+        'accent-danger': 'rgb(var(--accent-danger))',
+        'accent-platinum': 'rgb(var(--accent-platinum))',
+        
+        // Text colors
+        'text-primary': 'rgb(var(--text-primary))',
+        'text-secondary': 'rgb(var(--text-secondary))',
+        'text-disabled': 'rgb(var(--text-disabled))',
+        
+        // Other
+        'border-color': 'rgb(var(--border-color))',
       },
-      backgroundColor: theme => ({
-        ...theme('colors'),
-        primaryBg: 'rgb(var(--primary-bg))',
-        secondaryBg: 'rgb(var(--secondary-bg))',
-        tertiaryBg: 'rgb(var(--tertiary-bg))',
-      }),
-      textColor: theme => ({
-        ...theme('colors'),
-        textPrimary: 'rgb(var(--text-primary))',
-        textSecondary: 'rgb(var(--text-secondary))',
-        textDisabled: 'rgb(var(--text-disabled))',
-      }),
-      borderColor: theme => ({
-        ...theme('colors'),
-        borderColor: 'rgb(var(--border-color))',
-      }),
+      fontFamily: {
+        'primary': 'var(--font-primary)',
+        'secondary': 'var(--font-secondary)',
+      },
+      backgroundColor: {
+        // Ensure we have access to all the colors defined above
+      },
+      textColor: {
+        // Ensure we have access to all the colors defined above
+      },
+      borderColor: {
+        // Ensure we have access to all the colors defined above
+      },
     },
   },
   plugins: [],

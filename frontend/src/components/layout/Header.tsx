@@ -1,22 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Search, Plus, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
-      <div className="container mx-auto px-6 max-w-[1440px]">
-        <div className="h-16 flex items-center justify-between">
+    <header className="h-20 bg-primary-bg shadow-sm flex items-center justify-between px-8">
+        <div className="flex items-center">
           {/* Logo */}
-          <NavLink to="/" className="text-2xl font-bold text-[#222222] font-['Montserrat']">
-            Game<span className="text-[#FB7E00]">Backlog</span>
+          <NavLink to="/" className="text-3xl font-bold text-text-primary font-primary">
+            Game<span className="text-accent-primary">Backlog</span>
           </NavLink>
+        </div>
 
-          {/* Menu di navigazione - allineato al centro */}
-          <nav className="flex-1 flex justify-center">
-            <ul className="flex space-x-10">
+        {/* Menu di navigazione - centrato orizzontalmente */}
+        <nav className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
+          <ul className="flex space-x-10">
               {[
-
                 { name: 'Home', path: '/' },
                 { name: 'Libreria', path: '/library' },
                 { name: 'Dashboard', path: '/dashboard' },
@@ -27,51 +26,29 @@ const Header: React.FC = () => {
                     to={item.path}
                     className={({ isActive }) =>
                       isActive
-                        ? 'text-[#FB7E00] border-b-2 border-[#FB7E00] pb-1 font-medium font-["Roboto"]'
-                        : 'text-[#666666] hover:text-[#FB7E00] font-medium font-["Roboto"]'
+                        ? 'text-lg text-accent-primary border-b-2 border-accent-primary py-1 font-medium font-secondary'
+                        : 'text-lg text-text-secondary hover:text-accent-primary font-medium font-secondary'
                     }
                   >
                     {item.name}
                   </NavLink>
                 </li>
               ))}
-            </ul>
-          </nav>
+          </ul>
+        </nav>
 
-          {/* Profilo utente - allineato a destra */}
-          <div className="flex items-center space-x-4">
-            {/* Icona impostazioni con NavLink */}
-            <NavLink to="/settings">
-              <Settings className="h-6 w-6 text-[#666666] hover:text-[#FB7E00] cursor-pointer" />
-            </NavLink>
-            
-            {/* Avatar (senza immagine) */}
-            <div className="h-10 w-10 rounded-full bg-gray-300 border-2 border-[#FB7E00] cursor-pointer">
-              {/* Avatar vuoto */}
-            </div>
+        {/* Profilo utente - allineato a destra */}
+        <div className="flex items-center space-x-5">
+          {/* Icona impostazioni */}
+          <NavLink to="/settings">
+            {({ isActive }) => (
+              <Settings className={`h-6 w-6 ${isActive ? 'text-accent-primary' : 'text-text-secondary hover:text-accent-primary'} cursor-pointer`} />
+            )}
+          </NavLink>
+          {/* Avatar (senza immagine) */}
+          <div className="h-11 w-11 rounded-full bg-tertiaryBg border-2 border-accent-primary cursor-pointer">
           </div>
         </div>
-        
-        {/* Barra di ricerca e pulsante */}
-        <div className="py-4">
-          <div className="relative w-full flex items-center">
-            <div className="relative flex-grow max-w-2xl">
-              <input
-                type="text"
-                className="w-full h-12 pl-12 pr-4 rounded-3xl border border-[#E0E0E0] focus:border-[#FB7E00] focus:outline-none focus:ring-2 focus:ring-[#FB7E00]/30"
-                placeholder="Cerca nella tua libreria..."
-              />
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-[#666666]" />
-              </div>
-            </div>
-            <button className="ml-4 flex items-center px-6 py-3 bg-[#FB7E00] text-white font-medium rounded-lg hover:bg-[#FB7E00]/90 transition-colors">
-              <Plus className="h-5 w-5 mr-2" />
-              Aggiungi un gioco
-            </button>
-          </div>
-        </div>
-      </div>
     </header>
   );
 };
