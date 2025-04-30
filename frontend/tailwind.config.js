@@ -19,6 +19,7 @@ module.exports = {
         'accent-light-success': 'rgb(var(--accent-light-success))',
         'accent-danger': 'rgb(var(--accent-danger))',
         'accent-platinum': 'rgb(var(--accent-platinum))',
+        'accent-wishlist': 'rgb(var(--accent-wishlist))',
         
         // Text colors
         'text-primary': 'rgb(var(--text-primary))',

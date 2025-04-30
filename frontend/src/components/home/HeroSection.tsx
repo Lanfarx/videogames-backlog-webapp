@@ -1,26 +1,7 @@
 import React from 'react';
 import { Gamepad2, Clock, Trophy } from 'lucide-react';
 import { getGamesStats } from '../../utils/gamesData';
-
-interface StatItemProps {
-  value: string | number;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const StatItem: React.FC<StatItemProps> = ({ value, label, icon }) => (
-  <div className="flex flex-col items-center">
-    <div className="text-accent-primary mb-2">
-      {icon}
-    </div>
-    <div className="text-5xl font-bold text-accent-primary font-primary">
-      {value}
-    </div>
-    <div className="text-sm text-text-secondary mt-1 font-secondary">
-      {label}
-    </div>
-  </div>
-);
+import StatsCard from '../ui/StatsCard';
 
 interface HeroSectionProps {
   username: string;
@@ -41,25 +22,28 @@ const HeroSection: React.FC<HeroSectionProps> = ({ username }) => {
       
         <div className="grid grid-cols-3 gap-12 py-4">
           <div className="flex justify-center">
-            <StatItem 
-              value={stats.total || 0} 
+            <StatsCard 
               label="Giochi in libreria" 
-              icon={<Gamepad2 className="h-8 w-8" />} 
+              value={stats.total.toString()} 
+              icon={<Gamepad2 className="h-8 w-8 text-accent-primary" />} 
+              variant="hero"
             />
           </div>
-          <div className="flex justify-center">
-            <StatItem 
-              value={stats.totalHours || 0} 
+          <div className="flex justify-center border-x border-border-color px-8">
+            <StatsCard 
               label="Ore giocate" 
-              icon={<Clock className="h-8 w-8" />} 
+              value={stats.totalHours.toString()} 
+              icon={<Clock className="h-8 w-8 text-accent-primary" />} 
+              variant="hero"
             />
           </div>
           <div className="flex justify-center">
-            <StatItem 
-              value={stats.completed || 0} 
+            <StatsCard 
               label="Giochi completati" 
-              icon={<Trophy className="h-8 w-8" />} 
-            />
+              value={stats.completed.toString()} 
+              icon={<Trophy className="h-8 w-8 text-accent-primary" />} 
+              variant="hero"
+            />  
           </div>
         </div>
       </div>
