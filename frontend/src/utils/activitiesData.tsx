@@ -1,5 +1,6 @@
 import { Activity, ActivityType } from '../types/activity';
 import { Trophy, Clock, Gamepad2, Star, Award, X, BookmarkPlus } from 'lucide-react';
+import { getStatusColor } from './statusData';
 
 // Dati di esempio per le attività
 export const activitiesData: Activity[] = [
@@ -99,19 +100,19 @@ export function formatRelativeTime(date: Date): string {
 export function getActivityIcon(type: ActivityType) {
   switch(type) {
     case "completed":
-      return <Trophy className="h-5 w-5 text-[#9FC089]" />;
+      return <Trophy className="h-5 w-5" style={{ color: getStatusColor('completed') }} />;
     case "played":
-      return <Clock className="h-5 w-5 text-[#9FC089]" />;
+      return <Clock className="h-5 w-5" style={{ color: getStatusColor('played') }} />;
     case "added":
-      return <Gamepad2 className="h-5 w-5 text-[#9FC089]" />;
+      return <Gamepad2 className="h-5 w-5" style={{ color: getStatusColor('added') }} />;
     case "rated":
-      return <Star className="h-5 w-5 text-[#9FC089]" />;
+      return <Star className="h-5 w-5" style={{ color: getStatusColor('rated') }} />;
     case "platinum":
-      return <Award className="h-5 w-5 text-[#9370DB]" />; // Colore platino
+      return <Award className="h-5 w-5" style={{ color: getStatusColor('platinum') }} />;
     case "abandoned":
-      return <X className="h-5 w-5 text-[#F44336]" />; // Colore rosso
+      return <X className="h-5 w-5" style={{ color: getStatusColor('abandoned') }} />;
     case "wishlisted":
-      return <BookmarkPlus className="h-5 w-5 text-[#FFCC3F]" />; // Colore giallo
+      return <BookmarkPlus className="h-5 w-5" style={{ color: getStatusColor('wishlisted') }} />;
   }
 }  
 

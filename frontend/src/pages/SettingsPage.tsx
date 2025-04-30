@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useTheme } from '../contexts/theme-context';
 
 // Import components UI generici
-import Button from '../components/ui/Button';
-import Dropdown from '../components/ui/Dropdown';
+import Button from '../components/ui/atoms/Button';
+import Dropdown from '../components/ui/atoms/Dropdown';
 import ToggleSwitch from '../components/settings/ToggleSwitch';
 
 // Import componenti specifici delle impostazioni

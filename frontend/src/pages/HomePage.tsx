@@ -1,10 +1,10 @@
 import React from 'react';
 import Layout from '../components/layout/Layout';
-import SearchBar from '../components/ui/SearchBar';
 import AddGameButton from '../components/ui/AddGameButton';
 import HeroSection from '../components/home/HeroSection';
 import ContinuePlayingSection from '../components/home/ContinuePlayingSection';
 import RecentActivitiesSection from '../components/home/RecentActivitiesSection';
+import SearchBar from '../components/ui/atoms/SearchBar';
 
 const HomePage = () => {
     return (

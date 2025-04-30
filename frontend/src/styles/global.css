@@ -14,7 +14,8 @@
   --accent-success: 159, 192, 137;
   --accent-light-success: 209, 223, 210;
   --accent-danger: 244, 67, 54;
-  --accent-platinum: 147, 112, 219;
+  --accent-platinum: 192, 192, 192;
+  --accent-wishlist: 79, 195, 247; /* Nuovo colore celeste per wishlist */
 
   --text-primary: 34, 34, 34;
   --text-secondary: 102, 102, 102;
@@ -38,7 +39,8 @@
   --accent-success: 159, 192, 137;
   --accent-light-success: 209, 223, 210;
   --accent-danger: 244, 67, 54;
-  --accent-platinum: 147, 112, 219;
+  --accent-platinum: 192, 192, 192;
+  --accent-wishlist: 79, 195, 247; /* Nuovo colore celeste per wishlist */
 
   --text-primary: 224, 224, 224;
   --text-secondary: 160, 160, 160;
@@ -102,6 +104,10 @@
   background-color: rgb(var(--accent-platinum));
 }
 
+.bg-accent-wishlist {
+  background-color: rgb(var(--accent-wishlist));
+}
+
 .text-accent-primary {
   color: rgb(var(--accent-primary));
 }
@@ -120,6 +126,10 @@
 
 .text-accent-platinum {
   color: rgb(var(--accent-platinum));
+}
+
+.text-accent-wishlist {
+  color: rgb(var(--accent-wishlist));
 }
 
 .border-accent-primary {

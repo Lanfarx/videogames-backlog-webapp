@@ -1,12 +1,16 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
+import Button from './atoms/Button';
 
-const AddGameButton: React.FC = () => {
+const AddGameButton: React.FC<{ onClick?: () => void }> = ({ onClick = () => {} }) => {
   return (
-    <button className="flex items-center px-6 py-3 bg-accent-primary text-white font-medium rounded-lg transition-colors font-secondary">
-      <Plus className="h-5 w-5 mr-2" />
-      Aggiungi un gioco
-    </button>
+    <Button 
+      label="Aggiungi un gioco" 
+      primary={true}
+      onClick={onClick}
+      icon={<Plus className="h-5 w-5" />}
+      className="py-3 px-6 font-medium transition-colors rounded-lg"
+    />
   );
 };
 
