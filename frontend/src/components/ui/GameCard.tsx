@@ -1,5 +1,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import RatingStars from './atoms/RatingStars';
+import GenreTagList from './GenreTagList';
 
 interface GameCardProps {
   title: string;
@@ -15,49 +17,9 @@ const GameCard: React.FC<GameCardProps> = ({
   coverImage, 
   platform, 
   hoursPlayed, 
-  rating,
+  rating = 0,
   genres = [] // Default a array vuoto
 }) => {
-  const renderGenres = () => {
-    if (!genres.length) return null;
-    
-    const displayedGenres = genres.slice(0, 2);
-    
-    return (
-      <div className="flex flex-wrap gap-1">
-        {displayedGenres.map((genre, index) => (
-          <span 
-            key={index} 
-            className="px-2 py-0.5 text-xs rounded-full bg-tertiaryBg text-text-secondary font-secondary"
-          >
-            {genre}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  // Funzione per generare le stelline in base al rating
-  const renderRating = () => {
-    if (!rating) {
-      return <span className="text-xs text-text-disabled font-secondary">Non presente</span>;
-    }
-    
-    // Arrotondiamo il rating al mezzo punto più vicino (0, 0.5, 1, 1.5, ...)
-    const roundedRating = Math.round(rating * 2) / 2;
-    const fullStars = Math.floor(roundedRating);
-    const halfStar = roundedRating % 1 !== 0;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-    
-    return (
-      <div className="flex text-accent-secondary">
-        {[...Array(fullStars)].map((_, i) => <span key={`full-${i}`}>★</span>)}
-        {halfStar && <span>½</span>}
-        {[...Array(emptyStars)].map((_, i) => <span key={`empty-${i}`}>☆</span>)}
-      </div>
-    );
-  };
-  
   return (
     <div className="w-[280px] h-[280px] bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">
       {/* Immagine di copertina */}
@@ -84,11 +46,15 @@ const GameCard: React.FC<GameCardProps> = ({
         {/* Area info aggiuntive e stato */}
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-2">
-            {/* Generi del gioco */}
-            {renderGenres()}
+            {/* Utilizziamo GenreTagList per mostrare i generi */}
+            <GenreTagList genres={genres} maxDisplay={2} small={true} />
             
-            {/* Rating stelline dinamico */}
-            {renderRating()}
+            {/* Utilizziamo RatingStars invece di renderRating */}
+            {rating > 0 ? (
+              <RatingStars rating={rating} showValue={false} size="sm" />
+            ) : (
+              <span className="text-xs text-text-disabled font-secondary">Non presente</span>
+            )}
           </div>
           
           {/* Pulsante - sempre posizionato in basso */}
