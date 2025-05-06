@@ -1,4 +1,5 @@
-export type GameStatus = "not-started" | "in-progress" | "completed" | "platinum" | "abandoned" | "wishlist" 
+export type GameStatus = "not-started" | "in-progress" | "completed" | 
+"platinum" | "abandoned" | "wishlist" 
 
 export type Platform = string
 
@@ -19,4 +20,28 @@ export interface Game {
   price: number
   rating: number
   notes: string
+  review?: GameReview
+  timeline?: TimelineEvent[]
+  comments?: GameComment[]
+}
+
+export interface GameReview {
+  text: string
+  gameplay: number
+  graphics: number
+  story: number
+  sound: number
+  date: string
+}
+
+export interface TimelineEvent {
+  date: string
+  hours: number
+  event: string
+}
+
+export interface GameComment {
+  id: number
+  date: string
+  text: string
 }

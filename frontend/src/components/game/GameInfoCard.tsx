@@ -1,15 +1,44 @@
+import { useState, useEffect } from 'react';
 import { Clock, Pencil } from 'lucide-react';
 import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
+import PlaytimePopover from './ui/PlaytimePopover';
 
 interface GameInfoCardProps {
   game: Game;
   onEdit?: () => void;
-  onUpdatePlaytime?: () => void;
+  onUpdatePlaytime?: (newHours: number) => void;
 }
 
 const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => {
+  const [isEditingHours, setIsEditingHours] = useState(false);
+  const [displayedHours, setDisplayedHours] = useState(game.hoursPlayed);
+  
+  // Aggiorna le ore visualizzate quando cambia l'oggetto game
+  useEffect(() => {
+    setDisplayedHours(game.hoursPlayed);
+  }, [game.hoursPlayed]);
+  
+  const handleSavePlaytime = (hoursToAdd: number) => {
+    if (onUpdatePlaytime) {
+      const newTotalHours = displayedHours + hoursToAdd;
+      
+      // Aggiorna l'UI immediatamente
+      setDisplayedHours(newTotalHours);
+      
+      // Invia l'aggiornamento attraverso la callback
+      onUpdatePlaytime(newTotalHours);
+      
+      // Chiudi il popover
+      setIsEditingHours(false);
+    }
+  };
+  
+  const handleCancelPlaytime = () => {
+    setIsEditingHours(false);
+  };
+
   return (
     <div className="bg-primaryBg border border-border-color rounded-xl p-6 mb-8">
       <div className="flex justify-between items-center mb-4">
@@ -47,15 +76,25 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
         <span className="font-secondary font-medium text-sm text-text-secondary">
           Tempo di gioco
         </span>
-        <div className="flex items-center">
+        <div className="flex items-center relative">
           <span className="font-secondary font-semibold text-lg text-text-primary">
-            {game.hoursPlayed} ore
+            {displayedHours} ore
           </span>
+          
           {onUpdatePlaytime && (
-            <Clock 
-              className="w-4 h-4 text-accent-primary cursor-pointer ml-2"
-              onClick={onUpdatePlaytime} 
-            />
+            <>
+              <Clock 
+                className="w-4 h-4 text-accent-primary cursor-pointer ml-2"
+                onClick={() => setIsEditingHours(!isEditingHours)}
+              />
+              
+              {isEditingHours && (
+                <PlaytimePopover 
+                  onSave={handleSavePlaytime}
+                  onCancel={handleCancelPlaytime}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

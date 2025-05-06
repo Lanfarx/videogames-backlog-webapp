@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGameById } from '../utils/gamesData';
 import { getActivitiesByGameId } from '../utils/activitiesData';
-import { Game } from '../types/game';
+import { Game, GameComment } from '../types/game';
 import { Activity } from '../types/activity';
 import GamePageLayout from '../components/game/layout/GamePageLayout';
 import GameBanner from '../components/game/GameBanner';
@@ -16,12 +16,18 @@ export default function GamePage() {
   const navigate = useNavigate();
   const [game, setGame] = useState<Game | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [comments, setComments] = useState<GameComment[]>([]);
 
   // Carica i dati del gioco e le attività
   useEffect(() => {
     if (id) {
       const gameData = getGameById(parseInt(id));
       setGame(gameData);
+      
+      // Inizializza lo stato dei commenti con quelli del gioco
+      if (gameData?.comments) {
+        setComments(gameData.comments);
+      }
       
       // Carica le attività relative al gioco
       const gameActivities = getActivitiesByGameId(parseInt(id));
@@ -37,12 +43,6 @@ export default function GamePage() {
     );
   }
 
-  // I commenti sarebbero normalmente caricati da un API, qui li creiamo staticamente
-  const dummyComments = [
-    { id: 1, date: '15 Gen 2023', text: 'Ho trovato un easter egg interessante nel Castello di Hyrule!' },
-    { id: 2, date: '20 Gen 2023', text: 'La missione secondaria di Tarrey Town è molto coinvolgente.' },
-  ];
-
   // Gestione delle azioni
   const handleChangeStatus = () => {
     console.log('Modifica stato');
@@ -56,8 +56,22 @@ export default function GamePage() {
     console.log('Elimina gioco');
   };
 
-  const handleUpdatePlaytime = () => {
-    console.log('Aggiorna tempo di gioco');
+  const handleUpdatePlaytime = (newHours: number) => {
+    if (game) {
+      // Crea una copia aggiornata del gioco
+      const updatedGame = { 
+        ...game, 
+        hoursPlayed: newHours 
+      };
+      
+      // Aggiorna lo stato locale
+      setGame(updatedGame);
+      
+      console.log('Tempo di gioco aggiornato a:', newHours, 'ore');
+      
+      // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
+      // updateGameAPI(updatedGame).then(response => {...})
+    }
   };
 
   const handleNotesChange = (notes: string) => {
@@ -69,15 +83,63 @@ export default function GamePage() {
   };
 
   const handleAddComment = (text: string) => {
-    console.log('Nuovo commento:', text);
+    if (!game) return;
+    
+    const today = new Date();
+    const newComment: GameComment = {
+      id: comments.length > 0 ? Math.max(...comments.map(c => c.id)) + 1 : 1,
+      date: today.toISOString().split('T')[0],
+      text
+    };
+    
+    const updatedComments = [...comments, newComment];
+    setComments(updatedComments);
+    
+    // Aggiorna anche il gioco locale con i nuovi commenti
+    const updatedGame = {
+      ...game,
+      comments: updatedComments
+    };
+    setGame(updatedGame);
+    
+    console.log('Nuovo commento aggiunto:', newComment);
   };
 
-  const handleEditComment = (id: number) => {
-    console.log('Modifica commento:', id);
+  const handleEditComment = (id: number, newText: string) => {
+    if (!game) return;
+    
+    const updatedComments = comments.map(comment => 
+      comment.id === id 
+        ? { ...comment, text: newText } 
+        : comment
+    );
+    
+    setComments(updatedComments);
+    
+    // Aggiorna anche il gioco locale
+    const updatedGame = {
+      ...game,
+      comments: updatedComments
+    };
+    setGame(updatedGame);
+    
+    console.log('Commento modificato:', id, newText);
   };
 
   const handleDeleteComment = (id: number) => {
-    console.log('Elimina commento:', id);
+    if (!game) return;
+    
+    const updatedComments = comments.filter(comment => comment.id !== id);
+    setComments(updatedComments);
+    
+    // Aggiorna anche il gioco locale
+    const updatedGame = {
+      ...game,
+      comments: updatedComments
+    };
+    setGame(updatedGame);
+    
+    console.log('Commento eliminato:', id);
   };
 
   return (
@@ -99,10 +161,9 @@ export default function GamePage() {
           <div className="w-full lg:w-[60%] px-4 mb-8">
             {/* Note e Recensione */}
             <NotesReviewCard 
-              notes={game.notes}
               onNotesChange={handleNotesChange}
-              onReviewSave={handleReviewSave}
-            />
+              onReviewSave={handleReviewSave} 
+              game={game}            />
 
             {/* Timeline di Gioco */}
             <GameTimelineCard activities={activities} />
@@ -119,7 +180,7 @@ export default function GamePage() {
 
             {/* Sezione Commenti/Appunti */}
             <GameCommentsCard 
-              comments={dummyComments}
+              comments={comments}
               onAddComment={handleAddComment}
               onEditComment={handleEditComment}
               onDeleteComment={handleDeleteComment}
