@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGameById } from '../utils/gamesData';
-import { getActivitiesByGameId } from '../utils/activitiesData';
-import { Game, GameComment } from '../types/game';
-import { Activity } from '../types/activity';
+import { 
+  getActivitiesByGameId, 
+  recordGameplayHours, 
+  recordGameCompletion, 
+  recordGamePlatinum, 
+  recordGameAbandoned,
+  recordStatusChange
+} from '../utils/activitiesData';
+import { Game, GameComment, GameStatus } from '../types/game';
+import { Activity, ActivityType } from '../types/activity';
 import GamePageLayout from '../components/game/layout/GamePageLayout';
 import GameBanner from '../components/game/GameBanner';
 import GameCommentsCard from '../components/game/GameCommentsCard';
 import GameInfoCard from '../components/game/GameInfoCard';
-import GameTimelineCard from '../components/game/GameTimelineCard';
 import NotesReviewCard from '../components/game/NotesReviewCard';
+import GameTimelineCard from '../components/game/GameTimelineCard';
+
+// Mappa per convertire gli stati del gioco ai tipi di attività
+const gameStatusToActivityType: Record<GameStatus, ActivityType> = {
+  'in-progress': 'played',
+  'not-started': 'added',
+  'completed': 'completed',
+  'abandoned': 'abandoned',
+  'platinum': 'platinum'
+};
 
 export default function GamePage() {
   const { id } = useParams<{ id: string }>();
@@ -44,8 +60,62 @@ export default function GamePage() {
   }
 
   // Gestione delle azioni
-  const handleChangeStatus = () => {
-    console.log('Modifica stato');
+  const handleChangeStatus = (newStatus: GameStatus) => {
+    if (!game || game.status === newStatus) return;
+    
+    // Controlli di business:
+    // 1. Non permettere il cambio a "in-progress" se non ci sono ore giocate
+    if (newStatus === 'in-progress' && game.hoursPlayed === 0) {
+      console.warn('Non è possibile impostare lo stato "In corso" per un gioco senza tempo di gioco registrato.');
+      return;
+    }
+    
+    // 2. Non permettere di impostare "not-started" se il gioco ha già tempo di gioco registrato
+    if (newStatus === 'not-started' && game.hoursPlayed > 0) {
+      console.warn('Non è possibile impostare lo stato "Da iniziare" per un gioco con tempo di gioco registrato.');
+      return;
+    }
+    
+    const today = new Date();
+    let updatedGame = { ...game, status: newStatus };
+    let newActivity: Activity | null = null;
+    
+    // Aggiorna campi specifici in base allo stato
+    switch (newStatus) {
+      case 'completed':
+        updatedGame.completionDate = today.toISOString().split('T')[0];
+        newActivity = recordGameCompletion(game.id, game.title);
+        break;
+      case 'platinum':
+        updatedGame.completionDate = updatedGame.completionDate || today.toISOString().split('T')[0];
+        updatedGame.platinumDate = today.toISOString().split('T')[0];
+        newActivity = recordGamePlatinum(game.id, game.title);
+        break;
+      case 'abandoned':
+        newActivity = recordGameAbandoned(game.id, game.title);
+        break;
+      case 'not-started':
+        newActivity = recordStatusChange(game.id, game.title, 'added');
+        break;
+      default:
+        // Per sicurezza, usiamo la mappa per convertire lo stato del gioco al tipo di attività
+        const activityType = gameStatusToActivityType[newStatus] || 'added';
+        newActivity = recordStatusChange(game.id, game.title, activityType);
+        break;
+    }
+    
+    // Aggiorna lo stato locale
+    setGame(updatedGame);
+    
+    // Aggiorna la lista delle attività
+    if (newActivity) {
+      setActivities(prev => [newActivity, ...prev]);
+    }
+    
+    console.log('Stato aggiornato a:', newStatus);
+    
+    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
+    // updateGameAPI(updatedGame).then(response => {...})
   };
 
   const handleEditGame = () => {
@@ -58,14 +128,28 @@ export default function GamePage() {
 
   const handleUpdatePlaytime = (newHours: number) => {
     if (game) {
-      // Crea una copia aggiornata del gioco
+      const hoursAdded = newHours - game.hoursPlayed;
+      
+      // Aggiorna il gioco
       const updatedGame = { 
         ...game, 
         hoursPlayed: newHours 
       };
       
+      // Se il gioco passa da 0 ore a un valore positivo, imposta automaticamente lo stato a "in-progress"
+      if (game.hoursPlayed === 0 && newHours > 0 && game.status === 'not-started') {
+        updatedGame.status = 'in-progress';
+        console.log('Stato automaticamente aggiornato a "In corso" dopo l\'aggiunta di tempo di gioco');
+      }
+      
       // Aggiorna lo stato locale
       setGame(updatedGame);
+      
+      // Registra l'attività
+      const newActivity = recordGameplayHours(game.id, game.title, hoursAdded);
+      
+      // Aggiorna la lista delle attività
+      setActivities(prev => [newActivity, ...prev]);
       
       console.log('Tempo di gioco aggiornato a:', newHours, 'ore');
       
@@ -132,7 +216,6 @@ export default function GamePage() {
     const updatedComments = comments.filter(comment => comment.id !== id);
     setComments(updatedComments);
     
-    // Aggiorna anche il gioco locale
     const updatedGame = {
       ...game,
       comments: updatedComments
@@ -163,10 +246,14 @@ export default function GamePage() {
             <NotesReviewCard 
               onNotesChange={handleNotesChange}
               onReviewSave={handleReviewSave} 
-              game={game}            />
+              game={game}            
+            />
 
             {/* Timeline di Gioco */}
-            <GameTimelineCard activities={activities} />
+            <GameTimelineCard 
+              activities={activities} 
+              game={game} 
+            />
           </div>
 
           {/* Colonna destra (40%) */}

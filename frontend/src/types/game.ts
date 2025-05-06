@@ -1,5 +1,9 @@
-export type GameStatus = "not-started" | "in-progress" | "completed" | 
-"platinum" | "abandoned" | "wishlist" 
+export type GameStatus = 
+  | 'in-progress'
+  | 'not-started'
+  | 'completed'
+  | 'abandoned'
+  | 'platinum';
 
 export type Platform = string
 
@@ -20,8 +24,9 @@ export interface Game {
   price: number
   rating: number
   notes: string
+  completionDate?: string  // Data di completamento del gioco
+  platinumDate?: string    // Data di platino del gioco
   review?: GameReview
-  timeline?: TimelineEvent[]
   comments?: GameComment[]
 }
 
@@ -32,12 +37,6 @@ export interface GameReview {
   story: number
   sound: number
   date: string
-}
-
-export interface TimelineEvent {
-  date: string
-  hours: number
-  event: string
 }
 
 export interface GameComment {

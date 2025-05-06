@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="text-xs text-text-disabled font-['Roboto']">
-          Versione 0.2.0
+          Versione 0.3.0
         </div>
       </div>
     </footer>

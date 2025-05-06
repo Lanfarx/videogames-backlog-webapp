@@ -39,6 +39,11 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
     setIsEditingHours(false);
   };
 
+  // Verifica se il gioco è stato completato o platinato
+  const isCompleted = game.status === "completed";
+  const isPlatinum = game.status === "platinum";
+  const hasBeenCompleted = isCompleted || isPlatinum; // Sia i completati che i platinati sono stati completati
+
   return (
     <div className="bg-primaryBg border border-border-color rounded-xl p-6 mb-8">
       <div className="flex justify-between items-center mb-4">
@@ -99,6 +104,16 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
         </div>
       </div>
 
+      {/* Prezzo - Spostato qui, subito dopo il tempo di gioco */}
+      <div className="flex justify-between items-center py-3 border-b border-border-color">
+        <span className="font-secondary font-medium text-sm text-text-secondary">
+          Prezzo
+        </span>
+        <span className="font-secondary text-base text-text-primary">
+          {game.price ? `${game.price.toFixed(2)} €` : 'Non specificato'}
+        </span>
+      </div>
+
       {/* Data di acquisto */}
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">
@@ -109,15 +124,29 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
         </span>
       </div>
 
-      {/* Prezzo */}
-      <div className="flex justify-between items-center py-3 border-b border-border-color">
-        <span className="font-secondary font-medium text-sm text-text-secondary">
-          Prezzo
-        </span>
-        <span className="font-secondary text-base text-text-primary">
-          {game.price ? `${game.price.toFixed(2)} €` : 'Non specificato'}
-        </span>
-      </div>
+      {/* Data di completamento - Mostrata per giochi completati E platinati */}
+      {hasBeenCompleted && game.completionDate && (
+        <div className="flex justify-between items-center py-3 border-b border-border-color">
+          <span className="font-secondary font-medium text-sm text-text-secondary">
+            Data di completamento
+          </span>
+          <span className="font-secondary text-base text-text-primary">
+            {new Date(game.completionDate).toLocaleDateString('it-IT')}
+          </span>
+        </div>
+      )}
+
+      {/* Data di platino - Mostrata solo per giochi platinati */}
+      {isPlatinum && game.platinumDate && (
+        <div className="flex justify-between items-center py-3 border-b border-border-color">
+          <span className="font-secondary font-medium text-sm text-text-secondary">
+            Data di platino
+          </span>
+          <span className="font-secondary text-base text-text-primary">
+            {new Date(game.platinumDate).toLocaleDateString('it-IT')}
+          </span>
+        </div>
+      )}
       
       {/* Valutazione */}
       <div className="py-3">
