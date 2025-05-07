@@ -460,6 +460,19 @@ export function recordGameAbandoned(gameId: number, gameTitle: string, reason?: 
 }
 
 /**
+ * Registra una valutazione per un gioco
+ */
+export function recordGameRating(gameId: number, gameTitle: string, rating: number): Activity {
+  return addActivity({
+    type: "rated",
+    gameId,
+    gameTitle,
+    timestamp: new Date(),
+    additionalInfo: `${rating} stelle`
+  });
+}
+
+/**
  * Registra un'attività per un cambio di stato
  */
 export function recordStatusChange(gameId: number, gameTitle: string, newStatus: ActivityType): Activity {

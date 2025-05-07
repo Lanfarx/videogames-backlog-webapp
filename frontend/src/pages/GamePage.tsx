@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGameById } from '../utils/gamesData';
+import { getGameById, getGameRating } from '../utils/gamesData';
 import { 
   getActivitiesByGameId, 
   recordGameplayHours, 
@@ -9,7 +9,7 @@ import {
   recordGameAbandoned,
   recordStatusChange
 } from '../utils/activitiesData';
-import { Game, GameComment, GameStatus } from '../types/game';
+import { Game, GameComment, GameStatus, GameReview } from '../types/game';
 import { Activity, ActivityType } from '../types/activity';
 import GamePageLayout from '../components/game/layout/GamePageLayout';
 import GameBanner from '../components/game/GameBanner';
@@ -109,7 +109,8 @@ export default function GamePage() {
     
     // Aggiorna la lista delle attività
     if (newActivity) {
-      setActivities(prev => [newActivity, ...prev]);
+      // Corretto per evitare l'errore TypeScript assicurandoci che newActivity non sia null
+      setActivities(prev => [newActivity as Activity, ...prev]);
     }
     
     console.log('Stato aggiornato a:', newStatus);
@@ -118,12 +119,35 @@ export default function GamePage() {
     // updateGameAPI(updatedGame).then(response => {...})
   };
 
-  const handleEditGame = () => {
-    console.log('Modifica dettagli');
+  const handleEditGame = (updatedGameDetails: Partial<Game>) => {
+    if (!game) return;
+    
+    console.log('Modifica dettagli:', updatedGameDetails);
+    
+    // Aggiorniamo il gioco con i nuovi dati
+    const updatedGame = {
+      ...game,
+      ...updatedGameDetails
+    };
+    
+    // Aggiorniamo lo stato locale
+    setGame(updatedGame);
+    
+    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
+    // updateGameAPI(updatedGame).then(response => {...})
   };
 
   const handleDeleteGame = () => {
-    console.log('Elimina gioco');
+    console.log('Elimina gioco:', game?.id);
+    
+    // In un'app reale, qui ci sarebbe una chiamata API per eliminare il gioco
+    // deleteGameAPI(game.id).then(() => {
+    //   // Reindirizza l'utente alla pagina della collezione dopo l'eliminazione
+    //   navigate('/library');
+    // });
+    
+    // Per ora simuliamo semplicemente il reindirizzamento
+    navigate('/library');
   };
 
   const handleUpdatePlaytime = (newHours: number) => {
@@ -148,7 +172,7 @@ export default function GamePage() {
       // Registra l'attività
       const newActivity = recordGameplayHours(game.id, game.title, hoursAdded);
       
-      // Aggiorna la lista delle attività
+      // Aggiorna la lista delle attività - qui non c'è errore perché newActivity è sempre di tipo Activity
       setActivities(prev => [newActivity, ...prev]);
       
       console.log('Tempo di gioco aggiornato a:', newHours, 'ore');
@@ -162,8 +186,21 @@ export default function GamePage() {
     console.log('Note aggiornate:', notes);
   };
 
-  const handleReviewSave = () => {
-    console.log('Recensione salvata');
+  const handleReviewSave = (review: GameReview) => {
+    if (!game) return;
+    
+    // Aggiorna il gioco con la nuova recensione
+    const updatedGame = {
+      ...game,
+      review: review
+      // Non aggiorniamo più il rating qui, viene calcolato automaticamente
+    };
+    
+    setGame(updatedGame);
+    
+    console.log('Recensione salvata:', review);
+    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
+    // updateGameAPI(updatedGame).then(response => {...})
   };
 
   const handleAddComment = (text: string) => {
@@ -228,7 +265,7 @@ export default function GamePage() {
   return (
     <GamePageLayout title={game.title} onBackClick={() => navigate(-1)}>
       {/* Banner section con sfondo secondario */}
-      <div className="bg-secondaryBg">
+      <div className="bg-secondary-bg">
         <GameBanner 
           game={game}
           onChangeStatus={handleChangeStatus}
@@ -261,10 +298,9 @@ export default function GamePage() {
             {/* Card Informazioni */}
             <GameInfoCard 
               game={game}
-              onEdit={handleEditGame}
               onUpdatePlaytime={handleUpdatePlaytime}
+              onEditInfo={handleEditGame} // Aggiungiamo questa prop per abilitare la modifica delle informazioni
             />
-
             {/* Sezione Commenti/Appunti */}
             <GameCommentsCard 
               comments={comments}

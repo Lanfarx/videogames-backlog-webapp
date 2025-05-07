@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import RatingStars from '../ui/atoms/RatingStars';
-import { Save } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
+import { calculateRatingFromReview } from '../../utils/gamesData';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -22,6 +23,16 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   const [storyRating, setStoryRating] = useState(0);
   const [soundRating, setSoundRating] = useState(0);
   const [reviewDate, setReviewDate] = useState('');
+
+  // Verifica se il gioco è "da iniziare" (non permette recensioni)
+  const isNotStarted = game.status === 'not-started';
+
+  // Se il gioco è "da iniziare" e l'utente è nella scheda recensione, forza il cambio alla scheda note
+  useEffect(() => {
+    if (isNotStarted && activeTab === 'review') {
+      setActiveTab('notes');
+    }
+  }, [isNotStarted, activeTab]);
 
   // Carica i dati della recensione dal gioco quando disponibili
   useEffect(() => {
@@ -58,7 +69,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   };
 
   const handleSaveReview = () => {
-    if (onReviewSave) {
+    if (onReviewSave && !isNotStarted) {
       const now = new Date();
       const formattedDate = now.toISOString().split('T')[0];
       
@@ -102,6 +113,13 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     if (saveReviewSuccess) setSaveReviewSuccess(false);
   };
 
+  // Handler per il click sul tab della recensione
+  const handleReviewTabClick = () => {
+    if (!isNotStarted) {
+      setActiveTab('review');
+    }
+  };
+
   return (
     <div className="bg-primaryBg border border-border-color rounded-xl overflow-hidden mb-8">
       {/* Tab header */}
@@ -116,9 +134,14 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
         </button>
         <button
           className={`flex-1 py-4 font-primary font-semibold ${
-            activeTab === 'review' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'
+            activeTab === 'review' 
+              ? 'border-b-2 border-accent-primary text-accent-primary' 
+              : isNotStarted 
+                ? 'text-text-secondary/50 cursor-not-allowed' 
+                : 'text-text-secondary'
           }`}
-          onClick={() => setActiveTab('review')}
+          onClick={handleReviewTabClick}
+          disabled={isNotStarted}
         >
           Recensione
         </button>
@@ -139,6 +162,12 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
               {saveNotesSuccess && (
                 <span className="text-accent-success text-sm font-secondary">
                   Note salvate con successo!
+                </span>
+              )}
+              {isNotStarted && (
+                <span className="text-amber-500 text-sm font-secondary flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  Per scrivere una recensione, inizia a giocare a questo titolo.
                 </span>
               )}
               <div className="ml-auto">
@@ -162,6 +191,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                 value={reviewText}
                 onChange={handleReviewTextChange}
                 placeholder="Scrivi qui la tua recensione..."
+                disabled={isNotStarted}
               ></textarea>
               
               {/* Rating categories */}
@@ -175,6 +205,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                       rating={gameplayRating} 
                       size="md"
                       onRatingChange={handleGameplayRatingChange}
+                      readOnly={isNotStarted}
                     />
                   </div>
                 </div>
@@ -187,6 +218,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                       rating={graphicsRating} 
                       size="md"
                       onRatingChange={handleGraphicsRatingChange}
+                      readOnly={isNotStarted}
                     />
                   </div>
                 </div>
@@ -199,6 +231,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                       rating={storyRating} 
                       size="md"
                       onRatingChange={handleStoryRatingChange}
+                      readOnly={isNotStarted}
                     />
                   </div>
                 </div>
@@ -211,12 +244,13 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                       rating={soundRating} 
                       size="md"
                       onRatingChange={handleSoundRatingChange}
+                      readOnly={isNotStarted}
                     />
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 {saveReviewSuccess ? (
@@ -230,8 +264,13 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                 ) : null}
               </div>
               <button 
-                className="px-6 py-2 bg-accent-primary text-white rounded-lg font-secondary font-medium text-sm hover:bg-accent-primary/90 transition-colors flex items-center"
+                className={`px-6 py-2 rounded-lg font-secondary font-medium text-sm flex items-center ${
+                  isNotStarted 
+                    ? 'bg-gray-400 text-gray-300 cursor-not-allowed' 
+                    : 'bg-accent-primary text-white hover:bg-accent-primary/90 transition-colors'
+                }`}
                 onClick={handleSaveReview}
+                disabled={isNotStarted}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salva recensione

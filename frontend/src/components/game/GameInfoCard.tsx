@@ -4,16 +4,22 @@ import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from './ui/PlaytimePopover';
+import { getGameRating } from '../../utils/gamesData';
+import EditGameInfoModal from './EditGameInfoModal';
 
 interface GameInfoCardProps {
   game: Game;
-  onEdit?: () => void;
+  onEditInfo?: (updatedGame: Partial<Game>) => void;
   onUpdatePlaytime?: (newHours: number) => void;
 }
 
-const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => {
+const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps) => {
   const [isEditingHours, setIsEditingHours] = useState(false);
   const [displayedHours, setDisplayedHours] = useState(game.hoursPlayed);
+  const [showEditInfoModal, setShowEditInfoModal] = useState(false);
+  
+  // Calcola il rating direttamente dalla review
+  const calculatedRating = getGameRating(game);
   
   // Aggiorna le ore visualizzate quando cambia l'oggetto game
   useEffect(() => {
@@ -39,21 +45,31 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
     setIsEditingHours(false);
   };
 
+  const handleEditInfoClick = () => {
+    setShowEditInfoModal(true);
+  };
+
+  const handleSaveInfo = (updatedInfo: Partial<Game>) => {
+    if (onEditInfo) {
+      onEditInfo(updatedInfo);
+    }
+  };
+
   // Verifica se il gioco è stato completato o platinato
   const isCompleted = game.status === "completed";
   const isPlatinum = game.status === "platinum";
   const hasBeenCompleted = isCompleted || isPlatinum; // Sia i completati che i platinati sono stati completati
 
   return (
-    <div className="bg-primaryBg border border-border-color rounded-xl p-6 mb-8">
+    <div className="bg-primary-bg border border-border-color rounded-xl p-6 mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-primary font-semibold text-xl text-text-primary">
           Informazioni
         </h2>
-        {onEdit && (
+        {onEditInfo && (
           <Pencil 
             className="w-5 h-5 text-text-secondary hover:text-accent-primary cursor-pointer" 
-            onClick={onEdit}
+            onClick={handleEditInfoClick}
           />
         )}
       </div>
@@ -72,7 +88,7 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
           Piattaforma
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {game.platform}
+          {game.platform || 'Non specificata'}
         </span>
       </div>
 
@@ -154,9 +170,17 @@ const GameInfoCard = ({ game, onEdit, onUpdatePlaytime }: GameInfoCardProps) => 
           <span className="font-secondary font-medium text-sm text-text-secondary">
             La tua valutazione
           </span>
-          <RatingStars rating={game.rating} showValue={false} size="md" />
+          <RatingStars rating={calculatedRating} showValue={false} size="md" />
         </div>
       </div>
+
+      {/* Modale di modifica delle informazioni */}
+      <EditGameInfoModal
+        isOpen={showEditInfoModal}
+        onClose={() => setShowEditInfoModal(false)}
+        onSave={handleSaveInfo}
+        game={game}
+      />
     </div>
   );
 };

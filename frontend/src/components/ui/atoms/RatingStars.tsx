@@ -6,9 +6,10 @@ interface RatingStarsProps {
   showValue?: boolean;
   size?: 'sm' | 'md' | 'lg';
   onRatingChange?: (rating: number) => void;
+  readOnly?: boolean; // Aggiungiamo la proprietà readOnly
 }
 
-const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange }: RatingStarsProps) => {
+const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, readOnly = false }: RatingStarsProps) => {
   const getStarSize = () => {
     switch (size) {
       case 'sm': return 'w-4 h-4';
@@ -21,7 +22,8 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange }: 
   const starRefs = useRef<(HTMLSpanElement | null)[]>([null, null, null, null, null]);
 
   const starSize = getStarSize();
-  const isInteractive = !!onRatingChange;
+  // Un componente è interattivo solo se ha un gestore onRatingChange E non è readOnly
+  const isInteractive = !!onRatingChange && !readOnly;
 
   const handleClick = (event: React.MouseEvent<HTMLSpanElement>, starIndex: number) => {
     if (!isInteractive || !onRatingChange) return;
@@ -66,6 +68,7 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange }: 
   };
 
   const handleMouseLeave = () => {
+    if (!isInteractive) return;
     setHoverRating(null);
   };
 
@@ -77,7 +80,7 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange }: 
         <span 
           key={star} 
           ref={el => { starRefs.current[star - 1] = el; }}
-          className={`${isInteractive ? 'cursor-pointer' : ''}`}
+          className={`${isInteractive ? 'cursor-pointer' : 'cursor-default'}`}
           onClick={(e) => handleClick(e, star)}
           onMouseMove={(e) => handleMouseMove(e, star)}
         >

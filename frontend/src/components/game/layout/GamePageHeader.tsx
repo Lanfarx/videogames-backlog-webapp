@@ -1,6 +1,8 @@
 import React from 'react';
 import BreadcrumbNav from './BreadcrumbNav';
 import BackButton from './BackButton';
+import { Settings } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 interface GamePageHeaderProps {
   title: string;
@@ -13,7 +15,14 @@ const GamePageHeader: React.FC<GamePageHeaderProps> = ({ title, onBackClick }) =
       <div className="flex-1 flex items-center">
         <BreadcrumbNav title={title} />
       </div>
-      <BackButton onClick={onBackClick} />
+      <div className="flex items-center space-x-2">
+      <NavLink to="/settings">
+            {({ isActive }) => (
+              <Settings className={`h-6 w-6 ${isActive ? 'text-accent-primary' : 'text-text-secondary hover:text-accent-primary'} cursor-pointer`} />
+            )}
+          </NavLink>
+        <BackButton onClick={onBackClick} />
+      </div>
     </header>
   );
 };
