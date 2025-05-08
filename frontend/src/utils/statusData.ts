@@ -19,13 +19,11 @@ export const statusColors: Record<string, string> = {
   'completed': '#9FC089',   // Verde fisso
   'abandoned': '#F44336',   // Rosso fisso
   'platinum': '#C0C0C0',    // Argento/platino fisso
-  'wishlist': '#4FC3F7',    // Celeste fisso
   
   // Colori tipi attività (stessi dei relativi stati)
   'played': '#FB7E00',      // Come in-progress
   'added': '#FFCC3F',       // Come not-started
   'rated': '#8A5CF6',       // Viola
-  'wishlisted': '#4FC3F7',  // Come wishlist
 };
 
 /**
@@ -35,16 +33,14 @@ export const statusLabels: Record<string, string> = {
   // Stati giochi
   'in-progress': 'In corso',
   'not-started': 'Da iniziare',
-  'completed': 'Completati',
-  'abandoned': 'Abbandonati',
-  'platinum': 'Platinati',
-  'wishlist': 'Wishlist',
+  'completed': 'Completato',
+  'abandoned': 'Abbandonato',
+  'platinum': 'Platinato',
   
   // Tipi attività
   'played': 'Giocato',
   'added': 'Aggiunto',
   'rated': 'Valutato',
-  'wishlisted': 'Aggiunto alla wishlist',
 };
 
 /**
@@ -73,6 +69,5 @@ export function getStatusData(): StatusItem[] {
     { status: 'completed', label: statusLabels['completed'], count: stats.completed, color: statusColors['completed'] },
     { status: 'abandoned', label: statusLabels['abandoned'], count: stats.abandoned, color: statusColors['abandoned'] },
     { status: 'platinum', label: statusLabels['platinum'], count: stats.platinum, color: statusColors['platinum'] },
-    { status: 'wishlist', label: statusLabels['wishlist'], count: stats.wishlist, color: statusColors['wishlist'] },
   ];
 }
