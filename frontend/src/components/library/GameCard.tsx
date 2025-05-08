@@ -18,7 +18,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
       {/* Indicatore di stato */}
       <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
-        <div className="h-full" style={{ backgroundColor: `${getStatusColor}20`, width: "100%" }}></div>
+        <div className="h-full" style={{ backgroundColor: `${getStatusColor(game.status)}20`, width: "100%" }}></div>
       </div>
 
       {/* Copertina con link */}
