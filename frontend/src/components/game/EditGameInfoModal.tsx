@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Game, GameStatus, GAME_PLATFORMS } from '../../types/game';
+import { Game, GameStatus } from '../../types/game';
+import { GAME_PLATFORMS } from '../../constants/gameConstants';
 import { getAllPlatforms } from '../../utils/gamesData';
 
 interface EditGameInfoModalProps {

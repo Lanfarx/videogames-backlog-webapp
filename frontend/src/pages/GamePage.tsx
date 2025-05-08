@@ -84,23 +84,23 @@ export default function GamePage() {
     switch (newStatus) {
       case 'completed':
         updatedGame.completionDate = today.toISOString().split('T')[0];
-        newActivity = recordGameCompletion(game.id, game.title);
+        newActivity = recordGameCompletion(Number(game.id), game.title);
         break;
       case 'platinum':
         updatedGame.completionDate = updatedGame.completionDate || today.toISOString().split('T')[0];
         updatedGame.platinumDate = today.toISOString().split('T')[0];
-        newActivity = recordGamePlatinum(game.id, game.title);
+        newActivity = recordGamePlatinum(Number(game.id), game.title);
         break;
       case 'abandoned':
-        newActivity = recordGameAbandoned(game.id, game.title);
+        newActivity = recordGameAbandoned(Number(game.id), game.title);
         break;
       case 'not-started':
-        newActivity = recordStatusChange(game.id, game.title, 'added');
+        newActivity = recordStatusChange(Number(game.id), game.title, 'added');
         break;
       default:
         // Per sicurezza, usiamo la mappa per convertire lo stato del gioco al tipo di attività
         const activityType = gameStatusToActivityType[newStatus] || 'added';
-        newActivity = recordStatusChange(game.id, game.title, activityType);
+        newActivity = recordStatusChange(Number(game.id), game.title, activityType);
         break;
     }
     
@@ -170,7 +170,7 @@ export default function GamePage() {
       setGame(updatedGame);
       
       // Registra l'attività
-      const newActivity = recordGameplayHours(game.id, game.title, hoursAdded);
+      const newActivity = recordGameplayHours(Number(game.id), game.title, hoursAdded);
       
       // Aggiorna la lista delle attività - qui non c'è errore perché newActivity è sempre di tipo Activity
       setActivities(prev => [newActivity, ...prev]);

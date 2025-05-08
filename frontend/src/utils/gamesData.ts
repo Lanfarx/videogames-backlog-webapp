@@ -1,4 +1,5 @@
-import { Game, GameStatus, GameComment, GameReview, GAME_PLATFORMS, GamePlatform } from '../types/game';
+import { Game, GameStatus, GameReview, GamePlatform } from '../types/game';
+import { GAME_PLATFORMS } from '../constants/gameConstants';
 
 // Dati di esempio per i giochi
 export const gamesData: Game[] = [
@@ -24,6 +25,7 @@ export const gamesData: Game[] = [
         sound: 5,
         date: "2023-04-15"
       },
+      rating: 4.5,
       comments: [
         { id: 1, date: "2023-01-20", text: "Ho trovato un Easter Egg interessante nel villaggio Calbarico" },
         { id: 2, date: "2023-02-15", text: "La missione secondaria di Tarrey Town è molto coinvolgente" }
@@ -51,6 +53,7 @@ export const gamesData: Game[] = [
         sound: 4,
         date: "2023-02-10"
       },
+      rating: 4,
       comments: [
         { id: 1, date: "2022-12-15", text: "I bug sembrano molto ridotti rispetto al lancio" }
       ]
@@ -77,7 +80,8 @@ export const gamesData: Game[] = [
         story: 5,
         sound: 4.5,
         date: "2022-12-10"
-      }
+      },
+      rating: 5
     },
     {
       id: 4,
@@ -100,7 +104,8 @@ export const gamesData: Game[] = [
         story: 4,
         sound: 5,
         date: "2022-05-20"
-      }
+      },
+      rating: 4.5
     },
     {
       id: 5,
@@ -125,7 +130,8 @@ export const gamesData: Game[] = [
         story: 5,
         sound: 4.5,
         date: "2023-09-20"
-      }
+      },
+      rating: 4.5
     },
     {
       id: 6,
@@ -140,7 +146,8 @@ export const gamesData: Game[] = [
       status: "not-started",
       purchaseDate: "2023-09-10",
       price: 69.99,
-      notes: "Appena acquistato, non vedo l'ora di esplorare lo spazio!"
+      notes: "Appena acquistato, non vedo l'ora di esplorare lo spazio!",
+      rating: 0
     },
     {
       id: 7,
@@ -163,7 +170,8 @@ export const gamesData: Game[] = [
         story: 2,
         sound: 4,
         date: "2023-07-10"
-      }
+      },
+      rating: 3.5
     },
     {
       id: 8,
@@ -176,93 +184,14 @@ export const gamesData: Game[] = [
       platform: "Epic Games Store",
       hoursPlayed: 0,
       status: "not-started",
-      purchaseDate: "",
+      purchaseDate: "2024-06-25",
       price: 49.99,
-      notes: "Nella libreria, aspetto che ho voglia."
+      notes: "Nella libreria, aspetto che ho voglia.",
+      rating: 0
     },
   ]
 
 // Funzioni di utilità per accedere ai dati in modo tipizzato
-
-/**
- * Restituisce tutti i giochi
- */
-export function getAllGames(): Game[] {
-  return gamesData
-}
-
-/**
- * Restituisce un gioco specifico per ID
- */
-export function getGameById(id: number): Game | null {
-  return gamesData.find((game) => game.id === id) || null
-}
-
-/**
- * Restituisce i giochi filtrati per stato
- */
-export function getGamesByStatus(status: GameStatus): Game[] {
-  return gamesData.filter((game) => game.status === status)
-}
-
-/**
- * Restituisce i giochi in corso
- */
-export function getGamesInProgress(): Game[] {
-  return getGamesByStatus('in-progress')
-}
-
-/**
- * Restituisce i giochi completati (include sia quelli con stato "completed" che "platinum")
- */
-export function getCompletedGames(): Game[] {
-  return gamesData.filter((game) => game.status === 'completed' || game.status === 'platinum');
-}
-
-/**
- * Restituisce i giochi non ancora iniziati
- */
-export function getNotStartedGames(): Game[] {
-  return getGamesByStatus('not-started')
-}
-
-/**
- * Restituisce i giochi abbandonati
- */
-export function getAbandonedGames(): Game[] {
-  return getGamesByStatus('abandoned')
-}
-
-/**
- * Restituisce i giochi platinati
- */
-export function getPlatinumGames(): Game[] {
-  return getGamesByStatus('platinum')
-}
-
-/**
- * Restituisce le statistiche aggregate dei giochi
- */
-export function getGamesStats() {
-  const total = gamesData.length
-  const inProgress = getGamesInProgress().length
-  const completed = getCompletedGames().length
-  const notStarted = getNotStartedGames().length
-  const abandoned = getAbandonedGames().length
-  const platinum = getPlatinumGames().length
-  
-  const totalHours = gamesData.reduce((acc, game) => acc + game.hoursPlayed, 0)
-  
-  return {
-    total,
-    inProgress,
-    completed,
-    notStarted,
-    abandoned,
-    platinum,
-    totalHours
-  }
-}
 
 /**
  * Calcola il rating complessivo di un gioco dalla sua recensione
@@ -279,26 +208,105 @@ export function calculateRatingFromReview(review: GameReview | undefined): numbe
 
 /**
  * Ottiene il rating effettivo di un gioco, calcolato dalla review se presente
+ * o usando il valore preimpostato
  */
 export function getGameRating(game: Game): number {
+  // Se esiste già un rating nel gioco, restituisci quello
+  if (game.rating !== undefined) return game.rating;
+  
+  // Altrimenti calcolalo dalla recensione se disponibile
   return game.review ? calculateRatingFromReview(game.review) : 0;
 }
 
 /**
- * Aggiorna i rating dei giochi in base ai loro dati di recensione
+ * Aggiorna il rating di un gioco in base alla sua recensione
+ * Utile quando la recensione viene modificata
  */
-export function getGamesWithCalculatedRatings(): Game[] {
-  return gamesData.map(game => ({
-    ...game,
-    rating: getGameRating(game)
-  }));
+export function updateGameRating(game: Game): Game {
+  if (!game.review) return { ...game, rating: 0 };
+  
+  const calculatedRating = calculateRatingFromReview(game.review);
+  return { ...game, rating: calculatedRating };
 }
 
 /**
- * Restituisce tutti i giochi con rating calcolati automaticamente dalle recensioni
+ * Restituisce tutti i giochi
  */
-export function getAllGamesWithRatings(): Game[] {
-  return getGamesWithCalculatedRatings();
+export function getAllGames(): Game[] {
+  return gamesData;
+}
+
+/**
+ * Restituisce un gioco specifico per ID
+ */
+export function getGameById(id: number): Game | null {
+  return gamesData.find((game) => game.id === id) || null;
+}
+
+/**
+ * Restituisce i giochi filtrati per stato
+ */
+export function getGamesByStatus(status: GameStatus): Game[] {
+  return gamesData.filter((game) => game.status === status);
+}
+
+/**
+ * Restituisce i giochi in corso
+ */
+export function getGamesInProgress(): Game[] {
+  return getGamesByStatus('in-progress');
+}
+
+/**
+ * Restituisce i giochi completati (include sia quelli con stato "completed" che "platinum")
+ */
+export function getCompletedGames(): Game[] {
+  return gamesData.filter((game) => game.status === 'completed' || game.status === 'platinum');
+}
+
+/**
+ * Restituisce i giochi non ancora iniziati
+ */
+export function getNotStartedGames(): Game[] {
+  return getGamesByStatus('not-started');
+}
+
+/**
+ * Restituisce i giochi abbandonati
+ */
+export function getAbandonedGames(): Game[] {
+  return getGamesByStatus('abandoned');
+}
+
+/**
+ * Restituisce i giochi platinati
+ */
+export function getPlatinumGames(): Game[] {
+  return getGamesByStatus('platinum');
+}
+
+/**
+ * Restituisce le statistiche aggregate dei giochi
+ */
+export function getGamesStats() {
+  const total = gamesData.length;
+  const inProgress = getGamesInProgress().length;
+  const completed = getCompletedGames().length;
+  const notStarted = getNotStartedGames().length;
+  const abandoned = getAbandonedGames().length;
+  const platinum = getPlatinumGames().length;
+  
+  const totalHours = gamesData.reduce((acc, game) => acc + game.hoursPlayed, 0);
+  
+  return {
+    total,
+    inProgress,
+    completed,
+    notStarted,
+    abandoned,
+    platinum,
+    totalHours
+  };
 }
 
 /**

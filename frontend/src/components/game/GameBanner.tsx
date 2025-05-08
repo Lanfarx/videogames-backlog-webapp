@@ -4,7 +4,6 @@ import { Game } from '../../types/game';
 import { getStatusColor, getStatusLabel } from '../../utils/statusData';
 import GameCover from './GameCover';
 import GenreTagList from '../ui/GenreTagList';
-import RatingStars from '../ui/atoms/RatingStars';
 import StatusChangePopover from './ui/StatusChangePopover';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import EditGameDetailsModal from './EditGameDetailsModal';

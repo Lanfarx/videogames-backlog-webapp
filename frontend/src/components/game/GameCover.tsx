@@ -1,7 +1,7 @@
 import { getStatusColor } from '../../utils/statusData';
 
 interface GameCoverProps {
-  coverImage: string;
+  coverImage?: string;  // Reso opzionale
   title: string;
   status?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';

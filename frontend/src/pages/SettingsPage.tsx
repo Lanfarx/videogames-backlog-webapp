@@ -102,22 +102,9 @@ const SettingsPage: React.FC = () => {
             Contenuto della sezione Profilo
           </div>
         )}
-
-        {activeTab === 'notifiche' && (
-          <div className="py-10 text-center text-text-secondary">
-            Contenuto della sezione Notifiche
-          </div>
-        )}
-
         {activeTab === 'privacy' && (
           <div className="py-10 text-center text-text-secondary">
             Contenuto della sezione Privacy
-          </div>
-        )}
-
-        {activeTab === 'integrations' && (
-          <div className="py-10 text-center text-text-secondary">
-            Contenuto della sezione Integrations
           </div>
         )}
       </div>
