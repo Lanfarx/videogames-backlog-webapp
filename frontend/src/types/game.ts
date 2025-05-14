@@ -17,7 +17,7 @@ export type GamePlatform =
 
 // Definizione delle opzioni di ordinamento
 export type SortOption = 'title' | 'platform' | 'releaseYear' | 'rating' | 
-'hoursPlayed' | 'price' | 'purchaseDate' | 'completionDate' | 'platinumDate';
+'hoursPlayed' | 'price' | 'purchaseDate' | 'completionDate' | 'platinumDate' | 'metacritic';
 
 // Definizione dell'ordine di ordinamento
 export type SortOrder = 'asc' | 'desc';
@@ -29,6 +29,7 @@ export interface GameFilters {
   genre: string[];
   priceRange: [number, number];
   hoursRange: [number, number];
+  metacriticRange: [number, number];
   purchaseDate: string;
 }
 
@@ -43,6 +44,7 @@ export interface Game {
   coverImage?: string;
   price: number;
   hoursPlayed: number;
+  metacritic: number;
   rating: number;
   purchaseDate?: string;
   completionDate?: string;

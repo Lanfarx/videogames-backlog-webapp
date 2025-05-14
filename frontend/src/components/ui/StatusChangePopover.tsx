@@ -1,6 +1,6 @@
-import React from 'react';
-import { GameStatus } from '../../../types/game';
-import { getStatusLabel, getStatusColor, getStatusData } from '../../../utils/statusData';
+import React, { useRef, useEffect } from 'react';
+import { GameStatus } from '../../types/game';
+import { getStatusLabel, getStatusColor, getStatusData } from '../../utils/statusData';
 
 interface StatusChangePopoverProps {
   currentStatus: GameStatus;
@@ -15,11 +15,34 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
   onCancel,
   hoursPlayed 
 }) => {
+  // Ref per il popover
+  const popoverRef = useRef<HTMLDivElement>(null);
+  
+  // Effetto per gestire i clic fuori dal popover
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onCancel();
+      }
+    };
+
+    // Aggiungi l'event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Pulisci l'event listener quando il componente viene smontato
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onCancel]);
+
   // Ottieni tutti gli stati disponibili da statusData.ts
   const statusItems = getStatusData();
   
   return (
-    <div className="absolute z-10 top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-primaryBg border border-border-color">
+    <div 
+      ref={popoverRef}
+      className="absolute z-10 top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-primaryBg border border-border-color"
+    >
       <div className="rounded-md shadow-xs py-1">
         <div className="px-3 py-2 border-b border-border-color">
           <h3 className="text-sm font-medium text-text-primary">Cambia stato</h3>

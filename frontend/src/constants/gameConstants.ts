@@ -67,6 +67,7 @@ export const SORT_OPTIONS = [
   { id: 'platform', label: 'Piattaforma' },
   { id: 'releaseYear', label: 'Anno di uscita' },
   { id: 'rating', label: 'Valutazione' },
+  { id: 'metacritic', label: 'Metacritic' }, // Aggiungiamo l'opzione Metacritic
   { id: 'hoursPlayed', label: 'Ore di gioco' },
   { id: 'price', label: 'Prezzo' },
   { id: 'purchaseDate', label: 'Data di acquisto' },

@@ -1,16 +1,19 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
-import Button from './atoms/Button';
+import { PlusCircle } from 'lucide-react';
 
-const AddGameButton: React.FC<{ onClick?: () => void }> = ({ onClick = () => {} }) => {
+interface AddGameButtonProps {
+  onClick: () => void;
+}
+
+const AddGameButton: React.FC<AddGameButtonProps> = ({ onClick }) => {
   return (
-    <Button 
-      label="Aggiungi un gioco" 
-      primary={true}
+    <button
+      className="flex items-center px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
       onClick={onClick}
-      icon={<Plus className="h-5 w-5" />}
-      className="py-3 px-6 font-medium transition-colors rounded-lg"
-    />
+    >
+      <PlusCircle className="w-4 h-4 mr-2" />
+      Aggiungi gioco
+    </button>
   );
 };
 

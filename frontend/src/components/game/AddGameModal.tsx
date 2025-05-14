@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Upload } from 'lucide-react';
+import { X, Search, Upload, Award } from 'lucide-react';
 import { Game, GameStatus } from '../../types/game';
 import { STATUS_OPTIONS, STATUS_COLORS, STATUS_NAMES, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
 
@@ -25,6 +25,7 @@ const initialGameData: GameFormData = {
   platform: "",
   status: "not-started",
   hoursPlayed: 0,
+  metacritic: 0,
   purchaseDate: new Date().toISOString().split("T")[0],
   price: 0,
   notes: "",
@@ -41,6 +42,7 @@ const searchSampleGames = [
     publisher: "Nintendo",
     releaseYear: 2017,
     genres: ["Action", "Adventure", "Open World"],
+    metacritic: 97,
   },
   {
     id: 2,
@@ -50,6 +52,7 @@ const searchSampleGames = [
     publisher: "CD Projekt",
     releaseYear: 2020,
     genres: ["RPG", "Action", "Open World"],
+    metacritic: 86,
   },
   {
     id: 3,
@@ -59,6 +62,7 @@ const searchSampleGames = [
     publisher: "Sony Interactive Entertainment",
     releaseYear: 2022,
     genres: ["Action", "Adventure"],
+    metacritic: 94,
   }
 ];
 
@@ -112,6 +116,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       publisher: game.publisher,
       releaseYear: game.releaseYear,
       genres: game.genres,
+      metacritic: game.metacritic || 0,
     });
     setActiveTab("manual");
   };
@@ -302,6 +307,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                             <h3 className="font-montserrat font-medium text-base text-text-primary">{game.title}</h3>
                             <p className="font-roboto text-sm text-text-secondary">
                               {game.developer} • {game.releaseYear}
+                              {game.metacritic && (
+                                <span className="ml-2 text-yellow-500 font-medium">{game.metacritic}</span>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -381,6 +389,28 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         }
                         min="1970"
                         max={new Date().getFullYear()}
+                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                      />
+                    </div>
+
+                    {/* Metacritic */}
+                    <div>
+                      <label className="block font-roboto font-medium text-sm text-text-secondary mb-2">
+                        <span className="flex items-center">
+                          <Award className="w-4 h-4 text-yellow-500 mr-1" />
+                          Metacritic
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        value={gameData.metacritic || 0}
+                        onChange={(e) =>
+                          handleGameDataChange({
+                            metacritic: Number.parseInt(e.target.value) || 0,
+                          })
+                        }
+                        min="0"
+                        max="100"
                         className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
                       />
                     </div>
@@ -610,6 +640,13 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         <span className="font-roboto text-xs">{gameData.platform || "Piattaforma"}</span>
                         <span className="mx-2">|</span>
                         <span className="font-roboto text-xs">{gameData.hoursPlayed} ore</span>
+                        {gameData.metacritic > 0 && (
+                          <>
+                            <span className="mx-2">|</span>
+                            <Award className="h-4 w-4 mr-1 text-yellow-500" />
+                            <span className="font-roboto text-xs">{gameData.metacritic}</span>
+                          </>
+                        )}
                       </div>
 
                       {/* Prezzo */}

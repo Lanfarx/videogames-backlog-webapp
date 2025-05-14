@@ -1,47 +1,42 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import RatingStars from './atoms/RatingStars';
 import GenreTagList from './GenreTagList';
-import { calculateRatingFromReview } from '../../utils/gamesData';
 
 interface GameCardProps {
+  id: string;
   title: string;
-  coverImage?: string; // Reso opzionale
+  coverImage?: string;
   platform: string;
   hoursPlayed: number;
-  rating?: number; // Rating da 0 a 5, opzionale
-  genres: string[]; // Array dei generi del gioco
-  review?: {
-    gameplay: number;
-    graphics: number;
-    story: number;
-    sound: number;
-    text: string;
-    date: string;
-  }; // Recensione per calcolare il rating
+  rating?: number;
+  genres: string[];
 }
 
-const GameCard: React.FC<GameCardProps> = ({ 
+const InProgressGameCard: React.FC<GameCardProps> = ({ 
+  id,
   title, 
   coverImage, 
   platform, 
   hoursPlayed, 
-  rating = 0,
-  genres = [], // Default a array vuoto
-  review
+  rating,
+  genres = []
 }) => {
-  // Se c'è una recensione, calcoliamo il rating da essa, altrimenti usiamo il rating passato
-  const effectiveRating = review ? calculateRatingFromReview(review) : rating;
+  const navigate = useNavigate();
+  
+  // Funzione per navigare alla pagina del gioco con il popover delle ore aperto
+  const handleResumeGame = () => {
+    navigate(`/game/${id}?addPlaytime=true`);
+  };
   
   return (
     <div className="w-[280px] h-[280px] bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">
-      {/* Immagine di copertina */}
-      <div 
-        className="h-[140px] w-full bg-cover bg-center rounded-t-lg relative"
-      >
-       <div className="absolute inset-0 bg-accent-secondary bg-opacity-20 rounded-t-lg"></div>
-       <img src={coverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover" /> 
-      </div>
+      {/* Immagine di copertina con link */}
+      <Link to={`/game/${id}`} className="block h-[140px] w-full relative">
+        <div className="absolute inset-0 bg-accent-secondary bg-opacity-20 rounded-t-lg"></div>
+        <img src={coverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover rounded-t-lg" /> 
+      </Link>
       
       {/* Contenuto */}
       <div className="p-4 flex flex-col justify-between flex-grow">
@@ -59,19 +54,20 @@ const GameCard: React.FC<GameCardProps> = ({
         {/* Area info aggiuntive e stato */}
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-2">
-            {/* Utilizziamo GenreTagList per mostrare i generi */}
             <GenreTagList genres={genres} maxDisplay={2} small={true} />
             
-            {/* Utilizziamo RatingStars invece di renderRating */}
-            {effectiveRating > 0 ? (
-              <RatingStars rating={effectiveRating} showValue={false} size="sm" />
+            {(rating ?? 0) > 0 ? (
+              <RatingStars rating={rating ?? 0} showValue={false} size="sm" />
             ) : (
               <span className="text-xs text-text-disabled font-secondary">Non presente</span>
             )}
           </div>
           
-          {/* Pulsante - sempre posizionato in basso */}
-          <button className="text-sm font-medium text-accent-primary hover:text-accent-primary/80 font-secondary">
+          {/* Pulsante Riprendi che naviga direttamente alla pagina del gioco con flag per aprire il popover */}
+          <button 
+            className="text-sm font-medium text-accent-primary hover:text-accent-primary/80 font-secondary"
+            onClick={handleResumeGame}
+          >
             Riprendi
           </button>
         </div>
@@ -80,4 +76,4 @@ const GameCard: React.FC<GameCardProps> = ({
   );
 };
 
-export default GameCard;
+export default InProgressGameCard;
