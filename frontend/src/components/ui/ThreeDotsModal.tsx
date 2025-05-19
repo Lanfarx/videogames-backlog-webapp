@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Edit, Trash2, MoreVertical, Clock } from 'lucide-react';
+import { Edit, Trash2, MoreVertical, Clock, Settings } from 'lucide-react'; // Aggiunto Settings per "Modifica stato"
 import type { Game, GameStatus } from '../../types/game';
 import StatusChangePopover from '../ui/StatusChangePopover';
 import PlaytimePopover from '../ui/PlaytimePopover';
@@ -30,6 +30,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setActiveActionMenu(null); // Resetta il contesto della sezione attiva
         onClose();
       }
     };
@@ -79,64 +80,30 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
   };
 
   return (
-    <div 
+    <div
       ref={modalRef}
-      className={`absolute z-50 w-48 bg-primary-bg border border-border-color rounded-lg shadow-lg ${getPositionClasses()}`}
+      className={`absolute z-50 w-56 bg-primary-bg border border-border-color rounded-lg shadow-lg ${getPositionClasses()}`}
     >
-      <div className="absolute top-2 right-2 z-20">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setActiveActionMenu(activeActionMenu === game.id.toString() ? null : game.id.toString());
-          }}
-          className="p-1 rounded-full text-text-secondary hover:text-accent-primary transition-colors"
-        >
-          <MoreVertical className="h-5 w-5" />
-        </button>
-
-        {activeActionMenu === game.id.toString() && (
-          <div className="absolute top-8 right-0 bg-white shadow-lg rounded-md p-2 z-30">
-            <StatusChangePopover
-              currentStatus={game.status}
-              onStatusChange={(newStatus: GameStatus) => {
-                onStatusChange?.(game.id.toString(), newStatus);
-                setActiveActionMenu(null);
-              }}
-              onCancel={() => setActiveActionMenu(null)}
-              hoursPlayed={game.hoursPlayed}
-            />
-            <PlaytimePopover
-              onSave={(hoursToAdd: number) => {
-                const updatedGame = { ...game, hoursPlayed: game.hoursPlayed + hoursToAdd };
-                onEdit?.(updatedGame);
-                setActiveActionMenu(null);
-              }}
-              onCancel={() => setActiveActionMenu(null)}
-            />
-          </div>
-        )}
-      </div>
-      <ul className="py-1">
+      <ul className="py-2">
         <li>
-          <button 
+          <button
             onClick={handleEditClick}
-            className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-primary/10 transition-colors"
+            className="flex items-center w-full px-4 py-3 text-sm text-text-primary hover:bg-accent-primary/10 hover:text-accent-primary transition-colors rounded-t-lg"
           >
-            <Edit className="h-4 w-4 mr-2 text-text-secondary" />
+            <Edit className="h-5 w-5 mr-3 text-blue-500" /> {/* Icona blu per "Modifica gioco" */}
             Modifica gioco
           </button>
         </li>
         <li>
-          <button 
+          <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setActiveActionMenu('statusChange');
             }}
-            className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-primary/10 transition-colors"
+            className="flex items-center w-full px-4 py-3 text-sm text-text-primary hover:bg-accent-primary/10 hover:text-accent-primary transition-colors"
           >
-            <Edit className="h-4 w-4 mr-2 text-text-secondary" />
+            <Settings className="h-5 w-5 mr-3 text-green-500" /> {/* Icona verde per "Modifica stato" */}
             Modifica stato
           </button>
           {activeActionMenu === 'statusChange' && (
@@ -152,15 +119,15 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           )}
         </li>
         <li>
-          <button 
+          <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setActiveActionMenu('addPlaytime');
             }}
-            className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-primary/10 transition-colors"
+            className="flex items-center w-full px-4 py-3 text-sm text-text-primary hover:bg-accent-primary/10 hover:text-accent-primary transition-colors"
           >
-            <Clock className="h-4 w-4 mr-2 text-text-secondary" />
+            <Clock className="h-5 w-5 mr-3 text-text-secondary" />
             Aggiungi ore
           </button>
           {activeActionMenu === 'addPlaytime' && (
@@ -175,11 +142,11 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           )}
         </li>
         <li className="border-t border-border-color">
-          <button 
+          <button
             onClick={handleDeleteClick}
-            className="flex items-center w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+            className="flex items-center w-full px-4 py-3 text-sm text-accent-danger hover:bg-accent-danger/10 hover:text-accent-danger transition-colors rounded-b-lg"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="h-5 w-5 mr-3" />
             Elimina
           </button>
         </li>

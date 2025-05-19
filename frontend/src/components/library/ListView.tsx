@@ -34,6 +34,9 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
               Stato
             </th>
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
+              Metacritic
+            </th>
+            <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
               Valutazione
             </th>
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
@@ -41,6 +44,12 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
             </th>
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
               Data Acquisto
+            </th>
+            <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
+              Data Completamento
+            </th>
+            <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
+              Data Platino
             </th>
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
               Azioni
@@ -85,6 +94,16 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
               <td className="p-3 border-b border-border-color">
                 <StatusBadge status={game.status} />
               </td>
+              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
+                {game.metacritic ? (
+                  <div className="flex items-center">
+                    <span className="font-bold text-accent-primary mr-1">{game.metacritic}</span>
+                    <span className="text-xs text-text-secondary">/ 100</span>
+                  </div>
+                ) : (
+                  "-"
+                )}
+              </td>
               <td className="p-3 border-b border-border-color">
                 {game.rating > 0 ? (
                   <RatingStars rating={game.rating} showValue={false} size="sm" />
@@ -105,6 +124,26 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                   "-"
                 )}
               </td>
+              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
+                {game.completionDate ? (
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    {new Date(game.completionDate).toLocaleDateString()}
+                  </div>
+                ) : (
+                  "-"
+                )}
+              </td>
+              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
+                {game.platinumDate ? (
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    {new Date(game.platinumDate).toLocaleDateString()}
+                  </div>
+                ) : (
+                  "-"
+                )}
+              </td>
               <td className="p-3 border-b border-border-color">
                 <div className="relative">
                   <button
@@ -118,7 +157,6 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                     <MoreVertical className="h-5 w-5" />
                   </button>
 
-                  {/* Utilizzo del componente ThreeDotsModal */}
                   <ThreeDotsModal
                     isOpen={activeActionMenu === game.id.toString()}
                     onClose={() => setActiveActionMenu(null)}

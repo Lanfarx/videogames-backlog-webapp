@@ -6,6 +6,9 @@ import DiarioPage from './pages/DiarioPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import GamePage from './pages/GamePage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import ContactPage from './pages/ContactPage';
 
 function App() {
   return (
@@ -33,6 +36,9 @@ function App() {
             <SettingsPage />
           </Layout>
         } />
+        <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
+        <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
+        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
       </Routes>
     </div>
   );

@@ -137,7 +137,7 @@ const LibraryPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col bg-secondaryBg min-h-screen">
             <main className="flex-grow flex flex-col md:flex-row">
                 <SidebarFilter
                     filters={filters}

@@ -1,21 +1,33 @@
+import { useState } from 'react';
 import { getRecentActivities } from '../../utils/activitiesData';
 import { getStatusColor } from '../../utils/statusData';
 import ActivityCard from '../ui/ActivityCard';
+import ActivityHistoryPopover from '../game/ui/ActivityHistoryPopover';
+import {History } from 'lucide-react';
 
 export default function RecentActivitiesSection() {
   // Ottengo le attività recenti usando la funzione importata
   const recentActivities = getRecentActivities(5);
-  
+  const [showHistory, setShowHistory] = useState(false);
+
   return (
     <section className="mb-10">
       {/* Intestazione */}
       <div className='container mx-auto px-6 py-8'> 
         <div className="flex items-baseline justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
-            <p className="text-sm text-text-secondary mt-0.5 font-secondary">Le tue ultime azioni nella libreria</p>
+          <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
+          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+            <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
+            <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
           </div>
         </div>
+        {showHistory && (
+          <ActivityHistoryPopover
+            activities={getRecentActivities(100)}
+            onClose={() => setShowHistory(false)}
+            gameTitle="Tutta la libreria"
+          />
+        )}
 
         <div className="relative mt-6 pb-4">
           {/* Timeline line */}
@@ -37,7 +49,7 @@ export default function RecentActivitiesSection() {
                     style={{ backgroundColor: dotColor }}
                   ></div>
 
-                  {/* Activity card - posizionato a sinistra o destra */}
+                  {/* Activity card - posizionato a sinistra o a destra */}
                   <div className={`w-5/12 ${position === 'right' ? "ml-auto pl-5" : "mr-auto pr-5"}`}>
                     <ActivityCard 
                       activity={activity}
