@@ -18,7 +18,7 @@ const Header: React.FC = () => {
             <ul className="flex space-x-10">
                 {[
                   { name: 'Home', path: '/' },
-                  { name: 'Libreria', path: '/library' },
+                  { name: 'I miei giochi', path: '/library' },
                   { name: 'Dashboard', path: '/dashboard' },
                   { name: 'Diario', path: '/diario' },
                 ].map((item) => (

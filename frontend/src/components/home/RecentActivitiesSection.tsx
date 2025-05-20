@@ -25,7 +25,7 @@ export default function RecentActivitiesSection() {
           <ActivityHistoryPopover
             activities={getRecentActivities(100)}
             onClose={() => setShowHistory(false)}
-            gameTitle="Tutta la libreria"
+            gameTitle="Tutti i giochi"
           />
         )}
 

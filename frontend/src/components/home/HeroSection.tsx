@@ -17,13 +17,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ username }) => {
           Bentornato, {username}
         </h1>
         <p className="text-base text-text-secondary font-secondary mb-10">
-          Ecco cosa sta succedendo nella tua libreria
+          Ecco cosa sta succedendo con i tuoi giochi
         </p>
       
         <div className="grid grid-cols-3 gap-12 py-4">
           <div className="flex justify-center">
             <StatsCard 
-              label="Giochi in libreria" 
+              label="Totale giochi" 
               value={stats.total.toString()} 
               icon={<Gamepad2 className="h-8 w-8 text-accent-primary" />} 
               variant="hero"
