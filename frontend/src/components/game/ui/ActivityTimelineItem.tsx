@@ -17,7 +17,6 @@ const ActivityTimelineItem = ({
 }: ActivityTimelineItemProps) => {
   return (
     <div className="flex items-center">
-      <div className="w-3 h-3 rounded-full bg-accent-primary mr-2"></div>
       <div>
         {showDate && (
           <span className="text-xs font-secondary text-text-secondary mr-1">

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { ChevronDown, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, Pencil, Trash2, Award } from 'lucide-react';
 import { Game } from '../../types/game';
 import { getStatusColor, getStatusLabel } from '../../utils/statusData';
 import GameCover from './GameCover';
 import GenreTagList from '../ui/GenreTagList';
-import StatusChangePopover from './ui/StatusChangePopover';
+import StatusChangePopover from '../ui/StatusChangePopover';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import EditGameDetailsModal from './EditGameDetailsModal';
 
@@ -66,9 +66,17 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps)
         <div className="flex-1 flex flex-col justify-between">
           <div>
             <h1 className="font-primary font-bold text-3xl text-text-primary mb-2">{game.title}</h1>
-            <p className="font-secondary text-base text-text-secondary mb-2">
-              {game.developer} / {game.publisher}
-            </p>
+            <div className="flex items-center mb-2">
+              <p className="font-secondary text-base text-text-secondary">
+                {game.developer} / {game.publisher}
+              </p>
+              {game.metacritic && (
+                <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
+                  <Award className="w-4 h-4 text-yellow-500 mr-1" />
+                  <span className="font-secondary text-base font-semibold">{game.metacritic}</span>
+                </div>
+              )}
+            </div>
             <p className="font-secondary text-sm text-text-secondary mb-4">
               {game.releaseYear}
             </p>

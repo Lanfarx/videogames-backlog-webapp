@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionHeader from '../ui/SectionHeader';
-import GameCard from '../ui/GameCard';
+import InProgressGameCard from '../ui/InProgressGameCard';
 import { getGamesInProgress } from '../../utils/gamesData';
 
 const ContinuePlayingSection: React.FC = () => {
@@ -26,13 +26,16 @@ const ContinuePlayingSection: React.FC = () => {
         <div className="flex space-x-6 overflow-x-auto py-4 px-2 w-full scrollbar-hide">
           {inProgressGames.map((game) => {           
             return (
-              <GameCard 
+              <InProgressGameCard 
                 key={game.id}
+                id={game.id.toString()}
                 title={game.title}
                 coverImage={game.coverImage}
                 platform={game.platform}
                 hoursPlayed={game.hoursPlayed} 
-                genres={game.genres}              />
+                rating={game.rating}
+                genres={game.genres}
+              />
             );
           })}
         </div>

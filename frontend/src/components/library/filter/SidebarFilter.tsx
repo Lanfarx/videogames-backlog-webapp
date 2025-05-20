@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
 import { calculateCounts, calculateMaxValues } from '../../../utils/gameUtils';
 import { STATUS_OPTIONS } from '../../../constants/gameConstants';
@@ -21,6 +21,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     genre: true,
     price: true,
     hours: true,
+    metacritic: true,
     date: true,
   });
 
@@ -32,6 +33,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   // Calcola i valori massimi per i range
   const [maxPrice, setMaxPrice] = useState(70);
   const [maxHours, setMaxHours] = useState(100);
+  const [maxMetacritic, setMaxMetacritic] = useState(100);
 
   useEffect(() => {
     // Calcola i conteggi reali dai dati di games
@@ -41,15 +43,17 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     setGenreCounts(genreCountsTemp);
 
     // Calcola i valori massimi per i range
-    const { maxPriceTemp, maxHoursTemp } = calculateMaxValues(games);
+    const { maxPriceTemp, maxHoursTemp, maxMetacriticTemp } = calculateMaxValues(games);
     setMaxPrice(maxPriceTemp);
     setMaxHours(maxHoursTemp);
+    setMaxMetacritic(maxMetacriticTemp || 100); // Fallback a 100 se non ci sono giochi con Metacritic
 
-    // Imposta i valori iniziali dei filtri di prezzo e ore
+    // Imposta i valori iniziali dei filtri di prezzo, ore e metacritic
     setFilters((prev) => ({
       ...prev,
       priceRange: [0, maxPriceTemp],
       hoursRange: [0, maxHoursTemp],
+      metacriticRange: [0, maxMetacriticTemp || 100],
     }));
   }, [games]);
 
@@ -108,6 +112,15 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
+  // Gestisce il cambio del range di Metacritic
+  const handleMetacriticRangeChange = (value: number, index: number) => {
+    setFilters((prev) => {
+      const newMetacriticRange = [...prev.metacriticRange] as [number, number];
+      newMetacriticRange[index] = value;
+      return { ...prev, metacriticRange: newMetacriticRange };
+    });
+  };
+
   // Gestisce il cambio della data di acquisto
   const handlePurchaseDateChange = (date: string) => {
     setFilters((prev) => ({ ...prev, purchaseDate: date }));
@@ -121,6 +134,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       genre: [],
       priceRange: [0, maxPrice],
       hoursRange: [0, maxHours],
+      metacriticRange: [0, maxMetacritic],
       purchaseDate: "",
     });
   };
@@ -141,7 +155,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       {/* Pulsante per comprimere/espandere */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors"
+        className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-10`}
       >
         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
@@ -332,6 +346,36 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
                 <div className="flex justify-between mt-2">
                   <span className="font-roboto text-xs text-text-secondary">{filters.hoursRange[0]}h</span>
                   <span className="font-roboto text-xs text-text-secondary">{filters.hoursRange[1]}h</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Range slider Metacritic */}
+          <div className="mb-6">
+            <button
+              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
+              onClick={() => toggleSection("metacritic")}
+            >
+              <div className="flex items-center">
+                <Award className="h-4 w-4 mr-2 text-yellow-500" />
+                Metacritic
+              </div>
+              {expandedSections.metacritic ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            <div className={`border-t border-border-color pt-4 ${expandedSections.metacritic ? "block" : "hidden"}`}>
+              <div className="px-1">
+                <input
+                  type="range"
+                  min="0" 
+                  max={maxMetacritic}
+                  value={filters.metacriticRange[1]}
+                  onChange={(e) => handleMetacriticRangeChange(Number.parseInt(e.target.value), 1)}
+                  className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                />
+                <div className="flex justify-between mt-2">
+                  <span className="font-roboto text-xs text-text-secondary">{filters.metacriticRange[0]}</span>
+                  <span className="font-roboto text-xs text-text-secondary">{filters.metacriticRange[1]}</span>
                 </div>
               </div>
             </div>

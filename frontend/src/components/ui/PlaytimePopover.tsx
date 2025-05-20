@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Save } from 'lucide-react';
 
 interface PlaytimePopoverProps {
@@ -8,6 +8,26 @@ interface PlaytimePopoverProps {
 
 const PlaytimePopover = ({ onSave, onCancel }: PlaytimePopoverProps) => {
   const [hoursToAdd, setHoursToAdd] = useState(1);
+  
+  // Ref per il popover
+  const popoverRef = useRef<HTMLDivElement>(null);
+  
+  // Effetto per gestire i clic fuori dal popover
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onCancel();
+      }
+    };
+
+    // Aggiungi l'event listener
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Pulisci l'event listener quando il componente viene smontato
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onCancel]);
   
   const incrementHours = () => {
     setHoursToAdd(prev => prev + 1);
@@ -24,7 +44,10 @@ const PlaytimePopover = ({ onSave, onCancel }: PlaytimePopoverProps) => {
   };
 
   return (
-    <div className="absolute top-full right-0 mt-2 p-4 bg-primaryBg border border-border-color rounded-lg shadow-md z-10 w-56">
+    <div 
+      ref={popoverRef}
+      className="absolute top-full right-0 mt-2 p-4 bg-primaryBg border border-border-color rounded-lg shadow-md z-10 w-56"
+    >
       <div className="text-sm text-text-secondary mb-3 font-secondary">
         Aggiungi ore di gioco:
       </div>

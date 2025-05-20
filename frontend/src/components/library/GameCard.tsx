@@ -1,18 +1,23 @@
-import React from 'react';
-import { Monitor, Clock, MoreVertical } from 'lucide-react';
+import React, { useState } from 'react';
+import { Monitor, Clock, MoreVertical, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Game } from '../../types/game';
+import type { Game, GameStatus } from '../../types/game';
 import { getGameRating } from '../../utils/gamesData';
 import RatingStars from '../ui/atoms/RatingStars';
-import StatusBadge from '../ui/atoms/StatusBadge'; // Import del componente StatusBadge
+import StatusBadge from '../ui/atoms/StatusBadge';
 import { getStatusColor } from '../../utils/statusData';
+import ThreeDotsModal from '../ui/ThreeDotsModal';
 
 interface GameCardProps {
   game: Game;
+  onEdit?: (game: Game) => void;
+  onDelete?: (gameId: string) => void;
+  onStatusChange?: (gameId: string, status: GameStatus) => void;
 }
 
-const GameCard: React.FC<GameCardProps> = ({ game }) => {
+const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusChange }) => {
   const effectiveRating = getGameRating(game);
+  const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
@@ -43,6 +48,13 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
           <span className="mx-2">|</span>
           <Clock className="h-4 w-4 mr-1" />
           <span className="font-roboto text-xs">{game.hoursPlayed} ore</span>
+          {game.metacritic && (
+            <>
+              <span className="mx-2">|</span>
+              <Award className="h-4 w-4 mr-1 text-yellow-500" />
+              <span className="font-roboto text-xs">{game.metacritic}</span>
+            </>
+          )}
         </div>
 
         {/* Prezzo e Data di acquisto */}
@@ -67,9 +79,27 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
       </div>
 
       {/* Menu azioni */}
-      <button className="absolute top-4 right-4 p-1 rounded-full bg-primary-bg/80 text-text-secondary hover:text-accent-primary transition-colors">
-        <MoreVertical className="h-5 w-5" />
-      </button>
+      <div className="absolute top-2 right-2 z-20">
+        <ThreeDotsModal
+          isOpen={activeActionMenu === game.id.toString()}
+          onClose={() => setActiveActionMenu(null)}
+          game={game}
+          position="top-right"
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onStatusChange={onStatusChange}
+        />
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setActiveActionMenu(activeActionMenu === game.id.toString() ? null : game.id.toString());
+          }}
+          className="p-1 rounded-full text-text-secondary hover:text-accent-primary transition-colors"
+        >
+          <MoreVertical className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 };

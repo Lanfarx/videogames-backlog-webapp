@@ -3,7 +3,7 @@ import { Clock, Pencil } from 'lucide-react';
 import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
-import PlaytimePopover from './ui/PlaytimePopover';
+import PlaytimePopover from '../ui/PlaytimePopover';
 import { getGameRating } from '../../utils/gamesData';
 import EditGameInfoModal from './EditGameInfoModal';
 

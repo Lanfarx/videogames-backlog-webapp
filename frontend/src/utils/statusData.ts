@@ -1,6 +1,5 @@
 import { GameStatus } from '../types/game';
 import { getGamesStats } from './gamesData';
-import { ActivityType } from '../types/activity';
 
 export interface StatusItem {
   status: GameStatus | string;

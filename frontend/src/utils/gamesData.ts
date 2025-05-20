@@ -16,6 +16,7 @@ export const gamesData: Game[] = [
       status: "in-progress",
       purchaseDate: "2023-01-15",
       price: 59.99,
+      metacritic: 97,
       notes: "Uno dei migliori giochi open world che abbia mai giocato. L'esplorazione è incredibile!",
       review: {
         text: "Breath of the Wild è un capolavoro che ridefinisce il genere open world con la sua libertà di esplorazione.",
@@ -44,6 +45,7 @@ export const gamesData: Game[] = [
       status: "in-progress",
       purchaseDate: "2022-12-10",
       price: 49.99,
+      metacritic: 86,
       notes: "Dopo i vari aggiornamenti, il gioco è molto migliorato. Devo esplorare Night City più a fondo.",
       review: {
         text: "Dopo le patch, Cyberpunk è diventato un ottimo gioco. Night City è incredibilmente dettagliata e le missioni principali sono ben scritte.",
@@ -71,6 +73,7 @@ export const gamesData: Game[] = [
       status: "completed",
       purchaseDate: "2022-11-15",
       price: 69.99,
+      metacritic: 94,
       completionDate: "2022-12-05",
       notes: "Sequel eccezionale, la storia tra Kratos e Atreus è emozionante. I combattimenti sono spettacolari.",
       review: {
@@ -96,6 +99,7 @@ export const gamesData: Game[] = [
       status: "in-progress",
       purchaseDate: "2022-03-10",
       price: 59.99,
+      metacritic: 96,
       notes: "Il mio primo soulslike. Difficile ma incredibilmente gratificante. L'esplorazione è fantastica.",
       review: {
         text: "Elden Ring fonde perfettamente il gameplay soulslike con un mondo aperto. La direzione artistica è fenomenale.",
@@ -120,6 +124,7 @@ export const gamesData: Game[] = [
       status: "platinum",
       purchaseDate: "2023-08-05",
       price: 59.99,
+      metacritic: 96,
       completionDate: "2023-09-15",
       platinumDate: "2023-09-25",
       notes: "Uno dei migliori RPG che abbia mai giocato. La libertà di scelta è incredibile.",
@@ -146,6 +151,7 @@ export const gamesData: Game[] = [
       status: "not-started",
       purchaseDate: "2023-09-10",
       price: 69.99,
+      metacritic: 83,
       notes: "Appena acquistato, non vedo l'ora di esplorare lo spazio!",
       rating: 0
     },
@@ -162,6 +168,7 @@ export const gamesData: Game[] = [
       status: "abandoned",
       purchaseDate: "2023-06-25",
       price: 69.99,
+      metacritic: 87,
       notes: "Non mi ha preso come speravo. Il sistema di combattimento è buono ma la storia non mi ha coinvolto.",
       review: {
         text: "Graficamente impressionante ma la narrativa è confusa. Il sistema di combattimento è divertente ma non abbastanza da mantenermi interessato.",
@@ -186,6 +193,7 @@ export const gamesData: Game[] = [
       status: "not-started",
       purchaseDate: "2024-06-25",
       price: 49.99,
+      metacritic: 82,
       notes: "Nella libreria, aspetto che ho voglia.",
       rating: 0
     },
@@ -355,4 +363,24 @@ export function getGamesByPlatform(): Record<string, Game[]> {
  */
 export function getGamesForPlatform(platform: string): Game[] {
   return gamesData.filter(game => game.platform === platform);
+}
+
+/**
+ * Aggiorna un gioco esistente con i nuovi dati forniti
+ */
+export function updateGame(updatedGame: Game): void {
+  const index = gamesData.findIndex((game) => game.id === updatedGame.id);
+  if (index !== -1) {
+    gamesData[index] = { ...gamesData[index], ...updatedGame };
+  }
+}
+
+/**
+ * Elimina un gioco dal dataset in base al suo ID
+ */
+export function deleteGame(gameId: number): void {
+  const index = gamesData.findIndex((game) => game.id === gameId);
+  if (index !== -1) {
+    gamesData.splice(index, 1);
+  }
 }

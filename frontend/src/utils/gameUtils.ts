@@ -11,6 +11,7 @@ export function filterGames(
     genre?: string[];
     priceRange?: [number, number];
     hoursRange?: [number, number];
+    metacriticRange?: [number, number];
     purchaseDate?: string;
   }
 ): Game[] {
@@ -46,6 +47,19 @@ export function filterGames(
     // Filtra per ore di gioco
     if (filters.hoursRange) {
       if (game.hoursPlayed < filters.hoursRange[0] || game.hoursPlayed > filters.hoursRange[1]) {
+        return false;
+      }
+    }
+
+    // Filtra per punteggio Metacritic
+    if (filters.metacriticRange) {
+      // Considera solo i giochi che hanno un punteggio Metacritic
+      if (game.metacritic === undefined) {
+        // Se il range parte da 0, includi anche i giochi senza punteggio
+        if (filters.metacriticRange[0] > 0) {
+          return false;
+        }
+      } else if (game.metacritic < filters.metacriticRange[0] || game.metacritic > filters.metacriticRange[1]) {
         return false;
       }
     }
@@ -97,6 +111,18 @@ export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrde
         break;
       case 'platinumDate':
         comparison = compareDates(a.completionDate, b.completionDate);
+        break;
+      case 'metacritic':
+        // Gestisci i valori undefined mettendoli in fondo
+        if (a.metacritic === undefined && b.metacritic === undefined) {
+          comparison = 0;
+        } else if (a.metacritic === undefined) {
+          comparison = 1;
+        } else if (b.metacritic === undefined) {
+          comparison = -1;
+        } else {
+          comparison = a.metacritic - b.metacritic;
+        }
         break;
       default:
         comparison = a.title.localeCompare(b.title);
@@ -171,14 +197,16 @@ export function calculateCounts(games: Game[]): {
 }
 
 /**
- * Calcola i valori massimi per prezzo e ore di gioco
+ * Calcola i valori massimi per prezzo, ore di gioco e metacritic
  */
 export function calculateMaxValues(games: Game[]): {
   maxPriceTemp: number;
   maxHoursTemp: number;
+  maxMetacriticTemp: number;
 } {
   const maxPriceTemp = Math.max(...games.map((game) => game.price || 0));
   const maxHoursTemp = Math.max(...games.map((game) => game.hoursPlayed || 0));
+  const maxMetacriticTemp = Math.max(...games.map((game) => game.metacritic || 0));
 
-  return { maxPriceTemp, maxHoursTemp };
+  return { maxPriceTemp, maxHoursTemp, maxMetacriticTemp };
 }
