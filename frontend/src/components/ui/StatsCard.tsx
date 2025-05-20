@@ -26,9 +26,9 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, variant = 'de
     }
     
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="text-base text-text-secondary font-['Roboto']">{label}</div>
-            <div className="text-4xl font-bold text-text-primary mt-2 font-['Montserrat']">{formattedValue}</div>
+        <div className="bg-primary-bg p-6 rounded-lg shadow-sm">
+            <div className="text-base text-text-secondary font-secondary">{label}</div>
+            <div className="text-4xl font-bold text-text-primary mt-2 font-primary">{formattedValue}</div>
         </div>
     );
 };
