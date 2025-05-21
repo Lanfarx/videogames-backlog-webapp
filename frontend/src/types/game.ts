@@ -1,7 +1,11 @@
-// Definizione dei tipi di stato dei giochi
+/**
+ * Definizione dei tipi di stato dei giochi
+ */
 export type GameStatus = 'not-started' | 'in-progress' | 'completed' | 'abandoned' | 'platinum';
 
-// Elenco delle piattaforme di gioco supportate
+/**
+ * Elenco delle piattaforme di gioco supportate
+ */
 export type GamePlatform = 
   'PlayStation 5' | 
   'PlayStation 4' | 
@@ -15,26 +19,26 @@ export type GamePlatform =
   'iOS' | 
   'Android';
 
-// Definizione delle opzioni di ordinamento
+/**
+ * Definizione delle opzioni di ordinamento
+ */
 export type SortOption = 'title' | 'platform' | 'releaseYear' | 'rating' | 
 'hoursPlayed' | 'price' | 'purchaseDate' | 'completionDate' | 'platinumDate' | 'metacritic';
 
-// Definizione dell'ordine di ordinamento
+/**
+ * Definizione dell'ordine di ordinamento
+ */
 export type SortOrder = 'asc' | 'desc';
 
-// Definizione dei filtri per i giochi
-export interface GameFilters {
-  status: GameStatus[];
-  platform: string[];
-  genre: string[];
-  priceRange: [number, number];
-  hoursRange: [number, number];
-  metacriticRange: [number, number];
-  purchaseDate: string;
-}
+/**
+ * Range numerico [min, max]
+ */
+export type NumericRange = [number, number];
 
-// Definizione della struttura di un gioco
-export interface Game {
+/**
+ * Metadati di base di un gioco
+ */
+export interface GameBasicInfo {
   id: number;
   title: string;
   platform: string;
@@ -42,21 +46,45 @@ export interface Game {
   genres: string[];
   status: GameStatus;
   coverImage?: string;
+}
+
+/**
+ * Informazioni finanziarie del gioco
+ */
+export interface GameFinancialInfo {
   price: number;
+  purchaseDate?: string;
+}
+
+/**
+ * Informazioni sullo sviluppo del gioco
+ */
+export interface GameDevelopmentInfo {
+  developer?: string;
+  publisher?: string;
+}
+
+/**
+ * Informazioni di completamento del gioco
+ */
+export interface GameCompletionInfo {
+  completionDate?: string;
+  platinumDate?: string;
+}
+
+/**
+ * Informazioni di gioco
+ */
+export interface GamePlayInfo {
   hoursPlayed: number;
   metacritic: number;
   rating: number;
-  purchaseDate?: string;
-  completionDate?: string;
   notes?: string;
-  developer?: string;
-  publisher?: string;
-  platinumDate?: string;
-  review?: GameReview;
-  comments?: GameComment[];
 }
 
-// Definizione della struttura di una recensione
+/**
+ * Definizione della struttura di una recensione
+ */
 export interface GameReview {
   text: string;
   gameplay: number;
@@ -66,9 +94,67 @@ export interface GameReview {
   date: string;
 }
 
-// Definizione della struttura di un commento
+/**
+ * Definizione della struttura di un commento
+ */
 export interface GameComment {
   id: number;
   date: string;
   text: string;
 }
+
+/**
+ * Definizione completa della struttura di un gioco
+ * che unisce tutte le interfacce precedenti
+ */
+export interface Game extends 
+  GameBasicInfo,
+  GameFinancialInfo,
+  GameDevelopmentInfo,
+  GameCompletionInfo,
+  GamePlayInfo {
+  review?: GameReview;
+  comments?: GameComment[];
+}
+
+/**
+ * Definizione dei filtri per i giochi
+ */
+export interface GameFilters {
+  status: GameStatus[];
+  platform: string[];
+  genre: string[];
+  priceRange: NumericRange;
+  hoursRange: NumericRange;
+  metacriticRange: NumericRange;
+  purchaseDate: string;
+}
+
+/**
+ * Parametri di ricerca dei giochi
+ */
+export interface GameSearchParams {
+  query?: string;
+  filters?: Partial<GameFilters>;
+  sortBy?: SortOption;
+  sortOrder?: SortOrder;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Input per aggiungere un nuovo gioco
+ * Omette i campi che vengono generati automaticamente
+ */
+export type GameInput = Omit<Game, 'id' | 'rating' | 'comments'>;
+
+/**
+ * Input per aggiornare un gioco esistente
+ * Rende tutti i campi opzionali
+ */
+export type GameUpdateInput = Partial<Game>;
+
+/**
+ * Opzioni di visualizzazione per i giochi
+ */
+export type GameViewMode = 'grid' | 'list';

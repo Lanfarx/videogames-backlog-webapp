@@ -6,11 +6,11 @@ interface BreadcrumbNavProps {
   parentLabel?: string;
 }
 
-export default function BreadcrumbNav({ 
+const BreadcrumbNav = ({ 
   title, 
   parentPath = '/library', 
-  parentLabel = 'I miei giochi' 
-}: BreadcrumbNavProps) {
+  parentLabel = 'Libreria' 
+}: BreadcrumbNavProps) => {
   return (
     <nav className="font-secondary text-sm">
       <Link to={parentPath} className="text-accent-primary hover:underline">
@@ -21,3 +21,5 @@ export default function BreadcrumbNav({
     </nav>
   );
 };
+
+export default BreadcrumbNav;

@@ -1,5 +1,15 @@
 import { GameStatus } from '../types/game';
 import { getGamesStats } from './gamesData';
+import { 
+  STATUS_COLORS, 
+  STATUS_LABELS, 
+  ACTIVITY_COLORS,
+  ACTIVITY_LABELS,
+  getStatusColor as getGameStatusColor,
+  getStatusLabel as getGameStatusLabel,
+  getActivityColor,
+  getActivityLabel
+} from '../constants/gameConstants';
 
 export interface StatusItem {
   status: GameStatus | string;
@@ -9,51 +19,37 @@ export interface StatusItem {
 }
 
 /**
- * Mappa dei colori fissi per gli stati dei giochi e tipi di attività
- */
-export const statusColors: Record<string, string> = {
-  // Colori stati giochi
-  'in-progress': '#FB7E00', // Arancione fisso
-  'not-started': '#FFCC3F', // Giallo fisso
-  'completed': '#9FC089',   // Verde fisso
-  'abandoned': '#F44336',   // Rosso fisso
-  'platinum': '#C0C0C0',    // Argento/platino fisso
-  
-  // Colori tipi attività (stessi dei relativi stati)
-  'played': '#FB7E00',      // Come in-progress
-  'added': '#FFCC3F',       // Come not-started
-  'rated': '#8A5CF6',       // Viola
-};
-
-/**
- * Etichette in italiano per gli stati dei giochi
- */
-export const statusLabels: Record<string, string> = {
-  // Stati giochi
-  'in-progress': 'In corso',
-  'not-started': 'Da iniziare',
-  'completed': 'Completato',
-  'abandoned': 'Abbandonato',
-  'platinum': 'Platinato',
-  
-  // Tipi attività
-  'played': 'Giocato',
-  'added': 'Aggiunto',
-  'rated': 'Valutato',
-};
-
-/**
  * Ottiene il colore per un determinato stato o tipo di attività
+ * @deprecated Utilizzare getStatusColor o getActivityColor dal file constants/gameConstants.ts
  */
 export function getStatusColor(statusOrType: string): string {
-  return statusColors[statusOrType] || '#CCCCCC'; // Colore di fallback grigio
+  // Prima controlla se è uno stato di gioco
+  if (statusOrType in STATUS_COLORS) {
+    return getGameStatusColor(statusOrType);
+  }
+  // Altrimenti controlla se è un tipo di attività
+  if (statusOrType in ACTIVITY_COLORS) {
+    return getActivityColor(statusOrType);
+  }
+  // Fallback
+  return '#CCCCCC';
 }
 
 /**
  * Ottiene l'etichetta in italiano per un determinato stato o tipo di attività
+ * @deprecated Utilizzare getStatusLabel o getActivityLabel dal file constants/gameConstants.ts
  */
 export function getStatusLabel(statusOrType: string): string {
-  return statusLabels[statusOrType] || statusOrType;
+  // Prima controlla se è uno stato di gioco
+  if (statusOrType in STATUS_LABELS) {
+    return getGameStatusLabel(statusOrType);
+  }
+  // Altrimenti controlla se è un tipo di attività
+  if (statusOrType in ACTIVITY_LABELS) {
+    return getActivityLabel(statusOrType);
+  }
+  // Fallback
+  return statusOrType;
 }
 
 /**
@@ -62,11 +58,24 @@ export function getStatusLabel(statusOrType: string): string {
 export function getStatusData(): StatusItem[] {
   const stats = getGamesStats();
   
-  return [
-    { status: 'in-progress', label: statusLabels['in-progress'], count: stats.inProgress, color: statusColors['in-progress'] },
-    { status: 'not-started', label: statusLabels['not-started'], count: stats.notStarted, color: statusColors['not-started'] },
-    { status: 'completed', label: statusLabels['completed'], count: stats.completed, color: statusColors['completed'] },
-    { status: 'abandoned', label: statusLabels['abandoned'], count: stats.abandoned, color: statusColors['abandoned'] },
-    { status: 'platinum', label: statusLabels['platinum'], count: stats.platinum, color: statusColors['platinum'] },
-  ];
+  return Object.entries(STATUS_LABELS).map(([status, label]) => ({
+    status: status as GameStatus,
+    label: label,
+    count: getCountForStatus(stats, status as GameStatus),
+    color: STATUS_COLORS[status as GameStatus]
+  }));
+}
+
+/**
+ * Ottiene il conteggio per un determinato stato
+ */
+function getCountForStatus(stats: any, status: GameStatus): number {
+  switch (status) {
+    case 'in-progress': return stats.inProgress;
+    case 'not-started': return stats.notStarted;
+    case 'completed': return stats.completed;
+    case 'abandoned': return stats.abandoned;
+    case 'platinum': return stats.platinum;
+    default: return 0;
+  }
 }

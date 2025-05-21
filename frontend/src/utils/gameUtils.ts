@@ -1,212 +1,285 @@
-import type { Game, GameStatus, SortOption, SortOrder } from '../types/game';
+/**
+ * Utilità per la gestione dei giochi
+ */
+import { Game, GameStatus, GameBasicInfo, NumericRange, GameSearchParams, GameFilters, SortOption, SortOrder } from '../types/game';
+import { ChartItem } from '../types/stats';
+import {  
+  getStatusColor, 
+  getStatusLabel, 
+  getPlatformColor, 
+} from '../constants/gameConstants';
 
 /**
- * Filtra i giochi in base ai criteri specificati
+ * Filtra i giochi in base ai criteri di ricerca
  */
-export function filterGames(
-  games: Game[],
-  filters: {
-    status?: GameStatus[];
-    platform?: string[];
-    genre?: string[];
-    priceRange?: [number, number];
-    hoursRange?: [number, number];
-    metacriticRange?: [number, number];
-    purchaseDate?: string;
+export function filterGames(games: Game[], searchParams: GameSearchParams): Game[] {
+  let filtered = [...games];
+  
+  // Filtra per query di testo
+  if (searchParams.query) {
+    const query = searchParams.query.toLowerCase();
+    filtered = filtered.filter(game => 
+      game.title.toLowerCase().includes(query) || 
+      (game.developer && game.developer.toLowerCase().includes(query)) ||
+      (game.publisher && game.publisher.toLowerCase().includes(query)) ||
+      game.genres.some(genre => genre.toLowerCase().includes(query))
+    );
   }
-): Game[] {
-  return games.filter((game) => {
-    // Filtra per stato
-    if (filters.status && filters.status.length > 0) {
-      if (!filters.status.includes(game.status)) {
-        return false;
-      }
+  
+  // Filtra in base ai filtri specificati
+  if (searchParams.filters) {
+    const { status, platform, genre, priceRange, hoursRange, metacriticRange, purchaseDate } = searchParams.filters;
+    
+    if (status && status.length > 0) {
+      filtered = filtered.filter(game => status.includes(game.status));
     }
-
-    // Filtra per piattaforma
-    if (filters.platform && filters.platform.length > 0) {
-      if (!filters.platform.includes(game.platform)) {
-        return false;
-      }
+    
+    if (platform && platform.length > 0) {
+      filtered = filtered.filter(game => platform.includes(game.platform));
     }
-
-    // Filtra per genere
-    if (filters.genre && filters.genre.length > 0) {
-      if (!game.genres.some((genre) => filters.genre!.includes(genre))) {
-        return false;
-      }
+    
+    if (genre && genre.length > 0) {
+      filtered = filtered.filter(game => 
+        game.genres.some(g => genre.includes(g))
+      );
     }
-
-    // Filtra per prezzo
-    if (filters.priceRange) {
-      if (game.price < filters.priceRange[0] || game.price > filters.priceRange[1]) {
-        return false;
-      }
+    
+    if (priceRange) {
+      filtered = filtered.filter(game => 
+        game.price >= priceRange[0] && game.price <= priceRange[1]
+      );
     }
-
-    // Filtra per ore di gioco
-    if (filters.hoursRange) {
-      if (game.hoursPlayed < filters.hoursRange[0] || game.hoursPlayed > filters.hoursRange[1]) {
-        return false;
-      }
+    
+    if (hoursRange) {
+      filtered = filtered.filter(game => 
+        game.hoursPlayed >= hoursRange[0] && game.hoursPlayed <= hoursRange[1]
+      );
     }
-
-    // Filtra per punteggio Metacritic
-    if (filters.metacriticRange) {
-      // Considera solo i giochi che hanno un punteggio Metacritic
-      if (game.metacritic === undefined) {
-        // Se il range parte da 0, includi anche i giochi senza punteggio
-        if (filters.metacriticRange[0] > 0) {
-          return false;
-        }
-      } else if (game.metacritic < filters.metacriticRange[0] || game.metacritic > filters.metacriticRange[1]) {
-        return false;
-      }
+    
+    if (metacriticRange) {
+      filtered = filtered.filter(game => 
+        game.metacritic >= metacriticRange[0] && game.metacritic <= metacriticRange[1]
+      );
     }
-
-    // Filtra per data di acquisto
-    if (filters.purchaseDate && game.purchaseDate) {
-      const filterDate = new Date(filters.purchaseDate);
-      const gameDate = new Date(game.purchaseDate);
-      if (gameDate < filterDate) {
-        return false;
-      }
+    
+    if (purchaseDate) {
+      const purchaseYear = new Date(purchaseDate).getFullYear();
+      filtered = filtered.filter(game => 
+        game.purchaseDate && new Date(game.purchaseDate).getFullYear() === purchaseYear
+      );
     }
-
-    return true;
-  });
+  }
+  
+  // Applica ordinamento
+  if (searchParams.sortBy) {
+    filtered = sortGames(filtered, searchParams.sortBy, searchParams.sortOrder || 'asc');
+  }
+  
+  // Applica paginazione
+  if (searchParams.offset !== undefined && searchParams.limit) {
+    filtered = filtered.slice(searchParams.offset, searchParams.offset + searchParams.limit);
+  } else if (searchParams.limit) {
+    filtered = filtered.slice(0, searchParams.limit);
+  }
+  
+  return filtered;
 }
 
 /**
  * Ordina i giochi in base al criterio specificato
  */
-export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrder): Game[] {
+export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrder = 'asc'): Game[] {
+  const sortMultiplier = sortOrder === 'asc' ? 1 : -1;
+  
   return [...games].sort((a, b) => {
-    let comparison = 0;
-
     switch (sortBy) {
       case 'title':
-        comparison = a.title.localeCompare(b.title);
-        break;
+        return a.title.localeCompare(b.title) * sortMultiplier;
       case 'platform':
-        comparison = a.platform.localeCompare(b.platform);
-        break;
+        return a.platform.localeCompare(b.platform) * sortMultiplier;
       case 'releaseYear':
-        comparison = a.releaseYear - b.releaseYear;
-        break;
+        return (a.releaseYear - b.releaseYear) * sortMultiplier;
       case 'rating':
-        comparison = a.rating - b.rating;
-        break;
+        return (a.rating - b.rating) * sortMultiplier;
       case 'hoursPlayed':
-        comparison = a.hoursPlayed - b.hoursPlayed;
-        break;
+        return (a.hoursPlayed - b.hoursPlayed) * sortMultiplier;
       case 'price':
-        comparison = a.price - b.price;
-        break;
-      case 'purchaseDate':
-        comparison = compareDates(a.purchaseDate, b.purchaseDate);
-        break;
-      case 'completionDate':
-        comparison = compareDates(a.completionDate, b.completionDate);
-        break;
-      case 'platinumDate':
-        comparison = compareDates(a.completionDate, b.completionDate);
-        break;
+        return (a.price - b.price) * sortMultiplier;
       case 'metacritic':
-        // Gestisci i valori undefined mettendoli in fondo
-        if (a.metacritic === undefined && b.metacritic === undefined) {
-          comparison = 0;
-        } else if (a.metacritic === undefined) {
-          comparison = 1;
-        } else if (b.metacritic === undefined) {
-          comparison = -1;
-        } else {
-          comparison = a.metacritic - b.metacritic;
-        }
-        break;
+        return (a.metacritic - b.metacritic) * sortMultiplier;
+      case 'purchaseDate':
+        if (!a.purchaseDate) return sortMultiplier;
+        if (!b.purchaseDate) return -sortMultiplier;
+        return (new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime()) * sortMultiplier;
+      case 'completionDate':
+        if (!a.completionDate) return sortMultiplier;
+        if (!b.completionDate) return -sortMultiplier;
+        return (new Date(a.completionDate).getTime() - new Date(b.completionDate).getTime()) * sortMultiplier;
+      case 'platinumDate':
+        if (!a.platinumDate) return sortMultiplier;
+        if (!b.platinumDate) return -sortMultiplier;
+        return (new Date(a.platinumDate).getTime() - new Date(b.platinumDate).getTime()) * sortMultiplier;
       default:
-        comparison = a.title.localeCompare(b.title);
+        return 0;
     }
-
-    return sortOrder === 'asc' ? comparison : -comparison;
   });
 }
 
 /**
- * Confronta due date in formato stringa
+ * Genera dati di distribuzione per i grafici a torta
  */
-function compareDates(dateA?: string, dateB?: string): number {
-  if (!dateA && !dateB) return 0;
-  if (!dateA) return 1; // Cambiato da -1 a 1
-  if (!dateB) return -1; // Cambiato da 1 a -1
-
-  const parsedDateA = new Date(dateA).getTime();
-  const parsedDateB = new Date(dateB).getTime();
-
-  return parsedDateB - parsedDateA; // Cambiato l'ordine per invertire il confronto
+export function generateStatusDistributionData(games: Game[]): ChartItem[] {
+  const statusCounts: Record<GameStatus, number> = {
+    'not-started': 0,
+    'in-progress': 0,
+    'completed': 0,
+    'abandoned': 0,
+    'platinum': 0
+  };
+  
+  // Conta i giochi per stato
+  games.forEach(game => {
+    statusCounts[game.status]++;
+  });
+  
+  // Converte i conteggi in dati per i grafici
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    label: getStatusLabel(status),
+    value: count,
+    color: getStatusColor(status)
+  }));
 }
 
 /**
- * Formatta la data nel formato italiano
+ * Genera dati di distribuzione per i grafici sulle piattaforme
  */
-export function formatDate(dateString: string): string {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+export function generatePlatformDistributionData(games: Game[]): ChartItem[] {
+  const platformCounts: Record<string, number> = {};
+  
+  // Conta i giochi per piattaforma
+  games.forEach(game => {
+    if (!platformCounts[game.platform]) {
+      platformCounts[game.platform] = 0;
+    }
+    platformCounts[game.platform]++;
+  });
+  
+  // Converte i conteggi in dati per i grafici
+  return Object.entries(platformCounts)
+    .filter(([_, count]) => count > 0) // Filtra solo piattaforme con giochi
+    .map(([platform, count]) => ({
+      label: platform,
+      value: count,
+      color: getPlatformColor(platform)
+    }))
+    .sort((a, b) => b.value - a.value); // Ordina per conteggio decrescente
 }
 
 /**
- * Formatta il prezzo nel formato italiano
+ * Calcola il prezzo medio dei giochi
  */
-export function formatPrice(price: number): string {
-  return price.toFixed(2).replace('.', ',') + ' €';
+export function calculateAveragePrice(games: Game[]): number {
+  if (games.length === 0) return 0;
+  
+  const totalPrice = games.reduce((sum, game) => sum + game.price, 0);
+  return parseFloat((totalPrice / games.length).toFixed(2));
 }
 
 /**
- * Calcola i conteggi per stato, piattaforma e genere
+ * Calcola la media delle recensioni dei giochi
  */
-export function calculateCounts(games: Game[]): {
-  statusCountsTemp: Record<string, number>;
-  platformCountsTemp: Record<string, number>;
-  genreCountsTemp: Record<string, number>;
-} {
+export function calculateAverageRating(games: Game[]): number {
+  const gamesWithRating = games.filter(game => game.rating > 0);
+  if (gamesWithRating.length === 0) return 0;
+  
+  const totalRating = gamesWithRating.reduce((sum, game) => sum + game.rating, 0);
+  return parseFloat((totalRating / gamesWithRating.length).toFixed(1));
+}
+
+/**
+ * Estrae le informazioni di base di un gioco
+ */
+export function extractGameBasicInfo(game: Game): GameBasicInfo {
+  const { id, title, platform, releaseYear, genres, status, coverImage } = game;
+  return { id, title, platform, releaseYear, genres, status, coverImage };
+}
+
+/**
+ * Trova i giochi simili in base a generi e piattaforma
+ */
+export function findSimilarGames(game: Game, allGames: Game[], limit = 3): Game[] {
+  // Esclude il gioco stesso
+  const otherGames = allGames.filter(g => g.id !== game.id);
+  
+  // Calcola un punteggio di similitudine per ogni gioco
+  const scoredGames = otherGames.map(otherGame => {
+    let score = 0;
+    
+    // Stessa piattaforma
+    if (otherGame.platform === game.platform) score += 2;
+    
+    // Generi in comune
+    const commonGenres = otherGame.genres.filter(genre => game.genres.includes(genre));
+    score += commonGenres.length * 3;
+    
+    // Stesso sviluppatore
+    if (otherGame.developer && game.developer && otherGame.developer === game.developer) score += 4;
+    
+    // Anno di uscita simile
+    const yearDiff = Math.abs(otherGame.releaseYear - game.releaseYear);
+    if (yearDiff <= 2) score += 1;
+    
+    return { game: otherGame, score };
+  });
+  
+  // Ordina per punteggio e restituisce i primi N giochi
+  return scoredGames
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(item => item.game);
+}
+
+/**
+ * Calcola i valori massimi di prezzo, ore giocate e punteggio Metacritic
+ */
+export function calculateMaxValues(games: Game[]): { priceRange: NumericRange; hoursRange: NumericRange; metacriticRange: NumericRange } {
+  const maxPrice = Math.max(...games.map(game => game.price || 0), 0);
+  const maxHours = Math.max(...games.map(game => game.hoursPlayed || 0), 0);
+  const maxMetacritic = Math.max(...games.map(game => game.metacritic || 0), 0);
+
+  return {
+    priceRange: [0, maxPrice],
+    hoursRange: [0, maxHours],
+    metacriticRange: [0, maxMetacritic],
+  };
+}
+
+/**
+ * Calcola i conteggi di stato, piattaforma e genere dai dati dei giochi
+ */
+export function calculateCounts(games: any[]) {
   const statusCountsTemp: Record<string, number> = {};
   const platformCountsTemp: Record<string, number> = {};
   const genreCountsTemp: Record<string, number> = {};
 
   games.forEach((game) => {
-    // Conteggio per stato
+    // Conta gli stati
     if (game.status) {
       statusCountsTemp[game.status] = (statusCountsTemp[game.status] || 0) + 1;
     }
 
-    // Conteggio per piattaforma
+    // Conta le piattaforme
     if (game.platform) {
       platformCountsTemp[game.platform] = (platformCountsTemp[game.platform] || 0) + 1;
     }
 
-    // Conteggio per genere
-    if (game.genres) {
-      game.genres.forEach((genre) => {
-        genreCountsTemp[genre] = (genreCountsTemp[genre] || 0) + 1;
+    // Conta i generi
+    if (game.genre) {
+      game.genre.forEach((g: string) => {
+        genreCountsTemp[g] = (genreCountsTemp[g] || 0) + 1;
       });
     }
   });
 
   return { statusCountsTemp, platformCountsTemp, genreCountsTemp };
-}
-
-/**
- * Calcola i valori massimi per prezzo, ore di gioco e metacritic
- */
-export function calculateMaxValues(games: Game[]): {
-  maxPriceTemp: number;
-  maxHoursTemp: number;
-  maxMetacriticTemp: number;
-} {
-  const maxPriceTemp = Math.max(...games.map((game) => game.price || 0));
-  const maxHoursTemp = Math.max(...games.map((game) => game.hoursPlayed || 0));
-  const maxMetacriticTemp = Math.max(...games.map((game) => game.metacritic || 0));
-
-  return { maxPriceTemp, maxHoursTemp, maxMetacriticTemp };
 }

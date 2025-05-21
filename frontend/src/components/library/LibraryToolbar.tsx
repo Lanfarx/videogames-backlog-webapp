@@ -39,7 +39,7 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   }, []);
 
   // Ottieni l'etichetta dell'ordinamento corrente
-  const currentSortLabel = SORT_OPTIONS.find((option) => option.id === sortBy)?.label || "Titolo";
+  const currentSortLabel = SORT_OPTIONS.find((option) => option.value === sortBy)?.label || "Titolo";
 
   return (
     <div className="h-16 bg-primary-bg border-b border-border-color px-6 flex items-center justify-between relative">
@@ -93,16 +93,16 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
             <div className="absolute right-0 mt-2 w-48 bg-white border border-border-color rounded-md shadow-lg z-30">
               <ul className="py-1">
                 {SORT_OPTIONS.map((option) => (
-                  <li key={option.id}>
+                  <li key={option.value}>
                     <button
                       className="flex items-center justify-between w-full px-4 py-2 text-sm text-text-primary hover:bg-accent-primary hover:text-white transition-colors"
                       onClick={() => {
-                        onSortChange(option.id as SortOption);
+                        onSortChange(option.value as SortOption);
                         setShowSortDropdown(false);
                       }}
                     >
                       {option.label}
-                      {sortBy === option.id && <Check className="h-4 w-4 text-white" />}
+                      {sortBy === option.value && <Check className="h-4 w-4 text-white" />}
                     </button>
                   </li>
                 ))}

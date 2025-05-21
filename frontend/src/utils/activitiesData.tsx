@@ -1,6 +1,6 @@
+import { getStatusColor } from '../constants/gameConstants';
 import { Activity, ActivityType } from '../types/activity';
 import { Trophy, Clock, Gamepad2, Star, Award, X } from 'lucide-react';
-import { getStatusColor } from './statusData';
 
 // Dati di esempio per le attività
 export const activitiesData: Activity[] = [
@@ -301,37 +301,13 @@ export const activitiesData: Activity[] = [
 
 /**
  * Formatta una data in un formato relativo leggibile (es. "2 giorni fa")
+ * 
+ * @deprecated Usa formatRelativeTime da dateUtils.ts invece
  */
 export function formatRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInSec = Math.floor(diffInMs / 1000);
-  const diffInMin = Math.floor(diffInSec / 60);
-  const diffInHour = Math.floor(diffInMin / 60);
-  const diffInDay = Math.floor(diffInHour / 24);
-  const diffInWeek = Math.floor(diffInDay / 7);
-  const diffInMonth = Math.floor(diffInDay / 30);
-  const diffInYear = Math.floor(diffInDay / 365);
-
-  if (diffInSec < 60) {
-    return "Adesso";
-  }
-  if (diffInMin < 60) {
-    return `${diffInMin} ${diffInMin === 1 ? 'minuto' : 'minuti'} fa`;
-  }
-  if (diffInHour < 24) {
-    return `${diffInHour} ${diffInHour === 1 ? 'ora' : 'ore'} fa`;
-  }
-  if (diffInDay < 7) {
-    return `${diffInDay} ${diffInDay === 1 ? 'giorno' : 'giorni'} fa`;
-  }
-  if (diffInWeek < 4) {
-    return `${diffInWeek} ${diffInWeek === 1 ? 'settimana' : 'settimane'} fa`;
-  }
-  if (diffInMonth < 12) {
-    return `${diffInMonth} ${diffInMonth === 1 ? 'mese' : 'mesi'} fa`;
-  }
-  return `${diffInYear} ${diffInYear === 1 ? 'anno' : 'anni'} fa`;
+  // Importiamo la funzione centralizzata
+  const { formatRelativeTime: formatTime } = require('./dateUtils');
+  return formatTime(date);
 }
 
 /**

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import SidebarFilter from '../components/library/filter/SidebarFilter';
-import LibraryToolbar from '../components/library/LibraryToolbar';
-import GridView from '../components/library/GridView';
-import ListView from '../components/library/ListView';
-import Pagination from '../components/library/Pagination';
-import AddGameModal from '../components/game/AddGameModal';
-import EditGameInfoModal from '../components/game/EditGameInfoModal';
-import ConfirmationModal from '../components/ui/ConfirmationModal';
-import { filterGames, sortGames, calculateMaxValues } from '../utils/gameUtils';
-import { getAllGames, updateGame, deleteGame } from '../utils/gamesData';
-import type { GameFilters, SortOption, SortOrder, Game, GameStatus } from '../types/game';
+import SidebarFilter from '../../components/library/filter/SidebarFilter';
+import LibraryToolbar from '../../components/library/LibraryToolbar';
+import GridView from '../../components/library/GridView';
+import ListView from '../../components/library/ListView';
+import Pagination from '../../components/library/Pagination';
+import AddGameModal from '../../components/game/AddGameModal';
+import EditGameInfoModal from '../../components/game/EditGameInfoModal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import { filterGames, sortGames, calculateMaxValues } from '../../utils/gameUtils';
+import { getAllGames, updateGame, deleteGame } from '../../utils/gamesData';
+import type { GameFilters, SortOption, SortOrder, Game, GameStatus, GameSearchParams } from '../../types/game';
 
 const LibraryPage: React.FC = () => {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -40,16 +40,16 @@ const LibraryPage: React.FC = () => {
         setAllGames(games);
 
         // Calcola i massimali iniziali
-        const { maxPriceTemp, maxHoursTemp, maxMetacriticTemp } = calculateMaxValues(games);
+        const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(games);
 
         // Imposta i filtri iniziali con i massimali calcolati
         setFilters({
             status: [],
             platform: [],
             genre: [],
-            priceRange: [0, maxPriceTemp],
-            hoursRange: [0, maxHoursTemp],
-            metacriticRange: [0, maxMetacriticTemp],
+            priceRange: [0, priceRange[1]],
+            hoursRange: [0, hoursRange[1]],
+            metacriticRange: [0, metacriticRange[1]],
             purchaseDate: "",
         });
 
@@ -58,7 +58,18 @@ const LibraryPage: React.FC = () => {
 
     // Applica i filtri quando cambiano
     useEffect(() => {
-        const filtered = filterGames(allGames, filters);
+        // Mappa i filtri di tipo GameFilters in GameSearchParams
+        const searchParams: GameSearchParams = {
+            filters: {
+                ...filters,
+                priceRange: filters.priceRange || [0, 0],
+                hoursRange: filters.hoursRange || [0, 0],
+                metacriticRange: filters.metacriticRange || [0, 0],
+            },
+        };
+
+        // Passa i parametri mappati a filterGames
+        const filtered = filterGames(allGames, searchParams);
         const sorted = sortGames(filtered, sortBy, sortOrder);
         setFilteredGames(sorted);
         setCurrentPage(1);

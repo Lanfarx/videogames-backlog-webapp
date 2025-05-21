@@ -1,12 +1,12 @@
 import React from 'react';
-import { getAllGames, getGamesStats } from '../utils/gamesData';
-import { getRecentActivities } from '../utils/activitiesData';
-import { getStatusData } from '../utils/statusData';
-import StatsCard from '../components/ui/StatsCard';
-import StatusDistributionChart from '../components/dashboard/StatusDistributionChart';
-import PlatformBarChart from '../components/dashboard/PlatformBarChart';
-import GenreBarChart from '../components/dashboard/GenreBarChart';
-import RecentActivitiesList from '../components/dashboard/RecentActivitiesList';
+import { getAllGames, getGamesStats } from '../../utils/gamesData';
+import { getRecentActivities } from '../../utils/activitiesData';
+import { getStatusData } from '../../utils/statusData';
+import StatsCard from '../../components/ui/StatsCard';
+import StatusDistributionChart from '../../components/dashboard/StatusDistributionChart';
+import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
+import GenreBarChart from '../../components/dashboard/GenreBarChart';
+import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
 import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {

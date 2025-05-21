@@ -12,6 +12,7 @@ export default function SettingsTabs({ activeTab, onTabChange }: SettingsTabsPro
     { id: "generali", label: "Generali" },
     { id: "profilo", label: "Profilo" },
     { id: "privacy", label: "Privacy" },
+    { id: "account-collegati", label: "Account Collegati" },
   ]
 
   return (
