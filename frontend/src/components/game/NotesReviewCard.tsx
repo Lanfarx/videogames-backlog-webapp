@@ -3,6 +3,7 @@ import RatingStars from '../ui/atoms/RatingStars';
 import { Save, AlertCircle } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
 import { calculateRatingFromReview } from '../../utils/gamesData';
+import { recordGameRating } from '../../utils/activitiesData';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -72,7 +73,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     if (onReviewSave && !isNotStarted) {
       const now = new Date();
       const formattedDate = now.toISOString().split('T')[0];
-      
+
       const updatedReview: GameReview = {
         text: reviewText,
         gameplay: gameplayRating,
@@ -81,11 +82,16 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
         sound: soundRating,
         date: formattedDate
       };
-      
+
       // Aggiorna anche lo stato locale della data
       setReviewDate(formattedDate);
-      
+
       onReviewSave(updatedReview);
+
+      // Registra l'attività di valutazione
+      const averageRating = calculateRatingFromReview(updatedReview);
+      recordGameRating(game.id, game.title, averageRating);
+
       // Mostra messaggio di successo per 3 secondi
       setSaveReviewSuccess(true);
       setTimeout(() => setSaveReviewSuccess(false), 3000);

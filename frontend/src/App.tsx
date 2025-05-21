@@ -1,40 +1,33 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import HomePage from './pages/HomePage';
-import LibraryPage from './pages/LibraryPage';
-import DashboardPage from './pages/DashboardPage';
-import SettingsPage from './pages/SettingsPage';
+import HomePage from './pages/header/HomePage';
+import LibraryPage from './pages/header/LibraryPage';
+import DashboardPage from './pages/header/DashboardPage';
+import SettingsPage from './pages/header/SettingsPage';
 import GamePage from './pages/GamePage';
 import DiarioPage from './pages/DiarioPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
-import ContactPage from './pages/ContactPage';
+import ProfilePage from './pages/header/ProfilePage';
+import PrivacyPage from './pages/footer/PrivacyPage';
+import TermsPage from './pages/footer/TermsPage';
+import ContactPage from './pages/footer/ContactPage';
 
 function App() {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/library" element={
-          <Layout>
-            <LibraryPage />
-          </Layout>
-        } />
-        <Route path="/game/:id" element={<GamePage />} />
-        <Route path="/dashboard" element={
-          <Layout>
-            <DashboardPage />
-          </Layout>
-        } />
-        <Route path="/settings" element={
-          <Layout>
-            <SettingsPage />
-          </Layout>
-        } />
-        <Route path="/diario" element={<Layout><DiarioPage /> </Layout>} />
-        <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
-        <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
-        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        {/* Route con layout standard */}
+          <Route path="/game/:id" element={<GamePage />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/diario" element={<DiarioPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
       </Routes>
     </div>
   );

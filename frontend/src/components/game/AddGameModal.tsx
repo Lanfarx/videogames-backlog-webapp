@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Upload, Award } from 'lucide-react';
 import { Game, GameStatus } from '../../types/game';
-import { STATUS_OPTIONS, STATUS_COLORS, STATUS_NAMES, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
+import { STATUS_OPTIONS, STATUS_COLORS, STATUS_LABELS, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?: string, platinumDate?: string }
@@ -205,7 +205,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
 
   // Per visualizzazione nell'anteprima
   const statusColor = STATUS_COLORS[gameData.status as GameStatus] || "#E0E0E0";
-  const statusName = STATUS_NAMES[gameData.status as GameStatus] || "Sconosciuto";
+  const statusName = STATUS_LABELS[gameData.status as GameStatus] || "Sconosciuto";
 
   if (!isOpen) return null;
 

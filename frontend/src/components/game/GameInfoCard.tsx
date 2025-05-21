@@ -4,7 +4,7 @@ import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from '../ui/PlaytimePopover';
-import { getGameRating } from '../../utils/gamesData';
+import { getGameRating, updateGameRating } from '../../utils/gamesData';
 import EditGameInfoModal from './EditGameInfoModal';
 
 interface GameInfoCardProps {
@@ -25,6 +25,14 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
   useEffect(() => {
     setDisplayedHours(game.hoursPlayed);
   }, [game.hoursPlayed]);
+
+  useEffect(() => {
+    // Aggiorna dinamicamente il rating del gioco
+    if (onEditInfo) {
+      const updatedGame = updateGameRating(game);
+      onEditInfo(updatedGame);
+    }
+  }, [game.review]);
   
   const handleSavePlaytime = (hoursToAdd: number) => {
     if (onUpdatePlaytime) {

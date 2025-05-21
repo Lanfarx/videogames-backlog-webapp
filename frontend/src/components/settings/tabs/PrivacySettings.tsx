@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import { Globe, Lock, Clock, BarChart2, UserPlus, Mail, MessageSquare } from 'lucide-react';
+import { Globe, Lock, BookOpen, BarChart2, UserPlus, Mail, MessageSquare, Clock } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
 import ToggleSwitch from '../ToggleSwitch';
 
 interface PrivacySettingsProps {
   isProfilePublic: boolean;
   privacyOptions: {
-    showPlaytime: boolean;
-    showLibraryStats: boolean;
+    showStats: boolean;
+    showDiary: boolean;
     allowFriendRequests: boolean;
   };
   notificationOptions: {
     emailNotifications: boolean;
-    messageFromNonFollowers: boolean;
   };
   onProfileVisibilityChange: (isPublic: boolean) => void;
   onPrivacyOptionChange: (option: string, value: boolean) => void;
@@ -66,31 +65,33 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
             
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center space-x-3">
-                <Clock className="w-5 h-5 text-text-secondary" />
+                <BarChart2 className="w-5 h-5 text-text-secondary" />
                 <div>
-                  <p className="text-text-primary">Mostra ore di gioco</p>
-                  <p className="text-xs text-text-secondary">Consenti agli altri utenti di vedere le tue ore di gioco</p>
+                  <p className="text-text-primary">Mostra statistiche generali</p>
+                  <p className="text-xs text-text-secondary">Consenti agli altri utenti di vedere i tuoi progressi e statistiche di gioco</p>
                 </div>
               </div>
               <ToggleSwitch 
-                checked={privacyOptions.showPlaytime} 
-                onChange={(value) => onPrivacyOptionChange('showPlaytime', value)}
+                checked={privacyOptions.showStats} 
+                onChange={(value) => onPrivacyOptionChange('showStats', value)}
               />
             </div>
             
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center space-x-3">
-                <BarChart2 className="w-5 h-5 text-text-secondary" />
+                <BookOpen className="w-5 h-5 text-text-secondary" />
                 <div>
-                  <p className="text-text-primary">Mostra statistiche libreria</p>
-                  <p className="text-xs text-text-secondary">Consenti agli altri utenti di vedere le statistiche della tua libreria</p>
+                  <p className="text-text-primary">Mostra diario di gioco</p>
+                  <p className="text-xs text-text-secondary">Consenti agli altri utenti di vedere il tuo diario di gioco</p>
                 </div>
               </div>
               <ToggleSwitch 
-                checked={privacyOptions.showLibraryStats} 
-                onChange={(value) => onPrivacyOptionChange('showLibraryStats', value)}
+                checked={privacyOptions.showDiary} 
+                onChange={(value) => onPrivacyOptionChange('showDiary', value)}
               />
             </div>
+            
+
             
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center space-x-3">
@@ -109,11 +110,11 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
         )}
       </SettingsSection>
       
-      {/* Sezione Messaggi e Notifiche */}
-      <SettingsSection title="Messaggi e notifiche">
+      {/* Sezione Notifiche */}
+      <SettingsSection title="Notifiche">
         <div className="space-y-3">
           <p className="text-sm text-text-secondary mb-4">
-            Configura come desideri ricevere notifiche e chi può inviarti messaggi.
+            Configura come desideri ricevere notifiche per attività e aggiornamenti.
           </p>
           
           <div className="flex items-center justify-between py-2">
@@ -127,20 +128,6 @@ const PrivacySettings: React.FC<PrivacySettingsProps> = ({
             <ToggleSwitch 
               checked={notificationOptions.emailNotifications} 
               onChange={(value) => onNotificationOptionChange('emailNotifications', value)}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="w-5 h-5 text-text-secondary" />
-              <div>
-                <p className="text-text-primary">Messaggi da utenti che non segui</p>
-                <p className="text-xs text-text-secondary">Permetti agli utenti che non segui di inviarti messaggi</p>
-              </div>
-            </div>
-            <ToggleSwitch 
-              checked={notificationOptions.messageFromNonFollowers} 
-              onChange={(value) => onNotificationOptionChange('messageFromNonFollowers', value)}
             />
           </div>
         </div>

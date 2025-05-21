@@ -1,9 +1,10 @@
-import React, { ReactNode } from 'react';
-import Header from './Header';
-import Footer from './Footer';
+import React, { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
+import Header from "./Header";
+import Footer from "./Footer";
 
 interface LayoutProps {
-  children: ReactNode;
+  children?: ReactNode; // Rendiamo children opzionale
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -12,7 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Header />
       <main className="flex-grow w-full">
         <div className="w-full mx-auto ">
-          {children}
+          {/* Mostra children se forniti, altrimenti usa Outlet per le route nidificate */}
+          {children || <Outlet />}
         </div>
       </main>
       <Footer />
@@ -21,4 +23,3 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 };
 
 export default Layout;
-  

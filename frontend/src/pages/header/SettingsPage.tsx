@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { useTheme } from "../contexts/theme-context";
-import SettingsTabs from "../components/settings/SettingsTabs";
-import ProfileSettings from "../components/settings/tabs/ProfileSettings";
-import PrivacySettings from "../components/settings/tabs/PrivacySettings";
-import GeneralSettings from "../components/settings/tabs/GeneralSettings";
-import ConnectedAccountsSettings from "../components/settings/tabs/ConnectedAccountsSettings";
+import React, { useState, useEffect } from "react";
+import { useTheme } from "../../contexts/theme-context";
+import SettingsTabs from "../../components/settings/SettingsTabs";
+import ProfileSettings from "../../components/settings/tabs/ProfileSettings";
+import PrivacySettings from "../../components/settings/tabs/PrivacySettings";
+import ConnectedAccountsSettings from "../../components/settings/tabs/ConnectedAccountsSettings";
+import GeneralSettings from "../../components/settings/tabs/GeneralSettings";
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("generali");
@@ -18,53 +18,84 @@ const SettingsPage: React.FC = () => {
   );
 
   // Stati e handler per privacy e account collegati
-  const [isProfilePublic, setIsProfilePublic] = useState(false);
-  const [privacyOptions, setPrivacyOptions] = useState({
-    showPlaytime: true,
-    showLibraryStats: true,
-    allowFriendRequests: true,
+  const [isProfilePublic, setIsProfilePublic] = useState(() => {
+    const savedValue = localStorage.getItem('isProfilePublic');
+    return savedValue ? JSON.parse(savedValue) : false;
   });
-  const [notificationOptions, setNotificationOptions] = useState({
-    emailNotifications: true,
-    messageFromNonFollowers: false,
+  
+  const [privacyOptions, setPrivacyOptions] = useState(() => {
+    const savedOptions = localStorage.getItem('privacyOptions');
+    return savedOptions ? JSON.parse(savedOptions) : {
+      showStats: true,
+      showDiary: true,
+      allowFriendRequests: true,
+    };
   });
-  const [connectedAccounts, setConnectedAccounts] = useState({
-    steam: "",
+  
+  const [notificationOptions, setNotificationOptions] = useState(() => {
+    const savedOptions = localStorage.getItem('notificationOptions');
+    return savedOptions ? JSON.parse(savedOptions) : {
+      emailNotifications: true
+    };
+  });
+  
+  const [connectedAccounts, setConnectedAccounts] = useState(() => {
+    const savedAccounts = localStorage.getItem('connectedAccounts');
+    return savedAccounts ? JSON.parse(savedAccounts) : {
+      steam: "",
+    };
   });
 
   const handleProfileVisibilityChange = (isPublic: boolean) => {
     setIsProfilePublic(isPublic);
+    localStorage.setItem('isProfilePublic', JSON.stringify(isPublic));
   };
 
   const handlePrivacyOptionChange = (option: string, value: boolean) => {
-    setPrivacyOptions((prev) => ({
-      ...prev,
-      [option]: value,
-    }));
+    setPrivacyOptions((prev: any) => {
+      const newOptions = {
+        ...prev,
+        [option]: value,
+      };
+      localStorage.setItem('privacyOptions', JSON.stringify(newOptions));
+      return newOptions;
+    });
   };
 
   const handleNotificationOptionChange = (option: string, value: boolean) => {
-    setNotificationOptions((prev) => ({
-      ...prev,
-      [option]: value,
-    }));
+    setNotificationOptions((prev: any) => {
+      const newOptions = {
+        ...prev,
+        [option]: value,
+      };
+      localStorage.setItem('notificationOptions', JSON.stringify(newOptions));
+      return newOptions;
+    });
   };
 
   const handleConnectedAccountChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    platform: string,
+    value: string
   ) => {
-    const { name, value } = e.target;
-    setConnectedAccounts((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setConnectedAccounts((prev: any) => {
+      const newAccounts = {
+        ...prev,
+        [platform]: value,
+      };
+      localStorage.setItem('connectedAccounts', JSON.stringify(newAccounts));
+      return newAccounts;
+    });
   };
 
   const handleAccountDisconnect = (platform: string) => {
-    setConnectedAccounts((prev) => ({
-      ...prev,
-      [platform]: "",
-    }));
+    setConnectedAccounts((prev: any) => {
+      const newAccounts = {
+        ...prev,
+        [platform]: "",
+      };
+      localStorage.setItem('connectedAccounts', JSON.stringify(newAccounts));
+      return newAccounts;
+    });
   };
 
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
@@ -96,16 +127,15 @@ const SettingsPage: React.FC = () => {
           <GeneralSettings
             language={language}
             dateFormat={dateFormat}
+            theme={theme}
+            accentColor={accentColor}
+            accentColors={accentColors}
             languageOptions={languageOptions}
             dateFormatOptions={dateFormatOptions}
             onLanguageChange={setLanguage}
             onDateFormatChange={setDateFormat}
-            theme={theme}
-            accentColor={accentColor}
-            setTheme={setTheme}
-            setAccentColor={setAccentColor}
-            accentColors={accentColors}
-          />
+            setTheme={setTheme} 
+            />
         )}
 
         {activeTab === "profilo" && <ProfileSettings />}

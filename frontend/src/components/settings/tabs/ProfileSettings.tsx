@@ -18,12 +18,15 @@ interface PasswordData {
 
 const ProfileSettings: React.FC = () => {
   // Stato per i dati del profilo
-  const [profile, setProfile] = useState<ProfileData>({
-    username: 'utente123',
-    email: 'utente@esempio.com',
-    fullName: 'Mario Rossi',
-    bio: 'Appassionato di videogiochi, in particolare RPG e strategici.',
-    avatar: null
+  const [profile, setProfile] = useState<ProfileData>(() => {
+    const savedProfile = localStorage.getItem('profileData');
+    return savedProfile ? JSON.parse(savedProfile) : {
+      username: 'utente123',
+      email: 'utente@esempio.com',
+      fullName: 'Mario Rossi',
+      bio: 'Appassionato di videogiochi, in particolare RPG e strategici.',
+      avatar: null
+    };
   });
   
   // Stato per la modifica della password
@@ -139,12 +142,15 @@ const ProfileSettings: React.FC = () => {
 
   // Gestisce il salvataggio del profilo
   const handleSave = () => {
-    // Qui implementeremo la logica per salvare i dati del profilo
+    // Salva i dati del profilo nel localStorage
     console.log('Salvataggio profilo:', profile);
+    localStorage.setItem('profileData', JSON.stringify(profile));
     
-    // Simulazione di un salvataggio riuscito
+    // Aggiorna lo stato e mostra conferma
     setTimeout(() => {
       setIsEdited(false);
+      // Trigger un evento di storage per aggiornare altre componenti
+      window.dispatchEvent(new Event('storage'));
       alert('Profilo aggiornato con successo!');
     }, 1000);
   };

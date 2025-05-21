@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, ReactNode } from 'react';
-import { StatusItem, getStatusColor } from '../../utils/statusData';
+import { StatusItem } from '../../utils/statusData';
+import { getStatusColor } from '../../constants/gameConstants';
 
 interface StatusDistributionChartProps {
     data: StatusItem[];

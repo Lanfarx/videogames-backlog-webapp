@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Monitor, Clock, Calendar, MoreVertical, Star } from 'lucide-react';
+import { Monitor, Clock, Calendar, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Game, GameStatus } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
@@ -96,13 +96,12 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 {game.metacritic ? (
-                  <div className="flex items-center space-x-2">
-                    <Star className="h-4 w-4 text-accent-primary" />
-                    <span className="font-bold text-accent-primary">{game.metacritic}</span>
+                  <div className="flex items-center">
+                    <span className="font-bold text-accent-primary mr-1">{game.metacritic}</span>
                     <span className="text-xs text-text-secondary">/ 100</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-text-disabled">Non disponibile</span>
+                  "-"
                 )}
               </td>
               <td className="p-3 border-b border-border-color">

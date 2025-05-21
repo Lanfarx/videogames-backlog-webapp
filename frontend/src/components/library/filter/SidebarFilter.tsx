@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
-import { calculateCounts, calculateMaxValues } from '../../../utils/gameUtils';
+import { calculateMaxValues, calculateCounts } from '../../../utils/gameUtils';
 import { STATUS_OPTIONS } from '../../../constants/gameConstants';
 
 // Interfaccia per i props del componente
@@ -43,17 +43,17 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     setGenreCounts(genreCountsTemp);
 
     // Calcola i valori massimi per i range
-    const { maxPriceTemp, maxHoursTemp, maxMetacriticTemp } = calculateMaxValues(games);
-    setMaxPrice(maxPriceTemp);
-    setMaxHours(maxHoursTemp);
-    setMaxMetacritic(maxMetacriticTemp || 100); // Fallback a 100 se non ci sono giochi con Metacritic
+    const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(games);
+    setMaxPrice(priceRange[1]);
+    setMaxHours(hoursRange[1]);
+    setMaxMetacritic(metacriticRange[1] || 100); // Fallback a 100 se non ci sono giochi con Metacritic
 
     // Imposta i valori iniziali dei filtri di prezzo, ore e metacritic
     setFilters((prev) => ({
       ...prev,
-      priceRange: [0, maxPriceTemp],
-      hoursRange: [0, maxHoursTemp],
-      metacriticRange: [0, maxMetacriticTemp || 100],
+      priceRange: [0, priceRange[1]],
+      hoursRange: [0, hoursRange[1]],
+      metacriticRange: [0, metacriticRange[1] || 100],
     }));
   }, [games]);
 

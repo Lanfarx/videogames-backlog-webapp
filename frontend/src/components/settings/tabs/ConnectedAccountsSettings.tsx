@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import SettingsSection from "../SettingsSection";
 
 interface ConnectedAccountsSettingsProps {
   connectedAccounts: {
     steam?: string;
   };
-  onConnectedAccountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onConnectedAccountChange: (platform: string, value: string) => void;
   onAccountDisconnect: (platform: string) => void;
 }
 
@@ -14,6 +14,29 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
   onConnectedAccountChange,
   onAccountDisconnect,
 }) => {
+  const [steamIdInput, setSteamIdInput] = useState("");
+  const [steamIdError, setSteamIdError] = useState("");
+  
+  const handleSteamIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, ''); // Solo numeri
+    setSteamIdInput(value);
+    
+    if (value.length > 0 && value.length !== 17) {
+      setSteamIdError("Lo Steam ID deve essere di 17 cifre");
+    } else {
+      setSteamIdError("");
+    }
+  };
+  
+  const handleConnectSteam = () => {
+    if (steamIdInput.length === 17) {
+      onConnectedAccountChange("steam", steamIdInput);
+      setSteamIdInput("");
+      setSteamIdError("");
+    } else {
+      setSteamIdError("Lo Steam ID deve essere di 17 cifre");
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -45,9 +68,19 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-medium text-text-primary">
-                    Account Steam
-                  </h3>
+                  <div className="flex items-center space-x-1">
+                    <h3 className="font-medium text-text-primary">
+                      Account Steam
+                    </h3>
+                    <div className="relative group">
+                      <span className="cursor-help text-text-secondary rounded-full bg-border-color w-4 h-4 inline-flex items-center justify-center text-xs">?</span>
+                      <div className="absolute hidden group-hover:block w-64 p-2 bg-slate-700 text-white text-xs rounded-lg -top-2 left-6 shadow-lg z-20">
+                        <p className="mb-1">
+                          Nota: tutte le impostazioni del profilo Steam riguardanti la privacy devono essere pubbliche per il corretto funzionamento.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   {connectedAccounts.steam ? (
                     <p className="text-xs text-accent-success">
                       Account collegato
@@ -75,17 +108,28 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                         type="text"
                         name="steam"
                         placeholder="Steam ID 64"
-                        value={connectedAccounts.steam || ""}
-                        onChange={onConnectedAccountChange}
-                        className="px-3 py-1 text-sm border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                        value={steamIdInput}
+                        onChange={handleSteamIdChange}
+                        maxLength={17}
+                        className={`px-3 py-1 text-sm border ${
+                          steamIdError ? "border-red-500" : "border-border-color"
+                        } rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
                       />
+                      {steamIdError && (
+                        <p className="text-xs text-red-500 mb-1 absolute top-0 transform -translate-y-5">
+                          {steamIdError}
+                        </p>
+                      )}
                       <div className="absolute hidden group-hover:block min-w-48 p-2 bg-slate-700 text-white text-xs rounded-lg top-8 right-0 shadow-lg z-10">
                         <p className="mb-1 whitespace-nowrap">
                           Il tuo identificativo Steam a 17 cifre
                         </p>
                       </div>
                     </div>
-                    <button className="px-3 py-1 bg-accent-primary text-white text-sm rounded-lg hover:bg-accent-primary/90 transition-colors">
+                    <button 
+                      onClick={handleConnectSteam}
+                      className="px-3 py-1 bg-accent-primary text-white text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
+                    >
                       Collega
                     </button>
                   </div>

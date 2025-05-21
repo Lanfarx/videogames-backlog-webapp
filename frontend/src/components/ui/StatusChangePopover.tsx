@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { GameStatus } from '../../types/game';
-import { getStatusLabel, getStatusColor, getStatusData } from '../../utils/statusData';
+import { STATUS_OPTIONS } from '../../constants/gameConstants';
 
 interface StatusChangePopoverProps {
   currentStatus: GameStatus;
@@ -35,9 +35,6 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
     };
   }, [onCancel]);
 
-  // Ottieni tutti gli stati disponibili da statusData.ts
-  const statusItems = getStatusData();
-  
   return (
     <div 
       ref={popoverRef}
@@ -48,32 +45,34 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
           <h3 className="text-sm font-medium text-text-primary">Cambia stato</h3>
         </div>
         <div className="py-1">
-          {statusItems.map((statusItem) => {
+          {STATUS_OPTIONS.map((option) => {
+            const status = option.value;
+            
             // Filtro degli stati non selezionabili secondo le regole di business:
             
             // Regola 1: Non mostrare "Da iniziare" se ci sono ore di gioco
-            if (statusItem.status === 'not-started' && hoursPlayed > 0) {
+            if (status === 'not-started' && hoursPlayed > 0) {
               return null;
             }
             
             // Regola 2: Mostra "In corso" solo se il gioco ha già ore di gioco
-            if (statusItem.status === 'in-progress' && hoursPlayed === 0) {
+            if (status === 'in-progress' && hoursPlayed === 0) {
               return null;
             }
             
             return (
               <button
-                key={statusItem.status}
-                onClick={() => onStatusChange(statusItem.status as GameStatus)}
+                key={status}
+                onClick={() => onStatusChange(status)}
                 className={`w-full text-left px-4 py-2 text-sm leading-5 flex items-center ${
-                  statusItem.status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
+                  status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
                 }`}
               >
                 <span 
                   className="w-3 h-3 rounded-full mr-2" 
-                  style={{ backgroundColor: statusItem.color }} 
+                  style={{ backgroundColor: option.color }} 
                 />
-                {statusItem.label}
+                {option.label}
               </button>
             );
           })}

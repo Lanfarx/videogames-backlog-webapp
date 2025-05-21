@@ -1,6 +1,7 @@
 import React from 'react';
 import { Globe, Palette, Sun, Moon } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
+import ColorSelector from '../ColorSelector';
 
 interface GeneralSettingsProps {
   language: string;
@@ -13,7 +14,6 @@ interface GeneralSettingsProps {
   onLanguageChange: (language: string) => void;
   onDateFormatChange: (format: string) => void;
   setTheme: (theme: 'light' | 'dark') => void;
-  setAccentColor: (color: any) => void;
 }
 
 const GeneralSettings: React.FC<GeneralSettingsProps> = ({
@@ -27,8 +27,8 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
   onLanguageChange,
   onDateFormatChange,
   setTheme,
-  setAccentColor
 }) => {
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -76,20 +76,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                   <p className="text-xs text-text-secondary">Seleziona il colore principale dell'interfaccia</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                {Object.entries(accentColors).map(([colorName, colorClass]) => (
-                  <button
-                    key={colorName}
-                    className={`w-8 h-8 rounded-full ${colorClass} transition-all ${
-                      accentColor === colorName 
-                        ? 'ring-2 ring-offset-2 ring-offset-primaryBg dark:ring-offset-slate-800 ring-gray-400' 
-                        : 'hover:scale-110'
-                    }`}
-                    onClick={() => setAccentColor(colorName)}
-                    title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
-                  />
-                ))}
-              </div>
+              <ColorSelector />
             </div>
           </div>
         </div>
