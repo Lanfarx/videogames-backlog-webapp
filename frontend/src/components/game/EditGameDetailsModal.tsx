@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Game } from '../../types/game';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGame } from '../../store/slice/gamesSlice';
 
 interface EditGameDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedGame: Partial<Game>) => void;
+  onSave?: (updatedGame: Partial<Game>) => void; // Opzionale per backward compatibility
   game: Game;
 }
 
@@ -14,6 +16,7 @@ const EditGameDetailsModal = ({
   onSave,
   game
 }: EditGameDetailsModalProps) => {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     title: game.title,
     developer: game.developer,
@@ -32,17 +35,29 @@ const EditGameDetailsModal = ({
       [name]: value
     }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convertiamo la stringa delle genres di nuovo in un array
     const updatedGame: Partial<Game> = {
       ...formData,
+      releaseYear: Number(formData.releaseYear),
       genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean)
     };
     
-    onSave(updatedGame);
+    // Aggiorna il gioco attraverso Redux usando updateGame
+    const completeUpdatedGame = {
+      ...game,
+      ...updatedGame
+    };
+    
+    dispatch(updateGame(completeUpdatedGame));
+    
+    // Chiama la callback opzionale per backward compatibility
+    if (onSave) {
+      onSave(updatedGame);
+    }
+    
     onClose();
   };
 

@@ -108,6 +108,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           </button>
           {activeActionMenu === 'statusChange' && (
             <StatusChangePopover
+              gameId={game.id}
               currentStatus={game.status}
               onStatusChange={(newStatus) => {
                 onStatusChange?.(game.id.toString(), newStatus);
@@ -132,11 +133,9 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           </button>
           {activeActionMenu === 'addPlaytime' && (
             <PlaytimePopover
-              onSave={(hoursToAdd) => {
-                const updatedGame = { ...game, hoursPlayed: game.hoursPlayed + hoursToAdd };
-                onStatusChange?.(game.id.toString(), updatedGame.status);
-                setActiveActionMenu(null);
-              }}
+              gameId={game.id}
+              currentHours={game.hoursPlayed}
+              onSave={() => setActiveActionMenu(null)}
               onCancel={() => setActiveActionMenu(null)}
             />
           )}

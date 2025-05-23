@@ -7,6 +7,8 @@ import GenreTagList from '../ui/GenreTagList';
 import StatusChangePopover from '../ui/StatusChangePopover';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import EditGameDetailsModal from './EditGameDetailsModal';
+import { useAppDispatch } from '../../store/hooks';
+import { deleteGame } from '../../store/slice/gamesSlice';
 
 interface GameBannerProps {
   game: Game;
@@ -16,6 +18,8 @@ interface GameBannerProps {
 }
 
 const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps) => {
+  const dispatch = useAppDispatch();
+  
   // Ottieni l'etichetta in italiano per lo stato attuale
   const currentStatusLabel = getStatusLabel(game.status);
   const [showStatusPopover, setShowStatusPopover] = useState(false);
@@ -34,9 +38,15 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps)
   };
 
   const handleConfirmDelete = () => {
+    // Usa Redux per eliminare il gioco dallo stato globale
+    dispatch(deleteGame(game.id));
+    
+    // Chiama anche il callback opzionale per compatibilità
     if (onDelete) {
       onDelete();
     }
+    
+    setShowDeleteConfirmation(false);
   };
   
   const handleEditClick = () => {
@@ -97,11 +107,11 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps)
               
               {showStatusPopover && (
                 <StatusChangePopover 
-                  currentStatus={game.status}
-                  onStatusChange={handleStatusChange}
-                  onCancel={() => setShowStatusPopover(false)}
-                  hoursPlayed={game.hoursPlayed} // Passiamo le ore di gioco
-                />
+                    currentStatus={game.status}
+                    onStatusChange={handleStatusChange}
+                    onCancel={() => setShowStatusPopover(false)}
+                    hoursPlayed={game.hoursPlayed} // Passiamo le ore di gioco
+                    gameId={game.id}                />
               )}
             </div>
             <button 

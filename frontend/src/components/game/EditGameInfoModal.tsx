@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Game, GameStatus } from '../../types/game';
 import { GAME_PLATFORMS } from '../../constants/gameConstants';
-import { getAllPlatforms } from '../../utils/gamesData';
+import { useAllGames } from '../../utils/gamesHooks';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGameStatus, updateGamePlaytime, updateGamePlatform, updateGamePrice, updateGamePurchaseDate, updateGameCompletionDate, updateGamePlatinumDate } from '../../store/slice/gamesSlice';
 
 interface EditGameInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedGame: Partial<Game>) => void;
+  onSave?: (updatedGame: Partial<Game>) => void; // Opzionale per backward compatibility
   game: Game;
 }
 
@@ -16,6 +18,7 @@ const EditGameInfoModal = ({
   onSave,
   game
 }: EditGameInfoModalProps) => {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     platform: game.platform || '',
     price: game.price !== undefined ? game.price.toString() : '',
@@ -39,7 +42,6 @@ const EditGameInfoModal = ({
       [name]: value
     }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -60,23 +62,52 @@ const EditGameInfoModal = ({
       newStatus = 'in-progress';
     }
     
-    // Convertiamo i valori nei tipi corretti
-    const updatedGame: Partial<Game> = {
-      platform: formData.platform,
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      purchaseDate: formData.purchaseDate || undefined,
-      hoursPlayed: newHoursPlayed,
-      // Aggiungiamo le date solo se effettivamente modificate e se lo stato del gioco lo consente
-      ...(hasBeenCompleted && { completionDate: formData.completionDate || undefined }),
-      ...(isPlatinum && { platinumDate: formData.platinumDate || undefined })
-    };
+    // Aggiorna i dati attraverso Redux dispatch
+    dispatch(updateGamePlaytime({ gameId: game.id, hoursPlayed: newHoursPlayed }));
     
-    // Aggiungiamo il nuovo stato se è stato cambiato
-    if (newStatus) {
-      updatedGame.status = newStatus;
+    if (formData.platform && formData.platform !== game.platform) {
+      dispatch(updateGamePlatform({ gameId: game.id, platform: formData.platform }));
+    }
+      if (formData.price && parseFloat(formData.price) !== game.price) {
+      dispatch(updateGamePrice({ gameId: game.id, price: parseFloat(formData.price) }));
     }
     
-    onSave(updatedGame);
+    if (formData.purchaseDate && formData.purchaseDate !== game.purchaseDate) {
+      dispatch(updateGamePurchaseDate({ gameId: game.id, purchaseDate: formData.purchaseDate }));
+    }
+    
+    // Aggiorna le date se modificate
+    if (hasBeenCompleted && formData.completionDate !== game.completionDate) {
+      if (formData.completionDate) {
+        dispatch(updateGameCompletionDate({ gameId: game.id, completionDate: formData.completionDate }));
+      }
+    }
+    
+    if (isPlatinum && formData.platinumDate !== game.platinumDate) {
+      if (formData.platinumDate) {
+        dispatch(updateGamePlatinumDate({ gameId: game.id, platinumDate: formData.platinumDate }));
+      }
+    }
+    
+    // Aggiorna lo stato se necessario
+    if (newStatus) {
+      dispatch(updateGameStatus({ gameId: game.id, status: newStatus }));
+    }
+    
+    // Chiama la callback opzionale per backward compatibility
+    if (onSave) {
+      const updatedGame: Partial<Game> = {
+        platform: formData.platform,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        purchaseDate: formData.purchaseDate || undefined,
+        hoursPlayed: newHoursPlayed,
+        ...(hasBeenCompleted && { completionDate: formData.completionDate || undefined }),
+        ...(isPlatinum && { platinumDate: formData.platinumDate || undefined }),
+        ...(newStatus && { status: newStatus })
+      };
+      onSave(updatedGame);
+    }
+    
     onClose();
   };
 

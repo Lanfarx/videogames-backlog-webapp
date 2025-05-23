@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings, User } from 'lucide-react';
+import { Settings } from 'lucide-react';
+import { loadFromLocal } from '../../utils/localStorage';
+import AppLogo from '../ui/atoms/AppLogo';
 
 const Header: React.FC = () => {
   const [userProfile, setUserProfile] = useState({
@@ -11,12 +13,11 @@ const Header: React.FC = () => {
   // Carica i dati del profilo salvati
   useEffect(() => {
     const loadProfileData = () => {
-      const savedProfileData = localStorage.getItem('profileData');
+      const savedProfileData = loadFromLocal('profileData');
       if (savedProfileData) {
-        const profileInfo = JSON.parse(savedProfileData);
         setUserProfile({
-          username: profileInfo.username || 'utente123',
-          avatar: profileInfo.avatar || null
+          username: savedProfileData.username || 'utente123',
+          avatar: savedProfileData.avatar || null
         });
       }
     };
@@ -36,9 +37,7 @@ const Header: React.FC = () => {
       <header className="h-20 bg-primary-bg shadow-sm flex items-center justify-between px-8 flex-shrink-0">
           <div className="flex items-center">
             {/* Logo */}
-            <NavLink to="/" className="text-3xl font-bold text-text-primary font-primary">
-              Game<span className="text-accent-primary">Backlog</span>
-            </NavLink>
+            <AppLogo />
           </div>
 
           {/* Menu di navigazione - centrato orizzontalmente */}

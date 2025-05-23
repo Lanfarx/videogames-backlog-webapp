@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Monitor, Clock, MoreVertical, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Game, GameStatus } from '../../types/game';
-import { getGameRating } from '../../utils/gamesData';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import { getStatusColor } from '../../utils/statusData';
 import ThreeDotsModal from '../ui/ThreeDotsModal';
+import { useGameById, getGameRating } from '../../utils/gamesHooks';
 
 interface GameCardProps {
   game: Game;
@@ -16,14 +16,17 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusChange }) => {
-  const effectiveRating = getGameRating(game);
+  // Ottieni il gioco aggiornato dallo stato globale Redux
+  const currentGame = useGameById(game.id) || game;
+  const effectiveRating = currentGame.rating ?? getGameRating(currentGame);
+  const effectiveHours = currentGame.hoursPlayed;
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
       {/* Indicatore di stato */}
       <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
-        <div className="h-full" style={{ backgroundColor: `${getStatusColor(game.status)}20`, width: "100%" }}></div>
+        <div className="h-full" style={{ backgroundColor: `${getStatusColor(currentGame.status)}20`, width: "100%" }}></div>
       </div>
 
       {/* Copertina con link */}
@@ -36,7 +39,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
 
       {/* Contenuto */}
       <div className="p-4">
-        <Link to={`/gioco/${game.id}`} className="block">
+        <Link to={`/game/${game.id}`} className="block">
           <h3 className="font-montserrat font-semibold text-base text-text-primary line-clamp-2 h-12 hover:text-accent-primary transition-colors">
             {game.title}
           </h3>
@@ -47,7 +50,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
           <span className="font-roboto text-xs">{game.platform}</span>
           <span className="mx-2">|</span>
           <Clock className="h-4 w-4 mr-1" />
-          <span className="font-roboto text-xs">{game.hoursPlayed} ore</span>
+          <span className="font-roboto text-xs">{effectiveHours} ore</span>
           {game.metacritic && (
             <>
               <span className="mx-2">|</span>
@@ -71,7 +74,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
 
         {/* Stato e Valutazione */}
         <div className="mt-2 flex items-center justify-between">
-          <StatusBadge status={game.status} />
+          <StatusBadge status={currentGame.status} />
           {effectiveRating > 0 && (
             <RatingStars rating={effectiveRating} showValue={false} size="sm" />
           )}

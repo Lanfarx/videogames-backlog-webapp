@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGameById, getGameRating } from '../utils/gamesData';
+import { useGameById } from '../utils/gamesHooks';
+import { useAppDispatch } from '../store/hooks';
+import { updateGameStatus, updateGame, deleteGame, updateGamePlaytime } from '../store/slice/gamesSlice';
+
 import { 
   getActivitiesByGameId, 
   recordGameplayHours, 
@@ -30,26 +33,19 @@ const gameStatusToActivityType: Record<GameStatus, ActivityType> = {
 export default function GamePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [game, setGame] = useState<Game | null>(null);
+  const game = useGameById(id ? parseInt(id) : -1);
+  const dispatch = useAppDispatch();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [comments, setComments] = useState<GameComment[]>([]);
 
-  // Carica i dati del gioco e le attività
+  // Carica le attività e i commenti solo quando cambia il gioco
   useEffect(() => {
-    if (id) {
-      const gameData = getGameById(parseInt(id));
-      setGame(gameData);
-      
-      // Inizializza lo stato dei commenti con quelli del gioco
-      if (gameData?.comments) {
-        setComments(gameData.comments);
-      }
-      
-      // Carica le attività relative al gioco
-      const gameActivities = getActivitiesByGameId(parseInt(id));
+    if (game) {
+      setComments(game.comments || []);
+      const gameActivities = getActivitiesByGameId(game.id);
       setActivities(gameActivities);
     }
-  }, [id]);
+  }, [game]);
 
   if (!game) {
     return (
@@ -62,7 +58,6 @@ export default function GamePage() {
   // Gestione delle azioni
   const handleChangeStatus = (newStatus: GameStatus) => {
     if (!game || game.status === newStatus) return;
-    
     // Controlli di business:
     // 1. Non permettere il cambio a "in-progress" se non ci sono ore giocate
     if (newStatus === 'in-progress' && game.hoursPlayed === 0) {
@@ -76,19 +71,15 @@ export default function GamePage() {
       return;
     }
     
-    const today = new Date();
-    let updatedGame = { ...game, status: newStatus };
-    let newActivity: Activity | null = null;
+    dispatch(updateGameStatus({ gameId: game.id, status: newStatus }));
     
-    // Aggiorna campi specifici in base allo stato
+    // Aggiorna la lista delle attività (solo locale)
+    let newActivity: Activity | null = null;
     switch (newStatus) {
       case 'completed':
-        updatedGame.completionDate = today.toISOString().split('T')[0];
         newActivity = recordGameCompletion(Number(game.id), game.title);
         break;
       case 'platinum':
-        updatedGame.completionDate = updatedGame.completionDate || today.toISOString().split('T')[0];
-        updatedGame.platinumDate = today.toISOString().split('T')[0];
         newActivity = recordGamePlatinum(Number(game.id), game.title);
         break;
       case 'abandoned':
@@ -103,82 +94,26 @@ export default function GamePage() {
         newActivity = recordStatusChange(Number(game.id), game.title, activityType);
         break;
     }
-    
-    // Aggiorna lo stato locale
-    setGame(updatedGame);
-    
-    // Aggiorna la lista delle attività
-    if (newActivity) {
-      // Corretto per evitare l'errore TypeScript assicurandoci che newActivity non sia null
-      setActivities(prev => [newActivity as Activity, ...prev]);
-    }
-    
-    console.log('Stato aggiornato a:', newStatus);
-    
-    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
-    // updateGameAPI(updatedGame).then(response => {...})
+    if (newActivity) setActivities(prev => [newActivity as Activity, ...prev]);
   };
 
   const handleEditGame = (updatedGameDetails: Partial<Game>) => {
     if (!game) return;
-    
-    console.log('Modifica dettagli:', updatedGameDetails);
-    
-    // Aggiorniamo il gioco con i nuovi dati
-    const updatedGame = {
-      ...game,
-      ...updatedGameDetails
-    };
-    
-    // Aggiorniamo lo stato locale
-    setGame(updatedGame);
-    
-    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
-    // updateGameAPI(updatedGame).then(response => {...})
+    dispatch(updateGame({ ...game, ...updatedGameDetails }));
   };
 
   const handleDeleteGame = () => {
-    console.log('Elimina gioco:', game?.id);
-    
-    // In un'app reale, qui ci sarebbe una chiamata API per eliminare il gioco
-    // deleteGameAPI(game.id).then(() => {
-    //   // Reindirizza l'utente alla pagina della collezione dopo l'eliminazione
-    //   navigate('/library');
-    // });
-    
-    // Per ora simuliamo semplicemente il reindirizzamento
+    if (!game) return;
+    dispatch(deleteGame(game.id));
     navigate('/library');
   };
 
   const handleUpdatePlaytime = (newHours: number) => {
     if (game) {
+      dispatch(updateGamePlaytime({ gameId: game.id, hoursPlayed: newHours }));
       const hoursAdded = newHours - game.hoursPlayed;
-      
-      // Aggiorna il gioco
-      const updatedGame = { 
-        ...game, 
-        hoursPlayed: newHours 
-      };
-      
-      // Se il gioco passa da 0 ore a un valore positivo, imposta automaticamente lo stato a "in-progress"
-      if (game.hoursPlayed === 0 && newHours > 0 && game.status === 'not-started') {
-        updatedGame.status = 'in-progress';
-        console.log('Stato automaticamente aggiornato a "In corso" dopo l\'aggiunta di tempo di gioco');
-      }
-      
-      // Aggiorna lo stato locale
-      setGame(updatedGame);
-      
-      // Registra l'attività
       const newActivity = recordGameplayHours(Number(game.id), game.title, hoursAdded);
-      
-      // Aggiorna la lista delle attività - qui non c'è errore perché newActivity è sempre di tipo Activity
       setActivities(prev => [newActivity, ...prev]);
-      
-      console.log('Tempo di gioco aggiornato a:', newHours, 'ore');
-      
-      // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
-      // updateGameAPI(updatedGame).then(response => {...})
     }
   };
 
@@ -196,7 +131,7 @@ export default function GamePage() {
       // Non aggiorniamo più il rating qui, viene calcolato automaticamente
     };
     
-    setGame(updatedGame);
+    // setGame(updatedGame);
     
     console.log('Recensione salvata:', review);
     // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
@@ -221,7 +156,7 @@ export default function GamePage() {
       ...game,
       comments: updatedComments
     };
-    setGame(updatedGame);
+    // setGame(updatedGame);
     
     console.log('Nuovo commento aggiunto:', newComment);
   };
@@ -242,7 +177,7 @@ export default function GamePage() {
       ...game,
       comments: updatedComments
     };
-    setGame(updatedGame);
+    // setGame(updatedGame);
     
     console.log('Commento modificato:', id, newText);
   };
@@ -257,7 +192,7 @@ export default function GamePage() {
       ...game,
       comments: updatedComments
     };
-    setGame(updatedGame);
+    // setGame(updatedGame);
     
     console.log('Commento eliminato:', id);
   };

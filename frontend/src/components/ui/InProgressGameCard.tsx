@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useGameById } from '../../utils/gamesHooks';
 import RatingStars from './atoms/RatingStars';
 import GenreTagList from './GenreTagList';
 
@@ -24,6 +25,10 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
   genres = []
 }) => {
   const navigate = useNavigate();
+  // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
+  const gameFromStore = useGameById(Number(id));
+  const currentRating = gameFromStore?.rating ?? rating ?? 0;
+  const currentHours = gameFromStore?.hoursPlayed ?? hoursPlayed;
   
   // Funzione per navigare alla pagina del gioco con il popover delle ore aperto
   const handleResumeGame = () => {
@@ -47,7 +52,7 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
             <span>{platform}</span>
             <span className="mx-2">|</span>
             <Clock className="h-3 w-3 mr-1" />
-            <span>{hoursPlayed} ore</span>
+            <span>{currentHours} ore</span>
           </div>
         </div>
         
@@ -56,8 +61,8 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
           <div className="flex items-center justify-between mb-2">
             <GenreTagList genres={genres} maxDisplay={2} small={true} />
             
-            {(rating ?? 0) > 0 ? (
-              <RatingStars rating={rating ?? 0} showValue={false} size="sm" />
+            {(currentRating > 0) ? (
+              <RatingStars rating={currentRating} showValue={false} size="sm" />
             ) : (
               <span className="text-xs text-text-disabled font-secondary">Non presente</span>
             )}

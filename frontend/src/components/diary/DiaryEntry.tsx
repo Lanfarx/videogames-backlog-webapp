@@ -3,7 +3,7 @@ import { Activity } from '../../types/activity';
 import { Game } from '../../types/game';
 import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import RatingStars from '../ui/atoms/RatingStars';
-import { calculateRatingFromReview, getGameById } from '../../utils/gamesData';
+import { useGameById, calculateRatingFromReview } from '../../utils/gamesHooks';
 import { isFirstActivityInMonth } from '../../utils/activityUtils';
 
 interface DiaryEntryProps {
@@ -14,7 +14,7 @@ interface DiaryEntryProps {
 
 const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true, allActivities = [] }) => {
   const [expandedReview, setExpandedReview] = useState(false);
-  const game = getGameById(activity.gameId);
+  const game = useGameById(activity.gameId);
   
   // Non procedere se non c'è il gioco
   if (!game) return null;
@@ -184,7 +184,9 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
                 <Star className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm font-medium text-text-primary">Recensione</span>
               </div>
-              <RatingStars rating={calculateRatingFromReview(game.review)} />
+              {game && (
+                <RatingStars rating={calculateRatingFromReview(game.review)} />
+              )}
             </div>
             <p className={`text-xs text-text-secondary ${!expandedReview ? 'line-clamp-2' : ''}`}>
               {game.review?.text}

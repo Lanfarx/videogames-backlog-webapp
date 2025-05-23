@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import SettingsSection from "../SettingsSection";
+import { saveToLocal, loadFromLocal } from '../../../utils/localStorage';
 
 interface ConnectedAccountsSettingsProps {
   connectedAccounts: {

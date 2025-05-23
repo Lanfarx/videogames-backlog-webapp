@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, Upload, Award } from 'lucide-react';
 import { Game, GameStatus } from '../../types/game';
 import { STATUS_OPTIONS, STATUS_COLORS, STATUS_LABELS, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
+import { useAppDispatch } from '../../store/hooks';
+import { addGame } from '../../store/slice/gamesSlice';
+import { useAllGames } from '../../utils/gamesHooks';
+import { getNextGameIdFromList } from '../../utils/gameIdGenerator';
+import GenreTagList from '../ui/GenreTagList';
+import StatusBadge from '../ui/atoms/StatusBadge';
+import FormErrorInline from '../ui/atoms/FormErrorInline';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?: string, platinumDate?: string }
@@ -9,9 +16,6 @@ type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?
 interface AddGameModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isEdit?: boolean;
-  gameToEdit?: Partial<Game>;
-  onSave?: (game: Game) => void;
 }
 
 // Stato iniziale del form
@@ -35,7 +39,6 @@ const initialGameData: GameFormData = {
 // In un'implementazione reale, questo verrebbe sostituito da una chiamata API
 const searchSampleGames = [
   {
-    id: 1,
     title: "The Legend of Zelda: Breath of the Wild",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "Nintendo EPD",
@@ -45,7 +48,6 @@ const searchSampleGames = [
     metacritic: 97,
   },
   {
-    id: 2,
     title: "Cyberpunk 2077",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "CD Projekt Red",
@@ -55,7 +57,6 @@ const searchSampleGames = [
     metacritic: 86,
   },
   {
-    id: 3,
     title: "God of War Ragnarök",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "Santa Monica Studio",
@@ -68,26 +69,28 @@ const searchSampleGames = [
 
 const AddGameModal: React.FC<AddGameModalProps> = ({ 
   isOpen, 
-  onClose, 
-  isEdit = false, 
-  gameToEdit, 
-  onSave 
+  onClose
 }) => {
+  const dispatch = useAppDispatch();
+  const allGames = useAllGames();
   const [activeTab, setActiveTab] = useState<"search" | "manual">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [gameData, setGameData] = useState<GameFormData>(initialGameData);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
 
-  // Se è in modalità modifica, popola i dati del gioco
+  // Sempre nuovo gioco, resetta il form all'apertura
   useEffect(() => {
-    if (isEdit && gameToEdit) {
-      setGameData({ ...initialGameData, ...gameToEdit });
-      setActiveTab("manual");
-    } else {
-      setGameData(initialGameData);
-    }
-  }, [isEdit, gameToEdit, isOpen]);
+    setGameData(initialGameData);
+    setIsAutoFilled(false);
+    setFormError(null); // reset errore su chiusura modal
+  }, [isOpen]);
+
+  useEffect(() => {
+    setFormError(null); // reset errore su cambio tab
+  }, [activeTab]);
 
   // Gestisce la ricerca
   const handleSearch = (e: React.FormEvent) => {
@@ -119,6 +122,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       metacritic: game.metacritic || 0,
     });
     setActiveTab("manual");
+    setIsAutoFilled(true);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   // Gestisce l'aggiornamento dei dati del gioco
@@ -176,24 +182,50 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const removeImage = () => {
     handleGameDataChange({ coverImage: "" });
   };
-
   // Gestisce il salvataggio del gioco
   const handleSave = (andAddAnother = false) => {
-    // Crea un oggetto gioco completo
-    const gameToSave = {
-      id: gameData.id || Date.now(), // Usa l'ID esistente o ne crea uno nuovo
-      ...gameData,
-    } as Game;
-
-    // Chiama la funzione onSave se fornita
-    if (onSave) {
-      onSave(gameToSave);
+    // Validazione campi obbligatori
+    const scrollErrorIntoView = () => {
+      setTimeout(() => {
+        const errorSection = document.getElementById('add-game-base-info');
+        // Trova il contenitore scrollabile del modal
+        const modalContainer = errorSection?.closest('.max-h-[80vh].overflow-auto') || errorSection?.closest('[class*=overflow-auto]');
+        if (errorSection && modalContainer) {
+          // Calcola la posizione dell'errore rispetto al contenitore
+          const errorRect = errorSection.getBoundingClientRect();
+          const containerRect = modalContainer.getBoundingClientRect();
+          // Scrolla in modo che l'errore sia centrato nel contenitore
+          const offset = errorRect.top - containerRect.top - (containerRect.height / 2) + (errorRect.height / 2);
+          modalContainer.scrollTop += offset;
+        } else if (errorSection) {
+          // Fallback: scrollIntoView classico
+          errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 0);
+    };
+    if (!gameData.title.trim() || !gameData.releaseYear) {
+      setFormError("Compila tutti i campi obbligatori: titolo e anno di uscita.");
+      scrollErrorIntoView();
+      return;
     }
-
-    console.log("Salvataggio gioco:", gameToSave);
-
+    if (gameData.status !== "not-started" && (!gameData.hoursPlayed || gameData.hoursPlayed === 0)) {
+      setFormError("Se lo stato non è 'Da iniziare', inserisci almeno 1 ora di gioco.");
+      scrollErrorIntoView();
+      return;
+    }
+    setFormError(null);
+    const nextId = getNextGameIdFromList(allGames);
+    const gameToSave = {
+      id: nextId,
+      ...gameData
+      // rating rimosso: sarà gestito solo tramite review
+    } as Game;
+    dispatch(addGame(gameToSave));
+    // Aggiorna il contatore persistente per evitare collisioni con reload
+    try {
+      localStorage.setItem('videogame_backlog_next_game_id', String(nextId + 1));
+    } catch {}
     if (andAddAnother) {
-      // Resetta il form per aggiungere un altro gioco
       setGameData(initialGameData);
       setActiveTab("search");
       setSearchQuery("");
@@ -220,7 +252,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         <div className="p-8 border-b border-border-color">
           <div className="flex justify-between items-center">
             <h2 className="font-montserrat font-bold text-[28px] text-text-primary">
-              {isEdit ? "Modifica gioco" : "Aggiungi nuovo gioco"}
+              Aggiungi nuovo gioco
             </h2>
             <button
               onClick={onClose}
@@ -232,37 +264,35 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         </div>
 
         {/* Tabs */}
-        {!isEdit && (
-          <div className="border-b border-border-color mb-6">
-            <div className="flex">
-              <button
-                className={`px-6 py-3 font-roboto font-medium text-base transition-colors ${
-                  activeTab === "search"
-                    ? "text-text-primary border-b-[3px] border-accent-primary"
-                    : "text-text-secondary hover:text-accent-primary"
-                }`}
-                onClick={() => setActiveTab("search")}
-              >
-                Ricerca automatica
-              </button>
-              <button
-                className={`px-6 py-3 font-roboto font-medium text-base transition-colors ${
-                  activeTab === "manual"
-                    ? "text-text-primary border-b-[3px] border-accent-primary"
-                    : "text-text-secondary hover:text-accent-primary"
-                }`}
-                onClick={() => setActiveTab("manual")}
-              >
-                Inserimento manuale
-              </button>
-            </div>
+        <div className="border-b border-border-color mb-6">
+          <div className="flex">
+            <button
+              className={`px-6 py-3 font-roboto font-medium text-base transition-colors ${
+                activeTab === "search"
+                  ? "text-text-primary border-b-[3px] border-accent-primary"
+                  : "text-text-secondary hover:text-accent-primary"
+              }`}
+              onClick={() => setActiveTab("search")}
+            >
+              Ricerca automatica
+            </button>
+            <button
+              className={`px-6 py-3 font-roboto font-medium text-base transition-colors ${
+                activeTab === "manual"
+                  ? "text-text-primary border-b-[3px] border-accent-primary"
+                  : "text-text-secondary hover:text-accent-primary"
+              }`}
+              onClick={() => setActiveTab("manual")}
+            >
+              Inserimento manuale
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Content */}
         <div className="px-8">
           {/* Tab content */}
-          {!isEdit && activeTab === "search" ? (
+          {activeTab === "search" ? (
             <div className="mb-8">
               <form onSubmit={handleSearch} className="mb-6">
                 <div className="relative">
@@ -335,8 +365,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
               <div className="lg:col-span-2 space-y-8">
                 {/* Informazioni di base */}
-                <div>
+                <div className="relative" id="add-game-base-info">
                   <h3 className="font-montserrat font-semibold text-xl text-text-primary mb-6">Informazioni di base</h3>
+                  <FormErrorInline message={formError} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Titolo */}
                     <div className="md:col-span-2">
@@ -347,8 +378,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         type="text"
                         value={gameData.title}
                         onChange={(e) => handleGameDataChange({ title: e.target.value })}
-                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
                         required
+                        disabled={isAutoFilled}
                       />
                     </div>
 
@@ -359,7 +391,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         type="text"
                         value={gameData.developer}
                         onChange={(e) => handleGameDataChange({ developer: e.target.value })}
-                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
+                        disabled={isAutoFilled}
                       />
                     </div>
 
@@ -370,7 +403,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         type="text"
                         value={gameData.publisher}
                         onChange={(e) => handleGameDataChange({ publisher: e.target.value })}
-                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
+                        disabled={isAutoFilled}
                       />
                     </div>
 
@@ -382,14 +416,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       <input
                         type="number"
                         value={gameData.releaseYear}
-                        onChange={(e) =>
-                          handleGameDataChange({
-                            releaseYear: Number.parseInt(e.target.value) || new Date().getFullYear(),
-                          })
-                        }
+                        onChange={(e) => handleGameDataChange({ releaseYear: Number.parseInt(e.target.value) || new Date().getFullYear() })}
                         min="1970"
                         max={new Date().getFullYear()}
-                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
+                        disabled={isAutoFilled}
                       />
                     </div>
 
@@ -404,14 +435,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       <input
                         type="number"
                         value={gameData.metacritic || 0}
-                        onChange={(e) =>
-                          handleGameDataChange({
-                            metacritic: Number.parseInt(e.target.value) || 0,
-                          })
-                        }
+                        onChange={(e) => handleGameDataChange({ metacritic: Number.parseInt(e.target.value) || 0 })}
                         min="0"
                         max="100"
-                        className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
+                        disabled={isAutoFilled}
                       />
                     </div>
 
@@ -446,11 +474,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                             key={genre}
                             type="button"
                             onClick={() => handleGenreToggle(genre)}
-                            className={`px-3 py-1 rounded-full text-sm font-roboto transition-colors ${
-                              gameData.genres.includes(genre)
-                                ? "bg-accent-primary text-white"
-                                : "bg-secondary-bg text-text-primary hover:bg-tertiary-bg"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-sm font-roboto transition-colors ${gameData.genres.includes(genre) ? "bg-accent-primary text-white" : "bg-secondary-bg text-text-primary hover:bg-tertiary-bg"} ${isAutoFilled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            disabled={isAutoFilled}
                           >
                             {genre}
                           </button>
@@ -472,6 +497,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                           <button
                             onClick={removeImage}
                             className="absolute top-2 right-2 bg-primary-bg rounded-full p-1 text-text-secondary hover:text-accent-primary transition-colors"
+                            disabled={isAutoFilled}
                           >
                             <X className="h-4 w-4" />
                           </button>
@@ -485,7 +511,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                             </p>
                             <p className="text-xs text-text-secondary mt-1">PNG, JPG o WEBP (max. 2MB)</p>
                           </div>
-                          <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                          <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isAutoFilled} />
                         </label>
                       )}
                     </div>
@@ -608,7 +634,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                 <div className="bg-secondary-bg rounded-xl p-6">
                   <h3 className="font-montserrat font-semibold text-xl text-text-primary mb-4">Anteprima scheda</h3>
 
-                  <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm h-[320px] relative">
+                  <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm h-[330px] relative">
                     {/* Indicatore di stato */}
                     <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
                       <div className="h-full" style={{ backgroundColor: statusColor, width: "100%" }}></div>
@@ -658,13 +684,15 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
 
                       {/* Stato */}
                       <div className="mt-2">
-                        <span
-                          className="inline-block px-2 py-0.5 rounded-full text-xs font-roboto"
-                          style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
-                        >
-                          {statusName}
-                        </span>
+                        <StatusBadge status={gameData.status} />
                       </div>
+
+                      {/* Generi */}
+                      {gameData.genres && gameData.genres.length > 0 && (
+                        <div className="mt-2">
+                          <GenreTagList genres={gameData.genres} maxDisplay={3} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -681,22 +709,22 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
           >
             Annulla
           </button>
-          <div className="flex flex-wrap gap-4">
-            {!isEdit && (
+          {activeTab === "manual" && (
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => handleSave(true)}
                 className="px-6 py-3 text-accent-primary font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/10 transition-colors"
               >
                 Salva e aggiungi altro
               </button>
-            )}
-            <button
-              onClick={() => handleSave(false)}
-              className="px-6 py-3 bg-accent-primary text-white font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/90 transition-colors"
-            >
-              Salva
-            </button>
-          </div>
+              <button
+                onClick={() => handleSave(false)}
+                className="px-6 py-3 bg-accent-primary text-white font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/90 transition-colors"
+              >
+                Salva
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

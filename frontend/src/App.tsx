@@ -10,8 +10,22 @@ import ProfilePage from './pages/header/ProfilePage';
 import PrivacyPage from './pages/footer/PrivacyPage';
 import TermsPage from './pages/footer/TermsPage';
 import ContactPage from './pages/footer/ContactPage';
+import { useEffect } from 'react';
+import { useAppDispatch } from './store/hooks';
+import { setGames } from './store/slice/gamesSlice';
+import { gamesData } from './utils/gamesData';
+import { useAllGames } from './utils/gamesHooks';
 
 function App() {
+  const dispatch = useAppDispatch();
+  const allGames = useAllGames();
+
+  useEffect(() => {
+    if (allGames.length === 0) {
+      dispatch(setGames(gamesData));
+    }
+  }, [allGames.length, dispatch]);
+
   return (
     <div className="App">
       <Routes>

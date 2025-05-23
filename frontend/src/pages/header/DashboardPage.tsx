@@ -1,44 +1,44 @@
 import React from 'react';
-import { getAllGames, getGamesStats } from '../../utils/gamesData';
 import { getRecentActivities } from '../../utils/activitiesData';
-import { getStatusData } from '../../utils/statusData';
+import { useStatusData } from '../../utils/statusData';
 import StatsCard from '../../components/ui/StatsCard';
 import StatusDistributionChart from '../../components/dashboard/StatusDistributionChart';
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
 import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock } from 'lucide-react';
+import { useGamesStats, useAllGames } from '../../utils/gamesHooks';
 
 const DashboardPage: React.FC = () => {
-    const stats = getGamesStats();
-    const allGames = getAllGames();
+    const stats = useGamesStats();
+    const allGames = useAllGames();
     const recentActivities = getRecentActivities(5);
-    const statusData = getStatusData();
+    const statusData = useStatusData();
     
     // Calcolare le statistiche per piattaforme
-    const platformCounts = allGames.reduce((acc, game) => {
-        acc[game.platform] = (acc[game.platform] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+    const platformCounts = allGames.reduce((acc: Record<string, number>, game) => {
+      acc[game.platform] = (acc[game.platform] || 0) + 1;
+      return acc;
+    }, {});
 
     // Convertire in array e ordinare per conteggio
     const platformData = Object.entries(platformCounts)
         .map(([platform, count]) => ({ platform, count }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a, b) => (b.count as number) - (a.count as number))
         .slice(0, 4);
 
     // Calcolare le statistiche per generi
     const genreCounts: Record<string, number> = {};
-    allGames.forEach(game => {
-        game.genres.forEach(genre => {
-            genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-        });
+    allGames.forEach((game) => {
+      game.genres.forEach((genre) => {
+        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+      });
     });
 
     // Convertire in array e ordinare per conteggio
     const genreData = Object.entries(genreCounts)
         .map(([genre, count]) => ({ genre, count }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a, b) => (b.count as number) - (a.count as number))
         .slice(0, 5);
 
     return (

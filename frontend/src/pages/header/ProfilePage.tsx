@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/layout/Layout';
 import { Gamepad2, Clock, Trophy, CalendarRange, Lock, Eye, ArrowRight } from 'lucide-react';
-import { getGamesStats } from '../../utils/gamesData';
+import { useGamesStats } from '../../utils/gamesHooks';
 import StatsCard from '../../components/ui/StatsCard';
 import { Link } from 'react-router-dom';
 import DiaryFilters from '../../components/diary/DiaryFilters';
@@ -15,6 +15,7 @@ import {
   getUniqueMonthsForYear,
   filterActivitiesByYear
 } from '../../utils/activityUtils';
+import { loadFromLocal } from '../../utils/localStorage';
 
 // Simulazione dei dati del profilo (in produzione verrebbero dal backend)
 const profileData = {
@@ -28,7 +29,7 @@ const profileData = {
 };
 
 const ProfilePage = () => {
-  const stats = getGamesStats();
+  const stats = useGamesStats();
   const [isProfilePrivate, setIsProfilePrivate] = useState(profileData.isPrivate);
   
   // Stato per le opzioni di privacy
@@ -48,36 +49,34 @@ const ProfilePage = () => {
   useEffect(() => {
     const checkPrivacySettings = () => {
       // Controlla l'impostazione di visibilità del profilo
-      const savedPrivacySetting = localStorage.getItem('isProfilePublic');
+      const savedPrivacySetting = loadFromLocal('isProfilePublic');
       if (savedPrivacySetting !== null) {
-        setIsProfilePrivate(!JSON.parse(savedPrivacySetting));
+        setIsProfilePrivate(!savedPrivacySetting);
       }
       
       // Carica le opzioni di privacy
-      const savedOptions = localStorage.getItem('privacyOptions');
+      const savedOptions = loadFromLocal('privacyOptions');
       if (savedOptions) {
-        const options = JSON.parse(savedOptions);
         setPrivacySettings({
-          showStats: options.showStats !== undefined ? options.showStats : true,
-          showDiary: options.showDiary !== undefined ? options.showDiary : true
+          showStats: savedOptions.showStats !== undefined ? savedOptions.showStats : true,
+          showDiary: savedOptions.showDiary !== undefined ? savedOptions.showDiary : true
         });
       }
       
       // Aggiorna le tag in base alle impostazioni dell'utente
-      const savedProfileData = localStorage.getItem('profileData');
+      const savedProfileData = loadFromLocal('profileData');
       if (savedProfileData) {
-        const profileInfo = JSON.parse(savedProfileData);
-        if (profileInfo && profileInfo.bio) {
-          profileData.bio = profileInfo.bio;
+        if (savedProfileData.bio) {
+          profileData.bio = savedProfileData.bio;
         }
-        if (profileInfo && profileInfo.fullName) {
-          profileData.fullName = profileInfo.fullName;
+        if (savedProfileData.fullName) {
+          profileData.fullName = savedProfileData.fullName;
         }
-        if (profileInfo && profileInfo.username) {
-          profileData.username = profileInfo.username;
+        if (savedProfileData.username) {
+          profileData.username = savedProfileData.username;
         }
-        if (profileInfo && profileInfo.avatar) {
-          profileData.avatar = profileInfo.avatar;
+        if (savedProfileData.avatar) {
+          profileData.avatar = savedProfileData.avatar;
         }
       }
     };

@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
+import { loadFromLocal, saveToLocal } from '../utils/localStorage';
 
 type Theme = "light" | "dark"
 type AccentColor = "arancione" | "blu" | "verde" | "rosso" | "viola"
@@ -23,14 +24,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Carica le preferenze salvate
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme
-    const savedAccentColor = localStorage.getItem("accentColor") as AccentColor
+    const savedTheme = loadFromLocal("theme") as Theme;
+    const savedAccentColor = loadFromLocal("accentColor") as AccentColor;
 
     if (savedTheme) {
       setThemeState(savedTheme)
     } else {
       // Se non ci sono preferenze salvate, imposta esplicitamente "light"
-      localStorage.setItem("theme", "light")
+      saveToLocal("theme", "light")
     }
 
     if (savedAccentColor) {
@@ -72,8 +73,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.style.setProperty('--accent-primary', accentColors[accentColor]);
 
     // Salva le preferenze
-    localStorage.setItem("theme", theme)
-    localStorage.setItem("accentColor", accentColor)
+    saveToLocal("theme", theme);
+    saveToLocal("accentColor", accentColor);
   }, [theme, accentColor, mounted])
 
   const setTheme = (newTheme: Theme) => {

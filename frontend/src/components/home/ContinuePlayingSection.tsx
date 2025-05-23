@@ -2,10 +2,10 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionHeader from '../ui/SectionHeader';
 import InProgressGameCard from '../ui/InProgressGameCard';
-import { getGamesInProgress } from '../../utils/gamesData';
+import { useGamesInProgress } from '../../utils/gamesHooks';
 
 const ContinuePlayingSection: React.FC = () => {
-  const inProgressGames = getGamesInProgress();
+  const inProgressGames = useGamesInProgress();
   
   return (
     <section className="mb-12">

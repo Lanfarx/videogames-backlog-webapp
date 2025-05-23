@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import RatingStars from '../ui/atoms/RatingStars';
 import { Save, AlertCircle } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
-import { calculateRatingFromReview } from '../../utils/gamesData';
 import { recordGameRating } from '../../utils/activitiesData';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGameReview, updateGameRating, updateGameNotes } from '../../store/slice/gamesSlice';
+import { calculateRatingFromReview, useGameById } from '../../utils/gamesHooks';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -25,8 +27,12 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   const [soundRating, setSoundRating] = useState(0);
   const [reviewDate, setReviewDate] = useState('');
 
+  // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
+  const gameFromStore = useGameById(game.id);
+  const currentGame = gameFromStore || game;
+
   // Verifica se il gioco è "da iniziare" (non permette recensioni)
-  const isNotStarted = game.status === 'not-started';
+  const isNotStarted = currentGame.status === 'not-started';
 
   // Se il gioco è "da iniziare" e l'utente è nella scheda recensione, forza il cambio alla scheda note
   useEffect(() => {
@@ -37,16 +43,18 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
 
   // Carica i dati della recensione dal gioco quando disponibili
   useEffect(() => {
-    if (game.review) {
-      setReviewText(game.review.text);
-      setGameplayRating(game.review.gameplay);
-      setGraphicsRating(game.review.graphics);
-      setStoryRating(game.review.story);
-      setSoundRating(game.review.sound);
-      setReviewDate(game.review.date);
+    if (currentGame.review) {
+      setReviewText(currentGame.review.text);
+      setGameplayRating(currentGame.review.gameplay);
+      setGraphicsRating(currentGame.review.graphics);
+      setStoryRating(currentGame.review.story);
+      setSoundRating(currentGame.review.sound);
+      setReviewDate(currentGame.review.date);
     }
-    setNotesValue(game.notes || '');
-  }, [game]);
+    setNotesValue(currentGame.notes || '');
+  }, [currentGame]);
+
+  const dispatch = useAppDispatch();
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotesValue(e.target.value);
@@ -61,16 +69,17 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   };
 
   const handleSaveNotes = () => {
+    dispatch(updateGameNotes({ gameId: game.id, notes: notesValue }));
     if (onNotesChange) {
       onNotesChange(notesValue);
-      // Mostra messaggio di successo per 3 secondi
-      setSaveNotesSuccess(true);
-      setTimeout(() => setSaveNotesSuccess(false), 3000);
     }
+    // Mostra messaggio di successo per 3 secondi
+    setSaveNotesSuccess(true);
+    setTimeout(() => setSaveNotesSuccess(false), 3000);
   };
 
   const handleSaveReview = () => {
-    if (onReviewSave && !isNotStarted) {
+    if (!isNotStarted) {
       const now = new Date();
       const formattedDate = now.toISOString().split('T')[0];
 
@@ -86,11 +95,15 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
       // Aggiorna anche lo stato locale della data
       setReviewDate(formattedDate);
 
-      onReviewSave(updatedReview);
+      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
 
-      // Registra l'attività di valutazione
+      // Calcola e aggiorna il rating globale
       const averageRating = calculateRatingFromReview(updatedReview);
-      recordGameRating(game.id, game.title, averageRating);
+      dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
+
+      if (onReviewSave) {
+        onReviewSave(updatedReview);
+      }
 
       // Mostra messaggio di successo per 3 secondi
       setSaveReviewSuccess(true);

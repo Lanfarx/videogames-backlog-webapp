@@ -4,8 +4,8 @@ import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from '../ui/PlaytimePopover';
-import { getGameRating, updateGameRating } from '../../utils/gamesData';
 import EditGameInfoModal from './EditGameInfoModal';
+import { useGameById, getGameRating } from '../../utils/gamesHooks';
 
 interface GameInfoCardProps {
   game: Game;
@@ -15,32 +15,29 @@ interface GameInfoCardProps {
 
 const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps) => {
   const [isEditingHours, setIsEditingHours] = useState(false);
-  const [displayedHours, setDisplayedHours] = useState(game.hoursPlayed);
   const [showEditInfoModal, setShowEditInfoModal] = useState(false);
   
-  // Calcola il rating direttamente dalla review
-  const calculatedRating = getGameRating(game);
-  
-  // Aggiorna le ore visualizzate quando cambia l'oggetto game
-  useEffect(() => {
-    setDisplayedHours(game.hoursPlayed);
-  }, [game.hoursPlayed]);
+  // Ottieni il gioco aggiornato dallo stato globale Redux
+  const currentGame = useGameById(game.id) || game;
+
+  // Calcola il rating direttamente dalla review aggiornata
+  const calculatedRating = currentGame.rating ?? getGameRating(currentGame);
+
+  // Usa sempre le ore aggiornate dallo stato globale
+  const displayedHours = currentGame.hoursPlayed;
 
   useEffect(() => {
     // Aggiorna dinamicamente il rating del gioco
     if (onEditInfo) {
-      const updatedGame = updateGameRating(game);
-      onEditInfo(updatedGame);
+      onEditInfo({ rating: calculatedRating });
     }
-  }, [game.review]);
+  }, [currentGame.review]);
   
   const handleSavePlaytime = (hoursToAdd: number) => {
     if (onUpdatePlaytime) {
       const newTotalHours = displayedHours + hoursToAdd;
       
       // Aggiorna l'UI immediatamente
-      setDisplayedHours(newTotalHours);
-      
       // Invia l'aggiornamento attraverso la callback
       onUpdatePlaytime(newTotalHours);
       
@@ -64,8 +61,8 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
   };
 
   // Verifica se il gioco è stato completato o platinato
-  const isCompleted = game.status === "completed";
-  const isPlatinum = game.status === "platinum";
+  const isCompleted = currentGame.status === "completed";
+  const isPlatinum = currentGame.status === "platinum";
   const hasBeenCompleted = isCompleted || isPlatinum; // Sia i completati che i platinati sono stati completati
 
   return (
@@ -87,7 +84,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
         <span className="font-secondary font-medium text-sm text-text-secondary">
           Stato
         </span>
-        <StatusBadge status={game.status} />
+        <StatusBadge status={currentGame.status} />
       </div>
 
       {/* Piattaforma */}
@@ -96,7 +93,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           Piattaforma
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {game.platform || 'Non specificata'}
+          {currentGame.platform || 'Non specificata'}
         </span>
       </div>
 
@@ -119,6 +116,8 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
               
               {isEditingHours && (
                 <PlaytimePopover 
+                  gameId={currentGame.id}
+                  currentHours={displayedHours}
                   onSave={handleSavePlaytime}
                   onCancel={handleCancelPlaytime}
                 />
@@ -134,7 +133,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           Prezzo
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {game.price ? `${game.price.toFixed(2)} €` : 'Non specificato'}
+          {currentGame.price ? `${currentGame.price.toFixed(2)} €` : 'Non specificato'}
         </span>
       </div>
 
@@ -144,30 +143,30 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           Data di acquisto
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {game.purchaseDate ? new Date(game.purchaseDate).toLocaleDateString('it-IT') : 'Non specificata'}
+          {currentGame.purchaseDate ? new Date(currentGame.purchaseDate).toLocaleDateString('it-IT') : 'Non specificata'}
         </span>
       </div>
 
       {/* Data di completamento - Mostrata per giochi completati E platinati */}
-      {hasBeenCompleted && game.completionDate && (
+      {hasBeenCompleted && currentGame.completionDate && (
         <div className="flex justify-between items-center py-3 border-b border-border-color">
           <span className="font-secondary font-medium text-sm text-text-secondary">
             Data di completamento
           </span>
           <span className="font-secondary text-base text-text-primary">
-            {new Date(game.completionDate).toLocaleDateString('it-IT')}
+            {new Date(currentGame.completionDate).toLocaleDateString('it-IT')}
           </span>
         </div>
       )}
 
       {/* Data di platino - Mostrata solo per giochi platinati */}
-      {isPlatinum && game.platinumDate && (
+      {isPlatinum && currentGame.platinumDate && (
         <div className="flex justify-between items-center py-3 border-b border-border-color">
           <span className="font-secondary font-medium text-sm text-text-secondary">
             Data di platino
           </span>
           <span className="font-secondary text-base text-text-primary">
-            {new Date(game.platinumDate).toLocaleDateString('it-IT')}
+            {new Date(currentGame.platinumDate).toLocaleDateString('it-IT')}
           </span>
         </div>
       )}

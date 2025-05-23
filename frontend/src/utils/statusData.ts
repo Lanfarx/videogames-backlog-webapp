@@ -1,5 +1,5 @@
 import { GameStatus } from '../types/game';
-import { getGamesStats } from './gamesData';
+import { useGamesStats } from './gamesHooks';
 import { 
   STATUS_COLORS, 
   STATUS_LABELS, 
@@ -54,10 +54,10 @@ export function getStatusLabel(statusOrType: string): string {
 
 /**
  * Genera i dati di stato per i grafici e le visualizzazioni
+ * Ora usa lo stato globale tramite hook
  */
-export function getStatusData(): StatusItem[] {
-  const stats = getGamesStats();
-  
+export function useStatusData(): StatusItem[] {
+  const stats = useGamesStats();
   return Object.entries(STATUS_LABELS).map(([status, label]) => ({
     status: status as GameStatus,
     label: label,
@@ -66,9 +66,6 @@ export function getStatusData(): StatusItem[] {
   }));
 }
 
-/**
- * Ottiene il conteggio per un determinato stato
- */
 function getCountForStatus(stats: any, status: GameStatus): number {
   switch (status) {
     case 'in-progress': return stats.inProgress;

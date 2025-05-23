@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Save } from 'lucide-react';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGamePlaytime } from '../../store/slice/gamesSlice';
 
 interface PlaytimePopoverProps {
-  onSave: (hoursToAdd: number) => void;
+  gameId: number;
+  currentHours: number;
+  onSave?: (hoursToAdd: number) => void;
   onCancel: () => void;
 }
 
-const PlaytimePopover = ({ onSave, onCancel }: PlaytimePopoverProps) => {
+const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePopoverProps) => {
   const [hoursToAdd, setHoursToAdd] = useState(1);
+  const dispatch = useAppDispatch();
   
   // Ref per il popover
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -39,7 +44,10 @@ const PlaytimePopover = ({ onSave, onCancel }: PlaytimePopoverProps) => {
 
   const handleSave = () => {
     if (hoursToAdd > 0) {
-      onSave(hoursToAdd);
+      const newTotal = currentHours + hoursToAdd;
+      dispatch(updateGamePlaytime({ gameId, hoursPlayed: newTotal }));
+      if (onSave) onSave(hoursToAdd);
+      onCancel();
     }
   };
 

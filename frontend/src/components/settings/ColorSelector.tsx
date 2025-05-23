@@ -14,7 +14,6 @@ const ColorSelector: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between py-4">
-      <span className="font-secondary text-base text-text-secondary">Colore accent</span>
       <div className="flex space-x-3">
         {colorOptions.map((option) => (
           <button
