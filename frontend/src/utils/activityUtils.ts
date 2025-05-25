@@ -1,6 +1,11 @@
 import { Activity, ActivityType, ActivityGroup, ActivityFilters, PlayedActivityData } from '../types/activity';
 import { ActivityStats, MonthlyStats } from '../types/stats';
 import { extractHoursFromString, isInLastTwoWeeks } from './dateUtils';
+import { getActivityColor } from '../constants/gameConstants';
+import { Trophy, Clock, Gamepad2, Star, Award, X } from 'lucide-react';
+import React from 'react';
+import { Game } from '../types/game';
+import { gameStatusToActivityType } from './statusUtils';
 
 /**
  * Verifica se un'attività è la prima di un certo tipo per un gioco in un determinato mese
@@ -27,7 +32,7 @@ export function isFirstActivityInMonth(
 }
 
 /**
- * Ottiene dati specifici per le attività di tipo "played"
+ * Ottieni dati specifici per le attività di tipo "played"
  */
 export function getPlayedActivityData(
   activity: Activity, 
@@ -223,4 +228,147 @@ export function getUniqueMonthsForYear(activities: Activity[], year: number): nu
   });
   
   return Array.from(uniqueMonths).sort((a, b) => b - a); // Ordina in modo decrescente
+}
+
+export function getActivityIcon(type: ActivityType): React.ReactNode {
+  switch(type) {
+    case "completed":
+      return React.createElement(Trophy, { className: "h-5 w-5", style: { color: getActivityColor('completed') } });
+    case "played":
+      return React.createElement(Clock, { className: "h-5 w-5", style: { color: getActivityColor('played') } });
+    case "added":
+      return React.createElement(Gamepad2, { className: "h-5 w-5", style: { color: getActivityColor('added') } });
+    case "rated":
+      return React.createElement(Star, { className: "h-5 w-5", style: { color: getActivityColor('rated') } });
+    case "platinum":
+      return React.createElement(Award, { className: "h-5 w-5", style: { color: getActivityColor('platinum') } });
+    case "abandoned":
+      return React.createElement(X, { className: "h-5 w-5", style: { color: getActivityColor('abandoned') } });
+    default:
+      return null;
+  }
+}
+
+export function getActivityText(activity: Activity): string {
+  switch(activity.type) {
+    case "completed":
+      return `Hai completato ${activity.gameTitle}`;    
+    case "played":
+      // Controlla se l'additionalInfo contiene "ripreso", che indica un cambiamento di stato
+      if (activity.additionalInfo && activity.additionalInfo.includes("ripreso")) {
+        return `Hai ripreso a giocare a ${activity.gameTitle}`;
+      }
+      // Controlla se l'additionalInfo contiene "iniziato:", che indica la prima sessione di gioco
+      if (activity.additionalInfo && activity.additionalInfo.includes("iniziato:")) {
+        const ore = activity.additionalInfo.replace("iniziato:", "");
+        return `Hai iniziato ${activity.gameTitle} e giocato ${ore}`;
+      }
+      // Controlla se l'additionalInfo contiene "impostato:", che indica modifica manuale delle ore
+      if (activity.additionalInfo && activity.additionalInfo.includes("impostato:")) {
+        const ore = activity.additionalInfo.replace("impostato:", "");
+        return `Hai impostato ${ore} di gioco a ${activity.gameTitle}`;
+      }
+      // Controlla se l'additionalInfo inizia con "-", che indica rimozione di ore
+      if (activity.additionalInfo && activity.additionalInfo.startsWith("-")) {
+        return `Hai rimosso ${activity.additionalInfo.substring(1)} da ${activity.gameTitle}`;
+      }
+      return `Hai giocato ${activity.additionalInfo || ''} a ${activity.gameTitle}`;
+    case "added":
+      return `Hai aggiunto ${activity.gameTitle} alla tua libreria`;
+    case "rated":
+      return `Hai valutato ${activity.gameTitle} con ${activity.additionalInfo}`;
+    case "platinum":
+      return `Hai platinato ${activity.gameTitle}`;
+    case "abandoned":
+      return `Hai abbandonato ${activity.gameTitle} ${activity.additionalInfo ? activity.additionalInfo : ''}`;
+    default:
+      return '';
+  }
+}
+
+/**
+ * Crea un'attività generica
+ */
+export function createActivity(gameId: number, gameTitle: string, type: ActivityType, additionalInfo?: string): Activity {
+  return {
+    id: Date.now(),
+    type,
+    gameId,
+    gameTitle,
+    timestamp: new Date(),
+    additionalInfo
+  };
+}
+
+/**
+ * Crea un'attività per il cambio di stato di un gioco
+ */
+export function createStatusChangeActivity(game: Game, newStatus: Game["status"], prevStatus?: Game["status"]): Activity {
+  const activityType = gameStatusToActivityType[newStatus];
+  let additionalInfo;
+  
+  // Gestisci il caso specifico di ripresa del gioco (da abbandonato/completato/platinato a in corso)
+  if (newStatus === 'in-progress' && 
+      prevStatus && 
+      (prevStatus === 'abandoned' || prevStatus === 'completed' || prevStatus === 'platinum')) {
+    additionalInfo = 'ripreso';
+  }
+  
+  return createActivity(game.id, game.title, activityType, additionalInfo);
+}
+
+/**
+ * Crea un'attività per l'aggiunta di ore di gioco
+ */
+export function createPlaytimeActivity(game: Game, hoursAdded: number, isFirstSession: boolean = false): Activity {
+  let additionalInfo;
+  
+  if (isFirstSession) {
+    // Se è la prima sessione, usa il prefisso "iniziato:"
+    additionalInfo = `iniziato:${Math.abs(hoursAdded)} ore`;
+  } else if (hoursAdded < 0) {
+    // Se si stanno rimuovendo ore, indicalo nel messaggio
+    additionalInfo = `-${Math.abs(hoursAdded)} ore`;
+  } else {
+    additionalInfo = `${hoursAdded} ore`;
+  }
+  
+  return createActivity(game.id, game.title, 'played', additionalInfo);
+}
+
+/**
+ * Crea un'attività per l'impostazione manuale delle ore di gioco
+ */
+export function createManualPlaytimeActivity(game: Game, newHours: number): Activity {
+  const additionalInfo = `impostato:${newHours} ore`;
+  return createActivity(game.id, game.title, 'played', additionalInfo);
+}
+
+/**
+ * Crea un'attività per la valutazione di un gioco
+ */
+export function createRatingActivity(game: Game, rating: number): Activity {
+  return createActivity(game.id, game.title, 'rated', `${rating.toFixed(1)} stelle`);
+}
+
+/**
+ * Gestisci l'aggiornamento delle ore di gioco e crea le attività appropriate
+ */
+export function handlePlaytimeUpdate(game: Game, newHours: number): {
+  statusChanged: boolean;
+  activity: Activity;
+} {
+  const wasNotStarted = game.status === 'not-started';
+  const hoursToAdd = newHours - game.hoursPlayed;
+  let activity;
+  
+  // Se il gioco era "Da iniziare" e ora ha ore di gioco
+  if (wasNotStarted && newHours > 0) {
+    activity = createPlaytimeActivity(game, hoursToAdd, true);
+    return { statusChanged: true, activity };
+  } else {
+    // Caso normale: attività per le ore aggiunte
+    activity = createPlaytimeActivity(game, hoursToAdd);
+    return { statusChanged: false, activity };
+  }
 }

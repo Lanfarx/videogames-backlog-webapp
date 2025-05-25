@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Activity } from '../../types/activity';
-import { getActivityIcon, formatRelativeTime, getActivityText } from '../../utils/activitiesData';
+import { getActivityIcon, getActivityText } from '../../utils/activityUtils';
+import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface RecentActivitiesListProps {
     activities: Activity[];

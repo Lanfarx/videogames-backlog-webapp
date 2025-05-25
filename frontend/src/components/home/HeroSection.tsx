@@ -1,6 +1,6 @@
 import React from 'react';
 import { Gamepad2, Clock, Trophy } from 'lucide-react';
-import { useGamesStats } from '../../utils/gamesHooks';
+import { useGamesStats } from '../../store/hooks/gamesHooks';
 import StatsCard from '../ui/StatsCard';
 
 interface HeroSectionProps {

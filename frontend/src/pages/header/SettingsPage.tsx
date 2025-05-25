@@ -122,9 +122,7 @@ const SettingsPage: React.FC = () => {
         </h1>
         <hr className="border-t border-border-color my-4" />
 
-        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {activeTab === "generali" && (
+        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />        {activeTab === "generali" && (
           <GeneralSettings
             language={language}
             dateFormat={dateFormat}
@@ -135,7 +133,8 @@ const SettingsPage: React.FC = () => {
             dateFormatOptions={dateFormatOptions}
             onLanguageChange={setLanguage}
             onDateFormatChange={setDateFormat}
-            setTheme={setTheme} 
+            setTheme={setTheme}
+            setAccentColor={setAccentColor}
             />
         )}
 

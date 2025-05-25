@@ -1,6 +1,6 @@
 import { Activity } from '../../../types/activity';
 import { formatShortDate } from '../../../utils/dateUtils';
-import { getActivityText } from '../../../utils/activitiesData';
+import { getActivityText } from '../../../utils/activityUtils';
 
 interface ActivityTimelineItemProps {
   activity: Activity;

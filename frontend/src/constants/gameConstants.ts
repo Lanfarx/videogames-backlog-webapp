@@ -1,16 +1,16 @@
 import type { GameStatus, GamePlatform, SortOption, SortOrder } from '../types/game';
-import { ActivityType } from '../types/activity';
 import { ColorMap, LabelMap } from '../types/stats';
+import { getCssVarColor } from '../utils/getCssVarColor';
 
 /**
- * Definizioni di colori per stati di gioco
+ * Definizioni di colori per stati di gioco usando variabili CSS dedicate
  */
 export const STATUS_COLORS: ColorMap = {
-  'not-started': '#9CA3AF', // grigio
-  'in-progress': '#3B82F6', // blu
-  'completed': '#10B981',   // verde
-  'abandoned': '#EF4444',   // rosso
-  'platinum': '#8B5CF6'     // viola
+  'not-started': getCssVarColor('--status-not-started', '#9CA3AF'),
+  'in-progress': getCssVarColor('--status-in-progress', '#3B82F6'),
+  'completed': getCssVarColor('--status-completed', '#10B981'),
+  'abandoned': getCssVarColor('--status-abandoned', '#EF4444'),
+  'platinum': getCssVarColor('--status-platinum', '#8B5CF6')
 };
 
 /**
@@ -34,19 +34,19 @@ export const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label])
 }));
 
 /**
- * Colori predefiniti per le piattaforme principali
+ * Colori predefiniti per le piattaforme principali usando variabili CSS
  */
 export const PLATFORM_COLORS: Record<string, string> = {
-  'PlayStation 5': '#0070d1',
-  'PlayStation 4': '#003087',
-  'Xbox Series X/S': '#107c10',
-  'Xbox One': '#5dc21e',
-  'Nintendo Switch': '#e60012',
-  'Steam': '#1b2838',
-  'Epic Games Store': '#2a2a2a',
-  'PC': '#00adef',
-  'iOS': '#A2AAAD',
-  'Android': '#3DDC84'
+  'PlayStation 5': getCssVarColor('--platform-ps5', '#0070d1'),
+  'PlayStation 4': getCssVarColor('--platform-ps4', '#003087'),
+  'Xbox Series X/S': getCssVarColor('--platform-xbox-series', '#107c10'),
+  'Xbox One': getCssVarColor('--platform-xbox-one', '#5dc21e'),
+  'Nintendo Switch': getCssVarColor('--platform-switch', '#e60012'),
+  'Steam': getCssVarColor('--platform-steam', '#1b2838'),
+  'Epic Games Store': getCssVarColor('--platform-epic', '#2a2a2a'),
+  'PC': getCssVarColor('--platform-pc', '#00adef'),
+  'iOS': getCssVarColor('--platform-ios', '#A2AAAD'),
+  'Android': getCssVarColor('--platform-android', '#3DDC84')
 };
 
 /**
@@ -93,14 +93,13 @@ export const GENRES = [
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'title', label: 'Titolo' },
   { value: 'platform', label: 'Piattaforma' },
-  { value: 'releaseYear', label: 'Anno di uscita' },
-  { value: 'rating', label: 'Valutazione' },
   { value: 'hoursPlayed', label: 'Ore giocate' },
+  { value: 'metacritic', label: 'Metacritic' },
+  { value: 'rating', label: 'Valutazione' },
   { value: 'price', label: 'Prezzo' },
   { value: 'purchaseDate', label: 'Data di acquisto' },
   { value: 'completionDate', label: 'Data di completamento' },
   { value: 'platinumDate', label: 'Data platino' },
-  { value: 'metacritic', label: 'Metacritic' }
 ];
 
 /**
@@ -149,15 +148,15 @@ export function getRandomColor(): string {
 }
 
 /**
- * Mappa dei colori per tipi di attività
+ * Mappa dei colori per tipi di attività usando variabili CSS dedicate
  */
 export const ACTIVITY_COLORS: Record<string, string> = {
-  'played': STATUS_COLORS['in-progress'],   // Come in-progress
-  'added': STATUS_COLORS['not-started'],    // Come not-started
-  'rated': '#8A5CF6',                       // Viola
-  'completed': STATUS_COLORS['completed'],  // Come completed
-  'abandoned': STATUS_COLORS['abandoned'],  // Come abandoned
-  'platinum': STATUS_COLORS['platinum'],    // Come platinum
+  'played': getCssVarColor('--activity-played', STATUS_COLORS['in-progress']),
+  'added': getCssVarColor('--activity-added', STATUS_COLORS['not-started']),
+  'rated': getCssVarColor('--activity-rated', '#8A5CF6'),
+  'completed': getCssVarColor('--activity-completed', STATUS_COLORS['completed']),
+  'abandoned': getCssVarColor('--activity-abandoned', STATUS_COLORS['abandoned']),
+  'platinum': getCssVarColor('--activity-platinum', STATUS_COLORS['platinum'])
 };
 
 /**

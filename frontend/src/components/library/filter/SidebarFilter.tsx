@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
-import { calculateMaxValues, calculateCounts } from '../../../utils/gameUtils';
 import { STATUS_OPTIONS } from '../../../constants/gameConstants';
+import { calculateCounts, calculateMaxValues } from '../../../utils/gamesUtils';
 
 // Interfaccia per i props del componente
 interface SidebarFilterProps {

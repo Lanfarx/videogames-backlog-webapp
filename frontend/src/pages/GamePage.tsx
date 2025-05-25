@@ -1,19 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGameById } from '../utils/gamesHooks';
+import { useGameById } from '../store/hooks/index';
+import { useAllActivitiesByGameId, useAllActivitiesActions } from '../store/hooks/activitiesHooks';
 import { useAppDispatch } from '../store/hooks';
-import { updateGameStatus, updateGame, deleteGame, updateGamePlaytime } from '../store/slice/gamesSlice';
+import { updateGameStatus, updateGame, deleteGame, updateGamePlaytime, updateGameNotes, updateGameReview, updateGameRating } from '../store/slice/gamesSlice';
+import { createStatusChangeActivity, handlePlaytimeUpdate, createRatingActivity } from '../utils/activityUtils';
+import { calculateRatingFromReview } from '../utils/gamesUtils';
 
-import { 
-  getActivitiesByGameId, 
-  recordGameplayHours, 
-  recordGameCompletion, 
-  recordGamePlatinum, 
-  recordGameAbandoned,
-  recordStatusChange
-} from '../utils/activitiesData';
 import { Game, GameComment, GameStatus, GameReview } from '../types/game';
-import { Activity, ActivityType } from '../types/activity';
 import GamePageLayout from '../components/game/layout/GamePageLayout';
 import GameBanner from '../components/game/GameBanner';
 import GameCommentsCard from '../components/game/GameCommentsCard';
@@ -21,29 +15,19 @@ import GameInfoCard from '../components/game/GameInfoCard';
 import NotesReviewCard from '../components/game/NotesReviewCard';
 import GameTimelineCard from '../components/game/GameTimelineCard';
 
-// Mappa per convertire gli stati del gioco ai tipi di attività
-const gameStatusToActivityType: Record<GameStatus, ActivityType> = {
-  'in-progress': 'played',
-  'not-started': 'added',
-  'completed': 'completed',
-  'abandoned': 'abandoned',
-  'platinum': 'platinum'
-};
-
 export default function GamePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const game = useGameById(id ? parseInt(id) : -1);
   const dispatch = useAppDispatch();
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const { addActivity } = useAllActivitiesActions();
   const [comments, setComments] = useState<GameComment[]>([]);
-
-  // Carica le attività e i commenti solo quando cambia il gioco
+  const activities = useAllActivitiesByGameId(game?.id ?? -1);
+  
+  // Carica i commenti solo quando cambia il gioco
   useEffect(() => {
     if (game) {
       setComments(game.comments || []);
-      const gameActivities = getActivitiesByGameId(game.id);
-      setActivities(gameActivities);
     }
   }, [game]);
 
@@ -54,7 +38,6 @@ export default function GamePage() {
       </div>
     );
   }
-
   // Gestione delle azioni
   const handleChangeStatus = (newStatus: GameStatus) => {
     if (!game || game.status === newStatus) return;
@@ -70,31 +53,16 @@ export default function GamePage() {
       console.warn('Non è possibile impostare lo stato "Da iniziare" per un gioco con tempo di gioco registrato.');
       return;
     }
+
+    // Stato precedente per la funzione di creazione attività
+    const prevStatus = game.status;
     
+    // Aggiorna lo stato nel Redux store
     dispatch(updateGameStatus({ gameId: game.id, status: newStatus }));
     
-    // Aggiorna la lista delle attività (solo locale)
-    let newActivity: Activity | null = null;
-    switch (newStatus) {
-      case 'completed':
-        newActivity = recordGameCompletion(Number(game.id), game.title);
-        break;
-      case 'platinum':
-        newActivity = recordGamePlatinum(Number(game.id), game.title);
-        break;
-      case 'abandoned':
-        newActivity = recordGameAbandoned(Number(game.id), game.title);
-        break;
-      case 'not-started':
-        newActivity = recordStatusChange(Number(game.id), game.title, 'added');
-        break;
-      default:
-        // Per sicurezza, usiamo la mappa per convertire lo stato del gioco al tipo di attività
-        const activityType = gameStatusToActivityType[newStatus] || 'added';
-        newActivity = recordStatusChange(Number(game.id), game.title, activityType);
-        break;
-    }
-    if (newActivity) setActivities(prev => [newActivity as Activity, ...prev]);
+    // Crea e aggiungi l'attività utilizzando la funzione di utilità
+    const activity = createStatusChangeActivity(game, newStatus, prevStatus);
+    addActivity(activity);
   };
 
   const handleEditGame = (updatedGameDetails: Partial<Game>) => {
@@ -106,18 +74,22 @@ export default function GamePage() {
     if (!game) return;
     dispatch(deleteGame(game.id));
     navigate('/library');
-  };
-
-  const handleUpdatePlaytime = (newHours: number) => {
+  };  const handleUpdatePlaytime = (newHours: number) => {
     if (game) {
+      // Aggiorna le ore nel Redux store
       dispatch(updateGamePlaytime({ gameId: game.id, hoursPlayed: newHours }));
-      const hoursAdded = newHours - game.hoursPlayed;
-      const newActivity = recordGameplayHours(Number(game.id), game.title, hoursAdded);
-      setActivities(prev => [newActivity, ...prev]);
+      
+      // Usa la funzione di utilità per gestire la creazione di attività
+      const result = handlePlaytimeUpdate(game, newHours);
+      addActivity(result.activity);
     }
   };
-
   const handleNotesChange = (notes: string) => {
+    if (!game) return;
+    
+    // Aggiorna le note nel Redux store
+    dispatch(updateGameNotes({ gameId: game.id, notes }));
+    
     console.log('Note aggiornate:', notes);
   };
 
@@ -125,17 +97,27 @@ export default function GamePage() {
     if (!game) return;
     
     // Aggiorna il gioco con la nuova recensione
-    const updatedGame = {
-      ...game,
-      review: review
-      // Non aggiorniamo più il rating qui, viene calcolato automaticamente
-    };
+    dispatch(updateGameReview({ gameId: game.id, review }));
     
-    // setGame(updatedGame);
+    // Calcola e aggiorna il rating
+    const averageRating = calculateRatingFromReview(review);
+    dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
+    
+    // Crea un'attività per la valutazione
+    const ratingActivity = createRatingActivity(game, averageRating);
+    addActivity(ratingActivity);
     
     console.log('Recensione salvata:', review);
-    // In un'app reale, qui ci sarebbe una chiamata API per salvare i dati
-    // updateGameAPI(updatedGame).then(response => {...})
+  };  // Funzione generica per aggiornare i commenti e il gioco
+  const updateGameComments = (updatedComments: GameComment[]) => {
+    if (!game) return;
+    
+    const updatedGame = {
+      ...game,
+      comments: updatedComments
+    };
+    
+    dispatch(updateGame(updatedGame));
   };
 
   const handleAddComment = (text: string) => {
@@ -149,52 +131,24 @@ export default function GamePage() {
     };
     
     const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    
-    // Aggiorna anche il gioco locale con i nuovi commenti
-    const updatedGame = {
-      ...game,
-      comments: updatedComments
-    };
-    // setGame(updatedGame);
-    
-    console.log('Nuovo commento aggiunto:', newComment);
+    updateGameComments(updatedComments);
   };
 
   const handleEditComment = (id: number, newText: string) => {
     if (!game) return;
     
     const updatedComments = comments.map(comment => 
-      comment.id === id 
-        ? { ...comment, text: newText } 
-        : comment
+      comment.id === id ? { ...comment, text: newText } : comment
     );
     
-    setComments(updatedComments);
-    
-    // Aggiorna anche il gioco locale
-    const updatedGame = {
-      ...game,
-      comments: updatedComments
-    };
-    // setGame(updatedGame);
-    
-    console.log('Commento modificato:', id, newText);
+    updateGameComments(updatedComments);
   };
 
   const handleDeleteComment = (id: number) => {
     if (!game) return;
     
     const updatedComments = comments.filter(comment => comment.id !== id);
-    setComments(updatedComments);
-    
-    const updatedGame = {
-      ...game,
-      comments: updatedComments
-    };
-    // setGame(updatedGame);
-    
-    console.log('Commento eliminato:', id);
+    updateGameComments(updatedComments);
   };
 
   return (

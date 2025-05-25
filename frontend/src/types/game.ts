@@ -158,3 +158,17 @@ export type GameUpdateInput = Partial<Game>;
  * Opzioni di visualizzazione per i giochi
  */
 export type GameViewMode = 'grid' | 'list';
+
+/**
+ * Tipo per i giochi di esempio usati nella ricerca automatica (sample games)
+ * Questi giochi non hanno id, platform obbligatorio, né rating/commenti
+ */
+export interface SampleGame {
+  title: string;
+  coverImage: string;
+  developer: string;
+  publisher: string;
+  releaseYear: number;
+  genres: string[];
+  metacritic: number;
+}

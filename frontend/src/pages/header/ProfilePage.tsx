@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import Layout from '../../components/layout/Layout';
+import { useState, useEffect } from 'react';
 import { Gamepad2, Clock, Trophy, CalendarRange, Lock, Eye, ArrowRight } from 'lucide-react';
-import { useGamesStats } from '../../utils/gamesHooks';
+import { useGamesStats } from '../../store/hooks/index';
+import { useAllActivities } from '../../store/hooks/activitiesHooks';
 import StatsCard from '../../components/ui/StatsCard';
 import { Link } from 'react-router-dom';
 import DiaryFilters from '../../components/diary/DiaryFilters';
 import DiaryMonthGroup from '../../components/diary/DiaryMonthGroup';
 import { Activity } from '../../types/activity';
-import { getAllActivities } from '../../utils/activitiesData';
 import { formatLastUpdate } from '../../utils/dateUtils';
 import { 
   calculateActivityStats, 
-  calculateRecentPlaytime,
   getUniqueMonthsForYear,
-  filterActivitiesByYear
 } from '../../utils/activityUtils';
 import { loadFromLocal } from '../../utils/localStorage';
 
@@ -30,6 +27,7 @@ const profileData = {
 
 const ProfilePage = () => {
   const stats = useGamesStats();
+  const activitiesData = useAllActivities();
   const [isProfilePrivate, setIsProfilePrivate] = useState(profileData.isPrivate);
   
   // Stato per le opzioni di privacy
@@ -82,7 +80,7 @@ const ProfilePage = () => {
     };
     
     // Carica le attività
-    setActivities(getAllActivities());
+    setActivities(activitiesData);
     
     checkPrivacySettings();
     
@@ -92,7 +90,7 @@ const ProfilePage = () => {
     return () => {
       window.removeEventListener('storage', checkPrivacySettings);
     };
-  }, []);
+  }, [activitiesData]);
   
   // Gestisce il cambio dei filtri del diario
   const handleFilterChange = (filter: string) => {
@@ -114,9 +112,6 @@ const ProfilePage = () => {
   
   // Calcola le statistiche per il diario utilizzando le funzioni di utilità
   const diaryStats = calculateActivityStats(activities);
-  
-  // Filtra le attività per l'anno selezionato utilizzando la funzione di utilità
-  const yearActivities = filterActivitiesByYear(activities, selectedYear);
   
   // Ottieni mesi unici per l'anno selezionato utilizzando la funzione di utilità
   const months = getUniqueMonthsForYear(activities, selectedYear);

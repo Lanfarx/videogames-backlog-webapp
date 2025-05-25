@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Activity } from '../../types/activity';
 import { Game } from '../../types/game';
-import { getActivityText } from '../../utils/activitiesData';
 import { formatShortDate } from '../../utils/dateUtils';
 import { History } from 'lucide-react';
 import ActivityTimelineItem from './ui/ActivityTimelineItem';

@@ -3,7 +3,8 @@ import { Activity } from '../../types/activity';
 import { Game } from '../../types/game';
 import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import RatingStars from '../ui/atoms/RatingStars';
-import { useGameById, calculateRatingFromReview } from '../../utils/gamesHooks';
+import { useGameById } from '../../store/hooks/gamesHooks';
+import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { isFirstActivityInMonth } from '../../utils/activityUtils';
 
 interface DiaryEntryProps {

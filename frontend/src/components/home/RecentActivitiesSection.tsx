@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { getRecentActivities } from '../../utils/activitiesData';
-import { getStatusColor } from '../../utils/statusData';
+import { useRecentActivities } from '../../store/hooks/activitiesHooks';
+import { getActivityColor } from '../../constants/gameConstants';
 import ActivityCard from '../ui/ActivityCard';
 import ActivityHistoryPopover from '../game/ui/ActivityHistoryPopover';
 import {History } from 'lucide-react';
 
 export default function RecentActivitiesSection() {
-  // Ottengo le attività recenti usando la funzione importata
-  const recentActivities = getRecentActivities(5);
+  const recentActivities = useRecentActivities(5);
+  const allRecentActivities = useRecentActivities(100);
   const [showHistory, setShowHistory] = useState(false);
 
   return (
@@ -23,7 +23,7 @@ export default function RecentActivitiesSection() {
         </div>
         {showHistory && (
           <ActivityHistoryPopover
-            activities={getRecentActivities(100)}
+            activities={allRecentActivities}
             onClose={() => setShowHistory(false)}
             gameTitle="Tutta la libreria"
           />
@@ -39,7 +39,7 @@ export default function RecentActivitiesSection() {
               // Determina se l'attività è a sinistra o a destra
               const position = index % 2 === 0 ? 'right' : 'left';
               // Ottengo il colore dalla utility centralizzata
-              const dotColor = getStatusColor(activity.type);
+              const dotColor = getActivityColor(activity.type);
               
               return (
                 <div key={activity.id} className="relative min-h-[60px] flex items-center">

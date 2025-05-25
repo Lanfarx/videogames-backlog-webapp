@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Activity } from '../../types/activity';
-import { formatRelativeTime, getActivityText, getActivityIcon } from '../../utils/activitiesData';
+import { formatRelativeTime } from '../../utils/dateUtils';
+import { getActivityText, getActivityIcon } from '../../utils/activityUtils';
 
 interface ActivityCardProps {
   activity: Activity;

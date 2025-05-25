@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useGameById } from '../../utils/gamesHooks';
+import { useGameById } from '../../store/hooks/index';
 import RatingStars from './atoms/RatingStars';
 import GenreTagList from './GenreTagList';
 

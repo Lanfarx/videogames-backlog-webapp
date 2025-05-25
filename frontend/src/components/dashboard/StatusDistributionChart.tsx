@@ -1,9 +1,13 @@
 import React, { useRef, useEffect, ReactNode } from 'react';
-import { StatusItem } from '../../utils/statusData';
 import { getStatusColor } from '../../constants/gameConstants';
 
 interface StatusDistributionChartProps {
-    data: StatusItem[];
+    data: {
+        status: string;
+        label: string;
+        count: number;
+        color?: string;
+    }[];
     icon?: ReactNode;
     title: string;
 }

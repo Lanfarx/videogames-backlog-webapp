@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import Layout from '../components/layout/Layout';
+import { useState, useEffect } from 'react';
 import { CalendarRange, Pencil, Clock } from 'lucide-react';
 import DiaryFilters from '../components/diary/DiaryFilters';
 import DiaryMonthGroup from '../components/diary/DiaryMonthGroup';
 import { Activity } from '../types/activity';
-import { getAllActivities } from '../utils/activitiesData';
+import { useAllActivities } from '../store/hooks/activitiesHooks';
 import { formatLastUpdate } from '../utils/dateUtils';
 import { 
   calculateActivityStats, 
-  calculateRecentPlaytime,
   getUniqueMonthsForYear,
   filterActivitiesByYear
 } from '../utils/activityUtils';
@@ -19,10 +17,11 @@ const DiarioPage = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
   const [activities, setActivities] = useState<Activity[]>([]);
   
+  const allActivities = useAllActivities();
+
   useEffect(() => {
-    // Carica le attività
-    setActivities(getAllActivities());
-  }, []);
+    setActivities(allActivities);
+  }, [allActivities]);
 
   // Calcola statistiche generali utilizzando le funzioni di utilità
   const stats = calculateActivityStats(activities);

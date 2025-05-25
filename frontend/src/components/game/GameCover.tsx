@@ -1,4 +1,4 @@
-import { getStatusColor } from '../../utils/statusData';
+import { getStatusColor } from '../../constants/gameConstants';
 
 interface GameCoverProps {
   coverImage?: string;  // Reso opzionale

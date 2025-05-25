@@ -5,7 +5,8 @@ import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from '../ui/PlaytimePopover';
 import EditGameInfoModal from './EditGameInfoModal';
-import { useGameById, getGameRating } from '../../utils/gamesHooks';
+import { useGameById } from '../../store/hooks/gamesHooks';
+import { getGameRating } from '../../utils/gamesUtils';
 
 interface GameInfoCardProps {
   game: Game;
@@ -168,8 +169,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           <span className="font-secondary text-base text-text-primary">
             {new Date(currentGame.platinumDate).toLocaleDateString('it-IT')}
           </span>
-        </div>
-      )}
+        </div>      )}
       
       {/* Valutazione */}
       <div className="py-3">
@@ -177,16 +177,22 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           <span className="font-secondary font-medium text-sm text-text-secondary">
             La tua valutazione
           </span>
-          <RatingStars rating={calculatedRating} showValue={false} size="md" />
+          {calculatedRating === 0 ? (
+            <span className="font-secondary text-base text-text-secondary italic">
+              Non valutato
+            </span>
+          ) : (
+            <RatingStars rating={calculatedRating} showValue={false} size="md" />
+          )}
         </div>
       </div>
-
+      
       {/* Modale di modifica delle informazioni */}
       <EditGameInfoModal
         isOpen={showEditInfoModal}
         onClose={() => setShowEditInfoModal(false)}
         onSave={handleSaveInfo}
-        game={game}
+        game={currentGame}
       />
     </div>
   );

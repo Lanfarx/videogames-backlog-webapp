@@ -1,45 +1,30 @@
 import React from 'react';
-import { getRecentActivities } from '../../utils/activitiesData';
-import { useStatusData } from '../../utils/statusData';
 import StatsCard from '../../components/ui/StatsCard';
 import StatusDistributionChart from '../../components/dashboard/StatusDistributionChart';
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
 import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock } from 'lucide-react';
-import { useGamesStats, useAllGames } from '../../utils/gamesHooks';
+import { generatePlatformDistributionData, generateGenreDistributionData } from '../../utils/gamesUtils';
+import { useGamesStats } from '../../store/hooks/gamesHooks';
+import { useAllGames } from '../../store/hooks/gamesHooks';
+import { useRecentActivities } from '../../store/hooks/activitiesHooks';
+import { useStatusData } from '../../utils/statusUtils';
+
 
 const DashboardPage: React.FC = () => {
     const stats = useGamesStats();
     const allGames = useAllGames();
-    const recentActivities = getRecentActivities(5);
+    const recentActivities = useRecentActivities(5);
     const statusData = useStatusData();
-    
-    // Calcolare le statistiche per piattaforme
-    const platformCounts = allGames.reduce((acc: Record<string, number>, game) => {
-      acc[game.platform] = (acc[game.platform] || 0) + 1;
-      return acc;
-    }, {});
 
-    // Convertire in array e ordinare per conteggio
-    const platformData = Object.entries(platformCounts)
-        .map(([platform, count]) => ({ platform, count }))
-        .sort((a, b) => (b.count as number) - (a.count as number))
-        .slice(0, 4);
+    // Usa la funzione centralizzata per la distribuzione piattaforme
+    const platformData = generatePlatformDistributionData(allGames)
+      .slice(0, 4)
+      .map(item => ({ platform: item.label, count: item.value }));
 
-    // Calcolare le statistiche per generi
-    const genreCounts: Record<string, number> = {};
-    allGames.forEach((game) => {
-      game.genres.forEach((genre) => {
-        genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-      });
-    });
-
-    // Convertire in array e ordinare per conteggio
-    const genreData = Object.entries(genreCounts)
-        .map(([genre, count]) => ({ genre, count }))
-        .sort((a, b) => (b.count as number) - (a.count as number))
-        .slice(0, 5);
+    // Usa la funzione centralizzata per la distribuzione generi
+    const genreData = generateGenreDistributionData(allGames);
 
     return (
         <div className="flex flex-col bg-secondaryBg min-h-screen p-6">

@@ -13,16 +13,23 @@ import ContactPage from './pages/footer/ContactPage';
 import { useEffect } from 'react';
 import { useAppDispatch } from './store/hooks';
 import { setGames } from './store/slice/gamesSlice';
-import { gamesData } from './utils/gamesData';
-import { useAllGames } from './utils/gamesHooks';
+import { gamesData } from './data/gamesData';
+import { useAllGames } from './store/hooks/gamesHooks';
+import { activitiesData } from './data/activitiesData';
+import { setActivities } from './store/slice/activitiesSlice';
+import { useAllActivities } from './store/hooks/activitiesHooks';
 
 function App() {
   const dispatch = useAppDispatch();
   const allGames = useAllGames();
+  const allActivities = useAllActivities();
 
   useEffect(() => {
     if (allGames.length === 0) {
       dispatch(setGames(gamesData));
+    }
+    if (allActivities.length === 0) {
+      dispatch(setActivities(activitiesData));
     }
   }, [allGames.length, dispatch]);
 

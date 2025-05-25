@@ -34,10 +34,10 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="h-20 bg-primary-bg shadow-sm flex items-center justify-between px-8 flex-shrink-0">
-          <div className="flex items-center">
+      <header className="h-16 bg-primary-bg shadow-sm flex items-center justify-between px-6 flex-shrink-0">
+          <div className="flex items-center gap-3">
             {/* Logo */}
-            <AppLogo />
+            <AppLogo className="h-7 w-auto" />
           </div>
 
           {/* Menu di navigazione - centrato orizzontalmente */}

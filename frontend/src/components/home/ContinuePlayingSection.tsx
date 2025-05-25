@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionHeader from '../ui/SectionHeader';
 import InProgressGameCard from '../ui/InProgressGameCard';
-import { useGamesInProgress } from '../../utils/gamesHooks';
+import { useGamesInProgress } from '../../store/hooks/gamesHooks';
 
 const ContinuePlayingSection: React.FC = () => {
   const inProgressGames = useGamesInProgress();

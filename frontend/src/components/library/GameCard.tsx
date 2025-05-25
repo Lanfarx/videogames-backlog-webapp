@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 import type { Game, GameStatus } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
-import { getStatusColor } from '../../utils/statusData';
+import { useGameById } from '../../store/hooks/index';
+import { getGameRating } from '../../utils/gamesUtils';
 import ThreeDotsModal from '../ui/ThreeDotsModal';
-import { useGameById, getGameRating } from '../../utils/gamesHooks';
+import StatusIndicator from '../ui/atoms/StatusIndicator';
 
 interface GameCardProps {
   game: Game;
@@ -25,9 +26,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
       {/* Indicatore di stato */}
-      <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
-        <div className="h-full" style={{ backgroundColor: `${getStatusColor(currentGame.status)}20`, width: "100%" }}></div>
-      </div>
+      <StatusIndicator status={currentGame.status} />
 
       {/* Copertina con link */}
       <Link to={`/game/${game.id}`} className="block">

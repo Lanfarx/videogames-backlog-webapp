@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import RatingStars from '../ui/atoms/RatingStars';
 import { Save, AlertCircle } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
-import { recordGameRating } from '../../utils/activitiesData';
 import { useAppDispatch } from '../../store/hooks';
 import { updateGameReview, updateGameRating, updateGameNotes } from '../../store/slice/gamesSlice';
-import { calculateRatingFromReview, useGameById } from '../../utils/gamesHooks';
+import { useGameById } from '../../store/hooks/gamesHooks';
+import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
+import { calculateRatingFromReview } from '../../utils/gamesUtils';
+import { createRatingActivity } from '../../utils/activityUtils';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -51,10 +53,10 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
       setSoundRating(currentGame.review.sound);
       setReviewDate(currentGame.review.date);
     }
-    setNotesValue(currentGame.notes || '');
-  }, [currentGame]);
+    setNotesValue(currentGame.notes || '');  }, [currentGame]);
 
   const dispatch = useAppDispatch();
+  const { addActivity } = useAllActivitiesActions();
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotesValue(e.target.value);
@@ -93,13 +95,15 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
       };
 
       // Aggiorna anche lo stato locale della data
-      setReviewDate(formattedDate);
-
-      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
-
+      setReviewDate(formattedDate);      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
+      
       // Calcola e aggiorna il rating globale
       const averageRating = calculateRatingFromReview(updatedReview);
       dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
+
+      // Crea un'attività di tipo "rated" utilizzando la funzione di utilità
+      const ratingActivity = createRatingActivity(game, averageRating);
+      addActivity(ratingActivity);
 
       if (onReviewSave) {
         onReviewSave(updatedReview);

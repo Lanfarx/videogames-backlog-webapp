@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Save } from 'lucide-react';
 import { useAppDispatch } from '../../store/hooks';
 import { updateGamePlaytime } from '../../store/slice/gamesSlice';
+import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
+import { useGameById } from '../../store/hooks/gamesHooks';
+import { createPlaytimeActivity, handlePlaytimeUpdate } from '../../utils/activityUtils';
 
 interface PlaytimePopoverProps {
   gameId: number;
@@ -13,6 +16,8 @@ interface PlaytimePopoverProps {
 const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePopoverProps) => {
   const [hoursToAdd, setHoursToAdd] = useState(1);
   const dispatch = useAppDispatch();
+  const { addActivity } = useAllActivitiesActions();
+  const game = useGameById(gameId);
   
   // Ref per il popover
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -37,15 +42,24 @@ const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePop
   const incrementHours = () => {
     setHoursToAdd(prev => prev + 1);
   };
-  
   const decrementHours = () => {
+    // Non permettiamo valori negativi, il minimo è 1
     setHoursToAdd(prev => prev > 1 ? prev - 1 : 1);
-  };
-
-  const handleSave = () => {
+  };  const handleSave = () => {
+    // Assicuriamoci che hoursToAdd sia sempre maggiore di zero
     if (hoursToAdd > 0) {
       const newTotal = currentHours + hoursToAdd;
+      
+      // Aggiorna lo stato nel Redux store
       dispatch(updateGamePlaytime({ gameId, hoursPlayed: newTotal }));
+      
+      // Crea l'attività appropriata solo se abbiamo l'oggetto gioco
+      if (game) {
+        // Caso: aggiunta ore
+        const result = handlePlaytimeUpdate(game, newTotal);
+        addActivity(result.activity);
+      }
+      
       if (onSave) onSave(hoursToAdd);
       onCancel();
     }
@@ -54,9 +68,7 @@ const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePop
   return (
     <div 
       ref={popoverRef}
-      className="absolute top-full right-0 mt-2 p-4 bg-primaryBg border border-border-color rounded-lg shadow-md z-10 w-56"
-    >
-      <div className="text-sm text-text-secondary mb-3 font-secondary">
+      className="absolute top-full right-0 mt-2 p-4 bg-primaryBg border border-border-color rounded-lg shadow-md z-10 w-56"    >      <div className="text-sm text-text-secondary mb-3 font-secondary">
         Aggiungi ore di gioco:
       </div>
       

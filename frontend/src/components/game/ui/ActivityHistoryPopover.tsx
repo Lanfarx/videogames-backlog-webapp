@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Activity } from '../../../types/activity';
-import { getStatusColor } from '../../../utils/statusData';
+import { getActivityColor } from '../../../constants/gameConstants';
 import ActivityTimelineItem from './ActivityTimelineItem';
 
 interface ActivityHistoryPopoverProps {
@@ -65,7 +65,7 @@ const ActivityHistoryPopover = ({ activities, onClose, gameTitle }: ActivityHist
                   {/* Timeline dot con colore dinamico */}
                   <div 
                     className="w-3 h-3 rounded-full mr-3 shrink-0"
-                    style={{ backgroundColor: getStatusColor(activity.type) }}
+                    style={{ backgroundColor: getActivityColor(activity.type) }}
                   ></div>
                   <div className="flex-1">
                     {showDate && (

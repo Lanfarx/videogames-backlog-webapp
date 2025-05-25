@@ -87,17 +87,17 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, re
           {star <= displayRating ? (
             <Star 
               className={starSize} 
-              style={{ color: '#FFCC3F', fill: '#FFCC3F' }} 
+              style={{ color: 'rgb(var(--accent-secondary))', fill: 'rgb(var(--accent-secondary))' }} 
             />
           ) : star - 0.5 <= displayRating ? (
             <StarHalf 
               className={starSize} 
-              style={{ color: '#FFCC3F', fill: '#FFCC3F' }} 
+              style={{ color: 'rgb(var(--accent-secondary))', fill: 'rgb(var(--accent-secondary))' }} 
             />
           ) : (
             <Star 
               className={starSize} 
-              style={{ color: '#CCCCCC' }} 
+              style={{ color: 'rgb(var(--text-disabled))' }} 
             />
           )}
         </span>

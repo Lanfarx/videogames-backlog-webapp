@@ -25,6 +25,39 @@
   /* Font */
   --font-primary: 'Montserrat', sans-serif;
   --font-secondary: 'Roboto', sans-serif;
+
+  /* Variabili per piattaforme principali */
+  --platform-ps5: 0, 112, 209;
+  --platform-ps4: 0, 48, 135;
+  --platform-xbox-series: 16, 124, 16;
+  --platform-xbox-one: 93, 194, 30;
+  --platform-switch: 230, 0, 18;
+  --platform-steam: 27, 40, 56;
+  --platform-epic: 42, 42, 42;
+  --platform-pc: 0, 173, 239;
+  --platform-ios: 162, 170, 173;
+  --platform-android: 61, 220, 132;
+
+  /* Variabili per status dei giochi */
+  --status-not-started: 156, 163, 175; /* #9CA3AF */
+  --status-in-progress: 59, 130, 246;  /* #3B82F6 */
+  --status-completed: 16, 185, 129;    /* #10B981 */
+  --status-abandoned: 239, 68, 68;     /* #EF4444 */
+  --status-platinum:  192, 132, 252;   /* #C084FC  */
+  /* Variabili per activity color */
+  --activity-played: var(--status-in-progress);
+  --activity-added: var(--status-not-started);
+  --activity-rated: 245, 158, 11;    /* #F59E0B */
+  --activity-completed: var(--status-completed);
+  --activity-abandoned: var(--status-abandoned);
+  --activity-platinum: var(--status-platinum);
+  
+  /* Variabili per i colori di accento */
+  --accent-arancione: 251, 126, 0;    /* #FB7E00 */
+  --accent-blu: 45, 125, 246;         /* #2D7DF6 */
+  --accent-verde: 16, 185, 129;       /* #10B981 */
+  --accent-rosso: 239, 68, 68;        /* #EF4444 */
+  --accent-viola: 138, 92, 246;       /* #8A5CF6 */
 }
 
 /* Tema scuro */
@@ -64,6 +97,20 @@
 
 .text-text-primary {
   color: rgb(var(--text-primary));
+}
+
+/* Stili per scrollbar personalizzata */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
 }
 
 .text-text-secondary {
@@ -179,3 +226,30 @@
 .accent-viola {
   --accent-primary: 138, 92, 246;
 }
+
+/* Utility per piattaforme */
+.bg-platform-ps5 { background-color: rgb(var(--platform-ps5)); }
+.bg-platform-ps4 { background-color: rgb(var(--platform-ps4)); }
+.bg-platform-xbox-series { background-color: rgb(var(--platform-xbox-series)); }
+.bg-platform-xbox-one { background-color: rgb(var(--platform-xbox-one)); }
+.bg-platform-switch { background-color: rgb(var(--platform-switch)); }
+.bg-platform-steam { background-color: rgb(var(--platform-steam)); }
+.bg-platform-epic { background-color: rgb(var(--platform-epic)); }
+.bg-platform-pc { background-color: rgb(var(--platform-pc)); }
+.bg-platform-ios { background-color: rgb(var(--platform-ios)); }
+.bg-platform-android { background-color: rgb(var(--platform-android)); }
+
+/* Utility per status */
+.bg-status-not-started { background-color: rgb(var(--status-not-started)); }
+.bg-status-in-progress { background-color: rgb(var(--status-in-progress)); }
+.bg-status-completed { background-color: rgb(var(--status-completed)); }
+.bg-status-abandoned { background-color: rgb(var(--status-abandoned)); }
+.bg-status-platinum { background-color: rgb(var(--status-platinum)); }
+
+/* Utility per activity */
+.bg-activity-played { background-color: rgb(var(--activity-played)); }
+.bg-activity-added { background-color: rgb(var(--activity-added)); }
+.bg-activity-rated { background-color: rgb(var(--activity-rated)); }
+.bg-activity-completed { background-color: rgb(var(--activity-completed)); }
+.bg-activity-abandoned { background-color: rgb(var(--activity-abandoned)); }
+.bg-activity-platinum { background-color: rgb(var(--activity-platinum)); }

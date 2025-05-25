@@ -1,4 +1,4 @@
-import { Game, GameReview, GamePlatform } from '../types/game';
+import { Game, GameReview, GamePlatform, SampleGame } from '../types/game';
 import { GAME_PLATFORMS } from '../constants/gameConstants';
 
 // Dati di esempio per i giochi
@@ -197,4 +197,35 @@ export const gamesData: Game[] = [
       notes: "Nella libreria, aspetto che ho voglia.",
       rating: 0
     },
-  ]
+  ];
+
+// Dati di esempio per la ricerca automatica (usati in AddGameModal)
+export const searchSampleGames: SampleGame[] = [
+  {
+    title: "The Legend of Zelda: Breath of the Wild",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Nintendo EPD",
+    publisher: "Nintendo",
+    releaseYear: 2017,
+    genres: ["Action", "Adventure", "Open World"],
+    metacritic: 97,
+  },
+  {
+    title: "Cyberpunk 2077",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "CD Projekt Red",
+    publisher: "CD Projekt",
+    releaseYear: 2020,
+    genres: ["RPG", "Action", "Open World"],
+    metacritic: 86,
+  },
+  {
+    title: "God of War Ragnarök",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Santa Monica Studio",
+    publisher: "Sony Interactive Entertainment",
+    releaseYear: 2022,
+    genres: ["Action", "Adventure"],
+    metacritic: 94,
+  }
+];

@@ -3,9 +3,8 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { loadFromLocal, saveToLocal } from '../utils/localStorage';
-
-type Theme = "light" | "dark"
-type AccentColor = "arancione" | "blu" | "verde" | "rosso" | "viola"
+import { getCssVarColor } from '../utils/getCssVarColor';
+import { Theme, AccentColor } from '../types/theme';
 
 interface ThemeContextType {
   theme: Theme
@@ -43,38 +42,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Applica il tema
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted) return;
 
-    const root = window.document.documentElement
+    const root = window.document.documentElement;
 
     // Rimuovi tutte le classi di tema precedenti
-    root.classList.remove("light", "dark")
+    root.classList.remove('light', 'dark');
 
     // Rimuovi tutte le classi di colore accent precedenti
-    root.classList.remove("accent-arancione", "accent-blu", "accent-verde", "accent-rosso", "accent-viola")
+    root.classList.remove('accent-arancione', 'accent-blu', 'accent-verde', 'accent-rosso', 'accent-viola');
 
     // Aggiungi la classe per il colore accent
     root.classList.add(`accent-${accentColor}`)
+    root.classList.add(theme)
 
-   
-      root.classList.add(theme)
-    
-
-    // Aggiorna le variabili CSS per il colore accent basandosi sul colore selezionato
-    const accentColors = {
-      arancione: "251, 126, 0",
-      blu: "45, 125, 246",
-      verde: "16, 185, 129",
-      rosso: "239, 68, 68",
-      viola: "138, 92, 246"
-    };
-
-    // Applica il colore accent alle variabili CSS
-    document.documentElement.style.setProperty('--accent-primary', accentColors[accentColor]);
+    // Aggiorna la variabile CSS --accent-primary in base al colore selezionato
+    // Usa sempre la variabile CSS di base, non valori hardcoded
+    const accentVar = `--accent-${accentColor}`;
+    const accentValue = getCssVarColor(accentVar, '251, 126, 0').replace('rgb(', '').replace(')', '');
+    document.documentElement.style.setProperty('--accent-primary', accentValue);
 
     // Salva le preferenze
-    saveToLocal("theme", theme);
-    saveToLocal("accentColor", accentColor);
+    saveToLocal('theme', theme);
+    saveToLocal('accentColor', accentColor);
   }, [theme, accentColor, mounted])
 
   const setTheme = (newTheme: Theme) => {

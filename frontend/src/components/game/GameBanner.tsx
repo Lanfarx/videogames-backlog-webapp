@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Pencil, Trash2, Award } from 'lucide-react';
 import { Game } from '../../types/game';
-import { getStatusColor, getStatusLabel } from '../../utils/statusData';
+import { getStatusColor, getStatusLabel } from '../../constants/gameConstants';
 import GameCover from './GameCover';
 import GenreTagList from '../ui/GenreTagList';
 import StatusChangePopover from '../ui/StatusChangePopover';

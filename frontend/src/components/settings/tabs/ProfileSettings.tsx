@@ -17,11 +17,10 @@ interface PasswordData {
   confirmPassword: string;
 }
 
-const ProfileSettings: React.FC = () => {
-  // Stato per i dati del profilo
+const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
   const [profile, setProfile] = useState<ProfileData>(() => {
     const savedProfile = loadFromLocal('profileData');
-    return savedProfile ? JSON.parse(savedProfile) : {
+    return savedProfile || {
       username: 'utente123',
       email: 'utente@esempio.com',
       fullName: 'Mario Rossi',
@@ -139,9 +138,7 @@ const ProfileSettings: React.FC = () => {
         alert('Password aggiornata con successo!');
       }, 1000);
     }
-  };
-
-  // Gestisce il salvataggio del profilo
+  };  // Gestisce il salvataggio del profilo
   const handleSave = () => {
     // Salva i dati del profilo nel localStorage
     console.log('Salvataggio profilo:', profile);

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Upload, Award } from 'lucide-react';
 import { Game, GameStatus } from '../../types/game';
-import { STATUS_OPTIONS, STATUS_COLORS, STATUS_LABELS, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
+import { STATUS_OPTIONS, STATUS_COLORS, GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
 import { useAppDispatch } from '../../store/hooks';
 import { addGame } from '../../store/slice/gamesSlice';
-import { useAllGames } from '../../utils/gamesHooks';
+import { useAllGames } from '../../store/hooks/gamesHooks';
+import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { getNextGameIdFromList } from '../../utils/gameIdGenerator';
-import GenreTagList from '../ui/GenreTagList';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import FormErrorInline from '../ui/atoms/FormErrorInline';
+import { searchSampleGames } from '../../data/gamesData';
+import StatusIndicator from '../ui/atoms/StatusIndicator';
+import { createStatusChangeActivity, createPlaytimeActivity } from '../../utils/activityUtils';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?: string, platinumDate?: string }
@@ -35,44 +38,13 @@ const initialGameData: GameFormData = {
   notes: "",
 };
 
-// Simulazione di dati per la ricerca automatica
-// In un'implementazione reale, questo verrebbe sostituito da una chiamata API
-const searchSampleGames = [
-  {
-    title: "The Legend of Zelda: Breath of the Wild",
-    coverImage: "/placeholder.svg?height=280&width=280",
-    developer: "Nintendo EPD",
-    publisher: "Nintendo",
-    releaseYear: 2017,
-    genres: ["Action", "Adventure", "Open World"],
-    metacritic: 97,
-  },
-  {
-    title: "Cyberpunk 2077",
-    coverImage: "/placeholder.svg?height=280&width=280",
-    developer: "CD Projekt Red",
-    publisher: "CD Projekt",
-    releaseYear: 2020,
-    genres: ["RPG", "Action", "Open World"],
-    metacritic: 86,
-  },
-  {
-    title: "God of War Ragnarök",
-    coverImage: "/placeholder.svg?height=280&width=280",
-    developer: "Santa Monica Studio",
-    publisher: "Sony Interactive Entertainment",
-    releaseYear: 2022,
-    genres: ["Action", "Adventure"],
-    metacritic: 94,
-  }
-];
-
 const AddGameModal: React.FC<AddGameModalProps> = ({ 
   isOpen, 
   onClose
 }) => {
   const dispatch = useAppDispatch();
   const allGames = useAllGames();
+  const { addActivity } = useAllActivitiesActions();
   const [activeTab, setActiveTab] = useState<"search" | "manual">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -187,18 +159,20 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     // Validazione campi obbligatori
     const scrollErrorIntoView = () => {
       setTimeout(() => {
+        // Prima cerca la tab manuale, poi la sezione base info
+        const manualTab = document.getElementById('add-game-manual-tab');
         const errorSection = document.getElementById('add-game-base-info');
         // Trova il contenitore scrollabile del modal
-        const modalContainer = errorSection?.closest('.max-h-[80vh].overflow-auto') || errorSection?.closest('[class*=overflow-auto]');
-        if (errorSection && modalContainer) {
-          // Calcola la posizione dell'errore rispetto al contenitore
-          const errorRect = errorSection.getBoundingClientRect();
+        const modalContainer = (manualTab?.closest('.overflow-auto') || manualTab?.closest('[class*="overflow-auto"]')) as HTMLElement | null;
+        if (manualTab && modalContainer) {
+          // Scrolla la tab manuale in alto nel contenitore
+          const tabRect = manualTab.getBoundingClientRect();
           const containerRect = modalContainer.getBoundingClientRect();
-          // Scrolla in modo che l'errore sia centrato nel contenitore
-          const offset = errorRect.top - containerRect.top - (containerRect.height / 2) + (errorRect.height / 2);
+          const offset = tabRect.top - containerRect.top;
           modalContainer.scrollTop += offset;
+        } else if (manualTab) {
+          manualTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else if (errorSection) {
-          // Fallback: scrollIntoView classico
           errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }, 0);
@@ -214,13 +188,25 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       return;
     }
     setFormError(null);
-    const nextId = getNextGameIdFromList(allGames);
-    const gameToSave = {
+    const nextId = getNextGameIdFromList(allGames);    const gameToSave = {
       id: nextId,
       ...gameData
       // rating rimosso: sarà gestito solo tramite review
     } as Game;
     dispatch(addGame(gameToSave));
+    
+    // Crea attività appropriate in base al nuovo gioco
+    // 1. Crea l'attività di aggiunta alla libreria (added)
+    const addedActivity = createStatusChangeActivity(gameToSave, 'not-started');
+    addActivity(addedActivity);
+    
+    // 2. Se il gioco ha ore di gioco (stato non è "not-started"), crea anche un'attività di gioco
+    if (gameToSave.status !== 'not-started' && gameToSave.hoursPlayed > 0) {
+      const isFirstSession = true; // È la prima sessione dato che è un nuovo gioco
+      const playtimeActivity = createPlaytimeActivity(gameToSave, gameToSave.hoursPlayed, isFirstSession);
+      addActivity(playtimeActivity);
+    }
+    
     // Aggiorna il contatore persistente per evitare collisioni con reload
     try {
       localStorage.setItem('videogame_backlog_next_game_id', String(nextId + 1));
@@ -236,8 +222,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   };
 
   // Per visualizzazione nell'anteprima
-  const statusColor = STATUS_COLORS[gameData.status as GameStatus] || "#E0E0E0";
-  const statusName = STATUS_LABELS[gameData.status as GameStatus] || "Sconosciuto";
+  const statusColorVar = `--status-${gameData.status.replace(/_/g, '-').toLowerCase()}`;
+  const statusColor = `rgb(var(${statusColorVar}))`;
 
   if (!isOpen) return null;
 
@@ -362,11 +348,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div id="add-game-manual-tab" className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
               <div className="lg:col-span-2 space-y-8">
                 {/* Informazioni di base */}
                 <div className="relative" id="add-game-base-info">
-                  <h3 className="font-montserrat font-semibold text-xl text-text-primary mb-6">Informazioni di base</h3>
+                  <h3 id="manual-tab-header" className="font-montserrat font-semibold text-xl text-text-primary mb-6">Informazioni di base</h3>
                   <FormErrorInline message={formError} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Titolo */}
@@ -631,14 +617,12 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
 
               {/* Anteprima */}
               <div className="lg:col-span-1">
-                <div className="bg-secondary-bg rounded-xl p-6">
+                <div className="bg-secondary-bg rounded-xl p-6 sticky top-8">
                   <h3 className="font-montserrat font-semibold text-xl text-text-primary mb-4">Anteprima scheda</h3>
 
                   <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm h-[330px] relative">
                     {/* Indicatore di stato */}
-                    <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
-                      <div className="h-full" style={{ backgroundColor: statusColor, width: "100%" }}></div>
-                    </div>
+                    <StatusIndicator status={gameData.status} />
 
                     {/* Copertina */}
                     <div className="relative h-[180px] overflow-hidden">
@@ -686,13 +670,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       <div className="mt-2">
                         <StatusBadge status={gameData.status} />
                       </div>
-
-                      {/* Generi */}
-                      {gameData.genres && gameData.genres.length > 0 && (
-                        <div className="mt-2">
-                          <GenreTagList genres={gameData.genres} maxDisplay={3} />
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

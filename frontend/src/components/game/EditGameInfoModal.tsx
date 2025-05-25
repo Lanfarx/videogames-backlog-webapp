@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Game, GameStatus } from '../../types/game';
 import { GAME_PLATFORMS } from '../../constants/gameConstants';
-import { useAllGames } from '../../utils/gamesHooks';
 import { useAppDispatch } from '../../store/hooks';
 import { updateGameStatus, updateGamePlaytime, updateGamePlatform, updateGamePrice, updateGamePurchaseDate, updateGameCompletionDate, updateGamePlatinumDate } from '../../store/slice/gamesSlice';
+import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
+import { gameStatusToActivityType } from '../../utils/statusUtils';
+import { createStatusChangeActivity, createManualPlaytimeActivity } from '../../utils/activityUtils';
 
 interface EditGameInfoModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ const EditGameInfoModal = ({
   game
 }: EditGameInfoModalProps) => {
   const dispatch = useAppDispatch();
+  const { addActivity } = useAllActivitiesActions();
   const [formData, setFormData] = useState({
     platform: game.platform || '',
     price: game.price !== undefined ? game.price.toString() : '',
@@ -27,6 +30,20 @@ const EditGameInfoModal = ({
     completionDate: game.completionDate || '',
     platinumDate: game.platinumDate || ''
   });
+
+  // Aggiorna lo stato del form quando cambiano i dati del gioco o quando si apre il modale
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        platform: game.platform || '',
+        price: game.price !== undefined ? game.price.toString() : '',
+        purchaseDate: game.purchaseDate || '',
+        hoursPlayed: game.hoursPlayed.toString(),
+        completionDate: game.completionDate || '',
+        platinumDate: game.platinumDate || ''
+      });
+    }
+  }, [game, isOpen]);
 
   // Verifica se il gioco è stato completato o platinato
   const isCompleted = game.status === "completed";
@@ -60,10 +77,24 @@ const EditGameInfoModal = ({
     // cambiamo lo stato a "in-progress"
     else if (newHoursPlayed > 0 && game.hoursPlayed === 0 && game.status === 'not-started') {
       newStatus = 'in-progress';
-    }
-    
-    // Aggiorna i dati attraverso Redux dispatch
+    }    // Aggiorna i dati attraverso Redux dispatch
     dispatch(updateGamePlaytime({ gameId: game.id, hoursPlayed: newHoursPlayed }));
+    
+    // Crea attività in base alla modifica delle ore
+    const hoursDifference = newHoursPlayed - game.hoursPlayed;
+    
+    // Se si reimposta a 0 le ore e viene cambiato lo stato a "not-started"
+    if (newHoursPlayed === 0 && newStatus === 'not-started') {
+      // Registra l'attività di cambio stato utilizzando la funzione di utilità
+      const statusActivity = createStatusChangeActivity(game, 'not-started');
+      addActivity(statusActivity);
+    } 
+    // Se le ore vengono modificate, crea un'attività played
+    else if (hoursDifference !== 0) {
+      // Utilizza la funzione di utilità per creare l'attività di impostazione manuale delle ore
+      const playtimeActivity = createManualPlaytimeActivity(game, newHoursPlayed);
+      addActivity(playtimeActivity);
+    }
     
     if (formData.platform && formData.platform !== game.platform) {
       dispatch(updateGamePlatform({ gameId: game.id, platform: formData.platform }));

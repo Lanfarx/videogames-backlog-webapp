@@ -23,7 +23,8 @@ const EditGameDetailsModal = ({
     publisher: game.publisher,
     releaseYear: game.releaseYear,
     genres: game.genres.join(', '), // Convertiamo l'array in una stringa per il form
-    coverImage: game.coverImage
+    coverImage: game.coverImage,
+    metacritic: game.metacritic 
   });
 
   if (!isOpen) return null;
@@ -42,7 +43,8 @@ const EditGameDetailsModal = ({
     const updatedGame: Partial<Game> = {
       ...formData,
       releaseYear: Number(formData.releaseYear),
-      genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean)
+      genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean),
+      metacritic: Number(formData.metacritic) || 0
     };
     
     // Aggiorna il gioco attraverso Redux usando updateGame
@@ -92,20 +94,6 @@ const EditGameDetailsModal = ({
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="releaseYear" className="block text-text-primary font-secondary text-sm">
-                  Anno di rilascio
-                </label>
-                <input
-                  type="number"
-                  id="releaseYear"
-                  name="releaseYear"
-                  value={formData.releaseYear}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <label htmlFor="developer" className="block text-text-primary font-secondary text-sm">
                   Sviluppatore
                 </label>
@@ -128,6 +116,36 @@ const EditGameDetailsModal = ({
                   id="publisher"
                   name="publisher"
                   value={formData.publisher}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="metacritic" className="block text-text-primary font-secondary text-sm">
+                  Metacritic
+                </label>
+                <input
+                  type="number"
+                  id="metacritic"
+                  name="metacritic"
+                  value={formData.metacritic}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="releaseYear" className="block text-text-primary font-secondary text-sm">
+                  Anno di rilascio
+                </label>
+                <input
+                  type="number"
+                  id="releaseYear"
+                  name="releaseYear"
+                  value={formData.releaseYear}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />

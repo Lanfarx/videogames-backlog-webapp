@@ -2,6 +2,8 @@ import React from 'react';
 import { Globe, Palette, Sun, Moon } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
 import ColorSelector from '../ColorSelector';
+import { getCssVarColor } from '../../../utils/getCssVarColor';
+import { Theme, AccentColor } from '../../../types/theme';
 
 interface GeneralSettingsProps {
   language: string;
@@ -13,7 +15,8 @@ interface GeneralSettingsProps {
   dateFormatOptions: string[];
   onLanguageChange: (language: string) => void;
   onDateFormatChange: (format: string) => void;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: Theme) => void;
+  setAccentColor?: (color: AccentColor) => void;
 }
 
 const GeneralSettings: React.FC<GeneralSettingsProps> = ({
@@ -27,6 +30,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
   onLanguageChange,
   onDateFormatChange,
   setTheme,
+  setAccentColor,
 }) => {
 
   return (
@@ -70,13 +74,22 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
           <div className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`w-5 h-5 rounded-full ${accentColors[accentColor]}`}></div>
+                <div
+                  className="w-5 h-5 rounded-full"
+                  style={{ backgroundColor: getCssVarColor(`--accent-${accentColor}`, '#FB7E00') }}
+                ></div>
                 <div>
                   <p className="text-text-primary">Colore accento</p>
                   <p className="text-xs text-text-secondary">Seleziona il colore principale dell'interfaccia</p>
                 </div>
-              </div>
-              <ColorSelector />
+              </div>              <ColorSelector 
+                accentColor={accentColor}
+                onChange={(color) => {
+                  if (setAccentColor) {
+                    setAccentColor(color);
+                  }
+                }}
+              />
             </div>
           </div>
         </div>
