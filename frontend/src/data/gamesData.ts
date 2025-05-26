@@ -24,7 +24,7 @@ export const gamesData: Game[] = [
         graphics: 4.5,
         story: 4,
         sound: 5,
-        date: "2023-04-15"
+        date: "2023-04-15",
       },
       rating: 4.5,
       comments: [
@@ -199,33 +199,293 @@ export const gamesData: Game[] = [
     },
   ];
 
-// Dati di esempio per la ricerca automatica (usati in AddGameModal)
-export const searchSampleGames: SampleGame[] = [
+// Tipo per la manipolazione dei dati pubblici del catalogo giochi
+export type PublicCatalogGame = {
+  title: string;
+  description: string;
+  coverImage: string;
+  developer: string;
+  publisher: string;
+  releaseYear: number;
+  genres: string[];
+  metacritic: number;
+  platforms: string[];
+  userReview?: {
+    text: string;
+    gameplay: number;
+    graphics: number;
+    story: number;
+    sound: number;
+    date: string;
+  };
+};
+
+// Utility per aggregare tutte le piattaforme disponibili per ogni titolo
+export function getAllPlatformsForTitle(title: string): string[] {
+  const platformsSet = new Set<string>();
+  gamesData.forEach(g => {
+    if (g.title === title && g.platform) platformsSet.add(g.platform);
+  });
+  catalogGamesRaw.forEach(g => {
+    if (g.title === title && g.platforms) g.platforms.forEach(p => platformsSet.add(p));
+  });
+  return Array.from(platformsSet);
+}
+
+// Dati di esempio per il catalogo giochi globale (per la futura pagina Catalogo)
+const catalogGamesRaw: PublicCatalogGame[] = [
   {
     title: "The Legend of Zelda: Breath of the Wild",
+    description: "Breath of the Wild è un capolavoro che ridefinisce il genere open world con la sua libertà di esplorazione.",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "Nintendo EPD",
     publisher: "Nintendo",
     releaseYear: 2017,
     genres: ["Action", "Adventure", "Open World"],
     metacritic: 97,
+    platforms: ["Nintendo Switch"],
+    userReview: {
+      text: "Breath of the Wild è un capolavoro che ridefinisce il genere open world con la sua libertà di esplorazione.",
+      gameplay: 5,
+      graphics: 4.5,
+      story: 4,
+      sound: 5,
+      date: "2023-04-15"
+    }
   },
   {
     title: "Cyberpunk 2077",
+    description: "Dopo le patch, Cyberpunk è diventato un ottimo gioco. Night City è incredibilmente dettagliata e le missioni principali sono ben scritte.",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "CD Projekt Red",
     publisher: "CD Projekt",
     releaseYear: 2020,
     genres: ["RPG", "Action", "Open World"],
     metacritic: 86,
+    platforms: ["Steam"],
+    userReview: {
+      text: "Dopo le patch, Cyberpunk è diventato un ottimo gioco. Night City è incredibilmente dettagliata e le missioni principali sono ben scritte.",
+      gameplay: 4,
+      graphics: 4.5,
+      story: 4,
+      sound: 4,
+      date: "2023-02-10"
+    }
   },
   {
     title: "God of War Ragnarök",
+    description: "Un sequel che migliora il predecessore sotto ogni aspetto. La narrazione è coinvolgente e il gameplay è stato perfezionato.",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "Santa Monica Studio",
     publisher: "Sony Interactive Entertainment",
     releaseYear: 2022,
     genres: ["Action", "Adventure"],
     metacritic: 94,
-  }
+    platforms: ["PlayStation 5"],
+    userReview: {
+      text: "Un sequel che migliora il predecessore sotto ogni aspetto. La narrazione è coinvolgente e il gameplay è stato perfezionato.",
+      gameplay: 5,
+      graphics: 5,
+      story: 5,
+      sound: 4.5,
+      date: "2022-12-10"
+    }
+  },
+  {
+    title: "Elden Ring",
+    description: "Elden Ring fonde perfettamente il gameplay soulslike con un mondo aperto. La direzione artistica è fenomenale.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "FromSoftware",
+    publisher: "Bandai Namco Entertainment",
+    releaseYear: 2022,
+    genres: ["RPG", "Action", "Open World"],
+    metacritic: 96,
+    platforms: ["Xbox Series X/S"],
+    userReview: {
+      text: "Elden Ring fonde perfettamente il gameplay soulslike con un mondo aperto. La direzione artistica è fenomenale.",
+      gameplay: 5,
+      graphics: 4.5,
+      story: 4,
+      sound: 5,
+      date: "2022-05-20"
+    }
+  },
+  {
+    title: "Baldur's Gate 3",
+    description: "Baldur's Gate 3 è il miglior RPG degli ultimi anni, con un sistema di combattimento tattico eccezionale e una libertà di scelta senza precedenti.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Larian Studios",
+    publisher: "Larian Studios",
+    releaseYear: 2023,
+    genres: ["RPG", "Strategy"],
+    metacritic: 96,
+    platforms: ["Steam"],
+    userReview: {
+      text: "Baldur's Gate 3 è il miglior RPG degli ultimi anni, con un sistema di combattimento tattico eccezionale e una libertà di scelta senza precedenti.",
+      gameplay: 5,
+      graphics: 4.5,
+      story: 5,
+      sound: 4.5,
+      date: "2023-09-20"
+    }
+  },
+  {
+    title: "Starfield",
+    description: "Appena acquistato, non vedo l'ora di esplorare lo spazio!",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Bethesda Game Studios",
+    publisher: "Bethesda Softworks",
+    releaseYear: 2023,
+    genres: ["RPG", "Adventure", "Sci-Fi"],
+    metacritic: 83,
+    platforms: ["Xbox Series X/S"],
+    userReview: undefined
+  },
+  {
+    title: "Final Fantasy XVI",
+    description: "Graficamente impressionante ma la narrativa è confusa. Il sistema di combattimento è divertente ma non abbastanza da mantenermi interessato.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Square Enix",
+    publisher: "Square Enix",
+    releaseYear: 2023,
+    genres: ["RPG", "Action"],
+    metacritic: 87,
+    platforms: ["PlayStation 5"],
+    userReview: {
+      text: "Graficamente impressionante ma la narrativa è confusa. Il sistema di combattimento è divertente ma non abbastanza da mantenermi interessato.",
+      gameplay: 3.5,
+      graphics: 4.5,
+      story: 2,
+      sound: 4,
+      date: "2023-07-10"
+    }
+  },
+  {
+    title: "Hogwarts Legacy",
+    description: "Nella libreria, aspetto che ho voglia.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Avalanche Software",
+    publisher: "Warner Bros. Games",
+    releaseYear: 2023,
+    genres: ["RPG", "Adventure"],
+    metacritic: 82,
+    platforms: ["Epic Games Store"],
+    userReview: undefined
+  },
+  // Altri giochi di esempio per arricchire il catalogo
+  {
+    title: "Super Mario Odyssey",
+    description: "Un platform 3D rivoluzionario con mondi colorati e gameplay creativo.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Nintendo EPD",
+    publisher: "Nintendo",
+    releaseYear: 2017,
+    genres: ["Platform", "Adventure"],
+    metacritic: 97,
+    platforms: ["Nintendo Switch"],
+  },
+  {
+    title: "Red Dead Redemption 2",
+    description: "Un'epopea western open world con una narrazione profonda e ambientazioni mozzafiato.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Rockstar Studios",
+    publisher: "Rockstar Games",
+    releaseYear: 2018,
+    genres: ["Action", "Adventure", "Open World"],
+    metacritic: 97,
+    platforms: ["PlayStation 4", "Xbox One", "PC"],
+  },
+  {
+    title: "The Witcher 3: Wild Hunt",
+    description: "Un RPG open world acclamato dalla critica con una storia profonda e scelte morali complesse.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "CD Projekt Red",
+    publisher: "CD Projekt",
+    releaseYear: 2015,
+    genres: ["RPG", "Action", "Open World"],
+    metacritic: 93,
+    platforms: ["PlayStation 4", "Xbox One", "PC", "Nintendo Switch"],
+  },
+  {
+    title: "Persona 5 Royal",
+    description: "Un JRPG stiloso con una narrazione coinvolgente e un sistema di combattimento a turni raffinato.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Atlus",
+    publisher: "Atlus",
+    releaseYear: 2020,
+    genres: ["RPG", "Turn-Based"],
+    metacritic: 95,
+    platforms: ["PlayStation 4", "Nintendo Switch", "PC"],
+  },
+  {
+    title: "Spider-Man: Miles Morales",
+    description: "Vivi l'avventura di Miles Morales in una New York dinamica e vibrante.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Insomniac Games",
+    publisher: "Sony Interactive Entertainment",
+    releaseYear: 2020,
+    genres: ["Action", "Adventure"],
+    metacritic: 85,
+    platforms: ["PlayStation 4", "PlayStation 5", "PC"],
+  },
+  {
+    title: "Sekiro: Shadows Die Twice",
+    description: "Un action game impegnativo ambientato nel Giappone feudale, noto per la sua difficoltà e il combat system unico.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "FromSoftware",
+    publisher: "Activision",
+    releaseYear: 2019,
+    genres: ["Action", "Adventure"],
+    metacritic: 90,
+    platforms: ["PlayStation 4", "Xbox One", "PC"],
+  },
+  {
+    title: "Hades",
+    description: "Un roguelike acclamato per gameplay, narrazione e stile artistico.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Supergiant Games",
+    publisher: "Supergiant Games",
+    releaseYear: 2020,
+    genres: ["Roguelike", "Action"],
+    metacritic: 93,
+    platforms: ["PC", "Nintendo Switch", "PlayStation 4", "Xbox One"],
+  },
+  {
+    title: "Resident Evil 4 Remake",
+    description: "Il remake di un classico survival horror, con grafica e gameplay modernizzati.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Capcom",
+    publisher: "Capcom",
+    releaseYear: 2023,
+    genres: ["Action", "Horror"],
+    metacritic: 93,
+    platforms: ["PlayStation 4", "PlayStation 5", "Xbox Series X/S", "PC"],
+  },
+  {
+    title: "Alan Wake 2",
+    description: "Un thriller psicologico che espande la storia del primo Alan Wake con nuove meccaniche e atmosfere cupe.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Remedy Entertainment",
+    publisher: "Epic Games Publishing",
+    releaseYear: 2023,
+    genres: ["Action", "Horror", "Adventure"],
+    metacritic: 89,
+    platforms: ["PlayStation 5", "Xbox Series X/S", "PC"],
+  },
+  {
+    title: "Assassin's Creed Mirage",
+    description: "Un ritorno alle origini della saga con stealth, parkour e ambientazione mediorientale.",
+    coverImage: "/placeholder.svg?height=280&width=280",
+    developer: "Ubisoft Bordeaux",
+    publisher: "Ubisoft",
+    releaseYear: 2023,
+    genres: ["Action", "Adventure", "Stealth"],
+    metacritic: 77,
+    platforms: ["PlayStation 4", "PlayStation 5", "Xbox One", "Xbox Series X/S", "PC"],
+  },
 ];
+
+export const catalogGames: PublicCatalogGame[] = catalogGamesRaw;
+
+// Per la ricerca automatica (AddGameModal), usa direttamente il catalogo
+export const searchSampleGames = catalogGames;

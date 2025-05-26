@@ -34,17 +34,8 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
     }
   }, [currentGame.review]);
   
-  const handleSavePlaytime = (hoursToAdd: number) => {
-    if (onUpdatePlaytime) {
-      const newTotalHours = displayedHours + hoursToAdd;
-      
-      // Aggiorna l'UI immediatamente
-      // Invia l'aggiornamento attraverso la callback
-      onUpdatePlaytime(newTotalHours);
-      
-      // Chiudi il popover
-      setIsEditingHours(false);
-    }
+  const handleSavePlaytime = () => {
+    setIsEditingHours(false);
   };
   
   const handleCancelPlaytime = () => {

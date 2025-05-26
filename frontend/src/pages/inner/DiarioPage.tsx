@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import { CalendarRange, Pencil, Clock } from 'lucide-react';
-import DiaryFilters from '../components/diary/DiaryFilters';
-import DiaryMonthGroup from '../components/diary/DiaryMonthGroup';
-import { Activity } from '../types/activity';
-import { useAllActivities } from '../store/hooks/activitiesHooks';
-import { formatLastUpdate } from '../utils/dateUtils';
+import DiaryFilters from '../../components/diary/DiaryFilters';
+import DiaryMonthGroup from '../../components/diary/DiaryMonthGroup';
+import { Activity } from '../../types/activity';
+import { useAllActivities } from '../../store/hooks/activitiesHooks';
+import { formatLastUpdate } from '../../utils/dateUtils';
 import { 
   calculateActivityStats, 
   getUniqueMonthsForYear,
   filterActivitiesByYear
-} from '../utils/activityUtils';
+} from '../../utils/activityUtils';
 
 const DiarioPage = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
   const [activities, setActivities] = useState<Activity[]>([]);
   
@@ -43,10 +44,15 @@ const DiarioPage = () => {
     }
   };
 
-  // Filtra le attività per l'anno selezionato utilizzando la funzione di utilità
-  const yearActivities = filterActivitiesByYear(activities, selectedYear);
+  // Filtra le attività per anno e mese selezionati
+  const filteredActivities = activities.filter(a => {
+    const d = new Date(a.timestamp);
+    const yearMatch = d.getFullYear() === selectedYear;
+    const monthMatch = selectedMonth === undefined ? true : d.getMonth() === selectedMonth;
+    return yearMatch && monthMatch;
+  });
 
-  // Ottieni mesi unici per l'anno selezionato utilizzando la funzione di utilità
+  // Ottieni mesi unici per l'anno selezionato (per la select)
   const months = getUniqueMonthsForYear(activities, selectedYear);
 
   return (
@@ -96,23 +102,36 @@ const DiarioPage = () => {
         <DiaryFilters 
           year={selectedYear}
           onYearChange={setSelectedYear}
+          month={selectedMonth}
+          onMonthChange={setSelectedMonth}
           activeFilters={activeFilters}
           onFilterChange={handleFilterChange}
         />
         
         {/* Contenuto del diario */}
         <div className="bg-primary-bg rounded-lg shadow-sm p-6">
-          {months.length > 0 ? (
+          {filteredActivities.length > 0 ? (
             <div className="space-y-8">
-              {months.map(month => (
+              {/* Raggruppa per mese solo se non è selezionato un mese specifico */}
+              {selectedMonth === undefined ? (
+                months.map(month => (
+                  <DiaryMonthGroup 
+                    key={`${selectedYear}-${month}`}
+                    month={month}
+                    year={selectedYear}
+                    activities={filteredActivities}
+                    activeFilters={activeFilters}
+                  />
+                ))
+              ) : (
                 <DiaryMonthGroup 
-                  key={`${selectedYear}-${month}`}
-                  month={month}
+                  key={`${selectedYear}-${selectedMonth}`}
+                  month={selectedMonth}
                   year={selectedYear}
-                  activities={activities}
+                  activities={filteredActivities}
                   activeFilters={activeFilters}
                 />
-              ))}
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
@@ -120,7 +139,7 @@ const DiarioPage = () => {
                 Nessuna attività per questo periodo
               </h2>
               <p className="text-text-secondary font-secondary max-w-2xl mx-auto mb-6">
-                Non hai registrato attività di gioco per l'anno {selectedYear}. 
+                Non hai registrato attività di gioco per l'anno {selectedYear}{selectedMonth !== undefined ? ` e mese ${selectedMonth + 1}` : ''}. 
                 Le attività di gioco vengono aggiunte automaticamente quando registri progressi nella sezione Libreria.
               </p>
             </div>

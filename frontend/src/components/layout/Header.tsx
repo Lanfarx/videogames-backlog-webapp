@@ -47,6 +47,7 @@ const Header: React.FC = () => {
                   { name: 'Home', path: '/' },
                   { name: 'I miei giochi', path: '/library' },
                   { name: 'Dashboard', path: '/dashboard' },
+                  { name: 'Catalogo', path: '/catalog' },
                 ].map((item) => (
                   <li key={item.name}>
                     <NavLink

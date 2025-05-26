@@ -10,13 +10,17 @@ import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
 import { useStatusData } from '../../utils/statusUtils';
+import ActivityHistoryPopover from '../../components/game/ui/ActivityHistoryPopover';
+import { History } from 'lucide-react';
 
 
 const DashboardPage: React.FC = () => {
     const stats = useGamesStats();
     const allGames = useAllGames();
     const recentActivities = useRecentActivities(5);
+    const allRecentActivities = useRecentActivities(100);
     const statusData = useStatusData();
+    const [showHistory, setShowHistory] = React.useState(false);
 
     // Usa la funzione centralizzata per la distribuzione piattaforme
     const platformData = generatePlatformDistributionData(allGames)
@@ -41,14 +45,14 @@ const DashboardPage: React.FC = () => {
                     icon={<LayoutGrid className="h-6 w-6 text-accent-primary" />} 
                 />
                 <StatsCard 
-                    label="Giochi Completati" 
-                    value={stats.completed.toString()} 
-                    icon={<BarChart3 className="h-6 w-6 text-accent-success" />} 
-                />
-                <StatsCard 
                     label="Ore Totali di Gioco" 
                     value={stats.totalHours.toString()} 
                     icon={<Clock className="h-6 w-6 text-accent-secondary" />} 
+                />
+                <StatsCard 
+                    label="Giochi Completati" 
+                    value={stats.completed.toString()} 
+                    icon={<BarChart3 className="h-6 w-6 text-accent-success" />} 
                 />
             </div>
 
@@ -73,11 +77,30 @@ const DashboardPage: React.FC = () => {
                     icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2" />}
                     title="Generi più giocati" 
                 />
-                <RecentActivitiesList 
-                    activities={recentActivities} 
-                    icon={<Clock className="h-5 w-5 text-accent-primary mr-2" />}
-                    title="Attività Recente" 
-                />
+                <div className="bg-white p-6 shadow-sm rounded-lg">
+                    <div className="flex items-baseline justify-between mb-6">
+                      <h2 className="text-xl font-bold text-text-primary font-['Montserrat'] flex items-center">
+                        <Clock className="h-5 w-5 text-accent-primary mr-2" />
+                        Attività Recente
+                      </h2>
+                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+                        <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
+                        <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
+                      </div>
+                    </div>
+                    {showHistory && (
+                      <ActivityHistoryPopover
+                        activities={allRecentActivities}
+                        onClose={() => setShowHistory(false)}
+                        gameTitle="Tutta la libreria"
+                      />
+                    )}
+                    <RecentActivitiesList 
+                      activities={recentActivities} 
+                      icon={undefined}
+                      title={''}
+                    />
+                </div>
             </div>
         </div>
     );

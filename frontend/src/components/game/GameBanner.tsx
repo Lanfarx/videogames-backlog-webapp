@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Pencil, Trash2, Award } from 'lucide-react';
+import { ChevronDown, Pencil, Trash2, Award, ArrowLeft } from 'lucide-react';
 import { Game } from '../../types/game';
 import { getStatusColor, getStatusLabel } from '../../constants/gameConstants';
 import GameCover from './GameCover';
@@ -15,9 +15,11 @@ interface GameBannerProps {
   onChangeStatus?: (newStatus: Game['status']) => void;
   onEdit?: (updatedGame: Partial<Game>) => void;
   onDelete?: () => void;
+  onBack?: () => void;
+  showBackButton?: boolean;
 }
 
-const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps) => {
+const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackButton = false }: GameBannerProps) => {
   const dispatch = useAppDispatch();
   
   // Ottieni l'etichetta in italiano per lo stato attuale
@@ -58,10 +60,22 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete }: GameBannerProps)
       onEdit(updatedGame);
     }
   };
-  
   return (
     <section className="container mx-auto py-8 max-w-5xl">
       <div className="flex">
+        {/* Pulsante Indietro - posizionato in alto a sinistra */}
+        {showBackButton && onBack && (
+          <div className="mr-4 flex items-start">
+            <button 
+              onClick={onBack}
+              className="flex items-center gap-2 text-text-secondary hover:text-accent-primary transition-colors group"
+            >
+              <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">Indietro</span>
+            </button>
+          </div>
+        )}
+        
         {/* Copertina */}
         <div className="mr-20">
           <GameCover 

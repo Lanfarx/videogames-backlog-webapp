@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { Activity } from '../../types/activity';
 import { Game } from '../../types/game';
-import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import RatingStars from '../ui/atoms/RatingStars';
 import { useGameById } from '../../store/hooks/gamesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
-import { isFirstActivityInMonth } from '../../utils/activityUtils';
+import { isFirstActivityInMonth, getActivityIcon } from '../../utils/activityUtils';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { updateReviewPrivacy } from '../../store/slice/gamesSlice';
+import { Link } from 'react-router-dom';
+import { selectIsProfilePrivate, selectIsDiaryPrivate, selectForcePrivate } from '../../store/slice/settingsSlice';
 
 interface DiaryEntryProps {
   activity: Activity;
@@ -16,6 +20,11 @@ interface DiaryEntryProps {
 const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true, allActivities = [] }) => {
   const [expandedReview, setExpandedReview] = useState(false);
   const game = useGameById(activity.gameId);
+  const dispatch = useAppDispatch();
+  
+  const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
+  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
+  const forcePrivate = useAppSelector(selectForcePrivate);
   
   // Non procedere se non c'è il gioco
   if (!game) return null;
@@ -27,29 +36,12 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
     if (!isFirstPlayInMonth && allActivities.length > 0) return null;
   }
 
-  const getActivityIcon = () => {
+  const getDiaryEntryLabel = () => {
     switch (activity.type) {
-      case 'played':
-        return <Gamepad2 className="w-4 h-4 text-blue-500" />;
-      case 'platinum':
-        return <Trophy className="w-4 h-4 text-amber-500" />;
-      case 'rated':
-        return <Star className="w-4 h-4 text-yellow-500" />;
-      case 'abandoned':
-        return <X className="w-4 h-4 text-red-500" />;
-      case 'completed':
-        return <Check className="w-4 h-4 text-green-500" />;
-      default:
-        return <Gamepad2 className="w-4 h-4 text-accent-primary" />;
-    }
-  };
-
-  const getActivityLabel = () => {
-    switch (activity.type) {
-      case 'played':
-        // Verifica se è la prima volta che il gioco viene giocato nel mese usando la funzione di utilità
+      case 'played': {
         const isFirstInMonth = isFirstActivityInMonth(activity, allActivities, 'played');
         return isFirstInMonth ? 'Prima sessione del mese' : 'Giocato';
+      }
       case 'platinum':
         return 'Platinato';
       case 'rated':
@@ -97,24 +89,29 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
           )}
         </div>
       )}
-      
-      <div className="flex-grow">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-text-primary">{game.title}</span>
+          <Link
+            to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`}
+            className="font-bold text-base text-accent-primary hover:underline truncate"
+            title={game.title}
+          >
+            {game.title}
+          </Link>
           <span className="text-xs text-text-secondary">({game.releaseYear})</span>
           <span className="text-xs text-text-secondary">{game.platform}</span>
         </div>
         
         <div className="flex items-center gap-2 mb-2">
           <div className="flex items-center gap-1">
-            {getActivityIcon()}
-            <span className="text-xs font-medium">{getActivityLabel()}</span>
+            {getActivityIcon(activity.type)}
+            <span className="text-xs font-medium">{getDiaryEntryLabel()}</span>
           </div>
           
           {/* Mostra ore di gioco per ogni tipo di attività */}
           {activity.type === 'played' && activity.additionalInfo && (
             <span className="text-xs text-text-secondary">
-              ({activity.additionalInfo})
+              ({activity.additionalInfo.replace(/:(\d+)/, ': $1').replace(/:(\s*)/, ': ')})
             </span>
           )}
           
@@ -184,6 +181,19 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm font-medium text-text-primary">Recensione</span>
+                <button
+                  type="button"
+                  className={`ml-2 text-text-secondary ${forcePrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
+                  title={forcePrivate ? 'Non puoi rendere pubblica la recensione: profilo o diario privato' : (game.review?.isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
+                  onClick={() => {
+                    if (game.review && !forcePrivate) {
+                      dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !game.review.isPublic }));
+                    }
+                  }}
+                  disabled={forcePrivate}
+                >
+                  <EyeOff className="w-4 h-4" />
+                </button>
               </div>
               {game && (
                 <RatingStars rating={calculateRatingFromReview(game.review)} />

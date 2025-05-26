@@ -19,6 +19,7 @@ type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?
 interface AddGameModalProps {
   isOpen: boolean;
   onClose: () => void;
+  prefillGame?: Partial<Game> | null;
 }
 
 // Stato iniziale del form
@@ -40,7 +41,8 @@ const initialGameData: GameFormData = {
 
 const AddGameModal: React.FC<AddGameModalProps> = ({ 
   isOpen, 
-  onClose
+  onClose,
+  prefillGame
 }) => {
   const dispatch = useAppDispatch();
   const allGames = useAllGames();
@@ -63,6 +65,24 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   useEffect(() => {
     setFormError(null); // reset errore su cambio tab
   }, [activeTab]);
+
+  // Prefill da catalogo (o altro) se fornito
+  useEffect(() => {
+    if (isOpen && prefillGame) {
+      setGameData(prev => ({
+        ...prev,
+        title: prefillGame.title || "",
+        coverImage: prefillGame.coverImage || "",
+        developer: prefillGame.developer || "",
+        publisher: prefillGame.publisher || "",
+        releaseYear: prefillGame.releaseYear || new Date().getFullYear(),
+        genres: prefillGame.genres || [],
+        metacritic: prefillGame.metacritic || 0,
+      }));
+      setActiveTab("manual");
+      setIsAutoFilled(true);
+    }
+  }, [isOpen, prefillGame]);
 
   // Gestisce la ricerca
   const handleSearch = (e: React.FormEvent) => {
@@ -213,7 +233,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     } catch {}
     if (andAddAnother) {
       setGameData(initialGameData);
-      setActiveTab("search");
       setSearchQuery("");
       setSearchResults([]);
     } else {

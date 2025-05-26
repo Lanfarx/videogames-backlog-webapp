@@ -36,6 +36,8 @@ const LibraryPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<SortOption>("title");
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
     const [gamesPerPage, setGamesPerPage] = useState(12); // default
+    const [searchQuery, setSearchQuery] = useState("");
+    const [columns, setColumns] = useState(4); // default XL
     const gridContainerRef = useRef<HTMLDivElement>(null);
 
     // Carica i giochi all'inizio e aggiorna quando cambiano i dati da Redux
@@ -55,6 +57,7 @@ const LibraryPage: React.FC = () => {
         });
 
         setFilteredGames(allGamesFromStore);
+        setSearchQuery("");
     }, [allGamesFromStore]);
 
     // Applica i filtri quando cambiano
@@ -69,47 +72,40 @@ const LibraryPage: React.FC = () => {
             },
             sortBy,
             sortOrder,
+            query: searchQuery.trim() !== "" ? searchQuery : undefined,
         };
 
         const filtered = filterGames(allGamesFromStore, searchParams);
         const sorted = sortGames(filtered, sortBy, sortOrder);
         setFilteredGames(sorted);
         setCurrentPage(1);
-    }, [allGamesFromStore, filters, sortBy, sortOrder]);
+    }, [allGamesFromStore, filters, sortBy, sortOrder, searchQuery]);
 
     useEffect(() => {
-        function calculateGamesPerPage() {
-            if (viewMode === "grid") {
-                // Calcola colonne in base a breakpoints tailwind
-                let columns = 1;
-                const width = window.innerWidth;
-                if (width >= 1280) columns = 4;
-                else if (width >= 1024) columns = 3;
-                else if (width >= 640) columns = 2;
-                // Fissa a 3 righe
-                const rows = 3;
-                setGamesPerPage(columns * rows);
-            } else {
-                // ListView: calcola l'altezza effettiva della pagina (fino al footer)
-                // Prendi l'altezza del main (che arriva fino al footer)
-                const main = document.querySelector('main.flex-grow');
-                let mainHeight = 0;
-                if (main) {
-                    mainHeight = (main as HTMLElement).offsetHeight;
-                }
-                if (!mainHeight) {
-                    mainHeight = window.innerHeight - 32;
-                }
-                const rowHeight = 48; // stima di una riga della tabella (px)
-                // Limite massimo 50 per pagina
-                const rows = Math.max(1, Math.min(50, Math.floor(mainHeight / rowHeight)));
-                setGamesPerPage(rows);
-            }
+        function calculateColumns() {
+            const width = window.innerWidth;
+            if (width >= 1536) return 5;
+            if (width >= 1280) return 4;
+            if (width >= 1024) return 3;
+            if (width >= 640) return 2;
+            return 1;
         }
-        calculateGamesPerPage();
-        window.addEventListener('resize', calculateGamesPerPage);
-        return () => window.removeEventListener('resize', calculateGamesPerPage);
-    }, [viewMode]);
+        function handleResize() {
+            setColumns(calculateColumns());
+        }
+        setColumns(calculateColumns());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (viewMode === "grid") {
+            const rows = 3;
+            setGamesPerPage(columns * rows);
+        } else {
+            setGamesPerPage(14);
+        }
+    }, [viewMode, columns]);
 
     const indexOfLastGame = currentPage * gamesPerPage;
     const indexOfFirstGame = indexOfLastGame - gamesPerPage;
@@ -176,6 +172,7 @@ const LibraryPage: React.FC = () => {
                         sortBy={sortBy}
                         sortOrder={sortOrder}
                         onSortChange={handleSortChange}
+                        onSearchChange={setSearchQuery}
                     />
 
                     <div className="p-6" ref={gridContainerRef}>
@@ -187,16 +184,15 @@ const LibraryPage: React.FC = () => {
                                         onEdit={handleEditGame}
                                         onDelete={handleDeleteConfirmation}
                                         onStatusChange={handleStatusChange}
+                                        columns={columns}
                                     />
                                 ) : (
-                                    <div style={{maxHeight: '100%', height: '100%', overflowY: 'auto'}}>
-                                        <ListView 
-                                            games={currentGames} 
-                                            onEdit={handleEditGame}
-                                            onDelete={handleDeleteConfirmation}
-                                            onStatusChange={handleStatusChange}
-                                        />
-                                    </div>
+                                    <ListView 
+                                        games={currentGames} 
+                                        onEdit={handleEditGame}
+                                        onDelete={handleDeleteConfirmation}
+                                        onStatusChange={handleStatusChange}
+                                    />
                                 )}
                                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                             </>

@@ -29,7 +29,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
       <StatusIndicator status={currentGame.status} />
 
       {/* Copertina con link */}
-      <Link to={`/game/${game.id}`} className="block">
+      <Link to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`} className="block">
         <div className="relative h-[180px] overflow-hidden">
           <div className="absolute inset-0 bg-accent-secondary/20 z-10"></div>
           <img src={game.coverImage || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
@@ -38,7 +38,7 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
 
       {/* Contenuto */}
       <div className="p-4">
-        <Link to={`/game/${game.id}`} className="block">
+        <Link to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`} className="block">
           <h3 className="font-montserrat font-semibold text-base text-text-primary line-clamp-2 h-12 hover:text-accent-primary transition-colors">
             {game.title}
           </h3>

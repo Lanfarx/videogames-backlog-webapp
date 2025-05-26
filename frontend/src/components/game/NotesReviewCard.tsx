@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import RatingStars from '../ui/atoms/RatingStars';
-import { Save, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateGameReview, updateGameRating, updateGameNotes } from '../../store/slice/gamesSlice';
 import { useGameById } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { createRatingActivity } from '../../utils/activityUtils';
+import { loadFromLocal } from '../../utils/localStorage';
+import { selectIsProfilePrivate, selectIsDiaryPrivate, selectForcePrivate } from '../../store/slice/settingsSlice';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -33,6 +35,28 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   const gameFromStore = useGameById(game.id);
   const currentGame = gameFromStore || game;
 
+  // Stato per la privacy della recensione
+  const [isPublic, setIsPublic] = useState(currentGame.review?.isPublic ?? false);
+
+  // Usa Redux per la privacy
+  const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
+  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
+  const forcePrivate = useAppSelector(selectForcePrivate);
+
+  const dispatch = useAppDispatch();
+  const { addActivity } = useAllActivitiesActions();
+
+  // Se forzato privato, aggiorna la privacy se necessario
+  useEffect(() => {
+    if (currentGame.review && isPublic && forcePrivate) {
+      dispatch({
+        type: 'games/updateReviewPrivacy',
+        payload: { gameId: game.id, isPublic: false }
+      });
+      setIsPublic(false);
+    }
+  }, [forcePrivate, isPublic, currentGame.review, dispatch, game.id]);
+
   // Verifica se il gioco è "da iniziare" (non permette recensioni)
   const isNotStarted = currentGame.status === 'not-started';
 
@@ -55,8 +79,10 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     }
     setNotesValue(currentGame.notes || '');  }, [currentGame]);
 
-  const dispatch = useAppDispatch();
-  const { addActivity } = useAllActivitiesActions();
+  // Aggiorna anche lo stato del toggle quando cambia la review
+  useEffect(() => {
+    setIsPublic(currentGame.review?.isPublic ?? false);
+  }, [currentGame.review]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotesValue(e.target.value);
@@ -91,7 +117,8 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
         graphics: graphicsRating,
         story: storyRating,
         sound: soundRating,
-        date: formattedDate
+        date: formattedDate,
+        isPublic: isPublic,
       };
 
       // Aggiorna anche lo stato locale della data
@@ -216,6 +243,28 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                 placeholder="Scrivi qui la tua recensione..."
                 disabled={isNotStarted}
               ></textarea>
+              {/* Toggle privacy */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-tertiary-bg border-t border-border-color">
+                <button
+                  type="button"
+                  className={`flex items-center gap-2 text-sm text-text-secondary ${forcePrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
+                  title={forcePrivate ? 'Non puoi rendere pubblica la recensione: profilo o diario privato' : (isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
+                  onClick={() => {
+                    if (!isNotStarted && !forcePrivate) {
+                      dispatch({
+                        type: 'games/updateReviewPrivacy',
+                        payload: { gameId: game.id, isPublic: !isPublic }
+                      });
+                      setIsPublic(!isPublic);
+                    }
+                  }}
+                  disabled={isNotStarted || forcePrivate}
+                >
+                  <EyeOff className="w-5 h-5" />
+                  <span>{'Privata'}</span>
+                </button>
+                <span className="text-xs text-text-disabled">{forcePrivate ? 'Visibile solo a te' : (isPublic ? 'Visibile nella community' : 'Solo per te')}</span>
+              </div>
               
               {/* Rating categories */}
               <div className="grid grid-cols-2 gap-x-8 gap-y-4 p-4 bg-secondaryBg">

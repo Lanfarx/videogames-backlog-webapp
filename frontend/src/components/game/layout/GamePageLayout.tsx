@@ -5,17 +5,23 @@ import GamePageHeader from './GamePageHeader';
 interface GamePageLayoutProps {
   children: ReactNode;
   title: string;
-  onBackClick: () => void;
+  parentPath?: string;
+  parentLabel?: string;
 }
 
 const GamePageLayout: React.FC<GamePageLayoutProps> = ({ 
   children, 
   title, 
-  onBackClick 
+  parentPath = '/library',
+  parentLabel = 'Libreria'
 }) => {
   return (
     <div className="flex flex-col min-h-screen bg-primaryBg">
-      <GamePageHeader title={title} onBackClick={onBackClick} />
+      <GamePageHeader 
+        title={title} 
+        parentPath={parentPath}
+        parentLabel={parentLabel}
+      />
       <main className="flex-grow">
         {children}
       </main>

@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGameById } from '../store/hooks/index';
-import { useAllActivitiesByGameId, useAllActivitiesActions } from '../store/hooks/activitiesHooks';
-import { useAppDispatch } from '../store/hooks';
-import { updateGameStatus, updateGame, deleteGame, updateGamePlaytime, updateGameNotes, updateGameReview, updateGameRating } from '../store/slice/gamesSlice';
-import { createStatusChangeActivity, handlePlaytimeUpdate, createRatingActivity } from '../utils/activityUtils';
-import { calculateRatingFromReview } from '../utils/gamesUtils';
+import { useGameByTitle } from '../../store/hooks/index';
+import { useAllActivitiesByGameId, useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGameStatus, updateGame, deleteGame, updateGamePlaytime, updateGameNotes, updateGameReview } from '../../store/slice/gamesSlice';
+import { createStatusChangeActivity, handlePlaytimeUpdate } from '../../utils/activityUtils';
 
-import { Game, GameComment, GameStatus, GameReview } from '../types/game';
-import GamePageLayout from '../components/game/layout/GamePageLayout';
-import GameBanner from '../components/game/GameBanner';
-import GameCommentsCard from '../components/game/GameCommentsCard';
-import GameInfoCard from '../components/game/GameInfoCard';
-import NotesReviewCard from '../components/game/NotesReviewCard';
-import GameTimelineCard from '../components/game/GameTimelineCard';
+import { Game, GameComment, GameStatus, GameReview } from '../../types/game';
+import GameBanner from '../../components/game/GameBanner';
+import GameCommentsCard from '../../components/game/GameCommentsCard';
+import GameInfoCard from '../../components/game/GameInfoCard';
+import NotesReviewCard from '../../components/game/NotesReviewCard';
+import GameTimelineCard from '../../components/game/GameTimelineCard';
+import GamePageLayout from '../../components/game/layout/GamePageLayout';
 
 export default function GamePage() {
-  const { id } = useParams<{ id: string }>();
+  const { title } = useParams<{ title: string }>();
   const navigate = useNavigate();
-  const game = useGameById(id ? parseInt(id) : -1);
+  const decodedTitle = title ? decodeURIComponent(title.replace(/_/g, ' ')) : '';
+  const game = useGameByTitle(decodedTitle);
   const dispatch = useAppDispatch();
   const { addActivity } = useAllActivitiesActions();
   const [comments, setComments] = useState<GameComment[]>([]);
   const activities = useAllActivitiesByGameId(game?.id ?? -1);
-  
+
   // Carica i commenti solo quando cambia il gioco
   useEffect(() => {
     if (game) {
@@ -95,19 +95,8 @@ export default function GamePage() {
 
   const handleReviewSave = (review: GameReview) => {
     if (!game) return;
-    
-    // Aggiorna il gioco con la nuova recensione
     dispatch(updateGameReview({ gameId: game.id, review }));
-    
-    // Calcola e aggiorna il rating
-    const averageRating = calculateRatingFromReview(review);
-    dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
-    
-    // Crea un'attività per la valutazione
-    const ratingActivity = createRatingActivity(game, averageRating);
-    addActivity(ratingActivity);
-    
-    console.log('Recensione salvata:', review);
+    // NON chiamare qui addActivity se già lo fai nel componente della recensione!
   };  // Funzione generica per aggiornare i commenti e il gioco
   const updateGameComments = (updatedComments: GameComment[]) => {
     if (!game) return;
@@ -149,54 +138,60 @@ export default function GamePage() {
     
     const updatedComments = comments.filter(comment => comment.id !== id);
     updateGameComments(updatedComments);
-  };
-
-  return (
-    <GamePageLayout title={game.title} onBackClick={() => navigate(-1)}>
-      {/* Banner section con sfondo secondario */}
+  };  return (
+    <GamePageLayout 
+      title={game.title} 
+      parentPath="/library"
+      parentLabel="Libreria"
+    >
+      {/* Banner section con sfondo secondario - larghezza piena */}
       <div className="bg-secondary-bg">
         <GameBanner 
           game={game}
           onChangeStatus={handleChangeStatus}
           onEdit={handleEditGame}
           onDelete={handleDeleteGame}
+          onBack={() => navigate('/library')}
+          showBackButton={true}
         />
       </div>
 
-      {/* Layout contenuto (2 colonne) */}
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-wrap -mx-4">
-          {/* Colonna sinistra (60%) */}
-          <div className="w-full lg:w-[60%] px-4 mb-8">
-            {/* Note e Recensione */}
-            <NotesReviewCard 
-              onNotesChange={handleNotesChange}
-              onReviewSave={handleReviewSave} 
-              game={game}            
-            />
+      {/* Layout contenuto (2 colonne) - contenitore limitato */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-wrap -mx-4">
+            {/* Colonna sinistra (60%) */}
+            <div className="w-full lg:w-[60%] px-4 mb-8">
+              {/* Note e Recensione */}
+              <NotesReviewCard 
+                onNotesChange={handleNotesChange}
+                onReviewSave={handleReviewSave} 
+                game={game}            
+              />
 
-            {/* Timeline di Gioco */}
-            <GameTimelineCard 
-              activities={activities} 
-              game={game} 
-            />
-          </div>
+              {/* Timeline di Gioco */}
+              <GameTimelineCard 
+                activities={activities} 
+                game={game} 
+              />
+            </div>
 
-          {/* Colonna destra (40%) */}
-          <div className="w-full lg:w-[40%] px-4">
-            {/* Card Informazioni */}
-            <GameInfoCard 
-              game={game}
-              onUpdatePlaytime={handleUpdatePlaytime}
-              onEditInfo={handleEditGame} // Aggiungiamo questa prop per abilitare la modifica delle informazioni
-            />
-            {/* Sezione Commenti/Appunti */}
-            <GameCommentsCard 
-              comments={comments}
-              onAddComment={handleAddComment}
-              onEditComment={handleEditComment}
-              onDeleteComment={handleDeleteComment}
-            />
+            {/* Colonna destra (40%) */}
+            <div className="w-full lg:w-[40%] px-4">
+              {/* Card Informazioni */}
+              <GameInfoCard 
+                game={game}
+                onUpdatePlaytime={handleUpdatePlaytime}
+                onEditInfo={handleEditGame}
+              />
+              {/* Sezione Commenti/Appunti */}
+              <GameCommentsCard 
+                comments={comments}
+                onAddComment={handleAddComment}
+                onEditComment={handleEditComment}
+                onDeleteComment={handleDeleteComment}
+              />
+            </div>
           </div>
         </div>
       </div>

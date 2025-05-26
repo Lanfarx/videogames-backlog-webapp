@@ -4,6 +4,8 @@ import { Calendar, Filter, Check } from 'lucide-react';
 interface DiaryFiltersProps {
   year: number;
   onYearChange: (year: number) => void;
+  month?: number;
+  onMonthChange?: (month: number) => void;
   activeFilters: string[];
   onFilterChange: (filter: string) => void;
 }
@@ -11,11 +13,17 @@ interface DiaryFiltersProps {
 const DiaryFilters: React.FC<DiaryFiltersProps> = ({
   year,
   onYearChange,
+  month,
+  onMonthChange,
   activeFilters,
   onFilterChange
 }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const months = [
+    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  ];
   
   const filters = [
     { id: 'all', label: 'Tutto' },
@@ -49,6 +57,25 @@ const DiaryFilters: React.FC<DiaryFiltersProps> = ({
               </svg>
             </div>
           </div>
+          {onMonthChange && (
+            <div className="relative ml-2">
+              <select
+                value={month ?? ''}
+                onChange={e => onMonthChange(Number(e.target.value))}
+                className="pl-2 pr-8 py-1 bg-primary-bg border border-border-color rounded-md text-text-primary appearance-none cursor-pointer"
+              >
+                <option value="">Tutti i mesi</option>
+                {months.map((m, idx) => (
+                  <option key={m} value={idx}>{m}</option>
+                ))}
+              </select>
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex flex-wrap gap-2">

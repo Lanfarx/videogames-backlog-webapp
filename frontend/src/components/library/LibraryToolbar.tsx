@@ -11,6 +11,9 @@ interface LibraryToolbarProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (sortBy: SortOption) => void;
+  onSearchChange?: (query: string) => void;
+  columns?: number;
+  onColumnsChange?: (columns: number) => void;
 }
 
 const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
@@ -20,8 +23,12 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   sortBy,
   sortOrder,
   onSortChange,
+  onSearchChange,
+  columns,
+  onColumnsChange
 }) => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Chiudi il dropdown quando si clicca fuori
@@ -50,8 +57,19 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
           onClick={() => setShowSortDropdown(false)}
         ></div>
       )}
-
-      <AddGameButton onClick={onAddGame} />
+      <div className="flex items-center gap-3">
+        <AddGameButton onClick={onAddGame} />
+        <input
+          type="text"
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value);
+            onSearchChange && onSearchChange(e.target.value);
+          }}
+          placeholder="Cerca nella libreria..."
+          className="ml-2 px-3 py-1.5 rounded-md border border-border-color bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm w-96"
+        />
+      </div>
 
       <div className="flex items-center space-x-6">
         <div className="flex items-center space-x-2">

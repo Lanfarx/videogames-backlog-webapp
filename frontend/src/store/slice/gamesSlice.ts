@@ -34,6 +34,12 @@ const gamesSlice = createSlice({
         game.review = action.payload.review;
       }
     },
+    updateReviewPrivacy(state, action: PayloadAction<{ gameId: number; isPublic: boolean }>) {
+      const game = state.games.find(g => g.id === action.payload.gameId);
+      if (game && game.review) {
+        game.review.isPublic = action.payload.isPublic;
+      }
+    },
     updateGameStatus(state, action: PayloadAction<{ gameId: number; status: Game["status"] }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
@@ -150,7 +156,8 @@ export const {
   updateGamePrice, 
   updateGamePurchaseDate, 
   updateGameMetacritic,
-  updateGameComments 
+  updateGameComments,
+  updateReviewPrivacy 
 } = gamesSlice.actions;
 
 export default gamesSlice.reducer;

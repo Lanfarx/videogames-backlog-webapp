@@ -92,6 +92,7 @@ export interface GameReview {
   story: number;
   sound: number;
   date: string;
+  isPublic?: boolean; // true = pubblica, false/undefined = privata
 }
 
 /**
