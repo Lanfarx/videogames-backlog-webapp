@@ -116,7 +116,7 @@ export interface Game extends
   GamePlayInfo {
   review?: GameReview;
   comments?: GameComment[];
-}
+  }
 
 /**
  * Definizione dei filtri per i giochi
@@ -165,11 +165,35 @@ export type GameViewMode = 'grid' | 'list';
  * Questi giochi non hanno id, platform obbligatorio, né rating/commenti
  */
 export interface SampleGame {
+  id: string; // id RAWG come stringa
   title: string;
   coverImage: string;
-  developer: string;
-  publisher: string;
   releaseYear: number;
   genres: string[];
   metacritic: number;
 }
+
+/**
+ * Definizione di un gioco per il catalogo pubblico
+ */
+export type PublicCatalogGame = {
+  id?: number; // id RAWG opzionale
+  title: string;
+  description: string;
+  coverImage: string;
+  developer: string;
+  publisher: string;
+  releaseYear: number;
+  genres: { id: number; name: string }[]; // ora oggetti con id e nome
+  metacritic: number;
+  platforms: string[];
+  communityRating?: number;
+  userReview?: {
+    text: string;
+    gameplay: number;
+    graphics: number;
+    story: number;
+    sound: number;
+    date: string;
+  };
+};

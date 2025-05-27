@@ -9,7 +9,7 @@ import { isFirstActivityInMonth, getActivityIcon } from '../../utils/activityUti
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateReviewPrivacy } from '../../store/slice/gamesSlice';
 import { Link } from 'react-router-dom';
-import { selectIsProfilePrivate, selectIsDiaryPrivate, selectForcePrivate } from '../../store/slice/settingsSlice';
+import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../store/slice/settingsSlice';
 
 interface DiaryEntryProps {
   activity: Activity;
@@ -21,10 +21,7 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
   const [expandedReview, setExpandedReview] = useState(false);
   const game = useGameById(activity.gameId);
   const dispatch = useAppDispatch();
-  
-  const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
   const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
-  const forcePrivate = useAppSelector(selectForcePrivate);
   
   // Non procedere se non c'è il gioco
   if (!game) return null;
@@ -57,10 +54,6 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
     }
   };
   
-  // Non abbiamo più bisogno di testi aggiuntivi poiché tutte le informazioni
-  // sono ora mostrate direttamente accanto all'etichetta dell'attività
-  const activityText: string | null = null;
-  const isTextLong = false;
   const hasReview = activity.type === 'rated' && game.review;
 
   return (
@@ -179,20 +172,23 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
           <div className="bg-secondary-bg p-3 rounded-lg mt-2">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm font-medium text-text-primary">Recensione</span>
+                <Star className="w-4 h-4 text-yellow-500" />                <span className="text-sm font-medium text-text-primary">Recensione</span>
                 <button
                   type="button"
-                  className={`ml-2 text-text-secondary ${forcePrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
-                  title={forcePrivate ? 'Non puoi rendere pubblica la recensione: profilo o diario privato' : (game.review?.isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
+                  className={`ml-2 text-text-secondary ${isDiaryPrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
+                  title={isDiaryPrivate ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' : (game.review?.isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
                   onClick={() => {
-                    if (game.review && !forcePrivate) {
+                    if (game.review && !isDiaryPrivate) {
                       dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !game.review.isPublic }));
                     }
                   }}
-                  disabled={forcePrivate}
+                  disabled={isDiaryPrivate}
                 >
-                  <EyeOff className="w-4 h-4" />
+                  {game.review?.isPublic ? (
+                    <Eye className="w-4 h-4" />
+                  ) : (
+                    <EyeOff className="w-4 h-4" />
+                  )}
                 </button>
               </div>
               {game && (

@@ -1,4 +1,4 @@
-import { Game, GameReview, GamePlatform, SampleGame } from '../types/game';
+import { Game, GameReview, GamePlatform, SampleGame, PublicCatalogGame } from '../types/game';
 import { GAME_PLATFORMS } from '../constants/gameConstants';
 
 // Dati di esempio per i giochi
@@ -81,8 +81,8 @@ export const gamesData: Game[] = [
         gameplay: 5,
         graphics: 5,
         story: 5,
-        sound: 4.5,
-        date: "2022-12-10"
+        sound: 5,
+        date: "2023-03-10"
       },
       rating: 5
     },
@@ -199,41 +199,13 @@ export const gamesData: Game[] = [
     },
   ];
 
-// Tipo per la manipolazione dei dati pubblici del catalogo giochi
-export type PublicCatalogGame = {
-  title: string;
-  description: string;
-  coverImage: string;
-  developer: string;
-  publisher: string;
-  releaseYear: number;
-  genres: string[];
-  metacritic: number;
-  platforms: string[];
-  userReview?: {
-    text: string;
-    gameplay: number;
-    graphics: number;
-    story: number;
-    sound: number;
-    date: string;
-  };
-};
-
-// Utility per aggregare tutte le piattaforme disponibili per ogni titolo
-export function getAllPlatformsForTitle(title: string): string[] {
-  const platformsSet = new Set<string>();
-  gamesData.forEach(g => {
-    if (g.title === title && g.platform) platformsSet.add(g.platform);
-  });
-  catalogGamesRaw.forEach(g => {
-    if (g.title === title && g.platforms) g.platforms.forEach(p => platformsSet.add(p));
-  });
-  return Array.from(platformsSet);
+// Utility per convertire string[] in {id, name}[]
+function genresToObj(arr: string[]): { id: number; name: string }[] {
+  return arr.map((name, idx) => ({ id: idx + 1, name }));
 }
 
 // Dati di esempio per il catalogo giochi globale (per la futura pagina Catalogo)
-const catalogGamesRaw: PublicCatalogGame[] = [
+const catalogGamesRaw: import('../types/game').PublicCatalogGame[] = [
   {
     title: "The Legend of Zelda: Breath of the Wild",
     description: "Breath of the Wild è un capolavoro che ridefinisce il genere open world con la sua libertà di esplorazione.",
@@ -241,7 +213,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Nintendo EPD",
     publisher: "Nintendo",
     releaseYear: 2017,
-    genres: ["Action", "Adventure", "Open World"],
+    genres: genresToObj(["Action", "Adventure", "Open World"]),
     metacritic: 97,
     platforms: ["Nintendo Switch"],
     userReview: {
@@ -260,7 +232,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "CD Projekt Red",
     publisher: "CD Projekt",
     releaseYear: 2020,
-    genres: ["RPG", "Action", "Open World"],
+    genres: genresToObj(["RPG", "Action", "Open World"]),
     metacritic: 86,
     platforms: ["Steam"],
     userReview: {
@@ -279,7 +251,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Santa Monica Studio",
     publisher: "Sony Interactive Entertainment",
     releaseYear: 2022,
-    genres: ["Action", "Adventure"],
+    genres: genresToObj(["Action", "Adventure"]),
     metacritic: 94,
     platforms: ["PlayStation 5"],
     userReview: {
@@ -287,27 +259,27 @@ const catalogGamesRaw: PublicCatalogGame[] = [
       gameplay: 5,
       graphics: 5,
       story: 5,
-      sound: 4.5,
-      date: "2022-12-10"
+      sound: 5,
+      date: "2023-03-10"
     }
   },
   {
     title: "Elden Ring",
-    description: "Elden Ring fonde perfettamente il gameplay soulslike con un mondo aperto. La direzione artistica è fenomenale.",
+    description: "Un open world impegnativo e affascinante, con un design magistrale e una libertà di esplorazione senza precedenti.",
     coverImage: "/placeholder.svg?height=280&width=280",
     developer: "FromSoftware",
     publisher: "Bandai Namco Entertainment",
     releaseYear: 2022,
-    genres: ["RPG", "Action", "Open World"],
+    genres: genresToObj(["RPG", "Action", "Open World"]),
     metacritic: 96,
     platforms: ["Xbox Series X/S"],
     userReview: {
-      text: "Elden Ring fonde perfettamente il gameplay soulslike con un mondo aperto. La direzione artistica è fenomenale.",
+      text: "Un open world impegnativo e affascinante, con un design magistrale e una libertà di esplorazione senza precedenti.",
       gameplay: 5,
       graphics: 4.5,
-      story: 4,
-      sound: 5,
-      date: "2022-05-20"
+      story: 4.5,
+      sound: 4.5,
+      date: "2023-03-01"
     }
   },
   {
@@ -317,7 +289,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Larian Studios",
     publisher: "Larian Studios",
     releaseYear: 2023,
-    genres: ["RPG", "Strategy"],
+    genres: genresToObj(["RPG", "Strategy"]),
     metacritic: 96,
     platforms: ["Steam"],
     userReview: {
@@ -336,7 +308,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Bethesda Game Studios",
     publisher: "Bethesda Softworks",
     releaseYear: 2023,
-    genres: ["RPG", "Adventure", "Sci-Fi"],
+    genres: genresToObj(["RPG", "Adventure", "Sci-Fi"]),
     metacritic: 83,
     platforms: ["Xbox Series X/S"],
     userReview: undefined
@@ -348,7 +320,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Square Enix",
     publisher: "Square Enix",
     releaseYear: 2023,
-    genres: ["RPG", "Action"],
+    genres: genresToObj(["RPG", "Action"]),
     metacritic: 87,
     platforms: ["PlayStation 5"],
     userReview: {
@@ -367,7 +339,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Avalanche Software",
     publisher: "Warner Bros. Games",
     releaseYear: 2023,
-    genres: ["RPG", "Adventure"],
+    genres: genresToObj(["RPG", "Adventure"]),
     metacritic: 82,
     platforms: ["Epic Games Store"],
     userReview: undefined
@@ -380,7 +352,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Nintendo EPD",
     publisher: "Nintendo",
     releaseYear: 2017,
-    genres: ["Platform", "Adventure"],
+    genres: genresToObj(["Platform", "Adventure"]),
     metacritic: 97,
     platforms: ["Nintendo Switch"],
   },
@@ -391,7 +363,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Rockstar Studios",
     publisher: "Rockstar Games",
     releaseYear: 2018,
-    genres: ["Action", "Adventure", "Open World"],
+    genres: genresToObj(["Action", "Adventure", "Open World"]),
     metacritic: 97,
     platforms: ["PlayStation 4", "Xbox One", "PC"],
   },
@@ -402,7 +374,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "CD Projekt Red",
     publisher: "CD Projekt",
     releaseYear: 2015,
-    genres: ["RPG", "Action", "Open World"],
+    genres: genresToObj(["RPG", "Action", "Open World"]),
     metacritic: 93,
     platforms: ["PlayStation 4", "Xbox One", "PC", "Nintendo Switch"],
   },
@@ -413,7 +385,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Atlus",
     publisher: "Atlus",
     releaseYear: 2020,
-    genres: ["RPG", "Turn-Based"],
+    genres: genresToObj(["RPG", "Turn-Based"]),
     metacritic: 95,
     platforms: ["PlayStation 4", "Nintendo Switch", "PC"],
   },
@@ -424,7 +396,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Insomniac Games",
     publisher: "Sony Interactive Entertainment",
     releaseYear: 2020,
-    genres: ["Action", "Adventure"],
+    genres: genresToObj(["Action", "Adventure"]),
     metacritic: 85,
     platforms: ["PlayStation 4", "PlayStation 5", "PC"],
   },
@@ -435,7 +407,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "FromSoftware",
     publisher: "Activision",
     releaseYear: 2019,
-    genres: ["Action", "Adventure"],
+    genres: genresToObj(["Action", "Adventure"]),
     metacritic: 90,
     platforms: ["PlayStation 4", "Xbox One", "PC"],
   },
@@ -446,7 +418,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Supergiant Games",
     publisher: "Supergiant Games",
     releaseYear: 2020,
-    genres: ["Roguelike", "Action"],
+    genres: genresToObj(["Roguelike", "Action"]),
     metacritic: 93,
     platforms: ["PC", "Nintendo Switch", "PlayStation 4", "Xbox One"],
   },
@@ -457,7 +429,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Capcom",
     publisher: "Capcom",
     releaseYear: 2023,
-    genres: ["Action", "Horror"],
+    genres: genresToObj(["Action", "Horror"]),
     metacritic: 93,
     platforms: ["PlayStation 4", "PlayStation 5", "Xbox Series X/S", "PC"],
   },
@@ -468,7 +440,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Remedy Entertainment",
     publisher: "Epic Games Publishing",
     releaseYear: 2023,
-    genres: ["Action", "Horror", "Adventure"],
+    genres: genresToObj(["Action", "Horror", "Adventure"]),
     metacritic: 89,
     platforms: ["PlayStation 5", "Xbox Series X/S", "PC"],
   },
@@ -479,7 +451,7 @@ const catalogGamesRaw: PublicCatalogGame[] = [
     developer: "Ubisoft Bordeaux",
     publisher: "Ubisoft",
     releaseYear: 2023,
-    genres: ["Action", "Adventure", "Stealth"],
+    genres: genresToObj(["Action", "Adventure", "Stealth"]),
     metacritic: 77,
     platforms: ["PlayStation 4", "PlayStation 5", "Xbox One", "Xbox Series X/S", "PC"],
   },

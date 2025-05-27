@@ -3,7 +3,7 @@ import SidebarFilter from '../../components/library/filter/SidebarFilter';
 import LibraryToolbar from '../../components/library/LibraryToolbar';
 import GridView from '../../components/library/GridView';
 import ListView from '../../components/library/ListView';
-import Pagination from '../../components/library/Pagination';
+import Pagination from '../../components/ui/Pagination';
 import AddGameModal from '../../components/game/AddGameModal';
 import EditGameInfoModal from '../../components/game/EditGameInfoModal';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';

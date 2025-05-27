@@ -37,4 +37,5 @@ export default settingsSlice.reducer;
 // Selectors
 export const selectIsProfilePrivate = (state: { settings: SettingsState }) => !state.settings.isProfilePublic;
 export const selectIsDiaryPrivate = (state: { settings: SettingsState }) => !state.settings.privacyOptions.showDiary;
-export const selectForcePrivate = (state: { settings: SettingsState }) => !state.settings.isProfilePublic || !state.settings.privacyOptions.showDiary;
+// Selettore per forzare la privacy delle recensioni a privata se diario privato
+export const selectForcePrivate = (state: { settings: SettingsState }) => !state.settings.privacyOptions.showDiary;

@@ -9,7 +9,7 @@ import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { createRatingActivity } from '../../utils/activityUtils';
 import { loadFromLocal } from '../../utils/localStorage';
-import { selectIsProfilePrivate, selectIsDiaryPrivate, selectForcePrivate } from '../../store/slice/settingsSlice';
+import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../store/slice/settingsSlice';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -34,28 +34,25 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
   const gameFromStore = useGameById(game.id);
   const currentGame = gameFromStore || game;
-
-  // Stato per la privacy della recensione
+  // Stato per la privacy della recensione - sincronizzato con le impostazioni profilo
   const [isPublic, setIsPublic] = useState(currentGame.review?.isPublic ?? false);
-
   // Usa Redux per la privacy
   const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
   const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
-  const forcePrivate = useAppSelector(selectForcePrivate);
 
   const dispatch = useAppDispatch();
   const { addActivity } = useAllActivitiesActions();
-
-  // Se forzato privato, aggiorna la privacy se necessario
+  // Forza la privacy a privata se il diario è privato
   useEffect(() => {
-    if (currentGame.review && isPublic && forcePrivate) {
-      dispatch({
-        type: 'games/updateReviewPrivacy',
-        payload: { gameId: game.id, isPublic: false }
-      });
+    if (isDiaryPrivate) {
       setIsPublic(false);
+    } else if (!currentGame.review || currentGame.review.isPublic === undefined) {
+      // Solo quando si crea una nuova recensione senza privacy già impostata
+      setIsPublic(true);
+    } else {
+      setIsPublic(currentGame.review.isPublic);
     }
-  }, [forcePrivate, isPublic, currentGame.review, dispatch, game.id]);
+  }, [isDiaryPrivate, currentGame.review]);
 
   // Verifica se il gioco è "da iniziare" (non permette recensioni)
   const isNotStarted = currentGame.status === 'not-started';
@@ -105,12 +102,12 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     setSaveNotesSuccess(true);
     setTimeout(() => setSaveNotesSuccess(false), 3000);
   };
-
+  // Nel salvataggio della recensione, forza isPublic a false se diario privato
   const handleSaveReview = () => {
     if (!isNotStarted) {
       const now = new Date();
       const formattedDate = now.toISOString().split('T')[0];
-
+      const reviewPrivacy = isDiaryPrivate ? false : (currentGame.review?.isPublic !== undefined ? isPublic : true);
       const updatedReview: GameReview = {
         text: reviewText,
         gameplay: gameplayRating,
@@ -118,25 +115,18 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
         story: storyRating,
         sound: soundRating,
         date: formattedDate,
-        isPublic: isPublic,
+        isPublic: reviewPrivacy,
       };
-
-      // Aggiorna anche lo stato locale della data
-      setReviewDate(formattedDate);      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
-      
-      // Calcola e aggiorna il rating globale
+      setIsPublic(reviewPrivacy);
+      setReviewDate(formattedDate);
+      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
       const averageRating = calculateRatingFromReview(updatedReview);
       dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
-
-      // Crea un'attività di tipo "rated" utilizzando la funzione di utilità
       const ratingActivity = createRatingActivity(game, averageRating);
       addActivity(ratingActivity);
-
       if (onReviewSave) {
         onReviewSave(updatedReview);
       }
-
-      // Mostra messaggio di successo per 3 secondi
       setSaveReviewSuccess(true);
       setTimeout(() => setSaveReviewSuccess(false), 3000);
     }
@@ -242,28 +232,46 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                 onChange={handleReviewTextChange}
                 placeholder="Scrivi qui la tua recensione..."
                 disabled={isNotStarted}
-              ></textarea>
-              {/* Toggle privacy */}
+              ></textarea>              {/* Toggle privacy */}
               <div className="flex items-center gap-2 px-4 py-2 bg-tertiary-bg border-t border-border-color">
                 <button
                   type="button"
-                  className={`flex items-center gap-2 text-sm text-text-secondary ${forcePrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
-                  title={forcePrivate ? 'Non puoi rendere pubblica la recensione: profilo o diario privato' : (isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
+                  className={`flex items-center gap-2 text-sm ${
+                    isDiaryPrivate
+                      ? 'text-text-disabled opacity-60 cursor-not-allowed' 
+                      : isPublic 
+                        ? 'text-accent-success hover:text-accent-success/80'
+                        : 'text-text-secondary hover:text-accent-primary'
+                  } focus:outline-none transition-colors`}
+                  title={
+                    isDiaryPrivate
+                      ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.'
+                      : (isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
+                  }
                   onClick={() => {
-                    if (!isNotStarted && !forcePrivate) {
+                    if (!isNotStarted && !isDiaryPrivate) {
+                      setIsPublic(!isPublic);
                       dispatch({
                         type: 'games/updateReviewPrivacy',
                         payload: { gameId: game.id, isPublic: !isPublic }
                       });
-                      setIsPublic(!isPublic);
                     }
                   }}
-                  disabled={isNotStarted || forcePrivate}
+                  disabled={isNotStarted || isDiaryPrivate}
                 >
-                  <EyeOff className="w-5 h-5" />
-                  <span>{'Privata'}</span>
+                  {isPublic ? (
+                    <Eye className="w-5 h-5" />
+                  ) : (
+                    <EyeOff className="w-5 h-5" />
+                  )}
+                  <span>{isPublic ? 'Pubblica' : 'Privata'}</span>
                 </button>
-                <span className="text-xs text-text-disabled">{forcePrivate ? 'Visibile solo a te' : (isPublic ? 'Visibile nella community' : 'Solo per te')}</span>
+                <span className="text-xs text-text-disabled">
+                  {isDiaryPrivate
+                    ? 'Privacy limitata dal diario privato'
+                    : (isPublic ? 'Visibile nella community' : 'Solo per te')
+                  }
+                </span>
               </div>
               
               {/* Rating categories */}

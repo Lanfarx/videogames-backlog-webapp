@@ -1,26 +1,23 @@
-// Spostato da library/CatalogGameCard.tsx
+// Spostato da library/CatalogGame
 import React from "react";
 import { CheckCircle, PlusCircle, Award} from "lucide-react";
-import type { SampleGame } from "../../types/game";
-import RatingStars from '../ui/atoms/RatingStars';
 import { useNavigate } from "react-router-dom";
-import { useGameReviewsStats } from "../../store/hooks/gamesHooks";
+import { useCommunityCommunityRating } from '../../store/hooks/communityHooks';
+import RatingStars from '../ui/atoms/RatingStars';
+import { SampleGame } from "../../types/game";
 
 interface CatalogGameCardProps {
   game: SampleGame;
   isInLibrary: boolean;
   onAddToLibrary: () => void;
-  userReview?: { rating: number; positive: boolean } | null;
+  onInfoClick: (id: string) => void;
 }
 
-const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, onAddToLibrary, userReview }) => {
-  const { avg, count } = useGameReviewsStats(game.title);
-  const navigate = useNavigate();
+const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, onAddToLibrary, onInfoClick }) => {
+  const communityRating = useCommunityCommunityRating(game.title);
 
-  // Sostituisci gli spazi con _ per la URL
   const handleInfoClick = () => {
-    const urlTitle = game.title.replace(/\s+/g, '_');
-    navigate(`/catalog/${urlTitle}`);
+    onInfoClick(game.id);
   };
 
   return (
@@ -34,8 +31,6 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, on
       <div className="flex-1 flex flex-col gap-1">
         <h3 className="font-bold text-base text-text-primary mb-0.5 line-clamp-1">{game.title}</h3>
         <div className="text-xs text-text-secondary mb-0.5 flex flex-wrap items-center gap-1">
-          <span>{game.developer}</span>
-          <span className="mx-1">·</span>
           <span>{game.releaseYear}</span>
         </div>
         <div className="flex flex-wrap gap-1 mb-1">
@@ -53,9 +48,9 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, on
         </div>
         {/* Recensioni utenti aggregate */}
         <div className="flex items-center gap-2 mb-1">
-          <RatingStars rating={avg} showValue={false} size="sm" readOnly />
+          <RatingStars rating={communityRating} showValue={false} size="sm" readOnly />
           <span className="text-xs text-text-secondary">
-            {count > 0 ? `${avg.toFixed(1)} / 5 (${count} recensioni)` : 'Nessuna recensione utente'}
+            {communityRating > 0 ? `${communityRating.toFixed(1)} / 5` : 'Nessuna recensione utente'}
           </span>
         </div>
         <div className="flex-1" />

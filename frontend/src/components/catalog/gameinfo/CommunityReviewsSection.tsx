@@ -2,23 +2,17 @@ import React, { useState } from 'react';
 import { Star, Calendar, Filter } from 'lucide-react';
 import RatingStars from '../../ui/atoms/RatingStars';
 import { CommunityReview } from '../../../store/slice/communitySlice';
+import { useCommunityReviewsByGame } from '../../../store/hooks/communityHooks';
 
-interface CommunityReviewsSectionProps {
-  gameTitle: string;
-  reviews: CommunityReview[];
-  averageRating: number;
-  totalReviews: number;
-}
-
-const CommunityReviewsSection: React.FC<CommunityReviewsSectionProps> = ({
-  gameTitle,
-  reviews,
-  averageRating,
-  totalReviews
-}) => {
+const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle }) => {
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const sortedReviews = [...reviews].sort((a, b) => {
+  const reviews = useCommunityReviewsByGame(gameTitle) || [];
+  const totalReviews = reviews.length; // conteggio TOTALE recensioni
+  const validReviews = reviews.filter(r => typeof r.rating === 'number' && !isNaN(r.rating));
+  const averageRating = validReviews.length > 0 ? validReviews.reduce((sum, r) => sum + r.rating, 0) / validReviews.length : 0;
+
+  const sortedReviews = [...validReviews].sort((a, b) => {
     switch (sortBy) {
       case 'rating':
         return b.rating - a.rating;
@@ -32,7 +26,7 @@ const CommunityReviewsSection: React.FC<CommunityReviewsSectionProps> = ({
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach(review => {
+    validReviews.forEach(review => {
       const rounded = Math.round(review.rating);
       distribution[rounded as keyof typeof distribution]++;
     });
@@ -78,7 +72,7 @@ const CommunityReviewsSection: React.FC<CommunityReviewsSectionProps> = ({
               <div className="flex-1">
                 {[5, 4, 3, 2, 1].map(stars => {
                   const count = ratingDistribution[stars as keyof typeof ratingDistribution];
-                  const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                  const percentage = validReviews.length > 0 ? (count / validReviews.length) * 100 : 0;
                   
                   return (
                     <div key={stars} className="flex items-center gap-2 mb-1">

@@ -32,12 +32,22 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
   const handleConnectSteam = () => {
     if (steamIdInput.length === 17) {
       onConnectedAccountChange("steam", steamIdInput);
+      saveToLocal('steamId', steamIdInput); // Salva localmente
       setSteamIdInput("");
       setSteamIdError("");
     } else {
       setSteamIdError("Lo Steam ID deve essere di 17 cifre");
     }
   };
+
+  React.useEffect(() => {
+    // Carica steamId locale se presente
+    const saved = loadFromLocal('steamId');
+    if (saved && !connectedAccounts.steam) {
+      onConnectedAccountChange('steam', saved);
+    }
+  }, []);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -83,8 +93,8 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                     </div>
                   </div>
                   {connectedAccounts.steam ? (
-                    <p className="text-xs text-accent-success">
-                      Account collegato
+                    <p className="text-xs text-accent-success break-all mb-0">
+                      Steam ID collegato: <span className="font-mono">{connectedAccounts.steam}</span>
                     </p>
                   ) : (
                     <p className="text-xs text-text-secondary">

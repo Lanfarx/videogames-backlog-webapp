@@ -9,6 +9,8 @@ import {
   CommunityStats
 } from '../slice/communitySlice';
 import { Game } from '../../types/game';
+import { calculateCommunityRating } from '../../utils/gamesUtils';
+import { useAllGamesTitleWithRating } from './gamesHooks';
 
 // Hook per ottenere tutte le recensioni
 export const useAllCommunityReviews = () => {
@@ -98,3 +100,24 @@ export function useCommunityStatsByGameAggregated(gameTitle: string): CommunityS
     currentlyPlaying
   };
 }
+
+// Hook custom per ottenere il community rating medio dato un titolo di gioco
+export function useCommunityCommunityRating(gameTitle: string): number {
+  // Prendi tutti i giochi utente con quel titolo e rating valido
+  const userGames = useAllGamesTitleWithRating(gameTitle);
+  return calculateCommunityRating(userGames);
+}
+
+// Hook custom per ottenere tutti i community ratings per una lista di giochi
+export function useAllCommunityRatings(gameTitles: string[]): Record<string, number> {
+  const userGames = useSelector((state: RootState) => state.games.games);
+  
+  return gameTitles.reduce((ratings, title) => {
+    const titleGames = userGames.filter(g => g.title === title && g.rating !== undefined);
+    ratings[title] = calculateCommunityRating(titleGames);
+    return ratings;
+  }, {} as Record<string, number>);
+}
+
+// Hook per ottenere il numero di recensioni valide della community per un gioco
+// RIMOSSO: useCommunityReviewsCount perché ora il conteggio si fa direttamente nei componenti tramite useCommunityReviewsByGame

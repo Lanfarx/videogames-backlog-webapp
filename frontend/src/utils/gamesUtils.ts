@@ -1,5 +1,4 @@
 import { Game, GameStatus, GamePlatform, GameReview } from '../types/game';
-import { GAME_PLATFORMS } from '../constants/gameConstants';
 import { GameSearchParams, SortOption, SortOrder, NumericRange, GameBasicInfo } from '../types/game';
 import { ChartItem } from '../types/stats';
 import { getStatusColor, getStatusLabel, getPlatformColor } from '../constants/gameConstants';
@@ -178,5 +177,14 @@ export function generateGenreDistributionData(games: Game[]): { genre: string; c
     .map(([genre, count]) => ({ genre, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
+}
+
+/**
+ * Calcola il communityRating medio dato un array di giochi che hanno sicuramente un rating valido
+ */
+export function calculateCommunityRating(games: Array<{ rating: number }>): number {
+  if (!games.length) return 0;
+  const avg = games.reduce((sum, g) => sum + g.rating, 0) / games.length;
+  return Math.round(avg * 10) / 10;
 }
 

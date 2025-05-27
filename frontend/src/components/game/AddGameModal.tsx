@@ -9,9 +9,9 @@ import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { getNextGameIdFromList } from '../../utils/gameIdGenerator';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import FormErrorInline from '../ui/atoms/FormErrorInline';
-import { searchSampleGames } from '../../data/gamesData';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
 import { createStatusChangeActivity, createPlaytimeActivity } from '../../utils/activityUtils';
+import { getGameDetails, searchGames } from '../../store/api/rawgApi';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?: string, platinumDate?: string }
@@ -85,39 +85,61 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   }, [isOpen, prefillGame]);
 
   // Gestisce la ricerca
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
+  const handleSearch = async (query: string) => {
+    if (query.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    
     setIsSearching(true);
-
-    // Simulazione di una ricerca API
-    setTimeout(() => {
-      const results = searchSampleGames.filter(
-        (game) => game.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setSearchResults(results);
+    
+    try {
+      const data = await searchGames(query);
+      // Mappa i risultati dell'API al formato che ti serve
+     const formattedResults = data.results
+      .filter((game: any) => game.metacritic && game.ratings_count > 5)
+      .map((game: any) => ({
+        id: game.id,
+        title: game.name,
+        coverImage: game.background_image || "/placeholder.svg",
+        releaseYear: game.released ? new Date(game.released).getFullYear() : null,
+        genres: game.genres?.map((g: any) => g.name) || [],
+        metacritic: game.metacritic,
+        rating: game.rating,
+        platforms: game.platforms?.map((p: any) => p.platform.name) || [],
+      }));
+      
+      setSearchResults(formattedResults);
+    } catch (error) {
+      console.error('Errore nella ricerca:', error);
+    } finally {
       setIsSearching(false);
-    }, 500);
+    }
   };
 
   // Gestisce la selezione di un gioco dalla ricerca
-  const handleGameSelect = (game: any) => {
+  const handleGameSelect = async (game: any) => {
+    try {
+    const fullData = await getGameDetails(game.id);
+    
     setGameData({
       ...gameData,
-      title: game.title,
-      coverImage: game.coverImage,
-      developer: game.developer,
-      publisher: game.publisher,
-      releaseYear: game.releaseYear,
-      genres: game.genres,
-      metacritic: game.metacritic || 0,
+      title: fullData.name,
+      coverImage: fullData.background_image || "/placeholder.svg?height=280&width=280",
+      developer: fullData.developers?.[0]?.name || "Sconosciuto",
+      publisher: fullData.publishers?.[0]?.name || "Sconosciuto",
+      releaseYear: fullData.released ? new Date(fullData.released).getFullYear() : new Date().getFullYear(),
+      genres: fullData.genres?.map((g: any) => g.name) || [],
+      metacritic: fullData.metacritic || 0,
     });
     setActiveTab("manual");
     setIsAutoFilled(true);
     setSearchQuery("");
     setSearchResults([]);
-  };
+    } catch (error) {
+    console.error("Errore durante il caricamento dei dettagli del gioco:", error);
+  }
+};
 
   // Gestisce l'aggiornamento dei dati del gioco
   const handleGameDataChange = (data: Partial<GameFormData>) => {
@@ -299,7 +321,13 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
           {/* Tab content */}
           {activeTab === "search" ? (
             <div className="mb-8">
-              <form onSubmit={handleSearch} className="mb-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSearch(searchQuery);
+                }}
+                className="mb-6"
+              >
                 <div className="relative">
                   <input
                     type="text"

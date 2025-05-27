@@ -1,9 +1,8 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '..';
-import { Game, GameStatus, GamePlatform,  } from '../../types/game';
+import { Game, GameStatus, GamePlatform, PublicCatalogGame,  } from '../../types/game';
 import { GAME_PLATFORMS } from '../../constants/gameConstants';
-import { Activity } from '../../types/activity';
-import { useAllActivities } from './activitiesHooks';
+import { useMemo } from 'react';
 
 export function useAllGames(): Game[] {
   return useSelector((state: RootState) => state.games.games);
@@ -64,21 +63,11 @@ export function useUsedPlatforms(): string[] {
   return Array.from(platforms).sort();
 }
 
-// Statistiche sulle recensioni utente (ex useGameReviewsStats)
-export function useGameReviewsStats(gameTitle: string) {
-  const allActivities = useAllActivities();
-  // Filtra tutte le attività di tipo 'rated' per questo gioco
-  const reviews = allActivities.filter(
-    (a: Activity) => a.type === 'rated' && a.gameTitle === gameTitle
+// Restituisce tutti i giochi con un certo titolo e rating valido
+export function useAllGamesTitleWithRating(title: string): Game[] {
+  const allGames = useAllGames();
+  return allGames.filter(
+    (g: Game) => g.title === title && typeof g.rating === 'number' && g.rating !== null && g.rating !== undefined
   );
-  if (reviews.length === 0) {
-    return { count: 0, avg: 0, ratings: [] as number[] };
-  }
-  // Estrai il numero di stelle dalle additionalInfo (es: "5 stelle")
-  const ratings = reviews.map(r => {
-    const match = r.additionalInfo?.match(/(\d+(?:[.,]\d+)?)\s*stelle?/i);
-    return match ? parseFloat(match[1].replace(',', '.')) : null;
-  }).filter((n): n is number => n !== null);
-  const avg = ratings.length > 0 ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : 0;
-  return { count: ratings.length, avg, ratings };
 }
+

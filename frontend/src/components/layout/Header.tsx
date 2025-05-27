@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import { loadFromLocal } from '../../utils/localStorage';
 import AppLogo from '../ui/atoms/AppLogo';
+import ProfileAvatar from '../ui/ProfileAvatar';
 
 const Header: React.FC = () => {
   const [userProfile, setUserProfile] = useState({
@@ -73,22 +74,7 @@ const Header: React.FC = () => {
                 <Settings className={`h-6 w-6 ${isActive ? 'text-accent-primary' : 'text-text-secondary hover:text-accent-primary'} cursor-pointer`} />
               )}
             </NavLink>
-            {/* Avatar */}
-            <NavLink to="/profile">
-              <div className="h-11 w-11 rounded-full bg-tertiary-bg border-2 border-accent-primary cursor-pointer flex items-center justify-center overflow-hidden">
-                {userProfile.avatar ? (
-                  <img 
-                    src={userProfile.avatar} 
-                    alt="Avatar" 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <span className="text-accent-primary font-bold text-lg">
-                    {userProfile.username.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-            </NavLink>
+            <ProfileAvatar />
           </div>
       </header>
       {/* Linea di separazione subito sotto l'header */}

@@ -3,7 +3,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { updateReviewPrivacy } from '../../../store/slice/gamesSlice';
 import { useGameByTitle } from '../../../store/hooks/gamesHooks';
-import { selectIsProfilePrivate, selectIsDiaryPrivate, selectForcePrivate } from '../../../store/slice/settingsSlice';
+import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../../store/slice/settingsSlice';
 
 interface PersonalReview {
   text: string;
@@ -24,22 +24,10 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
   const dispatch = useAppDispatch();
   const game = useGameByTitle(personalReview.title);
   const isPublic = game?.review?.isPublic ?? false;
-
-  // Usa Redux per la privacy
-  const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
   const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
-  const forcePrivate = useAppSelector(selectForcePrivate);
 
-  // Se forzato privato, aggiorna la privacy se necessario
-  if (game && game.review && isPublic && forcePrivate) {
-    dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: false }));
-  }
-
-  const handleTogglePrivacy = () => {
-    if (game && game.review && !forcePrivate) {
-      dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !isPublic }));
-    }
-  };
+  // Forza la privacy a privata se il diario è privato
+  const effectiveIsPublic = isDiaryPrivate ? false : isPublic;
 
   return (
     <div className="bg-secondary-bg p-6 rounded-xl">
@@ -48,13 +36,31 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
         {game?.review && (
           <button
             type="button"
-            className={`flex items-center gap-2 text-sm text-text-secondary ${forcePrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
-            title={forcePrivate ? 'Non puoi rendere pubblica la recensione: profilo o diario privato' : (isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
-            onClick={handleTogglePrivacy}
-            disabled={forcePrivate}
+            className={`flex items-center gap-2 text-sm ${
+              isDiaryPrivate 
+                ? 'opacity-60 cursor-not-allowed text-text-disabled' 
+                : effectiveIsPublic 
+                  ? 'text-accent-success hover:text-accent-success/80'
+                  : 'text-text-secondary hover:text-accent-primary'
+            } focus:outline-none`}
+            title={
+              isDiaryPrivate 
+                ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' 
+                : (effectiveIsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
+            }
+            onClick={() => {
+              if (game && game.review && !isDiaryPrivate) {
+                dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !effectiveIsPublic }));
+              }
+            }}
+            disabled={isDiaryPrivate}
           >
-            <EyeOff className="w-5 h-5" />
-            <span className="text-xs">Privata</span>
+            {effectiveIsPublic ? (
+              <Eye className="w-5 h-5" />
+            ) : (
+              <EyeOff className="w-5 h-5" />
+            )}
+            <span className="text-xs">{effectiveIsPublic ? 'Pubblica' : 'Privata'}</span>
           </button>
         )}
       </div>

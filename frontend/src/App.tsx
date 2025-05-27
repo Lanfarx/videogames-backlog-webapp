@@ -51,7 +51,7 @@ function App() {
       <Routes>
         {/* Route con layout standard */}
           <Route path="/library/:title" element={<GamePage />} />
-          <Route path="/catalog/:title" element={<GameInfoPage />} />
+          <Route path="/catalog/:id" element={<GameInfoPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/library" element={<LibraryPage />} />
