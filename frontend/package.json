@@ -13,9 +13,6 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.2",
     "axios": "^1.9.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "http-proxy-middleware": "^3.0.5",
     "lucide-react": "^0.488.0",
     "primeflex": "^4.0.0",
     "primereact": "^10.9.4",
@@ -32,8 +29,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "tailwind:init": "tailwindcss init -p",
-    "proxy": "node proxy-server.js"
+    "tailwind:init": "tailwindcss init -p"
   },
   "eslintConfig": {
     "extends": [
