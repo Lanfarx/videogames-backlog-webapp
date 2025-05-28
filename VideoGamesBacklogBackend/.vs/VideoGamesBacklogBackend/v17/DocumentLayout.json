@@ -1,0 +1,183 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\models\\auth\\registermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:models\\auth\\registermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\helpers\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:helpers\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\models\\auth\\loginmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:models\\auth\\loginmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "Services\\AuthService.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Services\\AuthService.cs",
+              "RelativeToolTip": "Services\\AuthService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADYAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T11:02:14.571Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\User.cs",
+              "RelativeDocumentMoniker": "Models\\User.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\User.cs",
+              "RelativeToolTip": "Models\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T09:49:10.625Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADsAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T09:44:27.767Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RegisterModel.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\auth\\RegisterModel.cs",
+              "RelativeDocumentMoniker": "Models\\auth\\RegisterModel.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\auth\\RegisterModel.cs",
+              "RelativeToolTip": "Models\\auth\\RegisterModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T10:41:22.287Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "LoginModel.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\auth\\LoginModel.cs",
+              "RelativeDocumentMoniker": "Models\\auth\\LoginModel.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\auth\\LoginModel.cs",
+              "RelativeToolTip": "Models\\auth\\LoginModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T10:41:36.481Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T09:39:47.001Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "IAuthService.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Interfaces\\IAuthService.cs",
+              "RelativeDocumentMoniker": "Interfaces\\IAuthService.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Interfaces\\IAuthService.cs",
+              "RelativeToolTip": "Interfaces\\IAuthService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T10:57:32.124Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "JwtSettings.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Helpers\\JwtSettings.cs",
+              "RelativeDocumentMoniker": "Helpers\\JwtSettings.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Helpers\\JwtSettings.cs",
+              "RelativeToolTip": "Helpers\\JwtSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T10:50:44.428Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "Controllers\\AuthController.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "Controllers\\AuthController.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwCoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-28T09:49:53.342Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-28T10:31:27.944Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
