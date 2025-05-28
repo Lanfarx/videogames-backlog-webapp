@@ -1,45 +1,34 @@
 import React from 'react';
-import { getAllGames, getGamesStats } from '../../utils/gamesData';
-import { getRecentActivities } from '../../utils/activitiesData';
-import { getStatusData } from '../../utils/statusData';
 import StatsCard from '../../components/ui/StatsCard';
 import StatusDistributionChart from '../../components/dashboard/StatusDistributionChart';
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
 import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock } from 'lucide-react';
+import { generatePlatformDistributionData, generateGenreDistributionData } from '../../utils/gamesUtils';
+import { useGamesStats } from '../../store/hooks/gamesHooks';
+import { useAllGames } from '../../store/hooks/gamesHooks';
+import { useRecentActivities } from '../../store/hooks/activitiesHooks';
+import { useStatusData } from '../../utils/statusUtils';
+import ActivityHistoryPopover from '../../components/game/ui/ActivityHistoryPopover';
+import { History } from 'lucide-react';
+
 
 const DashboardPage: React.FC = () => {
-    const stats = getGamesStats();
-    const allGames = getAllGames();
-    const recentActivities = getRecentActivities(5);
-    const statusData = getStatusData();
-    
-    // Calcolare le statistiche per piattaforme
-    const platformCounts = allGames.reduce((acc, game) => {
-        acc[game.platform] = (acc[game.platform] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+    const stats = useGamesStats();
+    const allGames = useAllGames();
+    const recentActivities = useRecentActivities(5);
+    const allRecentActivities = useRecentActivities(100);
+    const statusData = useStatusData();
+    const [showHistory, setShowHistory] = React.useState(false);
 
-    // Convertire in array e ordinare per conteggio
-    const platformData = Object.entries(platformCounts)
-        .map(([platform, count]) => ({ platform, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 4);
+    // Usa la funzione centralizzata per la distribuzione piattaforme
+    const platformData = generatePlatformDistributionData(allGames)
+      .slice(0, 4)
+      .map(item => ({ platform: item.label, count: item.value }));
 
-    // Calcolare le statistiche per generi
-    const genreCounts: Record<string, number> = {};
-    allGames.forEach(game => {
-        game.genres.forEach(genre => {
-            genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-        });
-    });
-
-    // Convertire in array e ordinare per conteggio
-    const genreData = Object.entries(genreCounts)
-        .map(([genre, count]) => ({ genre, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
+    // Usa la funzione centralizzata per la distribuzione generi
+    const genreData = generateGenreDistributionData(allGames);
 
     return (
         <div className="flex flex-col bg-secondaryBg min-h-screen p-6">
@@ -56,14 +45,14 @@ const DashboardPage: React.FC = () => {
                     icon={<LayoutGrid className="h-6 w-6 text-accent-primary" />} 
                 />
                 <StatsCard 
-                    label="Giochi Completati" 
-                    value={stats.completed.toString()} 
-                    icon={<BarChart3 className="h-6 w-6 text-accent-success" />} 
-                />
-                <StatsCard 
                     label="Ore Totali di Gioco" 
                     value={stats.totalHours.toString()} 
                     icon={<Clock className="h-6 w-6 text-accent-secondary" />} 
+                />
+                <StatsCard 
+                    label="Giochi Completati" 
+                    value={stats.completed.toString()} 
+                    icon={<BarChart3 className="h-6 w-6 text-accent-success" />} 
                 />
             </div>
 
@@ -88,11 +77,30 @@ const DashboardPage: React.FC = () => {
                     icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2" />}
                     title="Generi più giocati" 
                 />
-                <RecentActivitiesList 
-                    activities={recentActivities} 
-                    icon={<Clock className="h-5 w-5 text-accent-primary mr-2" />}
-                    title="Attività Recente" 
-                />
+                <div className="bg-white p-6 shadow-sm rounded-lg">
+                    <div className="flex items-baseline justify-between mb-6">
+                      <h2 className="text-xl font-bold text-text-primary font-['Montserrat'] flex items-center">
+                        <Clock className="h-5 w-5 text-accent-primary mr-2" />
+                        Attività Recente
+                      </h2>
+                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+                        <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
+                        <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
+                      </div>
+                    </div>
+                    {showHistory && (
+                      <ActivityHistoryPopover
+                        activities={allRecentActivities}
+                        onClose={() => setShowHistory(false)}
+                        gameTitle="Tutta la libreria"
+                      />
+                    )}
+                    <RecentActivitiesList 
+                      activities={recentActivities} 
+                      icon={undefined}
+                      title={''}
+                    />
+                </div>
             </div>
         </div>
     );

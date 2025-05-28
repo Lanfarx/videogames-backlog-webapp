@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import SettingsSection from "../SettingsSection";
+import { saveToLocal, loadFromLocal } from '../../../utils/localStorage';
 
 interface ConnectedAccountsSettingsProps {
   connectedAccounts: {
@@ -31,12 +32,22 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
   const handleConnectSteam = () => {
     if (steamIdInput.length === 17) {
       onConnectedAccountChange("steam", steamIdInput);
+      saveToLocal('steamId', steamIdInput); // Salva localmente
       setSteamIdInput("");
       setSteamIdError("");
     } else {
       setSteamIdError("Lo Steam ID deve essere di 17 cifre");
     }
   };
+
+  React.useEffect(() => {
+    // Carica steamId locale se presente
+    const saved = loadFromLocal('steamId');
+    if (saved && !connectedAccounts.steam) {
+      onConnectedAccountChange('steam', saved);
+    }
+  }, []);
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -56,7 +67,7 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
           <div className="border border-border-color rounded-lg overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-3">
-                <div className="bg-[#1b2838] p-1.5 rounded">
+                <div className="bg-platform-steam p-1.5 rounded">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -82,8 +93,8 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                     </div>
                   </div>
                   {connectedAccounts.steam ? (
-                    <p className="text-xs text-accent-success">
-                      Account collegato
+                    <p className="text-xs text-accent-success break-all mb-0">
+                      Steam ID collegato: <span className="font-mono">{connectedAccounts.steam}</span>
                     </p>
                   ) : (
                     <p className="text-xs text-text-secondary">

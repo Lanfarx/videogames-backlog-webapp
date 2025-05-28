@@ -12,7 +12,8 @@ const BreadcrumbNav = ({
   parentLabel = 'Libreria' 
 }: BreadcrumbNavProps) => {
   return (
-    <nav className="font-secondary text-sm">
+    <nav className="font-secondary text-sm flex items-center gap-1">
+      <span className="mx-2 text-text-secondary">/</span>
       <Link to={parentPath} className="text-accent-primary hover:underline">
         {parentLabel}
       </Link>

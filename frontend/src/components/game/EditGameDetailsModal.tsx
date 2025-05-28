@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Game } from '../../types/game';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGame } from '../../store/slice/gamesSlice';
 
 interface EditGameDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedGame: Partial<Game>) => void;
+  onSave?: (updatedGame: Partial<Game>) => void; // Opzionale per backward compatibility
   game: Game;
 }
 
@@ -14,13 +16,15 @@ const EditGameDetailsModal = ({
   onSave,
   game
 }: EditGameDetailsModalProps) => {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     title: game.title,
     developer: game.developer,
     publisher: game.publisher,
     releaseYear: game.releaseYear,
     genres: game.genres.join(', '), // Convertiamo l'array in una stringa per il form
-    coverImage: game.coverImage
+    coverImage: game.coverImage,
+    metacritic: game.metacritic 
   });
 
   if (!isOpen) return null;
@@ -32,17 +36,30 @@ const EditGameDetailsModal = ({
       [name]: value
     }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convertiamo la stringa delle genres di nuovo in un array
     const updatedGame: Partial<Game> = {
       ...formData,
-      genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean)
+      releaseYear: Number(formData.releaseYear),
+      genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean),
+      metacritic: Number(formData.metacritic) || 0
     };
     
-    onSave(updatedGame);
+    // Aggiorna il gioco attraverso Redux usando updateGame
+    const completeUpdatedGame = {
+      ...game,
+      ...updatedGame
+    };
+    
+    dispatch(updateGame(completeUpdatedGame));
+    
+    // Chiama la callback opzionale per backward compatibility
+    if (onSave) {
+      onSave(updatedGame);
+    }
+    
     onClose();
   };
 
@@ -77,20 +94,6 @@ const EditGameDetailsModal = ({
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="releaseYear" className="block text-text-primary font-secondary text-sm">
-                  Anno di rilascio
-                </label>
-                <input
-                  type="number"
-                  id="releaseYear"
-                  name="releaseYear"
-                  value={formData.releaseYear}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <label htmlFor="developer" className="block text-text-primary font-secondary text-sm">
                   Sviluppatore
                 </label>
@@ -113,6 +116,36 @@ const EditGameDetailsModal = ({
                   id="publisher"
                   name="publisher"
                   value={formData.publisher}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="metacritic" className="block text-text-primary font-secondary text-sm">
+                  Metacritic
+                </label>
+                <input
+                  type="number"
+                  id="metacritic"
+                  name="metacritic"
+                  value={formData.metacritic}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                  className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="releaseYear" className="block text-text-primary font-secondary text-sm">
+                  Anno di rilascio
+                </label>
+                <input
+                  type="number"
+                  id="releaseYear"
+                  name="releaseYear"
+                  value={formData.releaseYear}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />

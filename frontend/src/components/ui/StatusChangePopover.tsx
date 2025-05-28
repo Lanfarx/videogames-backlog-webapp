@@ -1,20 +1,25 @@
 import React, { useRef, useEffect } from 'react';
 import { GameStatus } from '../../types/game';
 import { STATUS_OPTIONS } from '../../constants/gameConstants';
+import { useAppDispatch } from '../../store/hooks';
+import { updateGameStatus } from '../../store/slice/gamesSlice';
 
 interface StatusChangePopoverProps {
+  gameId: number; // aggiunto id gioco
   currentStatus: GameStatus;
-  onStatusChange: (newStatus: GameStatus) => void;
+  onStatusChange?: (newStatus: GameStatus) => void;
   onCancel: () => void;
   hoursPlayed: number; // Aggiungiamo le ore di gioco come prop
 }
 
 const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({ 
+  gameId,
   currentStatus, 
   onStatusChange, 
   onCancel,
   hoursPlayed 
 }) => {
+  const dispatch = useAppDispatch();
   // Ref per il popover
   const popoverRef = useRef<HTMLDivElement>(null);
   
@@ -34,6 +39,12 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onCancel]);
+
+  const handleStatusChange = (status: GameStatus) => {
+    dispatch(updateGameStatus({ gameId, status }));
+    if (onStatusChange) onStatusChange(status);
+    onCancel();
+  };
 
   return (
     <div 
@@ -63,7 +74,7 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
             return (
               <button
                 key={status}
-                onClick={() => onStatusChange(status)}
+                onClick={() => handleStatusChange(status)}
                 className={`w-full text-left px-4 py-2 text-sm leading-5 flex items-center ${
                   status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
                 }`}

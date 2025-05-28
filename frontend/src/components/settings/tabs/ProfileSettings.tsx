@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Save, Camera } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
+import { loadFromLocal, saveToLocal } from '../../../utils/localStorage';
 
 interface ProfileData {
   username: string;
@@ -16,11 +17,10 @@ interface PasswordData {
   confirmPassword: string;
 }
 
-const ProfileSettings: React.FC = () => {
-  // Stato per i dati del profilo
+const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
   const [profile, setProfile] = useState<ProfileData>(() => {
-    const savedProfile = localStorage.getItem('profileData');
-    return savedProfile ? JSON.parse(savedProfile) : {
+    const savedProfile = loadFromLocal('profileData');
+    return savedProfile || {
       username: 'utente123',
       email: 'utente@esempio.com',
       fullName: 'Mario Rossi',
@@ -138,13 +138,11 @@ const ProfileSettings: React.FC = () => {
         alert('Password aggiornata con successo!');
       }, 1000);
     }
-  };
-
-  // Gestisce il salvataggio del profilo
+  };  // Gestisce il salvataggio del profilo
   const handleSave = () => {
     // Salva i dati del profilo nel localStorage
     console.log('Salvataggio profilo:', profile);
-    localStorage.setItem('profileData', JSON.stringify(profile));
+    saveToLocal('profileData', profile);
     
     // Aggiorna lo stato e mostra conferma
     setTimeout(() => {

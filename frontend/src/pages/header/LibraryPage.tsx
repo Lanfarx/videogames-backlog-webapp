@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SidebarFilter from '../../components/library/filter/SidebarFilter';
 import LibraryToolbar from '../../components/library/LibraryToolbar';
 import GridView from '../../components/library/GridView';
 import ListView from '../../components/library/ListView';
-import Pagination from '../../components/library/Pagination';
+import Pagination from '../../components/ui/Pagination';
 import AddGameModal from '../../components/game/AddGameModal';
 import EditGameInfoModal from '../../components/game/EditGameInfoModal';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
-import { filterGames, sortGames, calculateMaxValues } from '../../utils/gameUtils';
-import { getAllGames, updateGame, deleteGame } from '../../utils/gamesData';
+import { filterGames, sortGames, calculateMaxValues } from '../../utils/gamesUtils';
+import { useAllGames } from '../../store/hooks/gamesHooks';
+import { useAppDispatch } from '../../store/hooks';
+import { deleteGame, updateGameStatus } from '../../store/slice/gamesSlice';
 import type { GameFilters, SortOption, SortOrder, Game, GameStatus, GameSearchParams } from '../../types/game';
 
 const LibraryPage: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const allGamesFromStore = useAllGames();
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [currentPage, setCurrentPage] = useState(1);
     const [isAddGameModalOpen, setIsAddGameModalOpen] = useState(false);
-    const [allGames, setAllGames] = useState<Game[]>([]);
     const [filteredGames, setFilteredGames] = useState<Game[]>([]);
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,15 +35,15 @@ const LibraryPage: React.FC = () => {
     });
     const [sortBy, setSortBy] = useState<SortOption>("title");
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-    const gamesPerPage = 8;
+    const [gamesPerPage, setGamesPerPage] = useState(12); // default
+    const [searchQuery, setSearchQuery] = useState("");
+    const [columns, setColumns] = useState(4); // default XL
+    const gridContainerRef = useRef<HTMLDivElement>(null);
 
-    // Carica i giochi all'inizio
+    // Carica i giochi all'inizio e aggiorna quando cambiano i dati da Redux
     useEffect(() => {
-        const games = getAllGames();
-        setAllGames(games);
-
         // Calcola i massimali iniziali
-        const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(games);
+        const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(allGamesFromStore);
 
         // Imposta i filtri iniziali con i massimali calcolati
         setFilters({
@@ -53,8 +56,9 @@ const LibraryPage: React.FC = () => {
             purchaseDate: "",
         });
 
-        setFilteredGames(games);
-    }, []);
+        setFilteredGames(allGamesFromStore);
+        setSearchQuery("");
+    }, [allGamesFromStore]);
 
     // Applica i filtri quando cambiano
     useEffect(() => {
@@ -66,19 +70,46 @@ const LibraryPage: React.FC = () => {
                 hoursRange: filters.hoursRange || [0, 0],
                 metacriticRange: filters.metacriticRange || [0, 0],
             },
+            sortBy,
+            sortOrder,
+            query: searchQuery.trim() !== "" ? searchQuery : undefined,
         };
 
-        // Passa i parametri mappati a filterGames
-        const filtered = filterGames(allGames, searchParams);
+        const filtered = filterGames(allGamesFromStore, searchParams);
         const sorted = sortGames(filtered, sortBy, sortOrder);
         setFilteredGames(sorted);
         setCurrentPage(1);
-    }, [filters, sortBy, sortOrder, allGames]);
+    }, [allGamesFromStore, filters, sortBy, sortOrder, searchQuery]);
+
+    useEffect(() => {
+        function calculateColumns() {
+            const width = window.innerWidth;
+            if (width >= 1536) return 5;
+            if (width >= 1280) return 4;
+            if (width >= 1024) return 3;
+            if (width >= 640) return 2;
+            return 1;
+        }
+        function handleResize() {
+            setColumns(calculateColumns());
+        }
+        setColumns(calculateColumns());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (viewMode === "grid") {
+            const rows = 3;
+            setGamesPerPage(columns * rows);
+        } else {
+            setGamesPerPage(14);
+        }
+    }, [viewMode, columns]);
 
     const indexOfLastGame = currentPage * gamesPerPage;
     const indexOfFirstGame = indexOfLastGame - gamesPerPage;
     const currentGames = filteredGames.slice(indexOfFirstGame, indexOfLastGame);
-
     const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
 
     const handleSortChange = (newSortBy: SortOption) => {
@@ -96,14 +127,9 @@ const LibraryPage: React.FC = () => {
         setIsEditModalOpen(true);
     };
 
-    // Gestisce il salvataggio delle modifiche
+    // Gestisce il salvataggio delle modifiche (ora usa Redux automaticamente)
     const handleSaveEdit = (updatedGame: Partial<Game>) => {
-        if (!updatedGame.id) return; // Ensure the game has an ID
-        const updatedGames = allGames.map(game => 
-            game.id === updatedGame.id ? { ...game, ...updatedGame } : game
-        );
-        setAllGames(updatedGames);
-        updateGame({ ...allGames.find(game => game.id === updatedGame.id), ...updatedGame } as Game); // Ensure a full Game is passed
+        // I modal componenti ora gestiscono Redux internamente
         setIsEditModalOpen(false);
         setSelectedGame(null);
     };
@@ -114,37 +140,18 @@ const LibraryPage: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    // Gestisce l'eliminazione effettiva del gioco
+    // Gestisce l'eliminazione effettiva del gioco usando Redux
     const handleDeleteGame = () => {
         if (gameToDelete) {
-            const newGames = allGames.filter(game => game.id !== parseInt(gameToDelete));
-            setAllGames(newGames);
-            deleteGame(parseInt(gameToDelete)); // Elimina dal database o da localStorage
+            dispatch(deleteGame(parseInt(gameToDelete)));
             setIsDeleteModalOpen(false);
             setGameToDelete(null);
         }
     };
 
-    // Gestisce il cambio di stato di un gioco
+    // Gestisce il cambio di stato di un gioco usando Redux
     const handleStatusChange = (gameId: string, newStatus: GameStatus) => {
-        const gameToUpdate = allGames.find(game => game.id === parseInt(gameId));
-        if (gameToUpdate) {
-            const now = new Date().toISOString();
-            const updatedGame = { 
-                ...gameToUpdate, 
-                status: newStatus,
-                // Aggiorna le date in base al nuovo stato
-                ...(newStatus === 'completed' && { completionDate: now }),
-                ...(newStatus === 'platinum' && { platinumDate: now, completionDate: gameToUpdate.completionDate || now })
-            };
-            
-            const updatedGames = allGames.map(game => 
-                game.id === parseInt(gameId) ? updatedGame : game
-            );
-            
-            setAllGames(updatedGames);
-            updateGame(updatedGame);
-        }
+        dispatch(updateGameStatus({ gameId: parseInt(gameId), status: newStatus }));
     };
 
     return (
@@ -154,7 +161,7 @@ const LibraryPage: React.FC = () => {
                     filters={filters}
                     setFilters={setFilters}
                     gamesCount={filteredGames.length}
-                    games={allGames}
+                    games={allGamesFromStore}
                 />
 
                 <div className="flex-1">
@@ -165,9 +172,10 @@ const LibraryPage: React.FC = () => {
                         sortBy={sortBy}
                         sortOrder={sortOrder}
                         onSortChange={handleSortChange}
+                        onSearchChange={setSearchQuery}
                     />
 
-                    <div className="p-6">
+                    <div className="p-6" ref={gridContainerRef}>
                         {filteredGames.length > 0 ? (
                             <>
                                 {viewMode === "grid" ? (
@@ -176,6 +184,7 @@ const LibraryPage: React.FC = () => {
                                         onEdit={handleEditGame}
                                         onDelete={handleDeleteConfirmation}
                                         onStatusChange={handleStatusChange}
+                                        columns={columns}
                                     />
                                 ) : (
                                     <ListView 
@@ -216,10 +225,7 @@ const LibraryPage: React.FC = () => {
             <AddGameModal 
                 isOpen={isAddGameModalOpen} 
                 onClose={() => setIsAddGameModalOpen(false)} 
-                onSave={(newGame: Game) => {
-                    setAllGames([...allGames, newGame]);
-                    setIsAddGameModalOpen(false);
-                }}
+                // Rimosso onSave perché ora il modal gestisce Redux internamente
             />
 
             {selectedGame && (
@@ -239,10 +245,12 @@ const LibraryPage: React.FC = () => {
                 onClose={() => {
                     setIsDeleteModalOpen(false);
                     setGameToDelete(null);
-                } }
+                }}
                 onConfirm={handleDeleteGame}
                 title="Elimina gioco"
-                message="Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata." confirmButtonText={''}            />
+                message="Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata."
+                confirmButtonText="Elimina"
+            />
         </div>
     );
 };

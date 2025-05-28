@@ -7,11 +7,12 @@ interface GridViewProps {
   onEdit?: (game: Game) => void;
   onDelete?: (gameId: string) => void;
   onStatusChange?: (gameId: string, status: GameStatus) => void;
+  columns?: number;
 }
 
-const GridView: React.FC<GridViewProps> = ({ games, onEdit, onDelete, onStatusChange }) => {
+const GridView: React.FC<GridViewProps> = ({ games, onEdit, onDelete, onStatusChange, columns = 4 }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className={`grid gap-6 grid-cols-1 ${columns >= 2 ? `sm:grid-cols-2` : ''} ${columns >= 3 ? `lg:grid-cols-3` : ''} ${columns >= 4 ? `xl:grid-cols-4` : ''} ${columns === 5 ? `2xl:grid-cols-5` : ''}`}>
       {games.map((game) => (
         <GameCard 
           key={game.id} 

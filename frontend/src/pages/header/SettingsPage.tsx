@@ -5,6 +5,7 @@ import ProfileSettings from "../../components/settings/tabs/ProfileSettings";
 import PrivacySettings from "../../components/settings/tabs/PrivacySettings";
 import ConnectedAccountsSettings from "../../components/settings/tabs/ConnectedAccountsSettings";
 import GeneralSettings from "../../components/settings/tabs/GeneralSettings";
+import { saveToLocal, loadFromLocal } from '../../utils/localStorage';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("generali");
@@ -19,13 +20,13 @@ const SettingsPage: React.FC = () => {
 
   // Stati e handler per privacy e account collegati
   const [isProfilePublic, setIsProfilePublic] = useState(() => {
-    const savedValue = localStorage.getItem('isProfilePublic');
-    return savedValue ? JSON.parse(savedValue) : false;
+    const savedValue = loadFromLocal('isProfilePublic');
+    return savedValue ? savedValue : false;
   });
   
   const [privacyOptions, setPrivacyOptions] = useState(() => {
-    const savedOptions = localStorage.getItem('privacyOptions');
-    return savedOptions ? JSON.parse(savedOptions) : {
+    const savedOptions = loadFromLocal('privacyOptions');
+    return savedOptions ? savedOptions : {
       showStats: true,
       showDiary: true,
       allowFriendRequests: true,
@@ -33,22 +34,22 @@ const SettingsPage: React.FC = () => {
   });
   
   const [notificationOptions, setNotificationOptions] = useState(() => {
-    const savedOptions = localStorage.getItem('notificationOptions');
-    return savedOptions ? JSON.parse(savedOptions) : {
+    const savedOptions = loadFromLocal('notificationOptions');
+    return savedOptions ? savedOptions : {
       emailNotifications: true
     };
   });
   
   const [connectedAccounts, setConnectedAccounts] = useState(() => {
-    const savedAccounts = localStorage.getItem('connectedAccounts');
-    return savedAccounts ? JSON.parse(savedAccounts) : {
+    const savedAccounts = loadFromLocal('connectedAccounts');
+    return savedAccounts ? savedAccounts : {
       steam: "",
     };
   });
 
   const handleProfileVisibilityChange = (isPublic: boolean) => {
     setIsProfilePublic(isPublic);
-    localStorage.setItem('isProfilePublic', JSON.stringify(isPublic));
+    saveToLocal('isProfilePublic', isPublic);
   };
 
   const handlePrivacyOptionChange = (option: string, value: boolean) => {
@@ -57,7 +58,7 @@ const SettingsPage: React.FC = () => {
         ...prev,
         [option]: value,
       };
-      localStorage.setItem('privacyOptions', JSON.stringify(newOptions));
+      saveToLocal('privacyOptions', newOptions);
       return newOptions;
     });
   };
@@ -68,7 +69,7 @@ const SettingsPage: React.FC = () => {
         ...prev,
         [option]: value,
       };
-      localStorage.setItem('notificationOptions', JSON.stringify(newOptions));
+      saveToLocal('notificationOptions', newOptions);
       return newOptions;
     });
   };
@@ -82,7 +83,7 @@ const SettingsPage: React.FC = () => {
         ...prev,
         [platform]: value,
       };
-      localStorage.setItem('connectedAccounts', JSON.stringify(newAccounts));
+      saveToLocal('connectedAccounts', newAccounts);
       return newAccounts;
     });
   };
@@ -93,7 +94,7 @@ const SettingsPage: React.FC = () => {
         ...prev,
         [platform]: "",
       };
-      localStorage.setItem('connectedAccounts', JSON.stringify(newAccounts));
+      saveToLocal('connectedAccounts', newAccounts);
       return newAccounts;
     });
   };
@@ -121,9 +122,7 @@ const SettingsPage: React.FC = () => {
         </h1>
         <hr className="border-t border-border-color my-4" />
 
-        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
-
-        {activeTab === "generali" && (
+        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />        {activeTab === "generali" && (
           <GeneralSettings
             language={language}
             dateFormat={dateFormat}
@@ -134,7 +133,8 @@ const SettingsPage: React.FC = () => {
             dateFormatOptions={dateFormatOptions}
             onLanguageChange={setLanguage}
             onDateFormatChange={setDateFormat}
-            setTheme={setTheme} 
+            setTheme={setTheme}
+            setAccentColor={setAccentColor}
             />
         )}
 

@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Activity } from '../../types/activity';
-import { getActivityIcon, formatRelativeTime, getActivityText } from '../../utils/activitiesData';
+import { getActivityIcon, getActivityText } from '../../utils/activityUtils';
+import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface RecentActivitiesListProps {
     activities: Activity[];
@@ -10,11 +11,13 @@ interface RecentActivitiesListProps {
 
 const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities, icon, title }) => {
     return (
-        <div className="bg-white p-6 shadow-sm rounded-sm">
-            <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
-                {icon}
-                {title}
-            </h2>
+        <>
+            {(icon || title) && (
+                <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
+                    {icon}
+                    {title}
+                </h2>
+            )}
             <div className="pl-2">
                 <div className="space-y-5">
                     {activities.map((activity) => (
@@ -40,7 +43,7 @@ const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities,
                     ))}
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

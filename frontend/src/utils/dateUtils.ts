@@ -1,5 +1,3 @@
-import { DateComponentProps } from '../types/ui';
-
 /**
  * Intervalli di tempo per il calcolo relativo
  */
@@ -201,15 +199,3 @@ export function formatHours(hours: number): string {
   return `${hours} ${hours === 1 ? 'ora' : 'ore'}`;
 }
 
-/**
- * Componente di formattazione data per React
- */
-export function formatDateComponent(props: DateComponentProps): string {
-  const { date, format, relative } = props;
-  
-  if (relative) {
-    return formatRelativeTime(date);
-  }
-  
-  return formatDateWithOptions(date, { format: format });
-}

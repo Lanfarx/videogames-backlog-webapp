@@ -19,7 +19,8 @@ const GenreTagList: React.FC<GenreTagListProps> = ({
   }
 
   // Limitiamo il numero di generi da mostrare
-  const displayedGenres = genres.slice(0, maxDisplay);
+  // Supporta sia string[] che {id, name}[]
+  const displayedGenres = genres.slice(0, maxDisplay).map((g: any) => typeof g === 'string' ? g : g.name);
   
   return (
     <div className="flex flex-wrap gap-2">

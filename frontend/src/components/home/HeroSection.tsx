@@ -1,6 +1,6 @@
 import React from 'react';
 import { Gamepad2, Clock, Trophy } from 'lucide-react';
-import { getGamesStats } from '../../utils/gamesData';
+import { useGamesStats } from '../../store/hooks/gamesHooks';
 import StatsCard from '../ui/StatsCard';
 
 interface HeroSectionProps {
@@ -8,7 +8,7 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ username }) => {
-  const stats = getGamesStats();
+  const stats = useGamesStats();
   
   return (
     <section className="bg-gradient-to-b from-secondaryBg to-primaryBg">
