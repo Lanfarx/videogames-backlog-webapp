@@ -3,7 +3,7 @@ import { Gamepad2, Clock, Trophy, CalendarRange, Lock, Eye, ArrowRight } from 'l
 import { useGamesStats } from '../../store/hooks/index';
 import { useAllActivities } from '../../store/hooks/activitiesHooks';
 import StatsCard from '../../components/ui/StatsCard';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DiaryFilters from '../../components/diary/DiaryFilters';
 import DiaryMonthGroup from '../../components/diary/DiaryMonthGroup';
 import { Activity } from '../../types/activity';
@@ -42,6 +42,7 @@ const ProfilePage = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [showFullDiary, setShowFullDiary] = useState(false);
+  const navigate = useNavigate();
   
   // Recupera le impostazioni di privacy e carica i dati delle attività
   useEffect(() => {
@@ -116,10 +117,25 @@ const ProfilePage = () => {
   // Ottieni mesi unici per l'anno selezionato utilizzando la funzione di utilità
   const months = getUniqueMonthsForYear(activities, selectedYear);
 
+  // Funzione di logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.dispatchEvent(new Event('storage'));
+    navigate('/login');
+  };
+
   return (
       <div className="container mx-auto px-4 md:px-8 py-10">
         {/* Sezione Profilo */}
-        <div className="bg-primary-bg rounded-lg shadow-sm p-6 mb-10">
+        <div className="bg-primary-bg rounded-lg shadow-sm p-6 mb-10 relative">
+          {/* Pulsante Logout in alto a destra */}
+          <button
+            onClick={handleLogout}
+            className="absolute top-6 right-6 bg-accent-danger hover:bg-accent-primary/90 focus:ring-2 focus:ring-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-8 py-2 rounded-lg h-12 min-w-[140px] z-10"
+            style={{ minWidth: 0, height: 'auto', fontSize: '1rem' }}
+          >
+            Logout
+          </button>
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             {/* Immagine profilo */}
             <div className="relative">

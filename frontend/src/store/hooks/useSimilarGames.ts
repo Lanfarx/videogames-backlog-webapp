@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getSimilarGames } from '../api/rawgApi';
+import { getSimilarGames } from '../services/rawgService';
 import type { PublicCatalogGame } from '../../types/game';
 
 export const useSimilarGames = (

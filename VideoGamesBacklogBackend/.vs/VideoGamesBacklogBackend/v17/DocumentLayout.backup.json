@@ -62,8 +62,7 @@
               "RelativeToolTip": "Services\\AuthService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADYAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-28T11:02:14.571Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-28T11:02:14.571Z"
             },
             {
               "$type": "Document",
@@ -99,8 +98,7 @@
               "RelativeToolTip": "Models\\auth\\RegisterModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-28T10:41:22.287Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-28T10:41:22.287Z"
             },
             {
               "$type": "Document",
@@ -120,9 +118,9 @@
               "Title": "AppDbContext.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Data\\AppDbContext.cs",
               "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
-              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Data\\AppDbContext.cs*",
-              "RelativeToolTip": "Data\\AppDbContext.cs*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAFAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "Data\\AppDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-28T09:39:47.001Z",
               "EditorCaption": ""

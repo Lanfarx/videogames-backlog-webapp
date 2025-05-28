@@ -7,7 +7,7 @@ import CatalogSortControls from "../../components/catalog/CatalogSortControls";
 import CatalogSearchBar from "../../components/catalog/CatalogSearchBar";
 import { useAllCommunityRatings } from "../../store/hooks/communityHooks";
 import Pagination from "../../components/ui/Pagination";
-import { getPaginatedGames } from '../../store/api/rawgApi';
+import { getPaginatedGames } from '../../store/services/rawgService';
 import { useNavigate } from "react-router-dom";
 
 const SORT_OPTIONS = [

@@ -9,7 +9,7 @@ import PersonalReviewCard from "../../components/catalog/gameinfo/PersonalReview
 import GamePageLayout from "../../components/game/layout/GamePageLayout";
 import GenreTagList from "../../components/ui/GenreTagList";
 import { BookOpen } from "lucide-react";
-import { getGameDetails } from '../../store/api/rawgApi';
+import { getGameDetails } from '../../store/services/rawgService';
 import type { PublicCatalogGame } from '../../types/game';
 import CommunityStats from "../../components/catalog/gameinfo/CommunityStats";
 

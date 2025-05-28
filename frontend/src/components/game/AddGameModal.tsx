@@ -11,7 +11,7 @@ import StatusBadge from '../ui/atoms/StatusBadge';
 import FormErrorInline from '../ui/atoms/FormErrorInline';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
 import { createStatusChangeActivity, createPlaytimeActivity } from '../../utils/activityUtils';
-import { getGameDetails, searchGames } from '../../store/api/rawgApi';
+import { getGameDetails, searchGames } from '../../store/services/rawgService';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "rating"> & { id?: number, completionDate?: string, platinumDate?: string }

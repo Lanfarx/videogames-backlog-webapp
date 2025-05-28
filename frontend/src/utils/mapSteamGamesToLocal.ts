@@ -2,7 +2,7 @@ import { Game } from '../types/game';
 
 // Funzione che richiama l'API Steam e mappa i giochi nel formato Game locale
 export async function mapSteamGamesToLocal(steamId: string): Promise<Game[]> {
-  const { fetchSteamGames } = await import('../store/api/steamApi');
+  const { fetchSteamGames } = await import('../store/services/steamService');
   const steamGames = await fetchSteamGames(steamId);
   return steamGames.map((steamGame: any) => {
     return {
