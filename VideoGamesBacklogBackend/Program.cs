@@ -8,6 +8,7 @@ using System.Text;
 using VideoGamesBacklogBackend.Data;
 using VideoGamesBacklogBackend.Helpers;
 using VideoGamesBacklogBackend.Interfaces;
+using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,8 +66,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>() 
+builder.Services.AddIdentity<User, IdentityRole<int>>()
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<IdentityOptions>(options =>
@@ -104,7 +105,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var app = builder.Build();
 

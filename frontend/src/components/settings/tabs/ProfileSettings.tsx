@@ -1,76 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { User, Save, Camera } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
-import { loadFromLocal, saveToLocal } from '../../../utils/localStorage';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../../store';
+import { setUserProfile } from '../../../store/slice/userSlice';
+import { updateProfile } from '../../../store/services/profileService';
+import { changePassword } from '../../../store/services/passwordService';
+import type { UserProfile } from '../../../types/profile';
+import { getToken } from '../../../utils/getToken';
+import Input from '../../auth/Input';
+import PasswordStrengthBar from '../../auth/PasswordStrengthBar';
 
-interface ProfileData {
-  username: string;
-  email: string;
-  fullName: string;
-  bio: string;
-  avatar: string | null;
-}
+const ProfileSettings: React.FC = () => {
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state: RootState) => state.user.profile);
 
-interface PasswordData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+  // Stato locale per il form, inizializzato da Redux
+  const [profile, setProfile] = useState<UserProfile | null>(userProfile);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
-const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
-  const [profile, setProfile] = useState<ProfileData>(() => {
-    const savedProfile = loadFromLocal('profileData');
-    return savedProfile || {
-      username: 'utente123',
-      email: 'utente@esempio.com',
-      fullName: 'Mario Rossi',
-      bio: 'Appassionato di videogiochi, in particolare RPG e strategici.',
-      avatar: null
-    };
-  });
-  
   // Stato per la modifica della password
-  const [passwordData, setPasswordData] = useState<PasswordData>({
+  const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
-  // Stato per tracciare le modifiche
-  const [isEdited, setIsEdited] = useState(false);
-  
-  // Stato per tracciare gli errori della password
   const [passwordErrors, setPasswordErrors] = useState<{
     currentPassword?: string;
     newPassword?: string;
     confirmPassword?: string;
     general?: string;
   }>({});
-  
-  // Gestisce i cambiamenti nei campi del form
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setProfile(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setIsEdited(true);
-  };
-  
 
+  // Sincronizza il form con lo stato Redux quando cambia il profilo
+  useEffect(() => {
+    setProfile(userProfile);
+  }, [userProfile]);
+
+  // Gestisce i cambiamenti nei campi del form
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (!profile) return;
+    const updatedProfile = { ...profile, [name]: value };
+    setProfile(updatedProfile);
+    const token = getToken()
+    if (token) {
+      try {
+        const updated = await updateProfile(updatedProfile, token);
+        dispatch(setUserProfile(updated));
+      } catch (err) {
+        alert('Errore durante il salvataggio del profilo.');
+      }
+    }
+  };
 
   // Gestisce il caricamento dell'avatar
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && profile) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const target = event.target;
         if (target && target.result) {
-          setProfile(prev => ({
-            ...prev,
-            avatar: target.result as string
-          }));
-          setIsEdited(true);
+          const updatedProfile = { ...profile, avatar: target.result as string };
+          setProfile(updatedProfile);
+          const token = getToken()
+          if (token) {
+            try {
+              const updated = await updateProfile(updatedProfile, token);
+              dispatch(setUserProfile(updated));
+            } catch (err) {
+              alert('Errore durante il salvataggio del profilo.');
+            }
+          }
         }
       };
       reader.readAsDataURL(e.target.files[0]);
@@ -124,48 +126,36 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
   };
   
   // Gestisce il salvataggio della password
-  const handleSavePassword = () => {
+  const handleSavePassword = async () => {
     if (validatePassword()) {
-      console.log('Salvataggio password:', passwordData);
-      
-      // Simulazione di un salvataggio riuscito
-      setTimeout(() => {
+      const token = getToken()
+      if (!token) {
+        setPasswordErrors({ general: 'Sessione scaduta. Effettua di nuovo il login.' });
+        return;
+      }
+      try {
+        await changePassword(passwordData.currentPassword, passwordData.newPassword, token);
         setPasswordData({
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
+        setPasswordErrors({});
         alert('Password aggiornata con successo!');
-      }, 1000);
+      } catch (err: any) {
+        setPasswordErrors({ general: err?.response?.data || 'Errore durante il cambio password.' });
+      }
     }
-  };  // Gestisce il salvataggio del profilo
-  const handleSave = () => {
-    // Salva i dati del profilo nel localStorage
-    console.log('Salvataggio profilo:', profile);
-    saveToLocal('profileData', profile);
-    
-    // Aggiorna lo stato e mostra conferma
-    setTimeout(() => {
-      setIsEdited(false);
-      // Trigger un evento di storage per aggiornare altre componenti
-      window.dispatchEvent(new Event('storage'));
-      alert('Profilo aggiornato con successo!');
-    }, 1000);
   };
+
+  if (!profile) {
+    return <div>Caricamento profilo...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-montserrat font-semibold text-xl text-text-primary">Il tuo profilo</h2>
-        {isEdited && (
-          <button 
-            onClick={handleSave}
-            className="flex items-center px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Salva modifiche
-          </button>
-        )}
       </div>
       
       {/* Sezione Avatar */}
@@ -194,7 +184,7 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
           </label>
         </div>
         <div>
-          <h3 className="font-montserrat font-medium text-lg text-text-primary">{profile.fullName || profile.username}</h3>
+          <h3 className="font-montserrat font-medium text-lg text-text-primary">{profile.fullName || profile.userName}</h3>
           <p className="text-text-secondary text-sm">Carica un'immagine per personalizzare il tuo profilo</p>
         </div>
       </div>
@@ -203,17 +193,19 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
       <SettingsSection title="Informazioni personali">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label htmlFor="username" className="block text-sm font-medium text-text-secondary">
+            <label htmlFor="UserName" className="block text-sm font-medium text-text-secondary">
               Nome utente
             </label>
             <input
               type="text"
-              id="username"
-              name="username"
-              value={profile.username}
+              id="UserName"
+              name="UserName"
+              value={profile.userName}
+              readOnly
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
+             <p className="text-xs text-text-secondary">Il nome utente non può essere modificato</p>
           </div>
           
           <div className="space-y-2">
@@ -239,7 +231,7 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
               type="text"
               id="fullName"
               name="fullName"
-              value={profile.fullName}
+              value={profile.fullName || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
@@ -252,7 +244,7 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
             <textarea
               id="bio"
               name="bio"
-              value={profile.bio}
+              value={profile.bio || ''}
               onChange={handleChange}
               rows={4}
               className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
@@ -267,81 +259,87 @@ const ProfileSettings: React.FC = () => {  // Stato per i dati del profilo
       
       {/* Sezione Cambio Password */}
       <SettingsSection title="Cambio Password">
-        <div className="grid grid-cols-1 gap-4">
+        <form className="grid grid-cols-1 gap-4" onSubmit={e => { e.preventDefault(); handleSavePassword(); }} autoComplete="off">
           <div className="space-y-2">
-            <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary">
-              Password attuale
-            </label>
-            <input
-              type="password"
+            <Input
+              type={showPassword ? 'text' : 'password'}
               id="currentPassword"
               name="currentPassword"
+              label="Password attuale"
               value={passwordData.currentPassword}
               onChange={handlePasswordChange}
-              className={`w-full px-3 py-2 border ${passwordErrors.currentPassword ? 'border-accent-danger' : 'border-border-color'} rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
+              autoComplete="current-password"
+              iconRight={
+                <span onClick={() => setShowPassword((v) => !v)} title="Mostra/Nascondi password" style={{ cursor: 'pointer' }}>
+                  {showPassword ? (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  ) : (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
+                  )}
+                </span>
+              }
             />
             {passwordErrors.currentPassword && (
-              <p className="text-xs text-accent-danger mt-1">{passwordErrors.currentPassword}</p>
+              <p className="text-xs text-accent-danger">{passwordErrors.currentPassword}</p>
             )}
           </div>
-          
           <div className="space-y-2">
-            <label htmlFor="newPassword" className="block text-sm font-medium text-text-secondary">
-              Nuova password
-            </label>
-            <input
-              type="password"
+            <Input
+              type={showNewPassword ? 'text' : 'password'}
               id="newPassword"
               name="newPassword"
+              label="Nuova password"
               value={passwordData.newPassword}
               onChange={handlePasswordChange}
-              className={`w-full px-3 py-2 border ${passwordErrors.newPassword ? 'border-accent-danger' : 'border-border-color'} rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
+              autoComplete="new-password"
+              iconRight={
+                <span onClick={() => setShowNewPassword((v) => !v)} title="Mostra/Nascondi password" style={{ cursor: 'pointer' }}>
+                  {showNewPassword ? (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  ) : (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
+                  )}
+                </span>
+              }
             />
             {passwordErrors.newPassword && (
-              <p className="text-xs text-accent-danger mt-1">{passwordErrors.newPassword}</p>
+              <p className="text-xs text-accent-danger">{passwordErrors.newPassword}</p>
             )}
+            <PasswordStrengthBar strength={
+              passwordData.newPassword.length === 0 ? '' :
+              passwordData.newPassword.length < 8 ? 'debole' :
+              /[0-9]/.test(passwordData.newPassword) && /[A-Z]/.test(passwordData.newPassword) && passwordData.newPassword.length > 10 ? 'forte' :
+              /[A-Z]/.test(passwordData.newPassword) ? 'media' :
+              ''
+            } />
           </div>
-          
           <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary">
-              Conferma nuova password
-            </label>
-            <input
+            <Input
               type="password"
               id="confirmPassword"
               name="confirmPassword"
+              label="Conferma nuova password"
               value={passwordData.confirmPassword}
               onChange={handlePasswordChange}
-              className={`w-full px-3 py-2 border ${passwordErrors.confirmPassword ? 'border-accent-danger' : 'border-border-color'} rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
+              autoComplete="new-password"
             />
             {passwordErrors.confirmPassword && (
-              <p className="text-xs text-accent-danger mt-1">{passwordErrors.confirmPassword}</p>
+              <p className="text-xs text-accent-danger">{passwordErrors.confirmPassword}</p>
             )}
           </div>
-          
           <div className="pt-2">
             <button 
-              onClick={handleSavePassword}
+              type="submit"
               className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
             >
               Aggiorna password
             </button>
+            {passwordErrors.general && (
+              <p className="text-xs text-accent-danger mt-2">{passwordErrors.general}</p>
+            )}
           </div>
-        </div>
+        </form>
       </SettingsSection>
-      
-      {/* Pulsante Salva (mobile) */}
-      {isEdited && (
-        <div className="md:hidden mt-6">
-          <button 
-            onClick={handleSave}
-            className="w-full flex items-center justify-center px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Salva modifiche
-          </button>
-        </div>
-      )}
     </div>
   );
 };

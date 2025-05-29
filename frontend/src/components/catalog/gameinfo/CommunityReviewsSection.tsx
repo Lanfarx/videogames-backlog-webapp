@@ -99,10 +99,10 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-accent-primary text-white rounded-full flex items-center justify-center font-medium">
-                      {review.username.charAt(0).toUpperCase()}
+                      {review.UserName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="font-medium text-text-primary">{review.username}</div>
+                      <div className="font-medium text-text-primary">{review.UserName}</div>
                       <div className="flex items-center gap-2 text-sm text-text-secondary">
                         <Calendar className="h-3 w-3" />
                         {new Date(review.date).toLocaleDateString('it-IT')}
@@ -114,7 +114,7 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
                   <RatingStars rating={review.rating} showValue={false} size="sm" readOnly />
                 </div>
 
-                <h4 className="font-medium text-text-primary mb-2">{review.username}</h4>
+                <h4 className="font-medium text-text-primary mb-2">{review.UserName}</h4>
                 <p className="text-text-secondary mb-3 leading-relaxed">{review.text}</p>            {/* Detailed Ratings */}
                 <div className="flex flex-wrap gap-4 text-sm text-text-secondary mb-3">
                   <span>Gameplay: <strong className="text-text-primary">{review.gameplay}</strong></span>

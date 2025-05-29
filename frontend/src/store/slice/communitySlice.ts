@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface CommunityReview {
   id: number;
-  username: string;
+  UserName: string;
   avatar?: string;
   rating: number;
   text: string;
@@ -100,7 +100,7 @@ const communitySlice = createSlice({
       state.reviews = [
         {
           id: 1,
-          username: "GamerPro92",
+          UserName: "GamerPro92",
           rating: 5,
           text: "Breath of the Wild ha ridefinito completamente quello che ci si aspetta da un gioco Zelda. La libertà di esplorazione è senza precedenti e ogni angolo del mondo nasconde qualche sorpresa.",
           date: "2024-01-15",
@@ -113,7 +113,7 @@ const communitySlice = createSlice({
         },
         {
           id: 2,
-          username: "RetroFan88",
+          UserName: "RetroFan88",
           rating: 4,
           text: "Il gioco è fantastico ma alcuni aspetti della storia potrebbero essere migliorati. L'esplorazione rimane il punto forte.",
           date: "2024-01-10",

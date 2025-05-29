@@ -1,24 +1,31 @@
 import React from 'react';
-import { useTheme } from '../../contexts/theme-context';
+import { useSelector, useDispatch } from 'react-redux';
 import { getCssVarColor } from '../../utils/getCssVarColor';
 import { AccentColor } from '../../types/theme';
+import { setUserProfile } from '../../store/slice/userSlice';
 
 interface ColorSelectorProps {
-  // Queste props sono opzionali poiché possiamo usare anche il context
   accentColor?: string;
   onChange?: (color: AccentColor) => void;
 }
 
 const ColorSelector: React.FC<ColorSelectorProps> = ({ accentColor: propAccentColor, onChange }) => {
-  const { accentColor: contextAccentColor, setAccentColor } = useTheme();
-  
-  // Usa il valore dalla prop se fornito, altrimenti usa il context
-  const currentAccentColor = propAccentColor || contextAccentColor;
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state: any) => state.user.profile);
+  const currentAccentColor = propAccentColor || userProfile?.appPreferences?.accentColor || 'arancione';
 
   const handleColorChange = (color: AccentColor) => {
-    // Chiama sia il callback delle props che la funzione del context
     if (onChange) onChange(color);
-    setAccentColor(color);
+    // Aggiorna lo stato globale Redux
+    if (userProfile) {
+      dispatch(setUserProfile({
+        ...userProfile,
+        appPreferences: {
+          ...userProfile.appPreferences,
+          accentColor: color
+        }
+      }));
+    }
   };
 
   const colorOptions = [

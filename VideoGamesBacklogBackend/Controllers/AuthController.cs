@@ -38,6 +38,6 @@ public class AuthController : ControllerBase
     {
         var user = await _authService.GetCurrentUserAsync(User);
         if (user == null) return NotFound();
-        return Ok(new { userId = user.Id, email = user.Email, userName = user.UserName });
+        return Ok(new { userId = user.Id, email = user.Email, username = user.UserName });
     }
 }

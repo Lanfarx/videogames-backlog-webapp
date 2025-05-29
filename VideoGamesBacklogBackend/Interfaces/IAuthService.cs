@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Models.auth;
 
 namespace VideoGamesBacklogBackend.Interfaces
@@ -8,6 +9,6 @@ namespace VideoGamesBacklogBackend.Interfaces
     {
         Task<IdentityResult> RegisterAsync(RegisterModel model);
         Task<string?> LoginAsync(LoginModel model);
-        Task<IdentityUser?> GetCurrentUserAsync(ClaimsPrincipal user);
+        Task<User?> GetCurrentUserAsync(ClaimsPrincipal user);
     }
 }

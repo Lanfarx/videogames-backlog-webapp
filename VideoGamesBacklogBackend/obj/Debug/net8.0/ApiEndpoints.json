@@ -42,24 +42,45 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "VideoGamesBacklogBackend.Controllers.WeatherForecastController",
-    "Method": "Get",
-    "RelativePath": "WeatherForecast",
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.ProfileController",
+    "Method": "GetProfile",
+    "RelativePath": "api/Profile",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": [
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.ProfileController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/Profile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[VideoGamesBacklogBackend.WeatherForecast, VideoGamesBacklogBackend, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
+        "Name": "updated",
+        "Type": "VideoGamesBacklogBackend.Models.User",
+        "IsRequired": true
       }
     ],
-    "EndpointName": "GetWeatherForecast"
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.ProfileController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/Profile/ChangePassword",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "VideoGamesBacklogBackend.Controllers.ProfileController\u002BChangePasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

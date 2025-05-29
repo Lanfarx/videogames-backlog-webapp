@@ -2,7 +2,6 @@ import { useSelector } from 'react-redux';
 import { RootState } from '..';
 import { Game, GameStatus, GamePlatform, PublicCatalogGame,  } from '../../types/game';
 import { GAME_PLATFORMS } from '../../constants/gameConstants';
-import { useMemo } from 'react';
 
 export function useAllGames(): Game[] {
   return useSelector((state: RootState) => state.games.games);

@@ -1,29 +1,43 @@
-// Pagina di Login per GameBacklog
 import React, { useState } from 'react';
 import { Input, Checkbox, Divider } from '../../components/auth';
-import AuthLayout from '../../components/auth/AuthLayout';
 import { login } from '../../store/services/authService';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setUserProfile } from '../../store/slice/userSlice';
+import { getProfile } from '../../store/services/profileService';
+import { getToken } from '../../utils/getToken';
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      const res = await login({ email, password });
-      // Salva il token JWT (esempio: localStorage)
-      localStorage.setItem('token', res.data.token);
+      const res = await login({ identifier, password });
+      if (remember) {
+        localStorage.setItem('token', res.data.token);
+        sessionStorage.removeItem('token');
+      } else {
+        sessionStorage.setItem('token', res.data.token);
+        localStorage.removeItem('token');
+      }
+      // Aggiorna subito lo stato globale utente
+      const token = getToken();
+      if (token) {
+        const profile = await getProfile(token);
+        dispatch(setUserProfile(profile));
+      }
       navigate('/');
     } catch (err: any) {
       if (err.response && err.response.status === 401) {
-        setError('Email o password non corretti.');
+        setError('Credenziali non corrette.');
       } else {
         setError('Errore durante il login.');
       }
@@ -31,7 +45,6 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout>
       <>
         <h2 className="font-montserrat font-semibold text-2xl text-gray-900 mb-1">Accedi al tuo account</h2>
         <p className="text-base text-gray-500 font-roboto mb-8">Bentornato nella tua libreria</p>
@@ -42,13 +55,13 @@ const LoginPage: React.FC = () => {
         )}
         <form className="space-y-0" onSubmit={handleSubmit}>
           <Input
-            label="Email"
-            type="email"
-            placeholder="inserisci@email.com"
-            autoComplete="email"
+            label="Email o Username"
+            type="text"
+            placeholder="Email o Username"
+            autoComplete="Username"
             required
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            value={identifier}
+            onChange={e => setIdentifier(e.target.value)}
           />
           <Input
             label="Password"
@@ -81,7 +94,7 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              disabled={!email || !password}
+              disabled={!identifier || !password}
             >
               Accedi
             </button>
@@ -93,8 +106,7 @@ const LoginPage: React.FC = () => {
           <a href="/register" className="text-accent font-medium hover:underline">Registrati qui</a>
         </div>
       </>
-    </AuthLayout>
   );
-};
-
+}
 export default LoginPage;
+

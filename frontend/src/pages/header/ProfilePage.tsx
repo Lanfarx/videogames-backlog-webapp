@@ -12,87 +12,54 @@ import {
   calculateActivityStats, 
   getUniqueMonthsForYear,
 } from '../../utils/activityUtils';
-import { loadFromLocal } from '../../utils/localStorage';
-
-// Simulazione dei dati del profilo (in produzione verrebbero dal backend)
-const profileData = {
-  username: 'utente123',
-  fullName: 'Mario Rossi',
-  bio: 'Appassionato di videogiochi, soprattutto RPG e giochi d\'avventura. Collezionista di edizioni speciali e memorabilia.',
-  avatar: null,
-  isPrivate: false,
-  memberSince: 'Gennaio 2023',
-  tags: ['RPG', 'Avventura', 'PlayStation', 'Steam']
-};
+import { useDispatch, useSelector } from 'react-redux';
+import { getProfile as getProfileFull } from '../../store/services/profileService';
+import { setUserProfile } from '../../store/slice/userSlice';
+import { getToken } from '../../utils/getToken';
 
 const ProfilePage = () => {
   const stats = useGamesStats();
   const activitiesData = useAllActivities();
-  const [isProfilePrivate, setIsProfilePrivate] = useState(profileData.isPrivate);
-  
-  // Stato per le opzioni di privacy
+  const userProfile = useSelector((state: any) => state.user.profile);
+
+  // Stati per privacy e diario
+  const [isProfilePrivate, setIsProfilePrivate] = useState(userProfile?.privacySettings?.isPrivate ?? false);
   const [privacySettings, setPrivacySettings] = useState({
-    showStats: true,
-    showDiary: true
+    showStats: userProfile?.privacySettings?.showStats ?? true,
+    showDiary: userProfile?.privacySettings?.showDiary ?? true
   });
-  
+
   // Stati per il diario
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [showFullDiary, setShowFullDiary] = useState(false);
   const navigate = useNavigate();
-  
-  // Recupera le impostazioni di privacy e carica i dati delle attività
+  const dispatch = useDispatch();
+
+  // Carica le attività (solo quelle, non più privacy/profile dallo storage)
   useEffect(() => {
-    const checkPrivacySettings = () => {
-      // Controlla l'impostazione di visibilità del profilo
-      const savedPrivacySetting = loadFromLocal('isProfilePublic');
-      if (savedPrivacySetting !== null) {
-        setIsProfilePrivate(!savedPrivacySetting);
-      }
-      
-      // Carica le opzioni di privacy
-      const savedOptions = loadFromLocal('privacyOptions');
-      if (savedOptions) {
-        setPrivacySettings({
-          showStats: savedOptions.showStats !== undefined ? savedOptions.showStats : true,
-          showDiary: savedOptions.showDiary !== undefined ? savedOptions.showDiary : true
+    setActivities(activitiesData);
+  }, [activitiesData]);
+
+  // Carica il profilo utente all'avvio della pagina SOLO se non già presente
+  useEffect(() => {
+    if (!userProfile) {
+      const token = getToken();
+      if (token) {
+        getProfileFull(token).then(profile => {
+          dispatch(setUserProfile(profile));
+          setIsProfilePrivate(profile.privacySettings?.isPrivate ?? false);
+          setPrivacySettings({
+            showStats: profile.privacySettings?.showStats ?? true,
+            showDiary: profile.privacySettings?.showDiary ?? true
+          });
         });
       }
-      
-      // Aggiorna le tag in base alle impostazioni dell'utente
-      const savedProfileData = loadFromLocal('profileData');
-      if (savedProfileData) {
-        if (savedProfileData.bio) {
-          profileData.bio = savedProfileData.bio;
-        }
-        if (savedProfileData.fullName) {
-          profileData.fullName = savedProfileData.fullName;
-        }
-        if (savedProfileData.username) {
-          profileData.username = savedProfileData.username;
-        }
-        if (savedProfileData.avatar) {
-          profileData.avatar = savedProfileData.avatar;
-        }
-      }
-    };
-    
-    // Carica le attività
-    setActivities(activitiesData);
-    
-    checkPrivacySettings();
-    
-    // Aggiorna lo stato quando le impostazioni cambiano
-    window.addEventListener('storage', checkPrivacySettings);
-    
-    return () => {
-      window.removeEventListener('storage', checkPrivacySettings);
-    };
-  }, [activitiesData]);
-  
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userProfile, dispatch]);
+
   // Gestisce il cambio dei filtri del diario
   const handleFilterChange = (filter: string) => {
     if (filter === 'all') {
@@ -140,15 +107,15 @@ const ProfilePage = () => {
             {/* Immagine profilo */}
             <div className="relative">
               <div className="w-32 h-32 rounded-full border-4 border-accent-primary bg-tertiary-bg flex items-center justify-center overflow-hidden">
-                {profileData.avatar ? (
+                {userProfile.avatar ? (
                   <img 
-                    src={profileData.avatar} 
+                    src={userProfile.avatar} 
                     alt="Avatar" 
                     className="w-full h-full object-cover" 
                   />
                 ) : (
                   <span className="text-accent-primary font-bold text-4xl">
-                    {profileData.username.charAt(0).toUpperCase()}
+                    {userProfile.UserName ? userProfile.UserName.charAt(0).toUpperCase() : 'U'}
                   </span>
                 )}
               </div>
@@ -163,7 +130,7 @@ const ProfilePage = () => {
             <div className="flex-1">
               <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
                 <h1 className="text-3xl font-bold text-text-primary font-primary">
-                  {profileData.fullName || profileData.username}
+                  {userProfile.fullName || userProfile.UserName}
                 </h1>
                 {isProfilePrivate && (
                   <div className="flex items-center text-accent-primary text-sm">
@@ -173,17 +140,17 @@ const ProfilePage = () => {
                 )}
               </div>
               <div className="text-text-secondary mb-4 text-center md:text-left">
-                <p className="text-sm">Membro dal {profileData.memberSince}</p>
+                <p className="text-sm">Membro dal {userProfile.memberSince ? new Date(userProfile.memberSince).toLocaleDateString('it-IT') : ''}</p>
               </div>
               
               <div className="bg-secondary-bg p-4 rounded-lg mb-4">
                 <p className="text-text-secondary font-secondary">
-                  {profileData.bio}
+                  {userProfile.bio}
                 </p>
               </div>
               
               <div className="flex flex-wrap gap-2">
-                {profileData.tags.map((tag, index) => (
+                {(Array.isArray(userProfile.tags) ? userProfile.tags : typeof userProfile.tags === 'string' && userProfile.tags.length > 0 ? userProfile.tags.split(',') : []).map((tag: string, index: number) => (
                   <span key={index} className="px-3 py-1 bg-tertiary-bg text-text-secondary text-sm rounded-full">
                     {tag}
                   </span>

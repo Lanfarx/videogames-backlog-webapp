@@ -3,7 +3,6 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { updateReviewPrivacy } from '../../../store/slice/gamesSlice';
 import { useGameByTitle } from '../../../store/hooks/gamesHooks';
-import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../../store/slice/settingsSlice';
 
 interface PersonalReview {
   text: string;
@@ -24,8 +23,8 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
   const dispatch = useAppDispatch();
   const game = useGameByTitle(personalReview.title);
   const isPublic = game?.review?.isPublic ?? false;
-  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
-
+  const userProfile = useAppSelector(state => state.user.profile);
+  const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
   // Forza la privacy a privata se il diario è privato
   const effectiveIsPublic = isDiaryPrivate ? false : isPublic;
 

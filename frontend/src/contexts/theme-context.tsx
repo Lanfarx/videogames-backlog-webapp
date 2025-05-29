@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { loadFromLocal, saveToLocal } from '../utils/localStorage';
 import { getCssVarColor } from '../utils/getCssVarColor';
 import { Theme, AccentColor } from '../types/theme';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 interface ThemeContextType {
   theme: Theme
@@ -16,55 +17,35 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // Prendi le preferenze dal profilo globale
+  const userProfile = useSelector((state: RootState) => state.user.profile);
   // Imposta "light" come valore predefinito invece di "system"
-  const [theme, setThemeState] = useState<Theme>("light")
-  const [accentColor, setAccentColorState] = useState<AccentColor>("arancione")
-  const [mounted, setMounted] = useState(false)
+  const [theme, setThemeState] = useState<Theme>(userProfile?.appPreferences?.theme || "light");
+  const [accentColor, setAccentColorState] = useState<AccentColor>(userProfile?.appPreferences?.accentColor || "arancione");
+  const [mounted, setMounted] = useState(false);
 
-  // Carica le preferenze salvate
+  // Aggiorna il tema quando cambia il profilo globale
   useEffect(() => {
-    const savedTheme = loadFromLocal("theme") as Theme;
-    const savedAccentColor = loadFromLocal("accentColor") as AccentColor;
-
-    if (savedTheme) {
-      setThemeState(savedTheme)
-    } else {
-      // Se non ci sono preferenze salvate, imposta esplicitamente "light"
-      saveToLocal("theme", "light")
+    if (userProfile?.appPreferences?.theme) {
+      setThemeState(userProfile.appPreferences.theme);
     }
-
-    if (savedAccentColor) {
-      setAccentColorState(savedAccentColor)
+    if (userProfile?.appPreferences?.accentColor) {
+      setAccentColorState(userProfile.appPreferences.accentColor);
     }
-
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, [userProfile]);
 
   // Applica il tema
   useEffect(() => {
     if (!mounted) return;
-
     const root = window.document.documentElement;
-
-    // Rimuovi tutte le classi di tema precedenti
     root.classList.remove('light', 'dark');
-
-    // Rimuovi tutte le classi di colore accent precedenti
     root.classList.remove('accent-arancione', 'accent-blu', 'accent-verde', 'accent-rosso', 'accent-viola');
-
-    // Aggiungi la classe per il colore accent
     root.classList.add(`accent-${accentColor}`)
     root.classList.add(theme)
-
-    // Aggiorna la variabile CSS --accent-primary in base al colore selezionato
-    // Usa sempre la variabile CSS di base, non valori hardcoded
     const accentVar = `--accent-${accentColor}`;
     const accentValue = getCssVarColor(accentVar, '251, 126, 0').replace('rgb(', '').replace(')', '');
     document.documentElement.style.setProperty('--accent-primary', accentValue);
-
-    // Salva le preferenze
-    saveToLocal('theme', theme);
-    saveToLocal('accentColor', accentColor);
   }, [theme, accentColor, mounted])
 
   const setTheme = (newTheme: Theme) => {

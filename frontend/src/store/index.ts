@@ -1,15 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
+import userReducer from './slice/userSlice';
 import gamesReducer from './slice/gamesSlice';
 import activitiesReducer from './slice/activitiesSlice';
 import communityReducer from './slice/communitySlice';
-import settingsReducer from './slice/settingsSlice';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
+    user: userReducer,
     games: gamesReducer,
     activities: activitiesReducer,
     community: communityReducer,
-    settings: settingsReducer,
   },
 });
 

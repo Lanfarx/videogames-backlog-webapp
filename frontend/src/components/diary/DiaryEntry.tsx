@@ -9,7 +9,6 @@ import { isFirstActivityInMonth, getActivityIcon } from '../../utils/activityUti
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateReviewPrivacy } from '../../store/slice/gamesSlice';
 import { Link } from 'react-router-dom';
-import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../store/slice/settingsSlice';
 
 interface DiaryEntryProps {
   activity: Activity;
@@ -21,7 +20,8 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
   const [expandedReview, setExpandedReview] = useState(false);
   const game = useGameById(activity.gameId);
   const dispatch = useAppDispatch();
-  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
+  const userProfile = useAppSelector(state => state.user.profile);
+  const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
   
   // Non procedere se non c'è il gioco
   if (!game) return null;

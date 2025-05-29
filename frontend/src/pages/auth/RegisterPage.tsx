@@ -2,25 +2,26 @@
 import React, { useState } from 'react';
 import { Input, Checkbox, PasswordStrengthBar, Divider } from '../../components/auth';
 import AuthLayout from '../../components/auth/AuthLayout';
-import { GAME_PLATFORMS } from '../../constants/gameConstants';
+import { GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../../store/services/authService';
 
 const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [username, setUsername] = useState('');
+  const [UserName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [platform, setPlatform] = useState('');
+  const [genre, setGenre] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   // Dummy validazione e forza password
-  const usernameValid = username.length >= 3 && /^[a-zA-Z0-9]+$/.test(username);
+  const UserNameValid = UserName.length >= 3 && /^[a-zA-Z0-9]+$/.test(UserName);
   let passwordStrength = '';
   if (password.length === 0) {
     passwordStrength = '';
@@ -50,7 +51,8 @@ const RegisterPage: React.FC = () => {
       return;
     }
     try {
-      await register({ email, password });
+      const tags = [platform, genre].filter(Boolean).join(',');
+      await register({ email, password, UserName, tags });
       navigate('/login');
     } catch (err: any) {
       if (err.response && err.response.status === 409) {
@@ -62,7 +64,7 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <AuthLayout>
+      <>
         <h2 className="font-montserrat font-semibold text-2xl text-gray-900 mb-1">Crea il tuo account</h2>
         <p className="text-base text-gray-500 font-roboto mb-8">Inizia a organizzare la tua libreria di giochi</p>
         {error && (
@@ -75,11 +77,11 @@ const RegisterPage: React.FC = () => {
             label="Nome utente"
             type="text"
             placeholder="Scegli un nome utente"
-            value={username}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-            valid={usernameValid}
-            iconRight={username.length > 0 ? (
-              usernameValid ? (
+            value={UserName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserName(e.target.value)}
+            valid={UserNameValid}
+            iconRight={UserName.length > 0 ? (
+              UserNameValid ? (
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#9FC089"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>
               ) : (
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#FB7E00"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -147,6 +149,16 @@ const RegisterPage: React.FC = () => {
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
+            <select
+              className="w-full h-12 px-4 rounded-lg border border-gray-300 text-base font-normal focus:border-accent focus:shadow-[0_0_0_2px_rgba(251,126,0,0.2)]"
+              value={genre}
+              onChange={e => setGenre(e.target.value)}
+            >
+              <option value="">Genere preferito</option>
+              {GENRES.map((g: string) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
           </div>
           {/* Termini e Privacy */}
           <div className="mb-8">
@@ -161,7 +173,7 @@ const RegisterPage: React.FC = () => {
             <button
               type="submit"
               className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              disabled={!acceptTerms || !usernameValid || !email || !password || !confirmPassword || !passwordMatch}
+              disabled={!acceptTerms || !UserNameValid || !email || !password || !confirmPassword || !passwordMatch}
             >
               Crea un account
             </button>
@@ -172,7 +184,7 @@ const RegisterPage: React.FC = () => {
           Hai già un account?{' '}
           <a href="/login" className="text-accent font-medium hover:underline">Accedi qui</a>
         </div>
-    </AuthLayout>
+      </>
   );
 };
 

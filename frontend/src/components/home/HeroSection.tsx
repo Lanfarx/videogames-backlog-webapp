@@ -4,17 +4,17 @@ import { useGamesStats } from '../../store/hooks/gamesHooks';
 import StatsCard from '../ui/StatsCard';
 
 interface HeroSectionProps {
-  username: string;
+  UserName: string;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ username }) => {
+const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
   const stats = useGamesStats();
   
   return (
     <section className="bg-gradient-to-b from-secondaryBg to-primaryBg">
       <div className="container mx-auto px-8 py-14">
         <h1 className="text-4xl font-bold text-text-primary font-primary mb-3">
-          Bentornato, {username}
+          Bentornato, {UserName}
         </h1>
         <p className="text-base text-text-secondary font-secondary mb-10">
           Ecco cosa sta succedendo nella tua libreria

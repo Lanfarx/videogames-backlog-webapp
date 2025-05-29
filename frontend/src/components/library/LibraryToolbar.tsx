@@ -3,10 +3,11 @@ import { Grid, List, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { SORT_OPTIONS } from '../../constants/gameConstants'; // Importa le opzioni di ordinamento
 import AddGameButton from '../ui/AddGameButton';
 import { SortOption } from '../../types/game';
-import { loadFromLocal } from '../../utils/localStorage';
 import { useAppDispatch } from '../../store/hooks';
 import { addGame } from '../../store/slice/gamesSlice';
 import { mapSteamGamesToLocal } from '../../utils/mapSteamGamesToLocal';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 interface LibraryToolbarProps {
   viewMode: "grid" | "list";
@@ -33,11 +34,12 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
 }) => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [search, setSearch] = useState("");
-  const [steamId, setSteamId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+  // Usa lo stato globale per steamId
+  const steamId = useSelector((state: RootState) => state.user.profile?.steamId || null);
 
   // Chiudi il dropdown quando si clicca fuori
   useEffect(() => {
@@ -55,10 +57,6 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
 
   // Ottieni l'etichetta dell'ordinamento corrente
   const currentSortLabel = SORT_OPTIONS.find((option) => option.value === sortBy)?.label || "Titolo";
-
-  useEffect(() => {
-    setSteamId(loadFromLocal('steamId'));
-  }, []);
 
   return (
     <div className="h-16 bg-primary-bg border-b border-border-color px-6 flex items-center justify-between relative">

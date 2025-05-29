@@ -1,37 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Settings } from 'lucide-react';
-import { loadFromLocal } from '../../utils/localStorage';
 import AppLogo from '../ui/atoms/AppLogo';
 import ProfileAvatar from '../ui/ProfileAvatar';
 
 const Header: React.FC = () => {
-  const [userProfile, setUserProfile] = useState({
-    username: 'utente123',
-    avatar: null
-  });
-
-  // Carica i dati del profilo salvati
-  useEffect(() => {
-    const loadProfileData = () => {
-      const savedProfileData = loadFromLocal('profileData');
-      if (savedProfileData) {
-        setUserProfile({
-          username: savedProfileData.username || 'utente123',
-          avatar: savedProfileData.avatar || null
-        });
-      }
-    };
-
-    loadProfileData();
-    
-    // Aggiorna quando cambia lo storage
-    window.addEventListener('storage', loadProfileData);
-    
-    return () => {
-      window.removeEventListener('storage', loadProfileData);
-    };
-  }, []);
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'I miei giochi', path: '/library' },
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Catalogo', path: '/catalog' },
+  ];
 
   return (
     <>
@@ -44,12 +23,7 @@ const Header: React.FC = () => {
           {/* Menu di navigazione - centrato orizzontalmente */}
           <nav className="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2">
             <ul className="flex space-x-10">
-                {[
-                  { name: 'Home', path: '/' },
-                  { name: 'I miei giochi', path: '/library' },
-                  { name: 'Dashboard', path: '/dashboard' },
-                  { name: 'Catalogo', path: '/catalog' },
-                ].map((item) => (
+                {navItems.map((item) => (
                   <li key={item.name}>
                     <NavLink
                       to={item.path}

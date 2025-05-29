@@ -8,8 +8,6 @@ import { useGameById } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { createRatingActivity } from '../../utils/activityUtils';
-import { loadFromLocal } from '../../utils/localStorage';
-import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../store/slice/settingsSlice';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -37,8 +35,9 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   // Stato per la privacy della recensione - sincronizzato con le impostazioni profilo
   const [isPublic, setIsPublic] = useState(currentGame.review?.isPublic ?? false);
   // Usa Redux per la privacy
-  const isProfilePrivate = useAppSelector(selectIsProfilePrivate);
-  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
+  const userProfile = useAppSelector(state => state.user.profile);
+  const isProfilePrivate = userProfile?.privacySettings?.isPrivate ?? false;
+  const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
 
   const dispatch = useAppDispatch();
   const { addActivity } = useAllActivitiesActions();
