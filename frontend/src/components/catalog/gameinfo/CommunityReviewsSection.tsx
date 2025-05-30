@@ -5,17 +5,17 @@ import { CommunityReview } from '../../../store/slice/communitySlice';
 import { useCommunityReviewsByGame } from '../../../store/hooks/communityHooks';
 
 const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle }) => {
-  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'Rating'>('newest');
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const reviews = useCommunityReviewsByGame(gameTitle) || [];
-  const totalReviews = reviews.length; // conteggio TOTALE recensioni
-  const validReviews = reviews.filter(r => typeof r.rating === 'number' && !isNaN(r.rating));
-  const averageRating = validReviews.length > 0 ? validReviews.reduce((sum, r) => sum + r.rating, 0) / validReviews.length : 0;
+  const Reviews = useCommunityReviewsByGame(gameTitle) || [];
+  const totalReviews = Reviews.length; // conteggio TOTALE recensioni
+  const validReviews = Reviews.filter(r => typeof r.Rating === 'number' && !isNaN(r.Rating));
+  const averageRating = validReviews.length > 0 ? validReviews.reduce((sum, r) => sum + r.Rating, 0) / validReviews.length : 0;
 
   const sortedReviews = [...validReviews].sort((a, b) => {
     switch (sortBy) {
-      case 'rating':
-        return b.rating - a.rating;
+      case 'Rating':
+        return b.Rating - a.Rating;
       case 'newest':
       default:
         return new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -26,14 +26,14 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    validReviews.forEach(review => {
-      const rounded = Math.round(review.rating);
+    validReviews.forEach(Review => {
+      const rounded = Math.round(Review.Rating);
       distribution[rounded as keyof typeof distribution]++;
     });
     return distribution;
   };
 
-  const ratingDistribution = getRatingDistribution();
+  const RatingDistribution = getRatingDistribution();
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl p-6">
@@ -49,7 +49,7 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
             className="bg-secondary-bg border border-border-color rounded-lg px-3 py-1 text-sm text-text-primary focus:outline-none focus:border-accent-primary"
           >
             <option value="newest">Più recenti</option>
-            <option value="rating">Valutazione</option>
+            <option value="Rating">Valutazione</option>
           </select>
         </div>
       </div>
@@ -65,13 +65,13 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-text-primary mb-1">{averageRating.toFixed(1)}</div>
-                <RatingStars rating={averageRating} showValue={false} size="md" readOnly />
+                <RatingStars Rating={averageRating} showValue={false} size="md" readOnly />
                 <div className="text-sm text-text-secondary mt-1">{totalReviews} recensioni</div>
               </div>
               
               <div className="flex-1">
                 {[5, 4, 3, 2, 1].map(stars => {
-                  const count = ratingDistribution[stars as keyof typeof ratingDistribution];
+                  const count = RatingDistribution[stars as keyof typeof RatingDistribution];
                   const percentage = validReviews.length > 0 ? (count / validReviews.length) * 100 : 0;
                   
                   return (
@@ -94,43 +94,43 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
 
           {/* Reviews List */}
           <div className="space-y-4">
-            {displayedReviews.map(review => (
-              <div key={review.id} className="border border-border-color rounded-lg p-4">
+            {displayedReviews.map(Review => (
+              <div key={Review.id} className="border border-border-color rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-accent-primary text-white rounded-full flex items-center justify-center font-medium">
-                      {review.UserName.charAt(0).toUpperCase()}
+                      {Review.UserName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="font-medium text-text-primary">{review.UserName}</div>
+                      <div className="font-medium text-text-primary">{Review.UserName}</div>
                       <div className="flex items-center gap-2 text-sm text-text-secondary">
                         <Calendar className="h-3 w-3" />
-                        {new Date(review.date).toLocaleDateString('it-IT')}
+                        {new Date(Review.date).toLocaleDateString('it-IT')}
                         <span>•</span>
-                        <span>{review.platform}</span>
+                        <span>{Review.Platform}</span>
                       </div>
                     </div>
                   </div>
-                  <RatingStars rating={review.rating} showValue={false} size="sm" readOnly />
+                  <RatingStars Rating={Review.Rating} showValue={false} size="sm" readOnly />
                 </div>
 
-                <h4 className="font-medium text-text-primary mb-2">{review.UserName}</h4>
-                <p className="text-text-secondary mb-3 leading-relaxed">{review.text}</p>            {/* Detailed Ratings */}
+                <h4 className="font-medium text-text-primary mb-2">{Review.UserName}</h4>
+                <p className="text-text-secondary mb-3 leading-relaxed">{Review.text}</p>            {/* Detailed Ratings */}
                 <div className="flex flex-wrap gap-4 text-sm text-text-secondary mb-3">
-                  <span>Gameplay: <strong className="text-text-primary">{review.gameplay}</strong></span>
-                  <span>Grafica: <strong className="text-text-primary">{review.graphics}</strong></span>
-                  <span>Storia: <strong className="text-text-primary">{review.story}</strong></span>
-                  <span>Audio: <strong className="text-text-primary">{review.sound}</strong></span>
+                  <span>Gameplay: <strong className="text-text-primary">{Review.Gameplay}</strong></span>
+                  <span>Grafica: <strong className="text-text-primary">{Review.Graphics}</strong></span>
+                  <span>Storia: <strong className="text-text-primary">{Review.Story}</strong></span>
+                  <span>Audio: <strong className="text-text-primary">{Review.Sound}</strong></span>
                 </div>
               </div>
             ))}
           </div>      {/* Show More Button */}
-          {reviews.length > 3 && (
+          {Reviews.length > 3 && (
             <button 
               onClick={() => setShowAllReviews(!showAllReviews)}
               className="w-full mt-4 py-2 border border-border-color rounded-lg text-accent-primary hover:bg-secondary-bg transition-colors"
             >
-              {showAllReviews ? 'Mostra meno' : `Mostra tutte le ${reviews.length} recensioni`}
+              {showAllReviews ? 'Mostra meno' : `Mostra tutte le ${Reviews.length} recensioni`}
             </button>
           )}
         </>

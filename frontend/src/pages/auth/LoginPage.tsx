@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
       }
       navigate('/');
     } catch (err: any) {
-      if (err.response && err.response.status === 401) {
+      if (err.response && err.response.Status === 401) {
         setError('Credenziali non corrette.');
       } else {
         setError('Errore durante il login.');

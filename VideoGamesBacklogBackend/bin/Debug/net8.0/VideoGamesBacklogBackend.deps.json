@@ -128,7 +128,7 @@
       "Microsoft.AspNetCore.Http.Abstractions/2.3.0": {
         "dependencies": {
           "Microsoft.AspNetCore.Http.Features": "2.3.0",
-          "System.Text.Encodings.Web": "9.0.5"
+          "System.text.Encodings.Web": "9.0.5"
         }
       },
       "Microsoft.AspNetCore.Http.Extensions/2.3.0": {
@@ -167,7 +167,7 @@
       "Microsoft.AspNetCore.WebUtilities/2.3.0": {
         "dependencies": {
           "Microsoft.Net.Http.Headers": "2.3.0",
-          "System.Text.Encodings.Web": "9.0.5"
+          "System.text.Encodings.Web": "9.0.5"
         }
       },
       "Microsoft.Bcl.AsyncInterfaces/7.0.0": {
@@ -412,7 +412,7 @@
           "Microsoft.Build.Framework": "17.8.3",
           "Microsoft.CodeAnalysis.Common": "4.8.0",
           "Microsoft.CodeAnalysis.Workspaces.Common": "4.8.0",
-          "System.Text.Json": "9.0.5"
+          "System.text.Json": "9.0.5"
         },
         "runtime": {
           "lib/net7.0/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll": {
@@ -502,8 +502,8 @@
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.5",
           "Microsoft.Extensions.DependencyModel": "9.0.5",
           "Microsoft.Extensions.Logging": "9.0.5",
-          "Mono.TextTemplating": "3.0.0",
-          "System.Text.Json": "9.0.5"
+          "Mono.textTemplating": "3.0.0",
+          "System.text.Json": "9.0.5"
         },
         "runtime": {
           "lib/net8.0/Microsoft.EntityFrameworkCore.Design.dll": {
@@ -590,8 +590,8 @@
       },
       "Microsoft.Extensions.DependencyModel/9.0.5": {
         "dependencies": {
-          "System.Text.Encodings.Web": "9.0.5",
-          "System.Text.Json": "9.0.5"
+          "System.text.Encodings.Web": "9.0.5",
+          "System.text.Json": "9.0.5"
         },
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.DependencyModel.dll": {
@@ -809,12 +809,12 @@
           "System.Security.Principal.Windows": "5.0.0"
         }
       },
-      "Mono.TextTemplating/3.0.0": {
+      "Mono.textTemplating/3.0.0": {
         "dependencies": {
           "System.CodeDom": "6.0.0"
         },
         "runtime": {
-          "lib/net6.0/Mono.TextTemplating.dll": {
+          "lib/net6.0/Mono.textTemplating.dll": {
             "assemblyVersion": "3.0.0.0",
             "fileVersion": "3.0.0.1"
           }
@@ -1020,15 +1020,15 @@
         }
       },
       "System.Security.Principal.Windows/5.0.0": {},
-      "System.Text.Encodings.Web/9.0.5": {
+      "System.text.Encodings.Web/9.0.5": {
         "runtime": {
-          "lib/net8.0/System.Text.Encodings.Web.dll": {
+          "lib/net8.0/System.text.Encodings.Web.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.525.21509"
           }
         },
         "runtimeTargets": {
-          "runtimes/browser/lib/net8.0/System.Text.Encodings.Web.dll": {
+          "runtimes/browser/lib/net8.0/System.text.Encodings.Web.dll": {
             "rid": "browser",
             "assetType": "runtime",
             "assemblyVersion": "9.0.0.0",
@@ -1036,13 +1036,13 @@
           }
         }
       },
-      "System.Text.Json/9.0.5": {
+      "System.text.Json/9.0.5": {
         "dependencies": {
           "System.IO.Pipelines": "9.0.5",
-          "System.Text.Encodings.Web": "9.0.5"
+          "System.text.Encodings.Web": "9.0.5"
         },
         "runtime": {
-          "lib/net8.0/System.Text.Json.dll": {
+          "lib/net8.0/System.text.Json.dll": {
             "assemblyVersion": "9.0.0.0",
             "fileVersion": "9.0.525.21509"
           }
@@ -1491,7 +1491,7 @@
       "path": "microsoft.win32.registry/4.5.0",
       "hashPath": "microsoft.win32.registry.4.5.0.nupkg.sha512"
     },
-    "Mono.TextTemplating/3.0.0": {
+    "Mono.textTemplating/3.0.0": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
@@ -1666,14 +1666,14 @@
       "path": "system.security.principal.windows/5.0.0",
       "hashPath": "system.security.principal.windows.5.0.0.nupkg.sha512"
     },
-    "System.Text.Encodings.Web/9.0.5": {
+    "System.text.Encodings.Web/9.0.5": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-HJPmqP2FsE+WVUUlTsZ4IFRSyzw40yz0ubiTnsaqm+Xo5fFZhVRvx6Zn8tLXj92/6pbre6OA4QL2A2vnCSKxJA==",
       "path": "system.text.encodings.web/9.0.5",
       "hashPath": "system.text.encodings.web.9.0.5.nupkg.sha512"
     },
-    "System.Text.Json/9.0.5": {
+    "System.text.Json/9.0.5": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-rnP61ZfloTgPQPe7ecr36loNiGX3g1PocxlKHdY/FUpDSsExKkTxpMAlB4X35wNEPr1X7mkYZuQvW3Lhxmu7KA==",

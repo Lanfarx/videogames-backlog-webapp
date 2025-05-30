@@ -23,7 +23,7 @@ export function SimilarGameItem({ game }: SimilarGameItemProps) {
       <div className="flex gap-3 p-3 rounded-lg hover:bg-secondary-bg transition-colors cursor-pointer">
         <div className="flex-shrink-0">
           <img 
-            src={game.coverImage || "/placeholder.svg"} 
+            src={game.CoverImage || "/placeholder.svg"} 
             alt={game.title}
             className="w-16 h-20 object-cover rounded-lg shadow-sm"
           />
@@ -33,20 +33,20 @@ export function SimilarGameItem({ game }: SimilarGameItemProps) {
             {game.title}
           </h4>
           <p className="text-xs text-text-secondary mb-2">
-            {game.releaseYear}
+            {game.ReleaseYear}
           </p>
           <div className="flex items-center gap-2 mb-2">
-            <RatingStars rating={communityRating} showValue={false} size="sm" readOnly />
+            <RatingStars Rating={communityRating} showValue={false} size="sm" readOnly />
             <span className="text-xs text-text-secondary">
               {communityRating > 0 ? communityRating.toFixed(1) : 'N.D.'}
             </span>
             <div className="flex items-center gap-1 ml-auto">
               <Award className="h-3 w-3 text-yellow-400 fill-current" />
-              <span className="text-xs text-text-secondary">{game.metacritic}</span>
+              <span className="text-xs text-text-secondary">{game.Metacritic}</span>
             </div>
           </div>
           <GenreTagList 
-            genres={game.genres.slice(0, 3).map(g => typeof g === 'string' ? g : g.name)} 
+            Genres={game.Genres.slice(0, 3).map(g => typeof g === 'string' ? g : g.name)} 
             maxDisplay={3} 
             small={true} 
           />

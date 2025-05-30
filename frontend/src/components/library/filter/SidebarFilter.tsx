@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
-import { STATUS_OPTIONS } from '../../../constants/gameConstants';
+import { Status_OPTIONS } from '../../../constants/gameConstants';
 import { calculateCounts, calculateMaxValues } from '../../../utils/gamesUtils';
 
 // Interfaccia per i props del componente
@@ -16,18 +16,18 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAllGenres, setShowAllGenres] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
-    status: true,
-    platform: true,
+    Status: true,
+    Platform: true,
     genre: true,
-    price: true,
+    Price: true,
     hours: true,
-    metacritic: true,
+    Metacritic: true,
     date: true,
   });
 
   // Calcola i conteggi per ogni filtro
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [platformCounts, setPlatformCounts] = useState<Record<string, number>>({});
+  const [StatusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [PlatformCounts, setPlatformCounts] = useState<Record<string, number>>({});
   const [genreCounts, setGenreCounts] = useState<Record<string, number>>({});
 
   // Calcola i valori massimi per i range
@@ -37,23 +37,23 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
 
   useEffect(() => {
     // Calcola i conteggi reali dai dati di games
-    const { statusCountsTemp, platformCountsTemp, genreCountsTemp } = calculateCounts(games);
-    setStatusCounts(statusCountsTemp);
-    setPlatformCounts(platformCountsTemp);
+    const { StatusCountsTemp, PlatformCountsTemp, genreCountsTemp } = calculateCounts(games);
+    setStatusCounts(StatusCountsTemp);
+    setPlatformCounts(PlatformCountsTemp);
     setGenreCounts(genreCountsTemp);
 
     // Calcola i valori massimi per i range
-    const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(games);
-    setMaxPrice(priceRange[1]);
+    const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(games);
+    setMaxPrice(PriceRange[1]);
     setMaxHours(hoursRange[1]);
-    setMaxMetacritic(metacriticRange[1] || 100); // Fallback a 100 se non ci sono giochi con Metacritic
+    setMaxMetacritic(MetacriticRange[1] || 100); // Fallback a 100 se non ci sono giochi con Metacritic
 
-    // Imposta i valori iniziali dei filtri di prezzo, ore e metacritic
+    // Imposta i valori iniziali dei filtri di prezzo, ore e Metacritic
     setFilters((prev) => ({
       ...prev,
-      priceRange: [0, priceRange[1]],
+      PriceRange: [0, PriceRange[1]],
       hoursRange: [0, hoursRange[1]],
-      metacriticRange: [0, metacriticRange[1] || 100],
+      MetacriticRange: [0, MetacriticRange[1] || 100],
     }));
   }, [games]);
 
@@ -65,22 +65,22 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   };
 
   // Gestisce il toggle dei filtri di stato
-  const handleStatusToggle = (status: GameStatus) => {
+  const handleStatusToggle = (Status: GameStatus) => {
     setFilters((prev) => {
-      const newStatus = prev.status.includes(status)
-        ? prev.status.filter((s) => s !== status)
-        : [...prev.status, status];
-      return { ...prev, status: newStatus };
+      const newStatus = prev.Status.includes(Status)
+        ? prev.Status.filter((s) => s !== Status)
+        : [...prev.Status, Status];
+      return { ...prev, Status: newStatus };
     });
   };
 
   // Gestisce il toggle dei filtri di piattaforma
-  const handlePlatformToggle = (platform: string) => {
+  const handlePlatformToggle = (Platform: string) => {
     setFilters((prev) => {
-      const newPlatform = prev.platform.includes(platform)
-        ? prev.platform.filter((p) => p !== platform)
-        : [...prev.platform, platform];
-      return { ...prev, platform: newPlatform };
+      const newPlatform = prev.Platform.includes(Platform)
+        ? prev.Platform.filter((p) => p !== Platform)
+        : [...prev.Platform, Platform];
+      return { ...prev, Platform: newPlatform };
     });
   };
 
@@ -97,9 +97,9 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   // Gestisce il cambio del range di prezzo
   const handlePriceRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
-      const newPriceRange = [...prev.priceRange] as [number, number];
+      const newPriceRange = [...prev.PriceRange] as [number, number];
       newPriceRange[index] = value;
-      return { ...prev, priceRange: newPriceRange };
+      return { ...prev, PriceRange: newPriceRange };
     });
   };
 
@@ -115,36 +115,36 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   // Gestisce il cambio del range di Metacritic
   const handleMetacriticRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
-      const newMetacriticRange = [...prev.metacriticRange] as [number, number];
+      const newMetacriticRange = [...prev.MetacriticRange] as [number, number];
       newMetacriticRange[index] = value;
-      return { ...prev, metacriticRange: newMetacriticRange };
+      return { ...prev, MetacriticRange: newMetacriticRange };
     });
   };
 
   // Gestisce il cambio della data di acquisto
   const handlePurchaseDateChange = (date: string) => {
-    setFilters((prev) => ({ ...prev, purchaseDate: date }));
+    setFilters((prev) => ({ ...prev, PurchaseDate: date }));
   };
 
   // Reimposta tutti i filtri
   const resetFilters = () => {
     setFilters({
-      status: [] as GameStatus[],
-      platform: [],
+      Status: [] as GameStatus[],
+      Platform: [],
       genre: [],
-      priceRange: [0, maxPrice],
+      PriceRange: [0, maxPrice],
       hoursRange: [0, maxHours],
-      metacriticRange: [0, maxMetacritic],
-      purchaseDate: "",
+      MetacriticRange: [0, maxMetacritic],
+      PurchaseDate: "",
     });
   };
 
   // Estrai le piattaforme uniche dai dati aggiornati
-  const platforms = Object.keys(platformCounts).sort();
+  const Platforms = Object.keys(PlatformCounts).sort();
 
   // Estrai i generi unici dai dati aggiornati
-  const genres = Object.keys(genreCounts).sort();
-  const visibleGenres = showAllGenres ? genres : genres.slice(0, 5);
+  const Genres = Object.keys(genreCounts).sort();
+  const visibleGenres = showAllGenres ? Genres : Genres.slice(0, 5);
 
   return (
     <aside
@@ -171,23 +171,23 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
           <div className="mb-6">
             <button
               className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("status")}
+              onClick={() => toggleSection("Status")}
             >
               Stato
-              {expandedSections.status ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedSections.Status ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.status ? "block" : "hidden"}`}>
-              {STATUS_OPTIONS.map((filter) => (
+            <div className={`border-t border-border-color pt-4 ${expandedSections.Status ? "block" : "hidden"}`}>
+              {Status_OPTIONS.map((filter) => (
                 <div key={filter.value} className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <div className="relative flex items-center">
                       <input
                         type="checkbox"
-                        id={`status-${filter.value}`}
-                        checked={filters.status.includes(filter.value as GameStatus)}
+                        id={`Status-${filter.value}`}
+                        checked={filters.Status.includes(filter.value as GameStatus)}
                         onChange={() => handleStatusToggle(filter.value as GameStatus)}
                         className="peer h-4 w-4 appearance-none rounded border border-border-color checked:border-0 focus:outline-none focus:ring-2 focus:ring-accent-primary/30 cursor-pointer"
-                        style={{ backgroundColor: filters.status.includes(filter.value as GameStatus) ? filter.color : "transparent" }}
+                        style={{ backgroundColor: filters.Status.includes(filter.value as GameStatus) ? filter.color : "transparent" }}
                       />
                       <svg
                         className="pointer-events-none absolute h-4 w-4 opacity-0 peer-checked:opacity-100"
@@ -203,13 +203,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
                       </svg>
                     </div>
                     <label
-                      htmlFor={`status-${filter.value}`}
+                      htmlFor={`Status-${filter.value}`}
                       className="ml-2 font-roboto text-sm text-text-primary cursor-pointer"
                     >
                       {filter.label}
                     </label>
                   </div>
-                  <span className="font-roboto text-xs text-text-secondary">({statusCounts[filter.value] || 0})</span>
+                  <span className="font-roboto text-xs text-text-secondary">({StatusCounts[filter.value] || 0})</span>
                 </div>
               ))}
             </div>
@@ -219,30 +219,30 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
           <div className="mb-6">
             <button
               className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("platform")}
+              onClick={() => toggleSection("Platform")}
             >
               Piattaforma
-              {expandedSections.platform ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedSections.Platform ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.platform ? "block" : "hidden"}`}>
-              {platforms.map((platform) => (
-                <div key={platform} className="flex items-center justify-between mb-3">
+            <div className={`border-t border-border-color pt-4 ${expandedSections.Platform ? "block" : "hidden"}`}>
+              {Platforms.map((Platform) => (
+                <div key={Platform} className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      id={`platform-${platform}`}
-                      checked={filters.platform.includes(platform)}
-                      onChange={() => handlePlatformToggle(platform)}
+                      id={`Platform-${Platform}`}
+                      checked={filters.Platform.includes(Platform)}
+                      onChange={() => handlePlatformToggle(Platform)}
                       className="h-4 w-4 rounded border-border-color text-accent-primary focus:ring-accent-primary/30 cursor-pointer"
                     />
                     <label
-                      htmlFor={`platform-${platform}`}
+                      htmlFor={`Platform-${Platform}`}
                       className="ml-2 font-roboto text-sm text-text-primary cursor-pointer"
                     >
-                      {platform}
+                      {Platform}
                     </label>
                   </div>
-                  <span className="font-roboto text-xs text-text-secondary">({platformCounts[platform] || 0})</span>
+                  <span className="font-roboto text-xs text-text-secondary">({PlatformCounts[Platform] || 0})</span>
                 </div>
               ))}
             </div>
@@ -278,12 +278,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
                   <span className="font-roboto text-xs text-text-secondary">({genreCounts[genre] || 0})</span>
                 </div>
               ))}
-              {!showAllGenres && genres.length > 5 && (
+              {!showAllGenres && Genres.length > 5 && (
                 <button
                   className="font-roboto text-sm text-accent-primary hover:text-accent-primary/80 mt-2"
                   onClick={() => setShowAllGenres(true)}
                 >
-                  Mostra altri ({genres.length - 5})
+                  Mostra altri ({Genres.length - 5})
                 </button>
               )}
               {showAllGenres && (
@@ -301,24 +301,24 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
           <div className="mb-6">
             <button
               className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("price")}
+              onClick={() => toggleSection("Price")}
             >
               Prezzo
-              {expandedSections.price ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedSections.Price ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.price ? "block" : "hidden"}`}>
+            <div className={`border-t border-border-color pt-4 ${expandedSections.Price ? "block" : "hidden"}`}>
               <div className="px-1">
                 <input
                   type="range"
                   min="0"
                   max={maxPrice}
-                  value={filters.priceRange[1]}
+                  value={filters.PriceRange[1]}
                   onChange={(e) => handlePriceRangeChange(Number.parseInt(e.target.value), 1)}
                   className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-accent-primary"
                 />
                 <div className="flex justify-between mt-2">
-                  <span className="font-roboto text-xs text-text-secondary">{filters.priceRange[0]}€</span>
-                  <span className="font-roboto text-xs text-text-secondary">{filters.priceRange[1]}€</span>
+                  <span className="font-roboto text-xs text-text-secondary">{filters.PriceRange[0]}€</span>
+                  <span className="font-roboto text-xs text-text-secondary">{filters.PriceRange[1]}€</span>
                 </div>
               </div>
             </div>
@@ -355,27 +355,27 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
           <div className="mb-6">
             <button
               className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("metacritic")}
+              onClick={() => toggleSection("Metacritic")}
             >
               <div className="flex items-center">
                 <Award className="h-4 w-4 mr-2 text-yellow-500" />
                 Metacritic
               </div>
-              {expandedSections.metacritic ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {expandedSections.Metacritic ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.metacritic ? "block" : "hidden"}`}>
+            <div className={`border-t border-border-color pt-4 ${expandedSections.Metacritic ? "block" : "hidden"}`}>
               <div className="px-1">
                 <input
                   type="range"
                   min="0" 
                   max={maxMetacritic}
-                  value={filters.metacriticRange[1]}
+                  value={filters.MetacriticRange[1]}
                   onChange={(e) => handleMetacriticRangeChange(Number.parseInt(e.target.value), 1)}
                   className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-yellow-500"
                 />
                 <div className="flex justify-between mt-2">
-                  <span className="font-roboto text-xs text-text-secondary">{filters.metacriticRange[0]}</span>
-                  <span className="font-roboto text-xs text-text-secondary">{filters.metacriticRange[1]}</span>
+                  <span className="font-roboto text-xs text-text-secondary">{filters.MetacriticRange[0]}</span>
+                  <span className="font-roboto text-xs text-text-secondary">{filters.MetacriticRange[1]}</span>
                 </div>
               </div>
             </div>
@@ -394,7 +394,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
               <div className="relative">
                 <input
                   type="date"
-                  value={filters.purchaseDate}
+                  value={filters.PurchaseDate}
                   onChange={(e) => handlePurchaseDateChange(e.target.value)}
                   className="w-full p-2 font-roboto text-sm text-text-primary border border-border-color rounded focus:outline-none focus:border-accent-primary"
                 />

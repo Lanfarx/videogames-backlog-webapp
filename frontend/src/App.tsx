@@ -13,8 +13,6 @@ import ContactPage from './pages/footer/ContactPage';
 import React from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { setGames } from './store/slice/gamesSlice';
-import { gamesData } from './data/gamesData';
-import { useAllGames } from './store/hooks/gamesHooks';
 import { activitiesData } from './data/activitiesData';
 import { setActivities } from './store/slice/activitiesSlice';
 import { useAllActivities } from './store/hooks/activitiesHooks';
@@ -29,7 +27,6 @@ import { setUserProfile } from './store/slice/userSlice';
 
 function App() {
   const dispatch = useAppDispatch();
-  const allGames = useAllGames();
   const allActivities = useAllActivities();
   const location = useLocation();
   const userProfile = useAppSelector((state) => state.user.profile);

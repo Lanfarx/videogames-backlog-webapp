@@ -10,7 +10,7 @@ interface ListViewProps {
   games: Game[];
   onEdit?: (game: Game) => void;
   onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, status: GameStatus) => void;
+  onStatusChange?: (gameId: string, Status: GameStatus) => void;
 }
 
 const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange }) => {
@@ -69,35 +69,35 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                   <div className="h-12 w-12 mr-3 overflow-hidden rounded relative">
                     <div className="absolute inset-0 bg-accent-secondary/20 z-10"></div>
                     <img
-                      src={game.coverImage || "/placeholder.svg"}
-                      alt={game.title}
+                      src={game.CoverImage || "/placeholder.svg"}
+                      alt={game.Title}
                       className="h-full w-full object-cover"
                     />
                   </div>
                   <Link to={`/game/${game.id}`} className="font-montserrat font-medium text-sm text-text-primary hover:text-accent-primary transition-colors">
-                    {game.title}
+                    {game.Title}
                   </Link>
                 </div>
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 <div className="flex items-center">
                   <Monitor className="h-4 w-4 mr-1" />
-                  {game.platform}
+                  {game.Platform}
                 </div>
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  {game.hoursPlayed} ore
+                  {game.HoursPlayed} ore
                 </div>
               </td>
               <td className="p-3 border-b border-border-color">
-                <StatusBadge status={game.status} />
+                <StatusBadge Status={game.Status} />
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.metacritic ? (
+                {game.Metacritic ? (
                   <div className="flex items-center">
-                    <span className="font-bold text-accent-primary mr-1">{game.metacritic}</span>
+                    <span className="font-bold text-accent-primary mr-1">{game.Metacritic}</span>
                     <span className="text-xs text-text-secondary">/ 100</span>
                   </div>
                 ) : (
@@ -105,40 +105,40 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                 )}
               </td>
               <td className="p-3 border-b border-border-color">
-                {game.rating > 0 ? (
-                  <RatingStars rating={game.rating} showValue={false} size="sm" />
+                {game.Rating > 0 ? (
+                  <RatingStars Rating={game.Rating} showValue={false} size="sm" />
                 ) : (
                   <span className="text-xs text-text-disabled">Non valutato</span>
                 )}
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.price > 0 ? `${game.price.toFixed(2)} €` : "-"}
+                {game.Price > 0 ? `${game.Price.toFixed(2)} €` : "-"}
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.purchaseDate ? (
+                {game.PurchaseDate ? (
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(game.purchaseDate).toLocaleDateString()}
+                    {new Date(game.PurchaseDate).toLocaleDateString()}
                   </div>
                 ) : (
                   "-"
                 )}
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.completionDate ? (
+                {game.CompletionDate ? (
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(game.completionDate).toLocaleDateString()}
+                    {new Date(game.CompletionDate).toLocaleDateString()}
                   </div>
                 ) : (
                   "-"
                 )}
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.platinumDate ? (
+                {game.PlatinumDate ? (
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(game.platinumDate).toLocaleDateString()}
+                    {new Date(game.PlatinumDate).toLocaleDateString()}
                   </div>
                 ) : (
                   "-"

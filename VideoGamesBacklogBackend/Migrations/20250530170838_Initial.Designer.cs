@@ -12,7 +12,7 @@ using VideoGamesBacklogBackend.Data;
 namespace VideoGamesBacklogBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250529091237_Initial")]
+    [Migration("20250530170838_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -242,7 +242,7 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -497,6 +497,10 @@ namespace VideoGamesBacklogBackend.Migrations
                         {
                             b1.Property<int>("UserId")
                                 .HasColumnType("integer");
+
+                            b1.Property<string>("AccentColor")
+                                .IsRequired()
+                                .HasColumnType("text");
 
                             b1.Property<string>("DateFormat")
                                 .IsRequired()

@@ -6,15 +6,15 @@ namespace VideoGamesBacklogBackend.Models
 {
     public enum GameStatus
     {
-        [System.ComponentModel.DataAnnotations.Display(Name = "not-started")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "NotStarted")]
         NotStarted,
-        [System.ComponentModel.DataAnnotations.Display(Name = "in-progress")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "InProgress")]
         InProgress,
-        [System.ComponentModel.DataAnnotations.Display(Name = "completed")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "Completed")]
         Completed,
-        [System.ComponentModel.DataAnnotations.Display(Name = "abandoned")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "Abandoned")]
         Abandoned,
-        [System.ComponentModel.DataAnnotations.Display(Name = "platinum")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "Platinum")]
         Platinum
     }
 
@@ -25,8 +25,7 @@ namespace VideoGamesBacklogBackend.Models
 
         [Required]
         public string Title { get; set; } = string.Empty;
-        [Required]
-        public string Platform { get; set; } = string.Empty;
+        public string? Platform { get; set; } = string.Empty;
         public int ReleaseYear { get; set; }
         public string[] Genres { get; set; } = Array.Empty<string>();
 
@@ -47,7 +46,7 @@ namespace VideoGamesBacklogBackend.Models
         public int HoursPlayed { get; set; }
         public int Metacritic { get; set; }
 
-        // Inizializza il rating a 0
+        // Inizializza il Rating a 0
         public int Rating { get; set; } = 0;
 
         public string? Notes { get; set; }
@@ -59,7 +58,7 @@ namespace VideoGamesBacklogBackend.Models
         public int UserId { get; set; }
         public User? User { get; set; }
 
-        // Relazione uno-a-molti: un gioco ha molte attività
+        // Relazione uno-a-molti: un gioco ha molte attivitï¿½
         public List<Activity> Activities { get; set; } = new List<Activity>();
     }
 

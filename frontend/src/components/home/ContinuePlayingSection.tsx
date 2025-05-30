@@ -13,7 +13,7 @@ const ContinuePlayingSection: React.FC = () => {
       <SectionHeader 
         title="Continua a giocare" 
         subtitle="Riprendi da dove avevi lasciato" 
-        seeAllLink="/library?filter=in-progress" 
+        seeAllLink="/library?filter=InProgress" 
       />
       
       <div className="relative flex items-center py-4">
@@ -29,12 +29,12 @@ const ContinuePlayingSection: React.FC = () => {
               <InProgressGameCard 
                 key={game.id}
                 id={game.id.toString()}
-                title={game.title}
-                coverImage={game.coverImage}
-                platform={game.platform}
-                hoursPlayed={game.hoursPlayed} 
-                rating={game.rating}
-                genres={game.genres}
+                title={game.Title}
+                CoverImage={game.CoverImage}
+                Platform={game.Platform}
+                HoursPlayed={game.HoursPlayed} 
+                Rating={game.Rating}
+                Genres={game.Genres}
               />
             );
           })}

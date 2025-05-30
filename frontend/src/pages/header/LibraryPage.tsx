@@ -10,12 +10,14 @@ import ConfirmationModal from '../../components/ui/ConfirmationModal';
 import { filterGames, sortGames, calculateMaxValues } from '../../utils/gamesUtils';
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useAppDispatch } from '../../store/hooks';
-import { deleteGame, updateGameStatus } from '../../store/slice/gamesSlice';
+import { useGameActions } from '../../store/hooks/gamesHooks';
+import { useLoadGames } from '../../store/hooks/gamesHooks';
 import type { GameFilters, SortOption, SortOrder, Game, GameStatus, GameSearchParams } from '../../types/game';
 
 const LibraryPage: React.FC = () => {
     const dispatch = useAppDispatch();
     const allGamesFromStore = useAllGames();
+    const { remove, update } = useGameActions();
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [currentPage, setCurrentPage] = useState(1);
     const [isAddGameModalOpen, setIsAddGameModalOpen] = useState(false);
@@ -25,13 +27,13 @@ const LibraryPage: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [gameToDelete, setGameToDelete] = useState<string | null>(null);
     const [filters, setFilters] = useState<GameFilters>({
-        status: [],
-        platform: [],
+        Status: [],
+        Platform: [],
         genre: [],
-        priceRange: [0, 0],
+        PriceRange: [0, 0],
         hoursRange: [0, 0],
-        metacriticRange: [0, 100],
-        purchaseDate: "",
+        MetacriticRange: [0, 100],
+        PurchaseDate: "",
     });
     const [sortBy, setSortBy] = useState<SortOption>("title");
     const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -40,20 +42,22 @@ const LibraryPage: React.FC = () => {
     const [columns, setColumns] = useState(4); // default XL
     const gridContainerRef = useRef<HTMLDivElement>(null);
 
+    useLoadGames(); // Carica i giochi dal backend all'apertura della pagina
+
     // Carica i giochi all'inizio e aggiorna quando cambiano i dati da Redux
     useEffect(() => {
         // Calcola i massimali iniziali
-        const { priceRange, hoursRange, metacriticRange } = calculateMaxValues(allGamesFromStore);
+        const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(allGamesFromStore);
 
         // Imposta i filtri iniziali con i massimali calcolati
         setFilters({
-            status: [],
-            platform: [],
+            Status: [],
+            Platform: [],
             genre: [],
-            priceRange: [0, priceRange[1]],
+            PriceRange: [0, PriceRange[1]],
             hoursRange: [0, hoursRange[1]],
-            metacriticRange: [0, metacriticRange[1]],
-            purchaseDate: "",
+            MetacriticRange: [0, MetacriticRange[1]],
+            PurchaseDate: "",
         });
 
         setFilteredGames(allGamesFromStore);
@@ -66,9 +70,9 @@ const LibraryPage: React.FC = () => {
         const searchParams: GameSearchParams = {
             filters: {
                 ...filters,
-                priceRange: filters.priceRange || [0, 0],
+                PriceRange: filters.PriceRange || [0, 0],
                 hoursRange: filters.hoursRange || [0, 0],
-                metacriticRange: filters.metacriticRange || [0, 0],
+                MetacriticRange: filters.MetacriticRange || [0, 0],
             },
             sortBy,
             sortOrder,
@@ -143,7 +147,7 @@ const LibraryPage: React.FC = () => {
     // Gestisce l'eliminazione effettiva del gioco usando Redux
     const handleDeleteGame = () => {
         if (gameToDelete) {
-            dispatch(deleteGame(parseInt(gameToDelete)));
+            remove(parseInt(gameToDelete));
             setIsDeleteModalOpen(false);
             setGameToDelete(null);
         }
@@ -151,7 +155,7 @@ const LibraryPage: React.FC = () => {
 
     // Gestisce il cambio di stato di un gioco usando Redux
     const handleStatusChange = (gameId: string, newStatus: GameStatus) => {
-        dispatch(updateGameStatus({ gameId: parseInt(gameId), status: newStatus }));
+        update(parseInt(gameId), { Status: newStatus });
     };
 
     return (
@@ -202,13 +206,13 @@ const LibraryPage: React.FC = () => {
                                 <button
                                     onClick={() =>
                                         setFilters({
-                                            status: [],
-                                            platform: [],
+                                            Status: [],
+                                            Platform: [],
                                             genre: [],
-                                            priceRange: [0, filters.priceRange[1]],
+                                            PriceRange: [0, filters.PriceRange[1]],
                                             hoursRange: [0, filters.hoursRange[1]],
-                                            metacriticRange: [0, filters.metacriticRange[1]],
-                                            purchaseDate: "",
+                                            MetacriticRange: [0, filters.MetacriticRange[1]],
+                                            PurchaseDate: "",
                                         })
                                     }
                                     className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
@@ -249,7 +253,7 @@ const LibraryPage: React.FC = () => {
                 onConfirm={handleDeleteGame}
                 title="Elimina gioco"
                 message="Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata."
-                confirmButtonText="Elimina"
+                confirmButtontext="Elimina"
             />
         </div>
     );

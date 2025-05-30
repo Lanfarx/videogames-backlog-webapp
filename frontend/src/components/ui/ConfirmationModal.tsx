@@ -6,8 +6,8 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   title: string;
   message: string;
-  confirmButtonText: string;
-  cancelButtonText?: string;
+  confirmButtontext: string;
+  cancelButtontext?: string;
   type?: 'danger' | 'warning' | 'info';
 }
 
@@ -17,8 +17,8 @@ const ConfirmationModal = ({
   onConfirm,
   title,
   message,
-  confirmButtonText,
-  cancelButtonText = 'Annulla',
+  confirmButtontext,
+  cancelButtontext = 'Annulla',
   type = 'danger'
 }: ConfirmationModalProps) => {
   if (!isOpen) return null;
@@ -49,7 +49,7 @@ const ConfirmationModal = ({
               className="px-4 py-2 border border-border-color rounded-lg text-text-primary hover:bg-secondary-bg transition-colors font-secondary"
               onClick={onClose}
             >
-              {cancelButtonText}
+              {cancelButtontext}
             </button>
             <button
               className={`px-4 py-2 text-white rounded-lg ${buttonColorClass} transition-colors font-secondary`}
@@ -58,7 +58,7 @@ const ConfirmationModal = ({
                 onClose();
               }}
             >
-              {confirmButtonText}
+              {confirmButtontext}
             </button>
           </div>
         </div>

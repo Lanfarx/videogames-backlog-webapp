@@ -39,7 +39,7 @@ export const searchGames = async (query: string) => {
     const response = await apiClient.get('/games', { 
     params: { 
       search: query,
-      platforms: '1, 4, 7, 18, 22'
+      Platforms: '1, 4, 7, 18, 22'
     }
 });
     return response.data;
@@ -66,19 +66,19 @@ export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {
   }
 };
 
-export const getSimilarGames = async (genreIds: number[], excludeId: number, count: number = 4, metacritic?: number) => {
+export const getSimilarGames = async (genreIds: number[], excludeId: number, count: number = 4, Metacritic?: number) => {
   try {
     const params: any = {
-      genres: genreIds.join(','),
+      Genres: genreIds.join(','),
       exclude_additions: true,
-      ordering: '-rating',
+      ordering: '-Rating',
       page_size: 20,
-      platforms: '1,4,7,18,22', // Solo piattaforme principali
+      Platforms: '1,4,7,18,22', // Solo piattaforme principali
       dates: '1900-01-01,' + new Date().toISOString().slice(0, 10), // Solo giochi già usciti
     };
-    // Se metacritic fornito, filtra per range simile (+/- 10)
-    if (typeof metacritic === 'number') {
-      params.metacritic = `${Math.max(0, metacritic - 10)},${Math.min(100, metacritic + 10)}`;
+    // Se Metacritic fornito, filtra per range simile (+/- 10)
+    if (typeof Metacritic === 'number') {
+      params.Metacritic = `${Math.max(0, Metacritic - 10)},${Math.min(100, Metacritic + 10)}`;
     }
     const response = await apiClient.get('/games', { params });
 

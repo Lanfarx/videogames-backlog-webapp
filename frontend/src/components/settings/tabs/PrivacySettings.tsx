@@ -23,12 +23,12 @@ const PrivacySettings: React.FC = () => {
   };
 
   // Cambia visibilità profilo
-  const handleProfileVisibilityChange = async (isPublic: boolean) => {
+  const handleProfileVisibilityChange = async (IsPublic: boolean) => {
     const newProfile = {
       ...userProfile,
       privacySettings: {
         ...userProfile.privacySettings,
-        isPrivate: !isPublic
+        isPrivate: !IsPublic
       }
     };
     await handleProfileUpdate(newProfile);

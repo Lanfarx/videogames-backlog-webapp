@@ -20,7 +20,7 @@ export interface ActivityStats {
  */
 export interface MonthlyStats {
   total: number;               // Totale attività nel mese
-  completed: number;           // Completamenti nel mese
+  Completed: number;           // Completamenti nel mese
   played: number;              // Sessioni nel mese 
   rated: number;               // Recensioni nel mese
   hours: number;               // Ore giocate nel mese
@@ -32,10 +32,10 @@ export interface MonthlyStats {
 export interface GameStats {
   total: number;               // Totale giochi
   inProgress: number;          // Giochi in corso
-  completed: number;           // Giochi completati
+  Completed: number;           // Giochi completati
   notStarted: number;          // Giochi non iniziati
-  abandoned: number;           // Giochi abbandonati
-  platinum: number;            // Giochi platinati
+  Abandoned: number;           // Giochi abbandonati
+  Platinum: number;            // Giochi platinati
   totalHours: number;          // Ore totali giocate
 }
 

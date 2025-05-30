@@ -6,7 +6,7 @@ export const activitiesData: Activity[] = [
   // Baldur's Gate 3 (id: 5) - Platinato
   {
     id: 1,
-    type: "platinum",
+    type: "Platinum",
     gameId: 5,
     gameTitle: "Baldur's Gate 3",
     timestamp: new Date("2023-09-25"),
@@ -14,7 +14,7 @@ export const activitiesData: Activity[] = [
   },
   {
     id: 2,
-    type: "completed",
+    type: "Completed",
     gameId: 5,
     gameTitle: "Baldur's Gate 3",
     timestamp: new Date("2023-09-15"),
@@ -62,7 +62,7 @@ export const activitiesData: Activity[] = [
   // God of War Ragnarök (id: 3) - Completato
   {
     id: 8,
-    type: "completed",
+    type: "Completed",
     gameId: 3,
     gameTitle: "God of War Ragnarök",
     timestamp: new Date("2022-12-05"),
@@ -250,7 +250,7 @@ export const activitiesData: Activity[] = [
   // Final Fantasy XVI (id: 7) - Abbandonato
   {
     id: 31,
-    type: "abandoned",
+    type: "Abandoned",
     gameId: 7,
     gameTitle: "Final Fantasy XVI",
     timestamp: new Date("2023-07-15"),

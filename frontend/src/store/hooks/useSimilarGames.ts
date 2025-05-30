@@ -11,24 +11,24 @@ export const useSimilarGames = (
   useEffect(() => {
     const fetchSimilar = async () => {
       try {
-        const genreIds = currentGame.genres?.map(g => g.id).filter(Boolean);
+        const genreIds = currentGame.Genres?.map(g => g.id).filter(Boolean);
         // DEBUG: logga currentGame per capire se ha id RAWG
         console.log('currentGame in useSimilarGames:', currentGame);
         if (genreIds && genreIds.length > 0 && currentGame.id) {
-          const results = await getSimilarGames(genreIds, currentGame.id, count, currentGame.metacritic);
+          const results = await getSimilarGames(genreIds, currentGame.id, count, currentGame.Metacritic);
           // DEBUG: logga la risposta
           console.log('Risposta getSimilarGames:', results);
 
           const formatted = results.map((game: any) => ({
             id: game.id,
             title: game.name,
-            coverImage: game.background_image,
-            developer: game.developers?.[0]?.name ?? "Sconosciuto",
-            publisher: game.publishers?.[0]?.name ?? "Sconosciuto",
-            releaseYear: game.released ? new Date(game.released).getFullYear() : null,
-            genres: game.genres?.map((g: any) => ({ id: g.id, name: g.name })) || [],
-            metacritic: game.metacritic || 0,
-            platforms: game.platforms?.map((p: any) => p.platform?.name) || [],
+            CoverImage: game.background_image,
+            Developer: game.Developers?.[0]?.name ?? "Sconosciuto",
+            Publisher: game.Publishers?.[0]?.name ?? "Sconosciuto",
+            ReleaseYear: game.released ? new Date(game.released).getFullYear() : null,
+            Genres: game.Genres?.map((g: any) => ({ id: g.id, name: g.name })) || [],
+            Metacritic: game.Metacritic || 0,
+            Platforms: game.Platforms?.map((p: any) => p.Platform?.name) || [],
           }));
 
           setSimilar(formatted);

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Activity } from '../../types/activity';
-import { getActivityIcon, getActivityText } from '../../utils/activityUtils';
+import { getActivityIcon, getActivitytext } from '../../utils/activityUtils';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface RecentActivitiesListProps {
@@ -33,7 +33,7 @@ const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities,
                             {/* Contenuto testuale */}
                             <div className="flex-1">
                                 <div className="text-sm font-medium text-text-primary font-['Roboto']">
-                                    {getActivityText(activity)}
+                                    {getActivitytext(activity)}
                                 </div>
                                 <div className="text-xs text-text-secondary font-['Roboto'] mt-0.5">
                                     {formatRelativeTime(activity.timestamp)}

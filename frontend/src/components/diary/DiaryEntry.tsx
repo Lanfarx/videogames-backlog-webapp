@@ -39,13 +39,13 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
         const isFirstInMonth = isFirstActivityInMonth(activity, allActivities, 'played');
         return isFirstInMonth ? 'Prima sessione del mese' : 'Giocato';
       }
-      case 'platinum':
+      case 'Platinum':
         return 'Platinato';
       case 'rated':
         return 'Recensito';
-      case 'abandoned':
+      case 'Abandoned':
         return activity.additionalInfo ? `Abbandonato (${activity.additionalInfo})` : 'Abbandonato';
-      case 'completed':
+      case 'Completed':
         return 'Completato';
       case 'added':
         return 'Aggiunto';
@@ -54,7 +54,7 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
     }
   };
   
-  const hasReview = activity.type === 'rated' && game.review;
+  const hasReview = activity.type === 'rated' && game.Review;
 
   return (
     <div className="border-b border-border-color py-4 flex items-start gap-4">
@@ -69,10 +69,10 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
       
       {showCoverImage && (
         <div className="w-16 h-24 flex-shrink-0 rounded overflow-hidden bg-secondary-bg">
-          {game.coverImage ? (
+          {game.CoverImage ? (
             <img 
-              src={game.coverImage} 
-              alt={game.title} 
+              src={game.CoverImage} 
+              alt={game.Title} 
               className="w-full h-full object-cover"
             />
           ) : (
@@ -85,14 +85,14 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <Link
-            to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`}
+            to={`/library/${encodeURIComponent(game.Title.replace(/ /g, '_'))}`}
             className="font-bold text-base text-accent-primary hover:underline truncate"
-            title={game.title}
+            title={game.Title}
           >
-            {game.title}
+            {game.Title}
           </Link>
-          <span className="text-xs text-text-secondary">({game.releaseYear})</span>
-          <span className="text-xs text-text-secondary">{game.platform}</span>
+          <span className="text-xs text-text-secondary">({game.ReleaseYear})</span>
+          <span className="text-xs text-text-secondary">{game.Platform}</span>
         </div>
         
         <div className="flex items-center gap-2 mb-2">
@@ -109,28 +109,28 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
           )}
           
           {/* Per completati, mostra il tempo impiegato per finirlo */}
-          {activity.type === 'completed' && (
+          {activity.type === 'Completed' && (
             <span className="text-xs text-text-secondary">
-              (Completato in {game.hoursPlayed} ore)
+              (Completato in {game.HoursPlayed} ore)
             </span>
           )}
           
           {/* Per platinati, mostra una stima del tempo di platino */}
-          {activity.type === 'platinum' && (
+          {activity.type === 'Platinum' && (
             <span className="text-xs text-text-secondary">
-              (Platinato in {game.hoursPlayed} ore)
+              (Platinato in {game.HoursPlayed} ore)
             </span>
           )}
           
           {/* Per recensioni, mostra le ore di gioco al momento della recensione */}
           {activity.type === 'rated' && (
             <span className="text-xs text-text-secondary">
-              (Recensito dopo {game.hoursPlayed} ore di gioco)
+              (Recensito dopo {game.HoursPlayed} ore di gioco)
             </span>
           )}
           
           {/* Le info per l'abbandono sono gestite nel testo dell'attività */}
-          {activity.additionalInfo && activity.type !== 'abandoned' && activity.type !== 'completed' && activity.type !== 'platinum' && activity.type !== 'rated' && activity.type !== 'played' && (
+          {activity.additionalInfo && activity.type !== 'Abandoned' && activity.type !== 'Completed' && activity.type !== 'Platinum' && activity.type !== 'rated' && activity.type !== 'played' && (
             <span className="text-xs text-text-secondary">({activity.additionalInfo})</span>
           )}
         </div>
@@ -138,15 +138,15 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
         {/* Abbiamo rimosso il testo per gli abbandoni, viene mostrato direttamente nell'etichetta */}
         
         {/* Note per i giochi completati o platinati (se presenti) */}
-        {(activity.type === 'completed' || activity.type === 'platinum') && game.notes && (
+        {(activity.type === 'Completed' || activity.type === 'Platinum') && game.Notes && (
           <div className="bg-secondary-bg p-3 rounded-lg mt-2">
             <div className="flex items-center mb-2">
               <span className="text-sm font-medium text-text-primary">Note</span>
             </div>
             <p className={`text-xs text-text-secondary ${!expandedReview ? 'line-clamp-2' : ''}`}>
-              {game.notes}
+              {game.Notes}
             </p>
-            {game.notes.length > 100 && (
+            {game.Notes.length > 100 && (
               <button 
                 className="flex items-center text-xs text-accent-primary mt-1 hover:underline"
                 onClick={() => setExpandedReview(!expandedReview)}
@@ -176,15 +176,15 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
                 <button
                   type="button"
                   className={`ml-2 text-text-secondary ${isDiaryPrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
-                  title={isDiaryPrivate ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' : (game.review?.isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
+                  title={isDiaryPrivate ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' : (game.Review?.IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
                   onClick={() => {
-                    if (game.review && !isDiaryPrivate) {
-                      dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !game.review.isPublic }));
+                    if (game.Review && !isDiaryPrivate) {
+                      dispatch(updateReviewPrivacy({ gameId: game.id, IsPublic: !game.Review.IsPublic }));
                     }
                   }}
                   disabled={isDiaryPrivate}
                 >
-                  {game.review?.isPublic ? (
+                  {game.Review?.IsPublic ? (
                     <Eye className="w-4 h-4" />
                   ) : (
                     <EyeOff className="w-4 h-4" />
@@ -192,13 +192,13 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
                 </button>
               </div>
               {game && (
-                <RatingStars rating={calculateRatingFromReview(game.review)} />
+                <RatingStars Rating={calculateRatingFromReview(game.Review)} />
               )}
             </div>
             <p className={`text-xs text-text-secondary ${!expandedReview ? 'line-clamp-2' : ''}`}>
-              {game.review?.text}
+              {game.Review?.Text}
             </p>
-            {game.review?.text && game.review.text.length > 100 && (
+            {game.Review?.Text && game.Review.Text.length > 100 && (
               <button 
                 className="flex items-center text-xs text-accent-primary mt-1 hover:underline"
                 onClick={() => setExpandedReview(!expandedReview)}

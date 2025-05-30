@@ -4,7 +4,7 @@ import { SORT_OPTIONS } from '../../constants/gameConstants'; // Importa le opzi
 import AddGameButton from '../ui/AddGameButton';
 import { SortOption } from '../../types/game';
 import { useAppDispatch } from '../../store/hooks';
-import { addGame } from '../../store/slice/gamesSlice';
+import { useGameActions } from '../../store/hooks/gamesHooks';
 import { mapSteamGamesToLocal } from '../../utils/mapSteamGamesToLocal';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -29,8 +29,6 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   sortOrder,
   onSortChange,
   onSearchChange,
-  columns,
-  onColumnsChange
 }) => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [search, setSearch] = useState("");
@@ -38,6 +36,7 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   const [importError, setImportError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+  const { add } = useGameActions();
   // Usa lo stato globale per steamId
   const steamId = useSelector((state: RootState) => state.user.profile?.steamId || null);
 
@@ -94,9 +93,9 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
                 setImportError(null);
                 try {
                   const mappedGames = await mapSteamGamesToLocal(steamId);
-                  mappedGames.forEach(game => {
-                    dispatch(addGame(game));
-                  });
+                  for (const game of mappedGames) {
+                    await add(game);
+                  }
                   alert(`Importazione completata! Giochi aggiunti: ${mappedGames.length}`);
                 } catch (err: any) {
                   setImportError('Errore durante l\'importazione da Steam.');

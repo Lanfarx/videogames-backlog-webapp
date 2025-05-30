@@ -4,14 +4,14 @@ export interface CommunityReview {
   id: number;
   UserName: string;
   avatar?: string;
-  rating: number;
+  Rating: number;
   text: string;
   date: string;
-  platform: string;
-  gameplay: number;
-  graphics: number;
-  story: number;
-  sound: number;
+  Platform: string;
+  Gameplay: number;
+  Graphics: number;
+  Story: number;
+  Sound: number;
   gameTitle: string; // Aggiunto per collegare la recensione al gioco
 }
 
@@ -25,12 +25,12 @@ export interface CommunityStats {
 }
 
 interface CommunityState {
-  reviews: CommunityReview[];
+  Reviews: CommunityReview[];
   stats: Record<string, CommunityStats>;
 }
 
 const initialState: CommunityState = {
-  reviews: [],
+  Reviews: [],
   stats: {}
 };
 
@@ -39,7 +39,7 @@ const communitySlice = createSlice({
   initialState,
   reducers: {
     addReview: (state, action: PayloadAction<CommunityReview>) => {
-      state.reviews.push(action.payload);
+      state.Reviews.push(action.payload);
       // Aggiorna le statistiche del gioco
       const gameTitle = action.payload.gameTitle;
       if (!state.stats[gameTitle]) {
@@ -54,25 +54,25 @@ const communitySlice = createSlice({
       }
       
       const gameStats = state.stats[gameTitle];
-      const gameReviews = state.reviews.filter(r => r.gameTitle === gameTitle);
+      const gameReviews = state.Reviews.filter(r => r.gameTitle === gameTitle);
       
       gameStats.totalReviews = gameReviews.length;
-      gameStats.averageRating = gameReviews.reduce((sum, r) => sum + r.rating, 0) / gameReviews.length;
+      gameStats.averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
     },
     
     removeReview: (state, action: PayloadAction<number>) => {
-      const reviewIndex = state.reviews.findIndex(r => r.id === action.payload);
-      if (reviewIndex !== -1) {
-        const review = state.reviews[reviewIndex];
-        state.reviews.splice(reviewIndex, 1);
+      const ReviewIndex = state.Reviews.findIndex(r => r.id === action.payload);
+      if (ReviewIndex !== -1) {
+        const Review = state.Reviews[ReviewIndex];
+        state.Reviews.splice(ReviewIndex, 1);
         
         // Aggiorna le statistiche del gioco
-        const gameTitle = review.gameTitle;
-        const gameReviews = state.reviews.filter(r => r.gameTitle === gameTitle);
+        const gameTitle = Review.gameTitle;
+        const gameReviews = state.Reviews.filter(r => r.gameTitle === gameTitle);
         
         if (gameReviews.length > 0) {
           state.stats[gameTitle].totalReviews = gameReviews.length;
-          state.stats[gameTitle].averageRating = gameReviews.reduce((sum, r) => sum + r.rating, 0) / gameReviews.length;
+          state.stats[gameTitle].averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
         } else {
           delete state.stats[gameTitle];
         }
@@ -97,38 +97,38 @@ const communitySlice = createSlice({
     // Azione per inizializzare con dati di esempio (solo per sviluppo)
     initializeSampleData: (state) => {
       // Inizializziamo con alcune recensioni di esempio
-      state.reviews = [
+      state.Reviews = [
         {
           id: 1,
           UserName: "GamerPro92",
-          rating: 5,
+          Rating: 5,
           text: "Breath of the Wild ha ridefinito completamente quello che ci si aspetta da un gioco Zelda. La libertà di esplorazione è senza precedenti e ogni angolo del mondo nasconde qualche sorpresa.",
           date: "2024-01-15",
-          platform: "Nintendo Switch",
-          gameplay: 5,
-          graphics: 4.5,
-          story: 4.5,
-          sound: 5,
+          Platform: "Nintendo Switch",
+          Gameplay: 5,
+          Graphics: 4.5,
+          Story: 4.5,
+          Sound: 5,
           gameTitle: "The Legend of Zelda: Breath of the Wild"
         },
         {
           id: 2,
           UserName: "RetroFan88",
-          rating: 4,
+          Rating: 4,
           text: "Il gioco è fantastico ma alcuni aspetti della storia potrebbero essere migliorati. L'esplorazione rimane il punto forte.",
           date: "2024-01-10",
-          platform: "Nintendo Switch",
-          gameplay: 4.5,
-          graphics: 4,
-          story: 3.5,
-          sound: 4,
+          Platform: "Nintendo Switch",
+          Gameplay: 4.5,
+          Graphics: 4,
+          Story: 3.5,
+          Sound: 4,
           gameTitle: "The Legend of Zelda: Breath of the Wild"
         }
       ];
       
       // Calcoliamo le statistiche in base alle recensioni
-      const gameReviews = state.reviews.filter(r => r.gameTitle === "The Legend of Zelda: Breath of the Wild");
-      const averageRating = gameReviews.reduce((sum, r) => sum + r.rating, 0) / gameReviews.length;
+      const gameReviews = state.Reviews.filter(r => r.gameTitle === "The Legend of Zelda: Breath of the Wild");
+      const averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
       
       state.stats["The Legend of Zelda: Breath of the Wild"] = {
         totalPlayers: 1250000,

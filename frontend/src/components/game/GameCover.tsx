@@ -1,13 +1,13 @@
 import { getStatusColor } from '../../constants/gameConstants';
 
 interface GameCoverProps {
-  coverImage?: string;  // Reso opzionale
+  CoverImage?: string;  // Reso opzionale
   title: string;
-  status?: string;
+  Status?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const GameCover = ({ coverImage, title, status = 'not-started', size = 'md' }: GameCoverProps) => {
+const GameCover = ({ CoverImage, title, Status = 'NotStarted', size = 'md' }: GameCoverProps) => {
   const getDimensions = () => {
     switch (size) {
       case 'sm': return 'w-32 h-32';
@@ -23,13 +23,13 @@ const GameCover = ({ coverImage, title, status = 'not-started', size = 'md' }: G
       style={{ boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
     >
       <img 
-        src={coverImage || "/placeholder.svg"} 
+        src={CoverImage || "/placeholder.svg"} 
         alt={title} 
         className="w-full h-full object-cover"
       />
       <div 
         className="absolute inset-0" 
-        style={{ backgroundColor: `${getStatusColor(status)}33` }}
+        style={{ backgroundColor: `${getStatusColor(Status)}33` }}
       ></div>
     </div>
   );

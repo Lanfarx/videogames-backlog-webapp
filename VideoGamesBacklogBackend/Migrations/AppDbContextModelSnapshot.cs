@@ -216,7 +216,6 @@ namespace VideoGamesBacklogBackend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PlatinumDate")
@@ -239,7 +238,7 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()

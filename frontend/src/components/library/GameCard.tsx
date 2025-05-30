@@ -13,69 +13,69 @@ interface GameCardProps {
   game: Game;
   onEdit?: (game: Game) => void;
   onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, status: GameStatus) => void;
+  onStatusChange?: (gameId: string, Status: GameStatus) => void;
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusChange }) => {
   // Ottieni il gioco aggiornato dallo stato globale Redux
   const currentGame = useGameById(game.id) || game;
-  const effectiveRating = currentGame.rating ?? getGameRating(currentGame);
-  const effectiveHours = currentGame.hoursPlayed;
+  const effectiveRating = currentGame.Rating ?? getGameRating(currentGame);
+  const effectiveHours = currentGame.HoursPlayed;
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
       {/* Indicatore di stato */}
-      <StatusIndicator status={currentGame.status} />
+      <StatusIndicator Status={currentGame.Status} />
 
       {/* Copertina con link */}
-      <Link to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`} className="block">
+      <Link to={`/library/${encodeURIComponent(game.Title.replace(/ /g, '_'))}`} className="block">
         <div className="relative h-[180px] overflow-hidden">
           <div className="absolute inset-0 bg-accent-secondary/20 z-10"></div>
-          <img src={game.coverImage || "/placeholder.svg"} alt={game.title} className="w-full h-full object-cover" />
+          <img src={game.CoverImage || "/placeholder.svg"} alt={game.Title} className="w-full h-full object-cover" />
         </div>
       </Link>
 
       {/* Contenuto */}
       <div className="p-4">
-        <Link to={`/library/${encodeURIComponent(game.title.replace(/ /g, '_'))}`} className="block">
+        <Link to={`/library/${encodeURIComponent(game.Title.replace(/ /g, '_'))}`} className="block">
           <h3 className="font-montserrat font-semibold text-base text-text-primary line-clamp-2 h-12 hover:text-accent-primary transition-colors">
-            {game.title}
+            {game.Title}
           </h3>
         </Link>
 
         <div className="flex items-center mt-2 text-text-secondary">
           <Monitor className="h-4 w-4 mr-1" />
-          <span className="font-roboto text-xs">{game.platform}</span>
+          <span className="font-roboto text-xs">{game.Platform}</span>
           <span className="mx-2">|</span>
           <Clock className="h-4 w-4 mr-1" />
           <span className="font-roboto text-xs">{effectiveHours} ore</span>
-          {game.metacritic && (
+          {game.Metacritic && (
             <>
               <span className="mx-2">|</span>
               <Award className="h-4 w-4 mr-1 text-yellow-500" />
-              <span className="font-roboto text-xs">{game.metacritic}</span>
+              <span className="font-roboto text-xs">{game.Metacritic}</span>
             </>
           )}
         </div>
 
         {/* Prezzo e Data di acquisto */}
         <div className="mt-2 flex items-center justify-between text-text-secondary">
-          {game.purchaseDate && (
+          {game.PurchaseDate && (
             <span className="font-roboto text-xs">
-              Acquistato il: {new Date(game.purchaseDate).toLocaleDateString()}
+              Acquistato il: {new Date(game.PurchaseDate).toLocaleDateString()}
             </span>
           )}
-          {game.price > 0 && (
-            <span className="font-roboto text-xs">{game.price.toFixed(2)} €</span>
+          {game.Price > 0 && (
+            <span className="font-roboto text-xs">{game.Price.toFixed(2)} €</span>
           )}
         </div>
 
         {/* Stato e Valutazione */}
         <div className="mt-2 flex items-center justify-between">
-          <StatusBadge status={currentGame.status} />
+          <StatusBadge Status={currentGame.Status} />
           {effectiveRating > 0 && (
-            <RatingStars rating={effectiveRating} showValue={false} size="sm" />
+            <RatingStars Rating={effectiveRating} showValue={false} size="sm" />
           )}
         </div>
       </div>

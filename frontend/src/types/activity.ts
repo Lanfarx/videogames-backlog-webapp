@@ -3,11 +3,11 @@
  */
 export type ActivityType = 
   | 'played'      // Sessione di gioco
-  | 'completed'   // Completamento del gioco
+  | 'Completed'   // Completamento del gioco
   | 'added'       // Aggiunta alla collezione
   | 'rated'       // Recensione/valutazione
-  | 'platinum'    // Ottenimento di tutti i trofei/achievement
-  | 'abandoned';  // Abbandono del gioco
+  | 'Platinum'    // Ottenimento di tutti i trofei/achievement
+  | 'Abandoned';  // Abbandono del gioco
 
 /**
  * Struttura base di un'attività
@@ -51,26 +51,26 @@ export interface PlayedActivityData {
 }
 
 /**
- * Informazioni specifiche per il tipo di attività "abandoned"
+ * Informazioni specifiche per il tipo di attività "Abandoned"
  */
 export interface AbandonedActivityData {
   reason?: string;                 // Motivo dell'abbandono
-  hoursPlayed?: number;            // Ore giocate prima di abbandonare
+  HoursPlayed?: number;            // Ore giocate prima di abbandonare
 }
 
 /**
  * Informazioni specifiche per il tipo di attività "rated"
  */
 export interface RatedActivityData {
-  rating: number;                  // Valutazione (1-10)
-  reviewText?: string;             // Testo della recensione
-  hoursPlayed?: number;            // Ore giocate prima della recensione
+  Rating: number;                  // Valutazione (1-10)
+  Reviewtext?: string;             // Testo della recensione
+  HoursPlayed?: number;            // Ore giocate prima della recensione
 }
 
 /**
- * Informazioni specifiche per il tipo di attività "completed"/"platinum"
+ * Informazioni specifiche per il tipo di attività "Completed"/"Platinum"
  */
 export interface CompletionActivityData {
   hoursToComplete: number;         // Ore impiegate per completare il gioco
-  completionDate: Date;            // Data di completamento
+  CompletionDate: Date;            // Data di completamento
 }

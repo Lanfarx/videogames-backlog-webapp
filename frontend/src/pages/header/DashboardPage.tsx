@@ -19,13 +19,13 @@ const DashboardPage: React.FC = () => {
     const allGames = useAllGames();
     const recentActivities = useRecentActivities(5);
     const allRecentActivities = useRecentActivities(100);
-    const statusData = useStatusData();
-    const [showHistory, setShowHistory] = React.useState(false);
+    const StatusData = useStatusData();
+    const [showHiStory, setShowHiStory] = React.useState(false);
 
     // Usa la funzione centralizzata per la distribuzione piattaforme
-    const platformData = generatePlatformDistributionData(allGames)
+    const PlatformData = generatePlatformDistributionData(allGames)
       .slice(0, 4)
-      .map(item => ({ platform: item.label, count: item.value }));
+      .map(item => ({ Platform: item.label, count: item.value }));
 
     // Usa la funzione centralizzata per la distribuzione generi
     const genreData = generateGenreDistributionData(allGames);
@@ -59,12 +59,12 @@ const DashboardPage: React.FC = () => {
             {/* Grafici Principali */}
             <div className="grid grid-cols-2 gap-5 mb-6">
                 <StatusDistributionChart 
-                    data={statusData} 
+                    data={StatusData} 
                     icon={<PieChartIcon className="h-5 w-5 text-accent-primary mr-2" />} 
                     title="Distribuzione per Stato" 
                 />
                 <PlatformBarChart 
-                    data={platformData} 
+                    data={PlatformData} 
                     icon={<BarChartIcon className="h-5 w-5 text-accent-primary mr-2" />}
                     title="Piattaforme più utilizzate" 
                 />
@@ -83,15 +83,15 @@ const DashboardPage: React.FC = () => {
                         <Clock className="h-5 w-5 text-accent-primary mr-2" />
                         Attività Recente
                       </h2>
-                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHiStory(true)}>
                         <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
                         <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
                       </div>
                     </div>
-                    {showHistory && (
+                    {showHiStory && (
                       <ActivityHistoryPopover
                         activities={allRecentActivities}
-                        onClose={() => setShowHistory(false)}
+                        onClose={() => setShowHiStory(false)}
                         gameTitle="Tutta la libreria"
                       />
                     )}

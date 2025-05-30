@@ -28,10 +28,10 @@ const DiaryFilters: React.FC<DiaryFiltersProps> = ({
   const filters = [
     { id: 'all', label: 'Tutto' },
     { id: 'played', label: 'Giocati' },
-    { id: 'completed', label: 'Completati' },
-    { id: 'abandoned', label: 'Abbandonati' },
+    { id: 'Completed', label: 'Completati' },
+    { id: 'Abandoned', label: 'Abbandonati' },
     { id: 'rated', label: 'Recensiti' },
-    { id: 'platinum', label: 'Platinati' }
+    { id: 'Platinum', label: 'Platinati' }
   ];
   
   return (

@@ -18,13 +18,13 @@ const EditGameDetailsModal = ({
 }: EditGameDetailsModalProps) => {
   const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
-    title: game.title,
-    developer: game.developer,
-    publisher: game.publisher,
-    releaseYear: game.releaseYear,
-    genres: game.genres.join(', '), // Convertiamo l'array in una stringa per il form
-    coverImage: game.coverImage,
-    metacritic: game.metacritic 
+    title: game.Title,
+    Developer: game.Developer,
+    Publisher: game.Publisher,
+    ReleaseYear: game.ReleaseYear,
+    Genres: game.Genres.join(', '), // Convertiamo l'array in una stringa per il form
+    CoverImage: game.CoverImage,
+    Metacritic: game.Metacritic 
   });
 
   if (!isOpen) return null;
@@ -39,12 +39,12 @@ const EditGameDetailsModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convertiamo la stringa delle genres di nuovo in un array
+    // Convertiamo la stringa delle Genres di nuovo in un array
     const updatedGame: Partial<Game> = {
       ...formData,
-      releaseYear: Number(formData.releaseYear),
-      genres: formData.genres.split(',').map(genre => genre.trim()).filter(Boolean),
-      metacritic: Number(formData.metacritic) || 0
+      ReleaseYear: Number(formData.ReleaseYear),
+      Genres: formData.Genres.split(',').map(genre => genre.trim()).filter(Boolean),
+      Metacritic: Number(formData.Metacritic) || 0
     };
     
     // Aggiorna il gioco attraverso Redux usando updateGame
@@ -94,42 +94,42 @@ const EditGameDetailsModal = ({
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="developer" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Developer" className="block text-text-primary font-secondary text-sm">
                   Sviluppatore
                 </label>
                 <input
                   type="text"
-                  id="developer"
-                  name="developer"
-                  value={formData.developer}
+                  id="Developer"
+                  name="Developer"
+                  value={formData.Developer}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="publisher" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Publisher" className="block text-text-primary font-secondary text-sm">
                   Editore
                 </label>
                 <input
                   type="text"
-                  id="publisher"
-                  name="publisher"
-                  value={formData.publisher}
+                  id="Publisher"
+                  name="Publisher"
+                  value={formData.Publisher}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="metacritic" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Metacritic" className="block text-text-primary font-secondary text-sm">
                   Metacritic
                 </label>
                 <input
                   type="number"
-                  id="metacritic"
-                  name="metacritic"
-                  value={formData.metacritic}
+                  id="Metacritic"
+                  name="Metacritic"
+                  value={formData.Metacritic}
                   onChange={handleChange}
                   min="0"
                   max="100"
@@ -138,28 +138,28 @@ const EditGameDetailsModal = ({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="releaseYear" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="ReleaseYear" className="block text-text-primary font-secondary text-sm">
                   Anno di rilascio
                 </label>
                 <input
                   type="number"
-                  id="releaseYear"
-                  name="releaseYear"
-                  value={formData.releaseYear}
+                  id="ReleaseYear"
+                  name="ReleaseYear"
+                  value={formData.ReleaseYear}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="genres" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Genres" className="block text-text-primary font-secondary text-sm">
                   Generi (separati da virgola)
                 </label>
                 <input
                   type="text"
-                  id="genres"
-                  name="genres"
-                  value={formData.genres}
+                  id="Genres"
+                  name="Genres"
+                  value={formData.Genres}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                   placeholder="Azione, Avventura, RPG, ..."
@@ -167,14 +167,14 @@ const EditGameDetailsModal = ({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="coverImage" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="CoverImage" className="block text-text-primary font-secondary text-sm">
                   URL immagine di copertina
                 </label>
                 <input
                   type="url"
-                  id="coverImage"
-                  name="coverImage"
-                  value={formData.coverImage}
+                  id="CoverImage"
+                  name="CoverImage"
+                  value={formData.CoverImage}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                   placeholder="https://example.com/image.jpg"

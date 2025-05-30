@@ -3,7 +3,7 @@ import React from 'react';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
-  helperText?: string;
+  helpertext?: string;
   valid?: boolean;
   iconRight?: React.ReactNode;
 }
@@ -11,7 +11,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 const Input: React.FC<InputProps> = ({
   label,
   error,
-  helperText,
+  helpertext,
   valid,
   iconRight,
   ...props
@@ -34,8 +34,8 @@ const Input: React.FC<InputProps> = ({
           <span className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">{iconRight}</span>
         )}
       </div>
-      {helperText && !error && (
-        <p className="text-xs text-gray-500 mt-1">{helperText}</p>
+      {helpertext && !error && (
+        <p className="text-xs text-gray-500 mt-1">{helpertext}</p>
       )}
       {error && (
         <p className="text-xs text-error mt-1">{error}</p>

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Input, Checkbox, PasswordStrengthBar, Divider } from '../../components/auth';
 import AuthLayout from '../../components/auth/AuthLayout';
-import { GAME_PLATFORMS, GENRES } from '../../constants/gameConstants';
+import { GAME_PlatformS, Genres } from '../../constants/gameConstants';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../../store/services/authService';
 
@@ -13,7 +13,7 @@ const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [platform, setPlatform] = useState('');
+  const [Platform, setPlatform] = useState('');
   const [genre, setGenre] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +51,11 @@ const RegisterPage: React.FC = () => {
       return;
     }
     try {
-      const tags = [platform, genre].filter(Boolean).join(',');
+      const tags = [Platform, genre].filter(Boolean).join(',');
       await register({ email, password, UserName, tags });
       navigate('/login');
     } catch (err: any) {
-      if (err.response && err.response.status === 409) {
+      if (err.response && err.response.Status === 409) {
         setError('Questa email è già registrata.');
       } else {
         setError('Errore durante la registrazione.');
@@ -87,7 +87,7 @@ const RegisterPage: React.FC = () => {
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#FB7E00"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
               )
             ) : null}
-            helperText="Minimo 3 caratteri, solo lettere e numeri"
+            helpertext="Minimo 3 caratteri, solo lettere e numeri"
           />
           <Input
             label="Email"
@@ -141,11 +141,11 @@ const RegisterPage: React.FC = () => {
             <div className="text-sm text-gray-500 mb-2">Ci aiuta a personalizzare la tua esperienza</div>
             <select
               className="w-full h-12 px-4 rounded-lg border border-gray-300 text-base font-normal focus:border-accent focus:shadow-[0_0_0_2px_rgba(251,126,0,0.2)] mb-2"
-              value={platform}
+              value={Platform}
               onChange={e => setPlatform(e.target.value)}
             >
               <option value="">Piattaforma preferita</option>
-              {GAME_PLATFORMS.map(p => (
+              {GAME_PlatformS.map(p => (
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
@@ -155,7 +155,7 @@ const RegisterPage: React.FC = () => {
               onChange={e => setGenre(e.target.value)}
             >
               <option value="">Genere preferito</option>
-              {GENRES.map((g: string) => (
+              {Genres.map((g: string) => (
                 <option key={g} value={g}>{g}</option>
               ))}
             </select>

@@ -11,29 +11,29 @@ import { createRatingActivity } from '../../utils/activityUtils';
 
 interface NotesReviewCardProps {
   game: Game;
-  onNotesChange?: (notes: string) => void;
-  onReviewSave?: (review: GameReview) => void;
+  onNotesChange?: (Notes: string) => void;
+  onReviewSave?: (Review: GameReview) => void;
 }
 
 const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardProps) => {
-  const [activeTab, setActiveTab] = useState<'notes' | 'review'>('notes');
-  const [notesValue, setNotesValue] = useState(game.notes || '');
+  const [activeTab, setActiveTab] = useState<'Notes' | 'Review'>('Notes');
+  const [NotesValue, setNotesValue] = useState(game.Notes || '');
   const [saveNotesSuccess, setSaveNotesSuccess] = useState(false);
   const [saveReviewSuccess, setSaveReviewSuccess] = useState(false);
   
   // Stati per la recensione
-  const [reviewText, setReviewText] = useState('');
-  const [gameplayRating, setGameplayRating] = useState(0);
-  const [graphicsRating, setGraphicsRating] = useState(0);
-  const [storyRating, setStoryRating] = useState(0);
-  const [soundRating, setSoundRating] = useState(0);
-  const [reviewDate, setReviewDate] = useState('');
+  const [Reviewtext, setReviewtext] = useState('');
+  const [GameplayRating, setGameplayRating] = useState(0);
+  const [GraphicsRating, setGraphicsRating] = useState(0);
+  const [StoryRating, setStoryRating] = useState(0);
+  const [SoundRating, setSoundRating] = useState(0);
+  const [ReviewDate, setReviewDate] = useState('');
 
   // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
   const gameFromStore = useGameById(game.id);
   const currentGame = gameFromStore || game;
   // Stato per la privacy della recensione - sincronizzato con le impostazioni profilo
-  const [isPublic, setIsPublic] = useState(currentGame.review?.isPublic ?? false);
+  const [IsPublic, setIsPublic] = useState(currentGame.Review?.IsPublic ?? false);
   // Usa Redux per la privacy
   const userProfile = useAppSelector(state => state.user.profile);
   const isProfilePrivate = userProfile?.privacySettings?.isPrivate ?? false;
@@ -45,40 +45,40 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   useEffect(() => {
     if (isDiaryPrivate) {
       setIsPublic(false);
-    } else if (!currentGame.review || currentGame.review.isPublic === undefined) {
+    } else if (!currentGame.Review || currentGame.Review.IsPublic === undefined) {
       // Solo quando si crea una nuova recensione senza privacy già impostata
       setIsPublic(true);
     } else {
-      setIsPublic(currentGame.review.isPublic);
+      setIsPublic(currentGame.Review.IsPublic);
     }
-  }, [isDiaryPrivate, currentGame.review]);
+  }, [isDiaryPrivate, currentGame.Review]);
 
   // Verifica se il gioco è "da iniziare" (non permette recensioni)
-  const isNotStarted = currentGame.status === 'not-started';
+  const isNotStarted = currentGame.Status === 'NotStarted';
 
   // Se il gioco è "da iniziare" e l'utente è nella scheda recensione, forza il cambio alla scheda note
   useEffect(() => {
-    if (isNotStarted && activeTab === 'review') {
-      setActiveTab('notes');
+    if (isNotStarted && activeTab === 'Review') {
+      setActiveTab('Notes');
     }
   }, [isNotStarted, activeTab]);
 
   // Carica i dati della recensione dal gioco quando disponibili
   useEffect(() => {
-    if (currentGame.review) {
-      setReviewText(currentGame.review.text);
-      setGameplayRating(currentGame.review.gameplay);
-      setGraphicsRating(currentGame.review.graphics);
-      setStoryRating(currentGame.review.story);
-      setSoundRating(currentGame.review.sound);
-      setReviewDate(currentGame.review.date);
+    if (currentGame.Review) {
+      setReviewtext(currentGame.Review.Text);
+      setGameplayRating(currentGame.Review.Gameplay);
+      setGraphicsRating(currentGame.Review.Graphics);
+      setStoryRating(currentGame.Review.Story);
+      setSoundRating(currentGame.Review.Sound);
+      setReviewDate(currentGame.Review.Date);
     }
-    setNotesValue(currentGame.notes || '');  }, [currentGame]);
+    setNotesValue(currentGame.Notes || '');  }, [currentGame]);
 
-  // Aggiorna anche lo stato del toggle quando cambia la review
+  // Aggiorna anche lo stato del toggle quando cambia la Review
   useEffect(() => {
-    setIsPublic(currentGame.review?.isPublic ?? false);
-  }, [currentGame.review]);
+    setIsPublic(currentGame.Review?.IsPublic ?? false);
+  }, [currentGame.Review]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotesValue(e.target.value);
@@ -86,43 +86,43 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     if (saveNotesSuccess) setSaveNotesSuccess(false);
   };
 
-  const handleReviewTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setReviewText(e.target.value);
+  const handleReviewtextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReviewtext(e.target.value);
     // Reset del messaggio di successo quando l'utente inizia a modificare
     if (saveReviewSuccess) setSaveReviewSuccess(false);
   };
 
   const handleSaveNotes = () => {
-    dispatch(updateGameNotes({ gameId: game.id, notes: notesValue }));
+    dispatch(updateGameNotes({ gameId: game.id, Notes: NotesValue }));
     if (onNotesChange) {
-      onNotesChange(notesValue);
+      onNotesChange(NotesValue);
     }
     // Mostra messaggio di successo per 3 secondi
     setSaveNotesSuccess(true);
     setTimeout(() => setSaveNotesSuccess(false), 3000);
   };
-  // Nel salvataggio della recensione, forza isPublic a false se diario privato
+  // Nel salvataggio della recensione, forza IsPublic a false se diario privato
   const handleSaveReview = () => {
     if (!isNotStarted) {
       const now = new Date();
       const formattedDate = now.toISOString().split('T')[0];
-      const reviewPrivacy = isDiaryPrivate ? false : (currentGame.review?.isPublic !== undefined ? isPublic : true);
+      const ReviewPrivacy = isDiaryPrivate ? false : (currentGame.Review?.IsPublic !== undefined ? IsPublic : true);
       const updatedReview: GameReview = {
-        text: reviewText,
-        gameplay: gameplayRating,
-        graphics: graphicsRating,
-        story: storyRating,
-        sound: soundRating,
-        date: formattedDate,
-        isPublic: reviewPrivacy,
+        Text: Reviewtext,
+        Gameplay: GameplayRating,
+        Graphics: GraphicsRating,
+        Story: StoryRating,
+        Sound: SoundRating,
+        Date: formattedDate,
+        IsPublic: ReviewPrivacy,
       };
-      setIsPublic(reviewPrivacy);
+      setIsPublic(ReviewPrivacy);
       setReviewDate(formattedDate);
-      dispatch(updateGameReview({ gameId: game.id, review: updatedReview }));
+      dispatch(updateGameReview({ gameId: game.id, Review: updatedReview }));
       const averageRating = calculateRatingFromReview(updatedReview);
-      dispatch(updateGameRating({ gameId: game.id, rating: averageRating }));
-      const ratingActivity = createRatingActivity(game, averageRating);
-      addActivity(ratingActivity);
+      dispatch(updateGameRating({ gameId: game.id, Rating: averageRating }));
+      const RatingActivity = createRatingActivity(game, averageRating);
+      addActivity(RatingActivity);
       if (onReviewSave) {
         onReviewSave(updatedReview);
       }
@@ -155,7 +155,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   // Handler per il click sul tab della recensione
   const handleReviewTabClick = () => {
     if (!isNotStarted) {
-      setActiveTab('review');
+      setActiveTab('Review');
     }
   };
 
@@ -165,15 +165,15 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
       <div className="flex text-center border-b border-border-color">
         <button
           className={`flex-1 py-4 font-primary font-semibold ${
-            activeTab === 'notes' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'
+            activeTab === 'Notes' ? 'border-b-2 border-accent-primary text-accent-primary' : 'text-text-secondary'
           }`}
-          onClick={() => setActiveTab('notes')}
+          onClick={() => setActiveTab('Notes')}
         >
           Note
         </button>
         <button
           className={`flex-1 py-4 font-primary font-semibold ${
-            activeTab === 'review' 
+            activeTab === 'Review' 
               ? 'border-b-2 border-accent-primary text-accent-primary' 
               : isNotStarted 
                 ? 'text-text-secondary/50 cursor-not-allowed' 
@@ -188,12 +188,12 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
 
       {/* Tab content */}
       <div className="p-6">
-        {activeTab === 'notes' ? (
+        {activeTab === 'Notes' ? (
           <div>
             <textarea
               className="w-full p-4 min-h-[180px] border border-border-color rounded-lg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
               placeholder="Aggiungi le tue note private per questo gioco..."
-              value={notesValue}
+              value={NotesValue}
               onChange={handleNotesChange}
             ></textarea>
             
@@ -227,8 +227,8 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
               {/* Review text */}
               <textarea
                 className="w-full p-4 min-h-[120px] border-b border-border-color focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
-                value={reviewText}
-                onChange={handleReviewTextChange}
+                value={Reviewtext}
+                onChange={handleReviewtextChange}
                 placeholder="Scrivi qui la tua recensione..."
                 disabled={isNotStarted}
               ></textarea>              {/* Toggle privacy */}
@@ -238,37 +238,37 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   className={`flex items-center gap-2 text-sm ${
                     isDiaryPrivate
                       ? 'text-text-disabled opacity-60 cursor-not-allowed' 
-                      : isPublic 
+                      : IsPublic 
                         ? 'text-accent-success hover:text-accent-success/80'
                         : 'text-text-secondary hover:text-accent-primary'
                   } focus:outline-none transition-colors`}
                   title={
                     isDiaryPrivate
                       ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.'
-                      : (isPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
+                      : (IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
                   }
                   onClick={() => {
                     if (!isNotStarted && !isDiaryPrivate) {
-                      setIsPublic(!isPublic);
+                      setIsPublic(!IsPublic);
                       dispatch({
                         type: 'games/updateReviewPrivacy',
-                        payload: { gameId: game.id, isPublic: !isPublic }
+                        payload: { gameId: game.id, IsPublic: !IsPublic }
                       });
                     }
                   }}
                   disabled={isNotStarted || isDiaryPrivate}
                 >
-                  {isPublic ? (
+                  {IsPublic ? (
                     <Eye className="w-5 h-5" />
                   ) : (
                     <EyeOff className="w-5 h-5" />
                   )}
-                  <span>{isPublic ? 'Pubblica' : 'Privata'}</span>
+                  <span>{IsPublic ? 'Pubblica' : 'Privata'}</span>
                 </button>
                 <span className="text-xs text-text-disabled">
                   {isDiaryPrivate
                     ? 'Privacy limitata dal diario privato'
-                    : (isPublic ? 'Visibile nella community' : 'Solo per te')
+                    : (IsPublic ? 'Visibile nella community' : 'Solo per te')
                   }
                 </span>
               </div>
@@ -281,7 +281,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   </label>
                   <div className="cursor-pointer">
                     <RatingStars 
-                      rating={gameplayRating} 
+                      Rating={GameplayRating} 
                       size="md"
                       onRatingChange={handleGameplayRatingChange}
                       readOnly={isNotStarted}
@@ -294,7 +294,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   </label>
                   <div className="cursor-pointer">
                     <RatingStars 
-                      rating={graphicsRating} 
+                      Rating={GraphicsRating} 
                       size="md"
                       onRatingChange={handleGraphicsRatingChange}
                       readOnly={isNotStarted}
@@ -307,7 +307,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   </label>
                   <div className="cursor-pointer">
                     <RatingStars 
-                      rating={storyRating} 
+                      Rating={StoryRating} 
                       size="md"
                       onRatingChange={handleStoryRatingChange}
                       readOnly={isNotStarted}
@@ -320,7 +320,7 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   </label>
                   <div className="cursor-pointer">
                     <RatingStars 
-                      rating={soundRating} 
+                      Rating={SoundRating} 
                       size="md"
                       onRatingChange={handleSoundRatingChange}
                       readOnly={isNotStarted}
@@ -336,9 +336,9 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   <span className="text-accent-success text-sm font-secondary">
                     Recensione salvata con successo!
                   </span>
-                ) : reviewDate ? (
+                ) : ReviewDate ? (
                   <span className="text-xs text-text-secondary font-secondary">
-                    Recensione aggiornata il: {new Date(reviewDate).toLocaleDateString('it-IT')}
+                    Recensione aggiornata il: {new Date(ReviewDate).toLocaleDateString('it-IT')}
                   </span>
                 ) : null}
               </div>

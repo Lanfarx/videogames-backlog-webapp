@@ -1,12 +1,25 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { Game, GameReview, GameComment } from '../../types/game';
+import {
+  fetchGames,
+  addGame,
+  updateGameThunk,
+  deleteGameThunk,
+  fetchComments,
+  addCommentThunk,
+  deleteCommentThunk
+} from '../thunks/gamesThunks';
 
 interface GamesState {
   games: Game[];
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: GamesState = {
   games: [],
+  loading: false,
+  error: null,
 };
 
 const gamesSlice = createSlice({
@@ -22,121 +35,158 @@ const gamesSlice = createSlice({
         state.games[idx] = action.payload;
       }
     },
-    updateGameRating(state, action: PayloadAction<{ gameId: number; rating: number }>) {
+    updateGameRating(state, action: PayloadAction<{ gameId: number; Rating: number }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.rating = action.payload.rating;
+        game.Rating = action.payload.Rating;
       }
     },
-    updateGameReview(state, action: PayloadAction<{ gameId: number; review: GameReview }>) {
+    updateGameReview(state, action: PayloadAction<{ gameId: number; Review: GameReview }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.review = action.payload.review;
+        game.Review = action.payload.Review;
       }
     },
-    updateReviewPrivacy(state, action: PayloadAction<{ gameId: number; isPublic: boolean }>) {
+    updateReviewPrivacy(state, action: PayloadAction<{ gameId: number; IsPublic: boolean }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
-      if (game && game.review) {
-        game.review.isPublic = action.payload.isPublic;
+      if (game && game.Review) {
+        game.Review.IsPublic = action.payload.IsPublic;
       }
     },
-    updateGameStatus(state, action: PayloadAction<{ gameId: number; status: Game["status"] }>) {
+    updateGameStatus(state, action: PayloadAction<{ gameId: number; Status: Game["Status"] }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        const previousStatus = game.status;
-        const newStatus = action.payload.status;
+        const previousStatus = game.Status;
+        const newStatus = action.payload.Status;
         const today = new Date().toISOString().split('T')[0];
         
         // Aggiorna lo stato
-        game.status = newStatus;
+        game.Status = newStatus;
         
         // Gestisci automaticamente le date in base al nuovo stato
-        if (newStatus === 'completed') {
-          // Quando diventa completato: imposta completionDate
-          game.completionDate = today;
-          // Se aveva platinumDate, rimuovilo (non è più platino)
-          game.platinumDate = undefined;
-        } else if (newStatus === 'platinum') {
-          // Quando diventa platino: imposta platinumDate e mantieni/imposta completionDate
-          game.platinumDate = today;
+        if (newStatus === 'Completed') {
+          // Quando diventa completato: imposta CompletionDate
+          game.CompletionDate = today;
+          // Se aveva PlatinumDate, rimuovilo (non è più platino)
+          game.PlatinumDate = undefined;
+        } else if (newStatus === 'Platinum') {
+          // Quando diventa platino: imposta PlatinumDate e mantieni/imposta CompletionDate
+          game.PlatinumDate = today;
           // Se non ha già una data di completamento, impostala
-          if (!game.completionDate) {
-            game.completionDate = today;
+          if (!game.CompletionDate) {
+            game.CompletionDate = today;
           }
         } else {
           // Per tutti gli altri stati, rimuovi entrambe le date
-          if (previousStatus === 'completed' || previousStatus === 'platinum') {
-            game.completionDate = undefined;
-            game.platinumDate = undefined;
+          if (previousStatus === 'Completed' || previousStatus === 'Platinum') {
+            game.CompletionDate = undefined;
+            game.PlatinumDate = undefined;
           }
         }
       }
     },
-    updateGamePlaytime(state, action: PayloadAction<{ gameId: number; hoursPlayed: number }>) {
+    updateGameplaytime(state, action: PayloadAction<{ gameId: number; HoursPlayed: number }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.hoursPlayed = action.payload.hoursPlayed;
+        game.HoursPlayed = action.payload.HoursPlayed;
         
         // Se il gioco era "Da iniziare" e ora ha ore di gioco, imposta lo stato a "In corso"
-        if (game.status === 'not-started' && action.payload.hoursPlayed > 0) {
-          game.status = 'in-progress';
+        if (game.Status === 'NotStarted' && action.payload.HoursPlayed > 0) {
+          game.Status = 'InProgress';
         }
       }
     },
-    updateGameNotes(state, action: PayloadAction<{ gameId: number; notes: string }>) {
+    updateGameNotes(state, action: PayloadAction<{ gameId: number; Notes: string }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.notes = action.payload.notes;
+        game.Notes = action.payload.Notes;
       }
     },
-    updateGameCompletionDate(state, action: PayloadAction<{ gameId: number; completionDate: string }>) {
+    updateGameCompletionDate(state, action: PayloadAction<{ gameId: number; CompletionDate: string }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.completionDate = action.payload.completionDate;
+        game.CompletionDate = action.payload.CompletionDate;
       }
     },
-    updateGamePlatinumDate(state, action: PayloadAction<{ gameId: number; platinumDate: string }>) {
+    updateGamePlatinumDate(state, action: PayloadAction<{ gameId: number; PlatinumDate: string }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.platinumDate = action.payload.platinumDate;
+        game.PlatinumDate = action.payload.PlatinumDate;
       }
     },
-    updateGamePlatform(state, action: PayloadAction<{ gameId: number; platform: string }>) {
+    updateGamePlatform(state, action: PayloadAction<{ gameId: number; Platform: string }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.platform = action.payload.platform;
+        game.Platform = action.payload.Platform;
       }
     },
-    updateGamePrice(state, action: PayloadAction<{ gameId: number; price: number }>) {
+    updateGamePrice(state, action: PayloadAction<{ gameId: number; Price: number }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.price = action.payload.price;
+        game.Price = action.payload.Price;
       }
     },
-    updateGamePurchaseDate(state, action: PayloadAction<{ gameId: number; purchaseDate: string }>) {
+    updateGamePurchaseDate(state, action: PayloadAction<{ gameId: number; PurchaseDate: string }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.purchaseDate = action.payload.purchaseDate;
+        game.PurchaseDate = action.payload.PurchaseDate;
       }
     },
-    updateGameMetacritic(state, action: PayloadAction<{ gameId: number; metacritic: number }>) {
+    updateGameMetacritic(state, action: PayloadAction<{ gameId: number; Metacritic: number }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.metacritic = action.payload.metacritic;
+        game.Metacritic = action.payload.Metacritic;
       }
     },
-    updateGameComments(state, action: PayloadAction<{ gameId: number; comments: GameComment[] }>) {
+    updateGameComments(state, action: PayloadAction<{ gameId: number; Comments: GameComment[] }>) {
       const game = state.games.find(g => g.id === action.payload.gameId);
       if (game) {
-        game.comments = action.payload.comments;
+        game.Comments = action.payload.Comments;
       }
     },
-    addGame(state, action: PayloadAction<Game>) {
-      state.games.push(action.payload);
-    },
-    deleteGame(state, action: PayloadAction<number>) {
-      state.games = state.games.filter(g => g.id !== action.payload);
-    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchGames.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGames.fulfilled, (state, action) => {
+        state.games = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchGames.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Errore caricamento giochi';
+      })
+      .addCase(addGame.fulfilled, (state, action) => {
+        state.games.push(action.payload);
+      })
+      .addCase(updateGameThunk.fulfilled, (state, action) => {
+        const idx = state.games.findIndex(g => g.id === action.payload.id);
+        if (idx !== -1) state.games[idx] = action.payload;
+      })
+      .addCase(deleteGameThunk.fulfilled, (state, action) => {
+        state.games = state.games.filter(g => g.id !== action.payload);
+      })
+      // Commenti
+      .addCase(fetchComments.fulfilled, (state, action) => {
+        const game = state.games.find(g => g.id === action.payload.gameId);
+        if (game) game.Comments = action.payload.Comments;
+      })
+      .addCase(addCommentThunk.fulfilled, (state, action) => {
+        const game = state.games.find(g => g.id === action.payload.gameId);
+        if (game) {
+          if (!game.Comments) game.Comments = [];
+          game.Comments.push(action.payload.comment);
+        }
+      })
+      .addCase(deleteCommentThunk.fulfilled, (state, action) => {
+        const game = state.games.find(g => g.id === action.payload.gameId);
+        if (game && game.Comments) {
+          game.Comments = game.Comments.filter(c => c.Id !== action.payload.commentId);
+        }
+      });
   }
 });
 
@@ -145,10 +195,8 @@ export const {
   updateGame, 
   updateGameRating, 
   updateGameReview, 
-  addGame, 
-  deleteGame, 
   updateGameStatus, 
-  updateGamePlaytime, 
+  updateGameplaytime, 
   updateGameNotes, 
   updateGameCompletionDate, 
   updateGamePlatinumDate, 

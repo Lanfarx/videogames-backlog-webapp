@@ -1,6 +1,6 @@
 import { Activity } from '../../../types/activity';
 import { formatShortDate } from '../../../utils/dateUtils';
-import { getActivityText } from '../../../utils/activityUtils';
+import { getActivitytext } from '../../../utils/activityUtils';
 
 interface ActivityTimelineItemProps {
   activity: Activity;
@@ -28,7 +28,7 @@ const ActivityTimelineItem = ({
           </span>
         )}
         <span className="text-xs font-secondary text-text-primary">
-          {getActivityText(activity)}
+          {getActivitytext(activity)}
         </span>
       </div>
     </div>

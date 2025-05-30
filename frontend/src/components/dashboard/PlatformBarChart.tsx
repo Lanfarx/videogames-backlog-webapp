@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 
 interface PlatformData {
-    platform: string;
+    Platform: string;
     count: number;
 }
 
@@ -25,7 +25,7 @@ const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data, icon, title }
                     return (
                         <div key={index} className="w-full">
                             <div className="flex justify-between text-sm text-text-primary mb-1 font-['Roboto']">
-                                <span>{item.platform}</span>
+                                <span>{item.Platform}</span>
                                 <span className="font-semibold">{item.count}</span>
                             </div>
                             <div className="w-full bg-tertiaryBg h-3 rounded-full overflow-hidden">

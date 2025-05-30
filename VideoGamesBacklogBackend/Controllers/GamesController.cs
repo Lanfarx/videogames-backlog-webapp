@@ -55,7 +55,7 @@ namespace VideoGamesBacklogBackend.Controllers
         }
 
         // Commenti
-        [HttpPost("{gameId}/comments")]
+        [HttpPost("{gameId}/Comments")]
         public async Task<IActionResult> AddComment(int gameId, [FromBody] GameComment comment)
         {
             var created = await _gameService.AddCommentAsync(User, gameId, comment);
@@ -63,7 +63,7 @@ namespace VideoGamesBacklogBackend.Controllers
             return Ok(created);
         }
 
-        [HttpDelete("{gameId}/comments/{commentId}")]
+        [HttpDelete("{gameId}/Comments/{commentId}")]
         public async Task<IActionResult> DeleteComment(int gameId, int commentId)
         {
             var result = await _gameService.DeleteCommentAsync(User, gameId, commentId);

@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
 import { getActivityColor } from '../../constants/gameConstants';
 import ActivityCard from '../ui/ActivityCard';
-import ActivityHistoryPopover from '../game/ui/ActivityHistoryPopover';
+import ActivityHiStoryPopover from '../game/ui/ActivityHistoryPopover';
 import {History } from 'lucide-react';
 
 export default function RecentActivitiesSection() {
   const recentActivities = useRecentActivities(5);
   const allRecentActivities = useRecentActivities(100);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHiStory, setShowHiStory] = useState(false);
 
   return (
     <section className="mb-10">
@@ -16,15 +16,15 @@ export default function RecentActivitiesSection() {
       <div className='container mx-auto px-6 py-8'> 
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
-          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHiStory(true)}>
             <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
             <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
           </div>
         </div>
-        {showHistory && (
-          <ActivityHistoryPopover
+        {showHiStory && (
+          <ActivityHiStoryPopover
             activities={allRecentActivities}
-            onClose={() => setShowHistory(false)}
+            onClose={() => setShowHiStory(false)}
             gameTitle="Tutta la libreria"
           />
         )}

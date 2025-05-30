@@ -12,8 +12,8 @@ using VideoGamesBacklogBackend.Data;
 namespace VideoGamesBacklogBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250529103117_AppPreferences")]
-    partial class AppPreferences
+    [Migration("20250530171150_OptionalPlatform")]
+    partial class OptionalPlatform
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -219,7 +219,6 @@ namespace VideoGamesBacklogBackend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PlatinumDate")
@@ -242,7 +241,7 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()
