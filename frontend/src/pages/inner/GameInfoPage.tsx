@@ -40,9 +40,8 @@ const GameInfoPage: React.FC = () => {
         setRawgGame(adapted);
       })
       .catch(() => setError('Errore nel caricamento dei dettagli dal catalogo RAWG.'))
-      .finally(() => setLoading(false));
-  }, [id]);
-  // Per la libreria utente, cerca tramite id numerico se disponibile
+      .finally(() => setLoading(false));  }, [id]);
+  // Per la libreria utente, cerca tramite titolo semplice
   // Hook sempre in cima, non condizionale
   const userGameByTitle = useGameByTitle(rawgGame?.title || "");
 

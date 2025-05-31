@@ -3,8 +3,7 @@ import RatingStars from '../ui/atoms/RatingStars';
 import { Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { updateGameReview, updateGameRating, updateGameNotes } from '../../store/slice/gamesSlice';
-import { useGameById } from '../../store/hooks/gamesHooks';
+import { useGameById, useGameActions } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { createRatingActivity } from '../../utils/activityUtils';
@@ -38,9 +37,9 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
   const userProfile = useAppSelector(state => state.user.profile);
   const isProfilePrivate = userProfile?.privacySettings?.isPrivate ?? false;
   const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
-
   const dispatch = useAppDispatch();
   const { addActivity } = useAllActivitiesActions();
+  const { update: updateGame } = useGameActions();
   // Forza la privacy a privata se il diario è privato
   useEffect(() => {
     if (isDiaryPrivate) {
@@ -91,9 +90,8 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
     // Reset del messaggio di successo quando l'utente inizia a modificare
     if (saveReviewSuccess) setSaveReviewSuccess(false);
   };
-
   const handleSaveNotes = () => {
-    dispatch(updateGameNotes({ gameId: game.id, Notes: NotesValue }));
+    updateGame(game.id, { Notes: NotesValue });
     if (onNotesChange) {
       onNotesChange(NotesValue);
     }
@@ -115,12 +113,17 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
         Sound: SoundRating,
         Date: formattedDate,
         IsPublic: ReviewPrivacy,
-      };
-      setIsPublic(ReviewPrivacy);
+      };      setIsPublic(ReviewPrivacy);
       setReviewDate(formattedDate);
-      dispatch(updateGameReview({ gameId: game.id, Review: updatedReview }));
+      
       const averageRating = calculateRatingFromReview(updatedReview);
-      dispatch(updateGameRating({ gameId: game.id, Rating: averageRating }));
+      
+      // Singola chiamata per aggiornare sia la review che il rating
+      updateGame(game.id, { 
+        Review: updatedReview,
+        Rating: averageRating 
+      });
+      
       const RatingActivity = createRatingActivity(game, averageRating);
       addActivity(RatingActivity);
       if (onReviewSave) {
@@ -245,15 +248,21 @@ const NotesReviewCard = ({ game, onNotesChange, onReviewSave }: NotesReviewCardP
                   title={
                     isDiaryPrivate
                       ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.'
-                      : (IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
-                  }
+                      : (IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')                  }
                   onClick={() => {
                     if (!isNotStarted && !isDiaryPrivate) {
-                      setIsPublic(!IsPublic);
-                      dispatch({
-                        type: 'games/updateReviewPrivacy',
-                        payload: { gameId: game.id, IsPublic: !IsPublic }
-                      });
+                      const newIsPublic = !IsPublic;
+                      setIsPublic(newIsPublic);
+                      
+                      // Aggiorna solo la privacy della review se esiste
+                      if (currentGame.Review) {
+                        updateGame(game.id, { 
+                          Review: { 
+                            ...currentGame.Review, 
+                            IsPublic: newIsPublic 
+                          } 
+                        });
+                      }
                     }
                   }}
                   disabled={isNotStarted || isDiaryPrivate}

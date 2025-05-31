@@ -69,6 +69,22 @@
   },
   {
     "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
+    "Method": "GetComments",
+    "RelativePath": "api/Games/{gameId}/Comments",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "gameId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
     "Method": "AddComment",
     "RelativePath": "api/Games/{gameId}/Comments",
     "HttpMethod": "POST",
@@ -111,6 +127,32 @@
   },
   {
     "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
+    "Method": "UpdateComment",
+    "RelativePath": "api/Games/{gameId}/Comments/{commentId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "gameId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "commentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "comment",
+        "Type": "VideoGamesBacklogBackend.Models.GameComment",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
     "Method": "GetById",
     "RelativePath": "api/Games/{id}",
     "HttpMethod": "GET",
@@ -127,9 +169,9 @@
   },
   {
     "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
-    "Method": "Update",
+    "Method": "UpdateGame",
     "RelativePath": "api/Games/{id}",
-    "HttpMethod": "PUT",
+    "HttpMethod": "PATCH",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -139,8 +181,8 @@
         "IsRequired": true
       },
       {
-        "Name": "updated",
-        "Type": "VideoGamesBacklogBackend.Models.Game",
+        "Name": "updateDto",
+        "Type": "VideoGamesBacklogBackend.Dto.UpdateGameDto",
         "IsRequired": true
       }
     ],
@@ -157,6 +199,64 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
+    "Method": "UpdatePlaytime",
+    "RelativePath": "api/Games/{id}/playtime",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "playtimeDto",
+        "Type": "VideoGamesBacklogBackend.Dto.UpdateGamePlaytimeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/Games/{id}/status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "statusDto",
+        "Type": "VideoGamesBacklogBackend.Dto.UpdateGameStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VideoGamesBacklogBackend.Controllers.GamesController",
+    "Method": "GetByTitle",
+    "RelativePath": "api/Games/by-title/{title}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "title",
+        "Type": "System.String",
         "IsRequired": true
       }
     ],

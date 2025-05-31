@@ -14,7 +14,8 @@ import {
 } from '../../utils/activityUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProfile as getProfileFull } from '../../store/services/profileService';
-import { setUserProfile } from '../../store/slice/userSlice';
+import { setUserProfile, clearUserProfile } from '../../store/slice/userSlice';
+import { resetGamesState } from '../../store/slice/gamesSlice';
 import { getToken } from '../../utils/getToken';
 
 const ProfilePage = () => {
@@ -82,11 +83,12 @@ const ProfilePage = () => {
   const diaryStats = calculateActivityStats(activities);
   
   // Ottieni mesi unici per l'anno selezionato utilizzando la funzione di utilità
-  const months = getUniqueMonthsForYear(activities, selectedYear);
-
-  // Funzione di logout
+  const months = getUniqueMonthsForYear(activities, selectedYear);  // Funzione di logout
   const handleLogout = () => {
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    dispatch(clearUserProfile());
+    dispatch(resetGamesState()); // Reset dello stato dei giochi
     window.dispatchEvent(new Event('storage'));
     navigate('/login');
   };

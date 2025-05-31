@@ -1,8 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { GameStatus } from '../../types/game';
 import { Status_OPTIONS } from '../../constants/gameConstants';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGameStatus } from '../../store/slice/gamesSlice';
+import { useGameStatusActions } from '../../store/hooks/gamesHooks';
 
 interface StatusChangePopoverProps {
   gameId: number; // aggiunto id gioco
@@ -19,7 +18,7 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
   onCancel,
   HoursPlayed 
 }) => {
-  const dispatch = useAppDispatch();
+  const { updateStatus } = useGameStatusActions();
   // Ref per il popover
   const popoverRef = useRef<HTMLDivElement>(null);
   
@@ -41,7 +40,7 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
   }, [onCancel]);
 
   const handleStatusChange = (Status: GameStatus) => {
-    dispatch(updateGameStatus({ gameId, Status }));
+    updateStatus(gameId, Status);
     if (onStatusChange) onStatusChange(Status);
     onCancel();
   };

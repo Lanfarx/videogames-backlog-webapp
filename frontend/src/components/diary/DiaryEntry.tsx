@@ -3,11 +3,10 @@ import { Activity } from '../../types/activity';
 import { Game } from '../../types/game';
 import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import RatingStars from '../ui/atoms/RatingStars';
-import { useGameById } from '../../store/hooks/gamesHooks';
+import { useGameById, useGameActions } from '../../store/hooks/gamesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 import { isFirstActivityInMonth, getActivityIcon } from '../../utils/activityUtils';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { updateReviewPrivacy } from '../../store/slice/gamesSlice';
 import { Link } from 'react-router-dom';
 
 interface DiaryEntryProps {
@@ -18,10 +17,10 @@ interface DiaryEntryProps {
 
 const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true, allActivities = [] }) => {
   const [expandedReview, setExpandedReview] = useState(false);
-  const game = useGameById(activity.gameId);
-  const dispatch = useAppDispatch();
+  const game = useGameById(activity.gameId);  const dispatch = useAppDispatch();
   const userProfile = useAppSelector(state => state.user.profile);
   const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
+  const { update: updateGame } = useGameActions();
   
   // Non procedere se non c'è il gioco
   if (!game) return null;
@@ -172,14 +171,19 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
           <div className="bg-secondary-bg p-3 rounded-lg mt-2">
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />                <span className="text-sm font-medium text-text-primary">Recensione</span>
+                <Star className="w-4 h-4 text-yellow-500" />                
+                <span className="text-sm font-medium text-text-primary">Recensione</span>
                 <button
                   type="button"
                   className={`ml-2 text-text-secondary ${isDiaryPrivate ? 'opacity-60 cursor-not-allowed' : 'hover:text-accent-primary'} focus:outline-none`}
-                  title={isDiaryPrivate ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' : (game.Review?.IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}
-                  onClick={() => {
+                  title={isDiaryPrivate ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' : (game.Review?.IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')}                  onClick={() => {
                     if (game.Review && !isDiaryPrivate) {
-                      dispatch(updateReviewPrivacy({ gameId: game.id, IsPublic: !game.Review.IsPublic }));
+                      updateGame(game.id, { 
+                        Review: { 
+                          ...game.Review, 
+                          IsPublic: !game.Review.IsPublic 
+                        } 
+                      });
                     }
                   }}
                   disabled={isDiaryPrivate}

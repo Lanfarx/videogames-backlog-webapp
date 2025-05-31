@@ -1,8 +1,7 @@
 import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { updateReviewPrivacy } from '../../../store/slice/gamesSlice';
-import { useGameByTitle } from '../../../store/hooks/gamesHooks';
+import { useLoadSingleGameByTitle, useGameActions } from '../../../store/hooks/gamesHooks';
 
 interface PersonalReview {
   Text: string;
@@ -21,10 +20,11 @@ interface PersonalReviewCardProps {
 
 const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview }) => {
   const dispatch = useAppDispatch();
-  const game = useGameByTitle(personalReview.title);
+  const { game } = useLoadSingleGameByTitle(personalReview.title);
   const IsPublic = game?.Review?.IsPublic ?? false;
   const userProfile = useAppSelector(state => state.user.profile);
   const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
+  const { update: updateGame } = useGameActions();
   // Forza la privacy a privata se il diario è privato
   const effectiveIsPublic = isDiaryPrivate ? false : IsPublic;
 
@@ -46,10 +46,14 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
               isDiaryPrivate 
                 ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' 
                 : (effectiveIsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
-            }
-            onClick={() => {
+            }            onClick={() => {
               if (game && game.Review && !isDiaryPrivate) {
-                dispatch(updateReviewPrivacy({ gameId: game.id, IsPublic: !effectiveIsPublic }));
+                updateGame(game.id, { 
+                  Review: { 
+                    ...game.Review, 
+                    IsPublic: !effectiveIsPublic 
+                  } 
+                });
               }
             }}
             disabled={isDiaryPrivate}

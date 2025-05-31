@@ -39,11 +39,11 @@
   --platform-android: 61, 220, 132;
 
   /* Variabili per status dei giochi */
-  --status-NotStarted: 156, 163, 175; /* #9CA3AF */
-  --status-InProgress: 59, 130, 246;  /* #3B82F6 */
-  --status-Completed: 16, 185, 129;    /* #10B981 */
-  --status-Abandoned: 239, 68, 68;     /* #EF4444 */
-  --status-Platinum:  192, 132, 252;   /* #C084FC  */
+  --status-notstarted: 156, 163, 175; /* #9CA3AF */
+  --status-inprogress: 59, 130, 246;  /* #3B82F6 */
+  --status-completed: 16, 185, 129;    /* #10B981 */
+  --status-abandoned: 239, 68, 68;     /* #EF4444 */
+  --status-platinum:  192, 132, 252;   /* #C084FC  */
   /* Variabili per activity color */
   --activity-played: var(--status-InProgress);
   --activity-added: var(--status-NotStarted);

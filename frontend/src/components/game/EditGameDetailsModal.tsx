@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Game } from '../../types/game';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGame } from '../../store/slice/gamesSlice';
+import { useGameActions } from '../../store/hooks/gamesHooks';
 
 interface EditGameDetailsModalProps {
   isOpen: boolean;
@@ -16,7 +15,7 @@ const EditGameDetailsModal = ({
   onSave,
   game
 }: EditGameDetailsModalProps) => {
-  const dispatch = useAppDispatch();
+  const { update: updateGame } = useGameActions();
   const [formData, setFormData] = useState({
     title: game.Title,
     Developer: game.Developer,
@@ -35,25 +34,22 @@ const EditGameDetailsModal = ({
       ...prev,
       [name]: value
     }));
-  };
-  const handleSubmit = (e: React.FormEvent) => {
+  };  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convertiamo la stringa delle Genres di nuovo in un array
     const updatedGame: Partial<Game> = {
-      ...formData,
+      Title: formData.title,
+      Developer: formData.Developer,
+      Publisher: formData.Publisher,
       ReleaseYear: Number(formData.ReleaseYear),
       Genres: formData.Genres.split(',').map(genre => genre.trim()).filter(Boolean),
+      CoverImage: formData.CoverImage,
       Metacritic: Number(formData.Metacritic) || 0
     };
     
-    // Aggiorna il gioco attraverso Redux usando updateGame
-    const completeUpdatedGame = {
-      ...game,
-      ...updatedGame
-    };
-    
-    dispatch(updateGame(completeUpdatedGame));
+    // Aggiorna il gioco usando il nuovo pattern unificato
+    updateGame(game.id, updatedGame);
     
     // Chiama la callback opzionale per backward compatibility
     if (onSave) {

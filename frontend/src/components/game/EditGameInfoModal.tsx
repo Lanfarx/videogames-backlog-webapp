@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Game, GameStatus } from '../../types/game';
+import { Game, GameStatus, GameUpdateInput } from '../../types/game';
 import { GAME_PlatformS } from '../../constants/gameConstants';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGameStatus, updateGameplaytime, updateGamePlatform, updateGamePrice, updateGamePurchaseDate, updateGameCompletionDate, updateGamePlatinumDate } from '../../store/slice/gamesSlice';
+import { useGameActions, useGameStatusActions, useGamePlaytimeActions } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { gameStatusToActivityType } from '../../utils/statusUtils';
 import { createStatusChangeActivity, createManualPlaytimeActivity } from '../../utils/activityUtils';
@@ -20,7 +19,9 @@ const EditGameInfoModal = ({
   onSave,
   game
 }: EditGameInfoModalProps) => {
-  const dispatch = useAppDispatch();
+  const { update } = useGameActions();
+  const { updateStatus } = useGameStatusActions();
+  const { updatePlaytime } = useGamePlaytimeActions();
   const { addActivity } = useAllActivitiesActions();
   const [formData, setFormData] = useState({
     Platform: game.Platform || '',
@@ -58,12 +59,42 @@ const EditGameInfoModal = ({
       ...prev,
       [name]: value
     }));
-  };
-  const handleSubmit = (e: React.FormEvent) => {
+  };  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convertiamo le ore in un numero
     const newHoursPlayed = parseFloat(formData.HoursPlayed) || 0;
+      // Costruiamo l'oggetto di aggiornamento con solo i campi modificati
+    const updateData: GameUpdateInput = {};
+    
+    if (formData.Platform && formData.Platform !== game.Platform) {
+      updateData.Platform = formData.Platform;
+    }
+    
+    if (formData.Price && parseFloat(formData.Price) !== game.Price) {
+      updateData.Price = parseFloat(formData.Price);
+    }
+    
+    if (formData.PurchaseDate && formData.PurchaseDate !== game.PurchaseDate) {
+      updateData.PurchaseDate = formData.PurchaseDate;
+    }
+    
+    if (newHoursPlayed !== game.HoursPlayed) {
+      updateData.HoursPlayed = newHoursPlayed;
+    }
+    
+    // Aggiorna le date se modificate
+    if (hasBeenCompleted && formData.CompletionDate !== game.CompletionDate) {
+      if (formData.CompletionDate) {
+        updateData.CompletionDate = formData.CompletionDate;
+      }
+    }
+    
+    if (isPlatinum && formData.PlatinumDate !== game.PlatinumDate) {
+      if (formData.PlatinumDate) {
+        updateData.PlatinumDate = formData.PlatinumDate;
+      }
+    }
     
     // Determiniamo se è necessario cambiare lo stato del gioco
     let newStatus: GameStatus | undefined = undefined;
@@ -72,13 +103,19 @@ const EditGameInfoModal = ({
     // cambiamo lo stato a "NotStarted"
     if (newHoursPlayed === 0 && game.Status !== 'NotStarted') {
       newStatus = 'NotStarted';
+      updateData.Status = newStatus;
     }
     // Se le ore passano da 0 a un valore maggiore e lo stato è "NotStarted",
     // cambiamo lo stato a "InProgress"
     else if (newHoursPlayed > 0 && game.HoursPlayed === 0 && game.Status === 'NotStarted') {
       newStatus = 'InProgress';
-    }    // Aggiorna i dati attraverso Redux dispatch
-    dispatch(updateGameplaytime({ gameId: game.id, HoursPlayed: newHoursPlayed }));
+      updateData.Status = newStatus;
+    }
+    
+    // Esegui l'aggiornamento solo se ci sono campi modificati
+    if (Object.keys(updateData).length > 0) {
+      update(game.id, updateData);
+    }
     
     // Crea attività in base alla modifica delle ore
     const hoursDifference = newHoursPlayed - game.HoursPlayed;
@@ -94,35 +131,6 @@ const EditGameInfoModal = ({
       // Utilizza la funzione di utilità per creare l'attività di impostazione manuale delle ore
       const playtimeActivity = createManualPlaytimeActivity(game, newHoursPlayed);
       addActivity(playtimeActivity);
-    }
-    
-    if (formData.Platform && formData.Platform !== game.Platform) {
-      dispatch(updateGamePlatform({ gameId: game.id, Platform: formData.Platform }));
-    }
-      if (formData.Price && parseFloat(formData.Price) !== game.Price) {
-      dispatch(updateGamePrice({ gameId: game.id, Price: parseFloat(formData.Price) }));
-    }
-    
-    if (formData.PurchaseDate && formData.PurchaseDate !== game.PurchaseDate) {
-      dispatch(updateGamePurchaseDate({ gameId: game.id, PurchaseDate: formData.PurchaseDate }));
-    }
-    
-    // Aggiorna le date se modificate
-    if (hasBeenCompleted && formData.CompletionDate !== game.CompletionDate) {
-      if (formData.CompletionDate) {
-        dispatch(updateGameCompletionDate({ gameId: game.id, CompletionDate: formData.CompletionDate }));
-      }
-    }
-    
-    if (isPlatinum && formData.PlatinumDate !== game.PlatinumDate) {
-      if (formData.PlatinumDate) {
-        dispatch(updateGamePlatinumDate({ gameId: game.id, PlatinumDate: formData.PlatinumDate }));
-      }
-    }
-    
-    // Aggiorna lo stato se necessario
-    if (newStatus) {
-      dispatch(updateGameStatus({ gameId: game.id, Status: newStatus }));
     }
     
     // Chiama la callback opzionale per backward compatibility

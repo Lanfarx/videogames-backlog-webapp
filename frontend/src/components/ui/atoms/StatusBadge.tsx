@@ -1,14 +1,18 @@
 import { getStatusColor, getStatusLabel } from '../../../constants/gameConstants';
 
 interface StatusBadgeProps {
-  Status: string;
+  Status?: string;
 }
 
 const StatusBadge = ({ Status }: StatusBadgeProps) => {
-  const color = getStatusColor(Status);
+  // Se Status è undefined, non renderizzare niente
+  if (!Status) {
+    return null;
+  }
+
   const label = getStatusLabel(Status);
   // Usa la variabile CSS per lo sfondo con opacità 0.15
-  const bgVar = `--Status-${Status.replace(/_/g, '-').toLowerCase()}`;
+  const bgVar = `--status-${Status.toLowerCase()}`;
   return (
     <span
       className="inline-block px-3 py-1 rounded-full text-sm font-medium font-secondary"

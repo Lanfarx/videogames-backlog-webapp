@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace VideoGamesBacklogBackend.Models
 {
@@ -31,6 +32,7 @@ namespace VideoGamesBacklogBackend.Models
 
         [Required]
         [Column(TypeName = "varchar(20)")]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public GameStatus Status { get; set; } = GameStatus.NotStarted;
 
         public string? CoverImage { get; set; }

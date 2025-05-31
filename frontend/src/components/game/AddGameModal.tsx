@@ -10,6 +10,7 @@ import FormErrorInline from '../ui/atoms/FormErrorInline';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
 import { createStatusChangeActivity, createPlaytimeActivity } from '../../utils/activityUtils';
 import { getGameDetails, searchGames } from '../../store/services/rawgService';
+import { fetchGames } from '../../store/thunks/gamesThunks';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "Rating"> & { id?: number, CompletionDate?: string, PlatinumDate?: string }
@@ -230,11 +231,10 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     }
     setFormError(null);
     const gameToSave = {
-      // id: nextId, // RIMOSSO, sarà il backend ad assegnare l'ID
       ...gameData
     } as Game;
     await add(gameToSave);
-    
+
     // Crea attività appropriate in base al nuovo gioco
     // 1. Crea l'attività di aggiunta alla libreria (added)
     const addedActivity = createStatusChangeActivity(gameToSave, 'NotStarted');
@@ -255,10 +255,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       onClose();
     }
   };
-
-  // Per visualizzazione nell'anteprima
-  const StatusColorVar = `--Status-${gameData.Status.replace(/_/g, '-').toLowerCase()}`;
-  const StatusColor = `rgb(var(${StatusColorVar}))`;
 
   if (!isOpen) return null;
 

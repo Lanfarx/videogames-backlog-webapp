@@ -21,7 +21,6 @@ namespace VideoGamesBacklogBackend.Services
         {
             var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return await _dbContext.Users
-                .Include(u => u.Library)
                 .FirstOrDefaultAsync(u => u.Id.ToString() == userId);
         }
 
