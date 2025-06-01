@@ -87,11 +87,40 @@ namespace VideoGamesBacklogBackend.Services
             
             if (updateDto.Rating.HasValue)
                 game.Rating = updateDto.Rating.Value;
-            
-            if (updateDto.Notes != null)
+              if (updateDto.Notes != null)
                 game.Notes = updateDto.Notes;
-              if (updateDto.Review != null)
-                game.Review = updateDto.Review;
+            
+            // Gestisci l'aggiornamento parziale della recensione
+            if (updateDto.Review != null)
+            {
+                // Se il gioco non ha ancora una recensione, creala
+                if (game.Review == null)
+                {
+                    game.Review = new GameReview();
+                }
+                
+                // Aggiorna solo i campi specificati nel DTO (non null)
+                if (updateDto.Review.Text != null)
+                    game.Review.Text = updateDto.Review.Text;
+                
+                if (updateDto.Review.Gameplay.HasValue)
+                    game.Review.Gameplay = updateDto.Review.Gameplay.Value;
+                
+                if (updateDto.Review.Graphics.HasValue)
+                    game.Review.Graphics = updateDto.Review.Graphics.Value;
+                
+                if (updateDto.Review.Story.HasValue)
+                    game.Review.Story = updateDto.Review.Story.Value;
+                
+                if (updateDto.Review.Sound.HasValue)
+                    game.Review.Sound = updateDto.Review.Sound.Value;
+                
+                if (updateDto.Review.Date != null)
+                    game.Review.Date = updateDto.Review.Date;
+                
+                if (updateDto.Review.IsPublic.HasValue)
+                    game.Review.IsPublic = updateDto.Review.IsPublic.Value;
+            }
             
             // Gestisci Status utilizzando la logica esistente
             if (!string.IsNullOrEmpty(updateDto.Status))
@@ -189,48 +218,24 @@ namespace VideoGamesBacklogBackend.Services
             return true;
         }
 
-        public async Task<List<GameComment>> GetCommentsAsync(ClaimsPrincipal userClaims, int gameId)
+        // Statistiche
+        public async Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var game = await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-            return game?.Comments.ToList() ?? new List<GameComment>();
-        }
+            var games = await _dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
 
-        public async Task<GameComment?> AddCommentAsync(ClaimsPrincipal userClaims, int gameId, GameComment comment)
-        {
-            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var game = await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-            if (game == null) return null;
-            comment.GameId = gameId;
-            game.Comments.Add(comment);
-            await _dbContext.SaveChangesAsync();
-            return comment;
-        }        public async Task<bool> DeleteCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId)
-        {
-            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var game = await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-            if (game == null) return false;
-            var comment = game.Comments.FirstOrDefault(c => c.Id == commentId);
-            if (comment == null) return false;
-            game.Comments.Remove(comment);
-            await _dbContext.SaveChangesAsync();
-            return true;
-        }
+            var stats = new GameStatsDto
+            {
+                Total = games.Count,
+                InProgress = games.Count(g => g.Status == GameStatus.InProgress),
+                Completed = games.Count(g => g.Status == GameStatus.Completed || g.Status == GameStatus.Platinum),
+                NotStarted = games.Count(g => g.Status == GameStatus.NotStarted),
+                Abandoned = games.Count(g => g.Status == GameStatus.Abandoned),
+                Platinum = games.Count(g => g.Status == GameStatus.Platinum),
+                TotalHours = games.Sum(g => g.HoursPlayed)
+            };
 
-        public async Task<GameComment?> UpdateCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId, GameComment updatedComment)
-        {
-            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var game = await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-            if (game == null) return null;
-            var comment = game.Comments.FirstOrDefault(c => c.Id == commentId);
-            if (comment == null) return null;
-            
-            // Aggiorna solo i campi modificabili
-            comment.Text = updatedComment.Text;
-            comment.Date = updatedComment.Date;
-            
-            await _dbContext.SaveChangesAsync();
-            return comment;
+            return stats;
         }
     }
 }

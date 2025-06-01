@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Clock, Pencil } from 'lucide-react';
 import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
@@ -26,13 +26,17 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
 
   // Usa sempre le ore aggiornate dallo stato globale
   const displayedHours = currentGame.HoursPlayed;
+ // Ref per tracciare il rating precedente e evitare aggiornamenti inutili
+  const prevRatingRef = useRef(calculatedRating);
 
+  // RIMOSSO: useEffect che causava chiamate API ridondanti
+  // Il rating viene già aggiornato quando si salva la recensione in NotesReviewCard
+  // Non è necessario sincronizzarlo di nuovo da qui
+  
   useEffect(() => {
-    // Aggiorna dinamicamente il Rating del gioco
-    if (onEditInfo) {
-      onEditInfo({ Rating: calculatedRating });
-    }
-  }, [currentGame.Review]);
+    // Aggiorna solo il ref per tracking, senza fare chiamate API
+    prevRatingRef.current = calculatedRating;
+  }, [calculatedRating]);
   
   const handleSavePlaytime = () => {
     setIsEditingHours(false);

@@ -24,7 +24,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
           <div className="flex justify-center">
             <StatsCard 
               label="Giochi in libreria" 
-              value={stats.total.toString()} 
+              value={stats.stats.total.toString()} 
               icon={<Gamepad2 className="h-8 w-8 text-accent-primary" />} 
               variant="hero"
             />
@@ -32,7 +32,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
           <div className="flex justify-center border-x border-border-color px-8">
             <StatsCard 
               label="Ore giocate" 
-              value={stats.totalHours.toString()} 
+              value={stats.stats.totalHours.toString()} 
               icon={<Clock className="h-8 w-8 text-accent-primary" />} 
               variant="hero"
             />
@@ -40,7 +40,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
           <div className="flex justify-center">
             <StatsCard 
               label="Giochi completati" 
-              value={stats.completed.toString()} 
+              value={stats.stats.completed.toString()} 
               icon={<Trophy className="h-8 w-8 text-accent-primary" />} 
               variant="hero"
             />  

@@ -53,7 +53,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const [gameData, setGameData] = useState<GameFormData>(initialGameData);
   const [formError, setFormError] = useState<string | null>(null);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
-  const appDispatch = useAppDispatch();
 
   // Sempre nuovo gioco, resetta il form all'apertura
   useEffect(() => {
@@ -195,9 +194,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   // Rimuove l'immagine
   const removeImage = () => {
     handleGameDataChange({ CoverImage: "" });
-  };
-  // Gestisce il salvataggio del gioco
-  const handleSave = async (andAddAnother = false) => {
+  };  // Gestisce il salvataggio del gioco
+  const handleSave = async () => {
     // Validazione campi obbligatori
     const scrollErrorIntoView = () => {
       setTimeout(() => {
@@ -229,30 +227,29 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       scrollErrorIntoView();
       return;
     }
-    setFormError(null);
+    setFormError(null);    
     const gameToSave = {
       ...gameData
     } as Game;
-    await add(gameToSave);
+    
+    try {
+      await add(gameToSave);
 
-    // Crea attività appropriate in base al nuovo gioco
-    // 1. Crea l'attività di aggiunta alla libreria (added)
-    const addedActivity = createStatusChangeActivity(gameToSave, 'NotStarted');
-    addActivity(addedActivity);
-    
-    // 2. Se il gioco ha ore di gioco (stato non è "NotStarted"), crea anche un'attività di gioco
-    if (gameToSave.Status !== 'NotStarted' && gameToSave.HoursPlayed > 0) {
-      const isFirstSession = true; // È la prima sessione dato che è un nuovo gioco
-      const playtimeActivity = createPlaytimeActivity(gameToSave, gameToSave.HoursPlayed, isFirstSession);
-      addActivity(playtimeActivity);
-    }
-    
-    if (andAddAnother) {
-      setGameData(initialGameData);
-      setSearchQuery("");
-      setSearchResults([]);
-    } else {
+      // Crea attività appropriate in base al nuovo gioco
+      // 1. Crea l'attività di aggiunta alla libreria (added)
+      const addedActivity = createStatusChangeActivity(gameToSave, 'NotStarted');
+      addActivity(addedActivity);      // 2. Se il gioco ha ore di gioco (stato non è "NotStarted"), crea anche un'attività di gioco
+      if (gameToSave.Status !== 'NotStarted' && gameToSave.HoursPlayed > 0) {
+        const isFirstSession = true; // È la prima sessione dato che è un nuovo gioco
+        const playtimeActivity = createPlaytimeActivity(gameToSave, gameToSave.HoursPlayed, isFirstSession);
+        addActivity(playtimeActivity);
+      }
+      
+      // Chiudi il modal dopo il salvataggio
       onClose();
+    } catch (error) {
+      console.error("Errore durante il salvataggio del gioco:", error);
+      setFormError("Errore durante il salvataggio del gioco. Riprova.");
     }
   };
 
@@ -722,22 +719,13 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
             className="px-6 py-3 bg-primary-bg border border-border-color text-text-primary font-roboto font-medium text-base rounded-lg hover:bg-secondary-bg transition-colors"
           >
             Annulla
-          </button>
-          {activeTab === "manual" && (
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => handleSave(true)}
-                className="px-6 py-3 text-accent-primary font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/10 transition-colors"
-              >
-                Salva e aggiungi altro
-              </button>
-              <button
-                onClick={() => handleSave(false)}
-                className="px-6 py-3 bg-accent-primary text-white font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/90 transition-colors"
-              >
-                Salva
-              </button>
-            </div>
+          </button>          {activeTab === "manual" && (
+            <button
+              onClick={() => handleSave()}
+              className="px-6 py-3 bg-accent-primary text-white font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/90 transition-colors"
+            >
+              Salva
+            </button>
           )}
         </div>
       </div>

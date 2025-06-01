@@ -682,8 +682,8 @@
             "format": "int32"
           },
           "rating": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "notes": {
             "type": "string",
@@ -734,9 +734,6 @@
           "gameId": {
             "type": "integer",
             "format": "int32"
-          },
-          "game": {
-            "$ref": "#/components/schemas/Game"
           }
         },
         "additionalProperties": false
@@ -749,20 +746,20 @@
             "nullable": true
           },
           "gameplay": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "graphics": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "story": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "sound": {
-            "type": "integer",
-            "format": "int32"
+            "type": "number",
+            "format": "double"
           },
           "date": {
             "type": "string",
@@ -897,8 +894,8 @@
             "nullable": true
           },
           "rating": {
-            "type": "integer",
-            "format": "int32",
+            "type": "number",
+            "format": "double",
             "nullable": true
           },
           "notes": {
@@ -906,7 +903,7 @@
             "nullable": true
           },
           "review": {
-            "$ref": "#/components/schemas/GameReview"
+            "$ref": "#/components/schemas/UpdateGameReviewDto"
           },
           "status": {
             "type": "string",
@@ -926,6 +923,44 @@
           "hoursPlayed": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateGameReviewDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "gameplay": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "graphics": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "story": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sound": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPublic": {
+            "type": "boolean",
+            "nullable": true
           }
         },
         "additionalProperties": false

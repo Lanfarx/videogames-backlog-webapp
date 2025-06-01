@@ -96,6 +96,12 @@ export interface GameReview {
 }
 
 /**
+ * Input per aggiornare parzialmente una recensione
+ * Rende tutti i campi opzionali per permettere aggiornamenti granulari
+ */
+export type GameReviewUpdateInput = Partial<GameReview>;
+
+/**
  * Definizione della struttura di un commento
  */
 export interface GameComment {
@@ -151,9 +157,11 @@ export type GameInput = Omit<Game, 'id' | 'Rating' | 'Comments'>;
 
 /**
  * Input per aggiornare un gioco esistente
- * Rende tutti i campi opzionali
+ * Rende tutti i campi opzionali e usa GameReviewUpdateInput per la recensione
  */
-export type GameUpdateInput = Partial<Game>;
+export interface GameUpdateInput extends Partial<Omit<Game, 'Review'>> {
+  Review?: GameReviewUpdateInput;
+}
 
 /**
  * Opzioni di visualizzazione per i giochi

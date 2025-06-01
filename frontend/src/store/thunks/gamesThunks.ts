@@ -52,3 +52,8 @@ export const deleteCommentThunk = createAsyncThunk('games/deleteComment', async 
 export const updateCommentThunk = createAsyncThunk('games/updateComment', async ({ gameId, commentId, comment }: { gameId: number, commentId: number, comment: GameComment }) => {
   return { gameId, comment: await gamesService.updateComment(gameId, commentId, comment) };
 });
+
+// Statistiche
+export const fetchGameStats = createAsyncThunk('games/fetchStats', async () => {
+  return await gamesService.getGameStats();
+});

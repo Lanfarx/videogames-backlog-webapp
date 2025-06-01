@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import DiaryFilters from '../../components/diary/DiaryFilters';
 import DiaryMonthGroup from '../../components/diary/DiaryMonthGroup';
 import { Activity } from '../../types/activity';
-import { formatLastUpdate } from '../../utils/dateUtils';
+import { formatLastUpdate, calculateActivityDays } from '../../utils/dateUtils';
 import { 
   calculateActivityStats, 
   getUniqueMonthsForYear,
@@ -176,22 +176,21 @@ const ProfilePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard 
               label="Totale giochi" 
-              value={stats.total.toString()} 
+              value={stats.stats.total.toString()} 
               icon={<Gamepad2 className="h-8 w-8 text-accent-primary" />}
             />
             <StatsCard 
               label="Ore giocate" 
-              value={stats.totalHours.toString()} 
+              value={stats.stats.totalHours.toString()} 
               icon={<Clock className="h-8 w-8 text-accent-primary" />}
             />
             <StatsCard 
               label="Giochi completati" 
-              value={stats.completed.toString()} 
+              value={stats.stats.completed.toString()} 
               icon={<Trophy className="h-8 w-8 text-accent-primary" />}
-            />
-            <StatsCard 
+            />            <StatsCard 
               label="Giorni di attività" 
-              value={"127"} 
+              value={userProfile?.memberSince ? calculateActivityDays(userProfile.memberSince).toString() : "0"} 
               icon={<CalendarRange className="h-8 w-8 text-accent-primary" />}
             />
           </div>

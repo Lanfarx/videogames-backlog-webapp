@@ -74,7 +74,7 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <Link to={`/game/${game.id}`} className="font-montserrat font-medium text-sm text-text-primary hover:text-accent-primary transition-colors">
+                  <Link to={`/library/${game.Title}`} className="font-montserrat font-medium text-sm text-text-primary hover:text-accent-primary transition-colors">
                     {game.Title}
                   </Link>
                 </div>

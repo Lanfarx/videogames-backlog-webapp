@@ -12,15 +12,30 @@ import {
   fetchComments,
   addCommentThunk,
   deleteCommentThunk,
-  updateCommentThunk
+  updateCommentThunk,
+  fetchGameStats
 } from '../thunks/gamesThunks';
 
 interface GamesState {
   games: Game[];
   loading: boolean;
   error: string | null;
-  gamesLoaded: boolean; // Flag per tracciare se i giochi sono stati caricati almeno una volta
-  loadedGameTitles: string[]; // Flag per tracciare quali giochi per titolo sono stati caricati
+  gamesLoaded: boolean;
+  loadedGameTitles: string[];
+  // Aggiungiamo il tracking dei commenti caricati
+  loadedCommentGameIds: number[];
+  // Statistiche
+  stats: {
+    total: number;
+    inProgress: number;
+    completed: number;
+    notStarted: number;
+    abandoned: number;
+    platinum: number;
+    totalHours: number;
+  } | null;
+  statsLoading: boolean;
+  statsError: string | null;
 }
 
 const initialState: GamesState = {
@@ -29,18 +44,24 @@ const initialState: GamesState = {
   error: null,
   gamesLoaded: false,
   loadedGameTitles: [],
+  loadedCommentGameIds: [],
+  stats: null,
+  statsLoading: false,
+  statsError: null
 };
 
 const gamesSlice = createSlice({
   name: 'games',
-  initialState,
-  reducers: {    resetGamesState: (state) => {
+  initialState,  reducers: {
+    resetGamesState: (state) => {
       // Reset completo dello stato quando l'utente fa logout
       state.games = [];
       state.loading = false;
       state.error = null;
       state.gamesLoaded = false;
-      state.loadedGameTitles = [];
+      state.stats = null;
+      state.statsLoading = false;
+      state.statsError = null;
     }
   },
   extraReducers: (builder) => {
@@ -71,34 +92,33 @@ const gamesSlice = createSlice({
         } else {
           state.games.push(action.payload);
         }
-      })      .addCase(fetchGameById.rejected, (state, action) => {
+      })      
+      .addCase(fetchGameById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Errore caricamento gioco';
-      })
-      // Fetch singolo gioco per titolo
+      })      // Fetch singolo gioco per titolo
       .addCase(fetchGameByTitle.pending, (state) => {
         state.loading = true;
         state.error = null;
-      })      .addCase(fetchGameByTitle.fulfilled, (state, action) => {
+      })
+      .addCase(fetchGameByTitle.fulfilled, (state, action) => {
         state.loading = false;
-        // Aggiunge o aggiorna il gioco nell'array
-        const existingIndex = state.games.findIndex(g => g.id === action.payload.id);
-        if (existingIndex !== -1) {
-          state.games[existingIndex] = action.payload;
+        const loadedGame = action.payload;
+        
+        // Controlla se il gioco esiste già nella lista
+        const existingIndex = state.games.findIndex(g => g.id === loadedGame.id);
+        
+        if (existingIndex >= 0) {
+          // Aggiorna il gioco esistente
+          state.games[existingIndex] = loadedGame;
         } else {
-          state.games.push(action.payload);
-        }        // Aggiungi il titolo al set dei titoli caricati
-        if (!state.loadedGameTitles.includes(action.payload.Title)) {
-          state.loadedGameTitles.push(action.payload.Title);
+          // Aggiungi il nuovo gioco alla lista
+          state.games.push(loadedGame);
         }
-      })      .addCase(fetchGameByTitle.rejected, (state, action) => {
+      })
+      .addCase(fetchGameByTitle.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Errore caricamento gioco';
-        // Anche se fallisce, aggiungiamo il titolo per evitare tentativi ripetuti
-        // Potremmo voler gestire questo diversamente in futuro
-        if (action.meta.arg && !state.loadedGameTitles.includes(action.meta.arg)) {
-          state.loadedGameTitles.push(action.meta.arg);
-        }
+        state.error = action.error.message || 'Errore nel caricamento';
       })
       .addCase(addGame.fulfilled, (state, action) => {
         state.games.push(action.payload);
@@ -143,6 +163,19 @@ const gamesSlice = createSlice({
             game.Comments[commentIndex] = action.payload.comment;
           }
         }
+      })
+      // Statistiche
+      .addCase(fetchGameStats.pending, (state) => {
+        state.statsLoading = true;
+        state.statsError = null;
+      })
+      .addCase(fetchGameStats.fulfilled, (state, action) => {
+        state.statsLoading = false;
+        state.stats = action.payload;
+      })
+      .addCase(fetchGameStats.rejected, (state, action) => {
+        state.statsLoading = false;
+        state.statsError = action.error.message || 'Errore nel caricamento delle statistiche';
       });
   }
 });

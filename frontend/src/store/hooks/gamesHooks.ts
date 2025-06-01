@@ -14,9 +14,10 @@ import {
   fetchComments,
   addCommentThunk,
   deleteCommentThunk,
-  updateCommentThunk
+  updateCommentThunk,
+  fetchGameStats
 } from '../thunks/gamesThunks';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useAppDispatch } from '../hooks';
 
 export function useLoadGames() {
@@ -35,31 +36,67 @@ export function useLoadGames() {
   return { loading, error, gamesLoaded };
 }
 
-// Hook per caricare un gioco per titolo
 export function useLoadSingleGameByTitle(title: string) {
   const dispatch = useAppDispatch();
-  const loading = useSelector((state: RootState) => state.games.loading);
-  const error = useSelector((state: RootState) => state.games.error);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasAttempted, setHasAttempted] = useState(false);
+  
+  // Ottieni il gioco dallo stato Redux in tempo reale
   const game = useGameByTitle(title);
-  const isGameTitleLoaded = useIsGameTitleLoaded(title);
   
-  // Usiamo useEffect con un flag di "richiesta inviata" per garantire che la richiesta venga fatta solo una volta
+  
   useEffect(() => {
-    // Crea una funzione per tenere traccia se la richiesta è stata inviata
-    let requestSent = false;
-    
-    // Se il titolo esiste, non è già caricato e non è in caricamento
-    if (title && !isGameTitleLoaded && !loading && !requestSent) {
-      console.log(`[useLoadSingleGameByTitle] Fetching game with title: "${title}"`);
-      dispatch(fetchGameByTitle(title));
-      requestSent = true;
+    // Reset quando cambia il titolo
+    if (title) {
+      setHasAttempted(false);
+      setError(null);
+      setLoading(false);
     }
-  }, [dispatch, title, isGameTitleLoaded, loading]);
+  }, [title]);
   
-  // Aggiungiamo un log per monitorare lo stato del gioco
+  // Effect separato per gestire il loading quando il gioco viene trovato
   useEffect(() => {
-    console.log(`[useLoadSingleGameByTitle] Game state update - title: "${title}", found: ${game ? 'yes' : 'no'}, loaded: ${isGameTitleLoaded}`);
-  }, [title, game, isGameTitleLoaded]);
+    if (game && loading) {
+      setLoading(false);
+    }
+  }, [game, loading]);
+  
+  useEffect(() => {
+    // Se non c'è titolo, esci
+    if (!title) return;
+    
+    // Se il gioco è già presente nello stato, non caricare
+    if (game) {
+      setLoading(false);
+      return;
+    }
+    
+    // Se stiamo già caricando o abbiamo già tentato, esci
+    if (loading || hasAttempted) return;
+    
+    let isMounted = true;
+    
+    const loadGame = async () => {
+      setLoading(true);
+      setError(null);
+      setHasAttempted(true);
+        try {
+        await dispatch(fetchGameByTitle(title)).unwrap();
+      } catch (err: any) {
+        if (isMounted) {
+          setError(err.message || 'Errore nel caricamento');
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadGame();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [title, game, loading, hasAttempted, dispatch]);
   
   return { game, loading, error };
 }
@@ -74,10 +111,6 @@ export function useGameById(id: number): Game | undefined {
 
 export function useGameByTitle(title: string): Game | undefined {
   return useSelector((state: RootState) => state.games.games.find(g => g.Title === title));
-}
-
-export function useIsGameTitleLoaded(title: string): boolean {
-  return useSelector((state: RootState) => state.games.loadedGameTitles.includes(title));
 }
 
 export function useGamesByStatus(Status: GameStatus): Game[] {
@@ -105,15 +138,28 @@ export function usePlatinumGames(): Game[] {
 }
 
 export function useGamesStats() {
-  const games = useAllGames();
-  const total = games.length;
-  const inProgress = games.filter(g => g.Status === 'InProgress').length;
-  const completed = games.filter(g => g.Status === 'Completed' || g.Status === 'Platinum').length;
-  const notStarted = games.filter(g => g.Status === 'NotStarted').length;
-  const abandoned = games.filter(g => g.Status === 'Abandoned').length;
-  const platinum = games.filter(g => g.Status === 'Platinum').length;
-  const totalHours = games.reduce((acc, g) => acc + g.HoursPlayed, 0);
-  return { total, inProgress, completed, notStarted, abandoned, platinum, totalHours };
+  const dispatch = useAppDispatch();
+  const stats = useSelector((state: RootState) => state.games.stats);
+  const loading = useSelector((state: RootState) => state.games.statsLoading);
+  const error = useSelector((state: RootState) => state.games.statsError);
+
+  const loadStats = useCallback(() => {
+    dispatch(fetchGameStats());
+  }, [dispatch]);
+
+  // Carica automaticamente le statistiche se non sono presenti
+  useEffect(() => {
+    if (!stats && !loading) {
+      loadStats();
+    }
+  }, [stats, loading, loadStats]);
+
+  return { 
+    stats: stats || { total: 0, inProgress: 0, completed: 0, notStarted: 0, abandoned: 0, platinum: 0, totalHours: 0 }, 
+    loading, 
+    error, 
+    loadStats 
+  };
 }
 
 export function useAllPlatforms(): GamePlatform[] {

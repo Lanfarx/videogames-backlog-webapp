@@ -19,7 +19,7 @@ export interface StatusItem {
  * Ora usa lo stato globale tramite hook
  */
 export function useStatusData(): StatusItem[] {
-  const stats = useGamesStats();
+  const { stats } = useGamesStats();
   return Object.entries(Status_LABELS).map(([Status, label]) => ({
     Status: Status as GameStatus,
     label: label,
@@ -32,9 +32,9 @@ function getCountForStatus(stats: any, Status: GameStatus): number {
   switch (Status) {
     case 'InProgress': return stats.inProgress;
     case 'NotStarted': return stats.notStarted;
-    case 'Completed': return stats.Completed;
-    case 'Abandoned': return stats.Abandoned;
-    case 'Platinum': return stats.Platinum;
+    case 'Completed': return stats.completed - stats.platinum; // Completed senza platinum
+    case 'Abandoned': return stats.abandoned;
+    case 'Platinum': return stats.platinum;
     default: return 0;
   }
 }

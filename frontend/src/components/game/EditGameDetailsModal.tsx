@@ -50,12 +50,6 @@ const EditGameDetailsModal = ({
     
     // Aggiorna il gioco usando il nuovo pattern unificato
     updateGame(game.id, updatedGame);
-    
-    // Chiama la callback opzionale per backward compatibility
-    if (onSave) {
-      onSave(updatedGame);
-    }
-    
     onClose();
   };
 

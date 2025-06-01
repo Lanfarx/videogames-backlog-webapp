@@ -46,13 +46,12 @@ namespace VideoGamesBacklogBackend.Models
         public string? CompletionDate { get; set; }
         public string? PlatinumDate { get; set; }
         public int HoursPlayed { get; set; }
-        public int Metacritic { get; set; }
-
-        // Inizializza il Rating a 0
-        public int Rating { get; set; } = 0;
+        public int Metacritic { get; set; }        // Inizializza il Rating a 0
+        public decimal Rating { get; set; } = 0;
 
         public string? Notes { get; set; }
         public GameReview? Review { get; set; }
+
         public List<GameComment> Comments { get; set; } = new List<GameComment>();
 
         // Foreign key per l'utente proprietario
@@ -62,16 +61,16 @@ namespace VideoGamesBacklogBackend.Models
 
         // Relazione uno-a-molti: un gioco ha molte attivit�
         public List<Activity> Activities { get; set; } = new List<Activity>();
-    }
-
+    }    
+    
     [Owned]
     public class GameReview
     {
         public string Text { get; set; } = string.Empty;
-        public int Gameplay { get; set; }
-        public int Graphics { get; set; }
-        public int Story { get; set; }
-        public int Sound { get; set; }
+        public decimal Gameplay { get; set; }
+        public decimal Graphics { get; set; }
+        public decimal Story { get; set; }
+        public decimal Sound { get; set; }
         public string Date { get; set; } = string.Empty;
         public bool? IsPublic { get; set; }
     }
@@ -86,6 +85,7 @@ namespace VideoGamesBacklogBackend.Models
         // Foreign key verso Game
         [ForeignKey("Game")]
         public int GameId { get; set; }
+        [JsonIgnore]
         public Game? Game { get; set; }
     }
 }

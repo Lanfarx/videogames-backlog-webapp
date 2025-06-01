@@ -11,7 +11,6 @@ import { filterGames, sortGames, calculateMaxValues } from '../../utils/gamesUti
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useAppDispatch } from '../../store/hooks';
 import { useGameActions } from '../../store/hooks/gamesHooks';
-import { useLoadGames } from '../../store/hooks/gamesHooks';
 import type { GameFilters, SortOption, SortOrder, Game, GameStatus, GameSearchParams } from '../../types/game';
 
 const LibraryPage: React.FC = () => {
@@ -41,8 +40,6 @@ const LibraryPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [columns, setColumns] = useState(4); // default XL
     const gridContainerRef = useRef<HTMLDivElement>(null);
-
-    useLoadGames(); // Carica i giochi dal backend all'apertura della pagina
 
     // Carica i giochi all'inizio e aggiorna quando cambiano i dati da Redux
     useEffect(() => {

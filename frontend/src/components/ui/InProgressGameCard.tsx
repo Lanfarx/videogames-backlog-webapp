@@ -32,13 +32,13 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
   
   // Funzione per navigare alla pagina del gioco con il popover delle ore aperto
   const handleResumeGame = () => {
-    navigate(`/game/${id}?addPlaytime=true`);
+    navigate(`/library/${title}?addPlaytime=true`);
   };
   
   return (
     <div className="w-[280px] h-[280px] bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">
       {/* Immagine di copertina con link */}
-      <Link to={`/game/${id}`} className="block h-[140px] w-full relative">
+      <Link to={`/library/${title}`} className="block h-[140px] w-full relative">
         <div className="absolute inset-0 bg-accent-secondary bg-opacity-20 rounded-t-lg"></div>
         <img src={CoverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover rounded-t-lg" /> 
       </Link>

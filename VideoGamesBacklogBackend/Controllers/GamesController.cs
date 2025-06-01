@@ -79,7 +79,17 @@ namespace VideoGamesBacklogBackend.Controllers
             var result = await _gameService.DeleteGameAsync(User, id);
             if (!result) return NotFound();
             return NoContent();
-        }        // Commenti
+        }
+
+        // Statistiche
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats()
+        {
+            var stats = await _gameService.GetGameStatsAsync(User);
+            return Ok(stats);
+        }
+
+        // Commenti
         [HttpGet("{gameId}/Comments")]
         public async Task<IActionResult> GetComments(int gameId)
         {

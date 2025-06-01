@@ -24,7 +24,6 @@ const GameCommentsCard = ({
   const [editingtext, setEditingtext] = useState('');
   // Verifica se è stato raggiunto il limite massimo di commenti
   const isCommentLimitReached = Comments.length >= maxComments;
-  
   const handleAddComment = () => {
     if (commenttext.trim() && onAddComment && !isCommentLimitReached) {
       onAddComment(commenttext);
@@ -93,10 +92,9 @@ const GameCommentsCard = ({
         {Comments.length === 0 ? (
           <p className="text-center text-text-secondary font-secondary text-sm py-4">
             Non ci sono ancora appunti per questo gioco.
-          </p>
-        ) : (
-          Comments.map((comment) => (
-            <div key={comment.Id}>
+          </p>        ) : (
+          Comments.map((comment, index) => (
+            <div key={comment.Id || `temp-${index}`}>
               {editingId === comment.Id ? (
                 // Modalità modifica
                 <div className="py-3 border-b border-border-color">
@@ -127,8 +125,8 @@ const GameCommentsCard = ({
                 // Visualizzazione normale
                 <CommentItem
                   id={comment.Id}
-                  date={new Date(comment.Date).toLocaleDateString('it-IT')}
-                  text={comment.Text}
+                  date={comment.Date ? new Date(comment.Date).toLocaleDateString('it-IT') : 'Data non valida'}
+                  text={comment.Text || 'Testo non disponibile'}
                   onEdit={() => startEditComment(comment.Id, comment.Text)}
                   onDelete={() => onDeleteComment && onDeleteComment(comment.Id)}
                 />

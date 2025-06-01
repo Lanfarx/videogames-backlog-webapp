@@ -15,7 +15,7 @@ import { History } from 'lucide-react';
 
 
 const DashboardPage: React.FC = () => {
-    const stats = useGamesStats();
+    const { stats, loading, error } = useGamesStats();
     const allGames = useAllGames();
     const recentActivities = useRecentActivities(5);
     const allRecentActivities = useRecentActivities(100);
@@ -28,9 +28,7 @@ const DashboardPage: React.FC = () => {
       .map(item => ({ Platform: item.label, count: item.value }));
 
     // Usa la funzione centralizzata per la distribuzione generi
-    const genreData = generateGenreDistributionData(allGames);
-
-    return (
+    const genreData = generateGenreDistributionData(allGames);    return (
         <div className="flex flex-col bg-secondaryBg min-h-screen p-6">
             {/* Intestazione pagina */}
             <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
@@ -41,12 +39,12 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-3 gap-5 mb-6">
                 <StatsCard 
                     label="Giochi Totali" 
-                    value={stats.total.toString()} 
+                    value={loading ? "..." : stats.total.toString()} 
                     icon={<LayoutGrid className="h-6 w-6 text-accent-primary" />} 
                 />
                 <StatsCard 
                     label="Ore Totali di Gioco" 
-                    value={stats.totalHours.toString()} 
+                    value={loading ? "..." : stats.totalHours.toString()} 
                     icon={<Clock className="h-6 w-6 text-accent-secondary" />} 
                 />
                 <StatsCard 
