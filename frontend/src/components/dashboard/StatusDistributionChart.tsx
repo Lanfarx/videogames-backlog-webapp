@@ -3,7 +3,7 @@ import { getStatusColor } from '../../constants/gameConstants';
 
 interface StatusDistributionChartProps {
     data: {
-        status: string;
+        Status: string;
         label: string;
         count: number;
         color?: string;
@@ -41,7 +41,7 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
             ctx.closePath();
             
             // Usa il colore definito nell'item
-            ctx.fillStyle = item.color || getStatusColor(item.status);
+            ctx.fillStyle = item.color || getStatusColor(item.Status);
             ctx.fill();
             
             startAngle += sliceAngle;

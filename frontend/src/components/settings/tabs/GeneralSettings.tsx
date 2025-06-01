@@ -3,35 +3,41 @@ import { Globe, Palette, Sun, Moon } from 'lucide-react';
 import SettingsSection from '../SettingsSection';
 import ColorSelector from '../ColorSelector';
 import { getCssVarColor } from '../../../utils/getCssVarColor';
-import { Theme, AccentColor } from '../../../types/theme';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../store';
+import { setUserProfile } from '../../../store/slice/userSlice';
+import { updateProfile } from '../../../store/services/profileService';
+import { getToken } from '../../../utils/getToken';
 
-interface GeneralSettingsProps {
-  language: string;
-  dateFormat: string;
-  theme: string;
-  accentColor: string;
-  accentColors: Record<string, string>;
-  languageOptions: string[];
-  dateFormatOptions: string[];
-  onLanguageChange: (language: string) => void;
-  onDateFormatChange: (format: string) => void;
-  setTheme: (theme: Theme) => void;
-  setAccentColor?: (color: AccentColor) => void;
-}
+const languageOptions = ['It', 'En'];
+const dateFormatOptions = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
 
-const GeneralSettings: React.FC<GeneralSettingsProps> = ({
-  language,
-  dateFormat,
-  theme,
-  accentColor,
-  accentColors,
-  languageOptions,
-  dateFormatOptions,
-  onLanguageChange,
-  onDateFormatChange,
-  setTheme,
-  setAccentColor,
-}) => {
+const GeneralSettings: React.FC = () => {
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state: RootState) => state.user.profile);
+  const token = getToken()
+
+  if (!userProfile) return <div>Caricamento...</div>;
+
+  const preferences = userProfile.appPreferences || {};
+  const theme = preferences.theme || 'light';
+  const language = preferences.language || 'it';
+  const dateFormat = preferences.dateFormat || 'DD/MM/YYYY';
+  const accentColor = preferences.accentColor || 'arancione';
+
+  // Helper per update e dispatch
+  const handleProfileUpdate = async (newPrefs: Partial<typeof preferences>) => {
+    if (!token) return;
+    const newProfile = {
+      ...userProfile,
+      appPreferences: {
+        ...preferences,
+        ...newPrefs
+      }
+    };
+    const updated = await updateProfile(newProfile, token);
+    dispatch(setUserProfile(updated));
+  };
 
   return (
     <div className="space-y-6">
@@ -53,7 +59,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                 className={`flex flex-col items-center justify-center p-6 rounded-lg border ${
                   theme === 'light' ? 'border-accent-primary bg-accent-primary/10' : 'border-border-color bg-secondary-bg'
                 } hover:border-accent-primary transition-all`}
-                onClick={() => setTheme('light')}
+                onClick={() => handleProfileUpdate({ theme: 'light' })}
               >
                 <Sun className={`w-8 h-8 mb-2 ${theme === 'light' ? 'text-accent-primary' : 'text-text-secondary'}`} />
                 <span className={`font-roboto font-medium ${theme === 'light' ? 'text-accent-primary' : 'text-text-primary'}`}>Chiaro</span>
@@ -63,7 +69,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                 className={`flex flex-col items-center justify-center p-6 rounded-lg border ${
                   theme === 'dark' ? 'border-accent-primary bg-accent-primary/10' : 'border-border-color bg-secondary-bg'
                 } hover:border-accent-primary transition-all`}
-                onClick={() => setTheme('dark')}
+                onClick={() => handleProfileUpdate({ theme: 'dark' })}
               >
                 <Moon className={`w-8 h-8 mb-2 ${theme === 'dark' ? 'text-accent-primary' : 'text-text-secondary'}`} />
                 <span className={`font-roboto font-medium ${theme === 'dark' ? 'text-accent-primary' : 'text-text-primary'}`}>Scuro</span>
@@ -76,19 +82,16 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
               <div className="flex items-center space-x-3">
                 <div
                   className="w-5 h-5 rounded-full"
-                  style={{ backgroundColor: getCssVarColor(`--accent-${accentColor}`, '#FB7E00') }}
+                  style={{ backgroundColor: getCssVarColor(`--accent-primary`, '#FB7E00') }}
                 ></div>
                 <div>
                   <p className="text-text-primary">Colore accento</p>
                   <p className="text-xs text-text-secondary">Seleziona il colore principale dell'interfaccia</p>
                 </div>
-              </div>              <ColorSelector 
+              </div>
+              <ColorSelector 
                 accentColor={accentColor}
-                onChange={(color) => {
-                  if (setAccentColor) {
-                    setAccentColor(color);
-                  }
-                }}
+                onChange={(color) => handleProfileUpdate({ accentColor: color })}
               />
             </div>
           </div>
@@ -113,7 +116,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
             <select 
               className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={language}
-              onChange={(e) => onLanguageChange(e.target.value)}
+              onChange={(e) => handleProfileUpdate({ language: e.target.value })}
             >
               {languageOptions.map((option) => (
                 <option key={option} value={option}>
@@ -134,7 +137,7 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
             <select 
               className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={dateFormat}
-              onChange={(e) => onDateFormatChange(e.target.value)}
+              onChange={(e) => handleProfileUpdate({ dateFormat: e.target.value })}
             >
               {dateFormatOptions.map((option) => (
                 <option key={option} value={option}>

@@ -2,14 +2,14 @@ import { Star, StarHalf } from 'lucide-react';
 import { useState, useRef } from 'react';
 
 interface RatingStarsProps {
-  rating: number;
+  Rating: number;
   showValue?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  onRatingChange?: (rating: number) => void;
+  onRatingChange?: (Rating: number) => void;
   readOnly?: boolean; // Aggiungiamo la proprietà readOnly
 }
 
-const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, readOnly = false }: RatingStarsProps) => {
+const RatingStars = ({ Rating, showValue = true, size = 'md', onRatingChange, readOnly = false }: RatingStarsProps) => {
   const getStarSize = () => {
     switch (size) {
       case 'sm': return 'w-4 h-4';
@@ -43,7 +43,7 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, re
       newRating = starIndex;
     }
 
-    if (newRating === rating) {
+    if (newRating === Rating) {
       onRatingChange(0);
     } else {
       onRatingChange(newRating);
@@ -72,7 +72,7 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, re
     setHoverRating(null);
   };
 
-  const displayRating = hoverRating !== null ? hoverRating : rating;
+  const displayRating = hoverRating !== null ? hoverRating : Rating;
 
   return (
     <div className="flex items-center" onMouseLeave={handleMouseLeave}>
@@ -104,7 +104,7 @@ const RatingStars = ({ rating, showValue = true, size = 'md', onRatingChange, re
       ))}
       {showValue && (
         <span className="ml-2 text-text-primary font-secondary text-sm">
-          {displayRating !== null ? displayRating : rating}/5
+          {displayRating !== null ? displayRating : Rating}/5
         </span>
       )}
     </div>

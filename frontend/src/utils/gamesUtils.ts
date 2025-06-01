@@ -6,16 +6,16 @@ import { getStatusColor, getStatusLabel, getPlatformColor } from '../constants/g
 // Tutte le use* relative ai giochi sono ora in store/hooks/gamesHooks.ts
 // Tutte le use* relative alle attività sono ora in store/hooks/activitiesHooks.ts
 
-export function calculateRatingFromReview(review: GameReview | undefined): number {
-  if (!review) return 0;
-  const { gameplay, graphics, story, sound } = review;
-  const average = (gameplay + graphics + story + sound) / 4;
+export function calculateRatingFromReview(Review: GameReview | undefined): number {
+  if (!Review) return 0;
+  const { Gameplay, Graphics, Story, Sound } = Review;
+  const average = (Gameplay + Graphics + Story + Sound) / 4;
   return Math.round(average * 2) / 2;
 }
 
 export function getGameRating(game: Game): number {
-  if (game.rating !== undefined) return game.rating;
-  return game.review ? calculateRatingFromReview(game.review) : 0;
+  if (game.Rating !== undefined) return game.Rating;
+  return game.Review ? calculateRatingFromReview(game.Review) : 0;
 }
 
 export function filterGames(games: Game[], searchParams: GameSearchParams): Game[] {
@@ -23,23 +23,23 @@ export function filterGames(games: Game[], searchParams: GameSearchParams): Game
   if (searchParams.query) {
     const query = searchParams.query.toLowerCase();
     filtered = filtered.filter(game =>
-      game.title.toLowerCase().includes(query) ||
-      (game.developer && game.developer.toLowerCase().includes(query)) ||
-      (game.publisher && game.publisher.toLowerCase().includes(query)) ||
-      game.genres.some(genre => genre.toLowerCase().includes(query))
+      game.Title.toLowerCase().includes(query) ||
+      (game.Developer && game.Developer.toLowerCase().includes(query)) ||
+      (game.Publisher && game.Publisher.toLowerCase().includes(query)) ||
+      game.Genres.some(genre => genre.toLowerCase().includes(query))
     );
   }
   if (searchParams.filters) {
-    const { status, platform, genre, priceRange, hoursRange, metacriticRange, purchaseDate } = searchParams.filters;
-    if (status && status.length > 0) filtered = filtered.filter(game => status.includes(game.status));
-    if (platform && platform.length > 0) filtered = filtered.filter(game => platform.includes(game.platform));
-    if (genre && genre.length > 0) filtered = filtered.filter(game => game.genres.some(g => genre.includes(g)));
-    if (priceRange) filtered = filtered.filter(game => game.price >= priceRange[0] && game.price <= priceRange[1]);
-    if (hoursRange) filtered = filtered.filter(game => game.hoursPlayed >= hoursRange[0] && game.hoursPlayed <= hoursRange[1]);
-    if (metacriticRange) filtered = filtered.filter(game => game.metacritic >= metacriticRange[0] && game.metacritic <= metacriticRange[1]);
-    if (purchaseDate) {
-      const purchaseYear = new Date(purchaseDate).getFullYear();
-      filtered = filtered.filter(game => game.purchaseDate && new Date(game.purchaseDate).getFullYear() === purchaseYear);
+    const { Status, Platform, genre, PriceRange, hoursRange, MetacriticRange, PurchaseDate } = searchParams.filters;
+    if (Status && Status.length > 0) filtered = filtered.filter(game => Status.includes(game.Status));
+    if (Platform && Platform.length > 0) filtered = filtered.filter(game => Platform.includes(game.Platform));
+    if (genre && genre.length > 0) filtered = filtered.filter(game => game.Genres.some(g => genre.includes(g)));
+    if (PriceRange) filtered = filtered.filter(game => game.Price >= PriceRange[0] && game.Price <= PriceRange[1]);
+    if (hoursRange) filtered = filtered.filter(game => game.HoursPlayed >= hoursRange[0] && game.HoursPlayed <= hoursRange[1]);
+    if (MetacriticRange) filtered = filtered.filter(game => game.Metacritic >= MetacriticRange[0] && game.Metacritic <= MetacriticRange[1]);
+    if (PurchaseDate) {
+      const purchaseYear = new Date(PurchaseDate).getFullYear();
+      filtered = filtered.filter(game => game.PurchaseDate && new Date(game.PurchaseDate).getFullYear() === purchaseYear);
     }
   }
   if (searchParams.sortBy) {
@@ -57,119 +57,119 @@ export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrde
   const sortMultiplier = sortOrder === 'asc' ? 1 : -1;
   return [...games].sort((a, b) => {
     switch (sortBy) {
-      case 'title': return a.title.localeCompare(b.title) * sortMultiplier;
-      case 'platform': return a.platform.localeCompare(b.platform) * sortMultiplier;
-      case 'releaseYear': return (a.releaseYear - b.releaseYear) * sortMultiplier;
-      case 'rating': return (a.rating - b.rating) * sortMultiplier;
-      case 'hoursPlayed': return (a.hoursPlayed - b.hoursPlayed) * sortMultiplier;
-      case 'price': return (a.price - b.price) * sortMultiplier;
-      case 'metacritic': return (a.metacritic - b.metacritic) * sortMultiplier;
-      case 'purchaseDate':
-        if (!a.purchaseDate) return sortMultiplier;
-        if (!b.purchaseDate) return -sortMultiplier;
-        return (new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime()) * sortMultiplier;
-      case 'completionDate':
-        if (!a.completionDate) return sortMultiplier;
-        if (!b.completionDate) return -sortMultiplier;
-        return (new Date(a.completionDate).getTime() - new Date(b.completionDate).getTime()) * sortMultiplier;
-      case 'platinumDate':
-        if (!a.platinumDate) return sortMultiplier;
-        if (!b.platinumDate) return -sortMultiplier;
-        return (new Date(a.platinumDate).getTime() - new Date(b.platinumDate).getTime()) * sortMultiplier;
+      case 'title': return a.Title.localeCompare(b.Title) * sortMultiplier;
+      case 'Platform': return a.Platform.localeCompare(b.Platform) * sortMultiplier;
+      case 'ReleaseYear': return (a.ReleaseYear - b.ReleaseYear) * sortMultiplier;
+      case 'Rating': return (a.Rating - b.Rating) * sortMultiplier;
+      case 'HoursPlayed': return (a.HoursPlayed - b.HoursPlayed) * sortMultiplier;
+      case 'Price': return (a.Price - b.Price) * sortMultiplier;
+      case 'Metacritic': return (a.Metacritic - b.Metacritic) * sortMultiplier;
+      case 'PurchaseDate':
+        if (!a.PurchaseDate) return sortMultiplier;
+        if (!b.PurchaseDate) return -sortMultiplier;
+        return (new Date(a.PurchaseDate).getTime() - new Date(b.PurchaseDate).getTime()) * sortMultiplier;
+      case 'CompletionDate':
+        if (!a.CompletionDate) return sortMultiplier;
+        if (!b.CompletionDate) return -sortMultiplier;
+        return (new Date(a.CompletionDate).getTime() - new Date(b.CompletionDate).getTime()) * sortMultiplier;
+      case 'PlatinumDate':
+        if (!a.PlatinumDate) return sortMultiplier;
+        if (!b.PlatinumDate) return -sortMultiplier;
+        return (new Date(a.PlatinumDate).getTime() - new Date(b.PlatinumDate).getTime()) * sortMultiplier;
       default: return 0;
     }
   });
 }
 
 export function generateStatusDistributionData(games: Game[]): ChartItem[] {
-  const statusCounts: Record<GameStatus, number> = {
-    'not-started': 0,
-    'in-progress': 0,
-    'completed': 0,
-    'abandoned': 0,
-    'platinum': 0
+  const StatusCounts: Record<GameStatus, number> = {
+    'NotStarted': 0,
+    'InProgress': 0,
+    'Completed': 0,
+    'Abandoned': 0,
+    'Platinum': 0
   };
-  games.forEach(game => { statusCounts[game.status]++; });
-  return Object.entries(statusCounts).map(([status, count]) => ({
-    label: getStatusLabel(status as GameStatus),
+  games.forEach(game => { StatusCounts[game.Status]++; });
+  return Object.entries(StatusCounts).map(([Status, count]) => ({
+    label: getStatusLabel(Status as GameStatus),
     value: count,
-    color: getStatusColor(status as GameStatus)
+    color: getStatusColor(Status as GameStatus)
   }));
 }
 
 export function generatePlatformDistributionData(games: Game[]): ChartItem[] {
-  const platformCounts: Record<string, number> = {};
-  games.forEach(game => { platformCounts[game.platform] = (platformCounts[game.platform] || 0) + 1; });
-  return Object.entries(platformCounts)
+  const PlatformCounts: Record<string, number> = {};
+  games.forEach(game => { PlatformCounts[game.Platform] = (PlatformCounts[game.Platform] || 0) + 1; });
+  return Object.entries(PlatformCounts)
     .filter(([_, count]) => count > 0)
-    .map(([platform, count]) => ({
-      label: platform,
+    .map(([Platform, count]) => ({
+      label: Platform,
       value: count,
-      color: getPlatformColor(platform)
+      color: getPlatformColor(Platform)
     }))
     .sort((a, b) => b.value - a.value);
 }
 
 export function calculateAveragePrice(games: Game[]): number {
   if (games.length === 0) return 0;
-  const totalPrice = games.reduce((sum, game) => sum + game.price, 0);
+  const totalPrice = games.reduce((sum, game) => sum + game.Price, 0);
   return parseFloat((totalPrice / games.length).toFixed(2));
 }
 
 export function calculateAverageRating(games: Game[]): number {
-  const gamesWithRating = games.filter(game => game.rating > 0);
+  const gamesWithRating = games.filter(game => game.Rating > 0);
   if (gamesWithRating.length === 0) return 0;
-  const totalRating = gamesWithRating.reduce((sum, game) => sum + game.rating, 0);
+  const totalRating = gamesWithRating.reduce((sum, game) => sum + game.Rating, 0);
   return parseFloat((totalRating / gamesWithRating.length).toFixed(1));
 }
 
 export function extractGameBasicInfo(game: Game): GameBasicInfo {
-  const { id, title, platform, releaseYear, genres, status, coverImage } = game;
-  return { id, title, platform, releaseYear, genres, status, coverImage };
+  const { id, Title, Platform, ReleaseYear, Genres, Status, CoverImage } = game;
+  return { id, Title, Platform, ReleaseYear, Genres, Status, CoverImage };
 }
 
 export function findSimilarGames(game: Game, allGames: Game[], limit = 3): Game[] {
   const otherGames = allGames.filter(g => g.id !== game.id);
   const scoredGames = otherGames.map(otherGame => {
     let score = 0;
-    if (otherGame.platform === game.platform) score += 2;
-    const commonGenres = otherGame.genres.filter(genre => game.genres.includes(genre));
+    if (otherGame.Platform === game.Platform) score += 2;
+    const commonGenres = otherGame.Genres.filter(genre => game.Genres.includes(genre));
     score += commonGenres.length * 3;
-    if (otherGame.developer && game.developer && otherGame.developer === game.developer) score += 4;
-    const yearDiff = Math.abs(otherGame.releaseYear - game.releaseYear);
+    if (otherGame.Developer && game.Developer && otherGame.Developer === game.Developer) score += 4;
+    const yearDiff = Math.abs(otherGame.ReleaseYear - game.ReleaseYear);
     if (yearDiff <= 2) score += 1;
     return { game: otherGame, score };
   });
   return scoredGames.sort((a, b) => b.score - a.score).slice(0, limit).map(item => item.game);
 }
 
-export function calculateMaxValues(games: Game[]): { priceRange: NumericRange; hoursRange: NumericRange; metacriticRange: NumericRange } {
-  const maxPrice = Math.max(...games.map(game => game.price || 0), 0);
-  const maxHours = Math.max(...games.map(game => game.hoursPlayed || 0), 0);
-  const maxMetacritic = Math.max(...games.map(game => game.metacritic || 0), 0);
+export function calculateMaxValues(games: Game[]): { PriceRange: NumericRange; hoursRange: NumericRange; MetacriticRange: NumericRange } {
+  const maxPrice = Math.max(...games.map(game => game.Price || 0), 0);
+  const maxHours = Math.max(...games.map(game => game.HoursPlayed || 0), 0);
+  const maxMetacritic = Math.max(...games.map(game => game.Metacritic || 0), 0);
   return {
-    priceRange: [0, maxPrice],
+    PriceRange: [0, maxPrice],
     hoursRange: [0, maxHours],
-    metacriticRange: [0, maxMetacritic],
+    MetacriticRange: [0, maxMetacritic],
   };
 }
 
 export function calculateCounts(games: Game[]) {
-  const statusCountsTemp: Record<string, number> = {};
-  const platformCountsTemp: Record<string, number> = {};
+  const StatusCountsTemp: Record<string, number> = {};
+  const PlatformCountsTemp: Record<string, number> = {};
   const genreCountsTemp: Record<string, number> = {};
   games.forEach((game) => {
-    if (game.status) statusCountsTemp[game.status] = (statusCountsTemp[game.status] || 0) + 1;
-    if (game.platform) platformCountsTemp[game.platform] = (platformCountsTemp[game.platform] || 0) + 1;
-    if (game.genres) game.genres.forEach((g: string) => { genreCountsTemp[g] = (genreCountsTemp[g] || 0) + 1; });
+    if (game.Status) StatusCountsTemp[game.Status] = (StatusCountsTemp[game.Status] || 0) + 1;
+    if (game.Platform) PlatformCountsTemp[game.Platform] = (PlatformCountsTemp[game.Platform] || 0) + 1;
+    if (game.Genres) game.Genres.forEach((g: string) => { genreCountsTemp[g] = (genreCountsTemp[g] || 0) + 1; });
   });
-  return { statusCountsTemp, platformCountsTemp, genreCountsTemp };
+  return { StatusCountsTemp, PlatformCountsTemp, genreCountsTemp };
 }
 
 export function generateGenreDistributionData(games: Game[]): { genre: string; count: number }[] {
   const genreCounts: Record<string, number> = {};
   games.forEach((game) => {
-    game.genres.forEach((genre: string) => {
+    game.Genres.forEach((genre: string) => {
       genreCounts[genre] = (genreCounts[genre] || 0) + 1;
     });
   });
@@ -180,11 +180,11 @@ export function generateGenreDistributionData(games: Game[]): { genre: string; c
 }
 
 /**
- * Calcola il communityRating medio dato un array di giochi che hanno sicuramente un rating valido
+ * Calcola il communityRating medio dato un array di giochi che hanno sicuramente un Rating valido
  */
-export function calculateCommunityRating(games: Array<{ rating: number }>): number {
+export function calculateCommunityRating(games: Array<{ Rating: number }>): number {
   if (!games.length) return 0;
-  const avg = games.reduce((sum, g) => sum + g.rating, 0) / games.length;
+  const avg = games.reduce((sum, g) => sum + g.Rating, 0) / games.length;
   return Math.round(avg * 10) / 10;
 }
 

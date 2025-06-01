@@ -199,3 +199,14 @@ export function formatHours(hours: number): string {
   return `${hours} ${hours === 1 ? 'ora' : 'ore'}`;
 }
 
+/**
+ * Calcola i giorni di attività dall'iscrizione
+ */
+export function calculateActivityDays(memberSince: Date | string): number {
+  const memberSinceDate = typeof memberSince === 'string' ? new Date(memberSince) : memberSince;
+  const now = new Date();
+  const diffInMs = now.getTime() - memberSinceDate.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffInDays); // Assicura che non sia negativo
+}
+

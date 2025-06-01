@@ -14,7 +14,7 @@
   --accent-success: 159, 192, 137;
   --accent-light-success: 209, 223, 210;
   --accent-danger: 244, 67, 54;
-  --accent-platinum: 192, 192, 192;
+  --accent-Platinum: 192, 192, 192;
 
   --text-primary: 34, 34, 34;
   --text-secondary: 102, 102, 102;
@@ -39,18 +39,18 @@
   --platform-android: 61, 220, 132;
 
   /* Variabili per status dei giochi */
-  --status-not-started: 156, 163, 175; /* #9CA3AF */
-  --status-in-progress: 59, 130, 246;  /* #3B82F6 */
+  --status-notstarted: 156, 163, 175; /* #9CA3AF */
+  --status-inprogress: 59, 130, 246;  /* #3B82F6 */
   --status-completed: 16, 185, 129;    /* #10B981 */
   --status-abandoned: 239, 68, 68;     /* #EF4444 */
   --status-platinum:  192, 132, 252;   /* #C084FC  */
   /* Variabili per activity color */
-  --activity-played: var(--status-in-progress);
-  --activity-added: var(--status-not-started);
+  --activity-played: var(--status-InProgress);
+  --activity-added: var(--status-NotStarted);
   --activity-rated: 245, 158, 11;    /* #F59E0B */
-  --activity-completed: var(--status-completed);
-  --activity-abandoned: var(--status-abandoned);
-  --activity-platinum: var(--status-platinum);
+  --activity-Completed: var(--status-Completed);
+  --activity-Abandoned: var(--status-Abandoned);
+  --activity-Platinum: var(--status-Platinum);
   
   /* Variabili per i colori di accento */
   --accent-arancione: 251, 126, 0;    /* #FB7E00 */
@@ -71,7 +71,7 @@
   --accent-success: 159, 192, 137;
   --accent-light-success: 209, 223, 210;
   --accent-danger: 244, 67, 54;
-  --accent-platinum: 192, 192, 192;
+  --accent-Platinum: 192, 192, 192;
 
   --text-primary: 224, 224, 224;
   --text-secondary: 160, 160, 160;
@@ -145,8 +145,8 @@
   background-color: rgb(var(--accent-danger));
 }
 
-.bg-accent-platinum {
-  background-color: rgb(var(--accent-platinum));
+.bg-accent-Platinum {
+  background-color: rgb(var(--accent-Platinum));
 }
 
 .text-accent-primary {
@@ -165,8 +165,8 @@
   color: rgb(var(--accent-danger));
 }
 
-.text-accent-platinum {
-  color: rgb(var(--accent-platinum));
+.text-accent-Platinum {
+  color: rgb(var(--accent-Platinum));
 }
 
 .border-accent-primary {
@@ -240,16 +240,16 @@
 .bg-platform-android { background-color: rgb(var(--platform-android)); }
 
 /* Utility per status */
-.bg-status-not-started { background-color: rgb(var(--status-not-started)); }
-.bg-status-in-progress { background-color: rgb(var(--status-in-progress)); }
-.bg-status-completed { background-color: rgb(var(--status-completed)); }
-.bg-status-abandoned { background-color: rgb(var(--status-abandoned)); }
-.bg-status-platinum { background-color: rgb(var(--status-platinum)); }
+.bg-status-NotStarted { background-color: rgb(var(--status-NotStarted)); }
+.bg-status-InProgress { background-color: rgb(var(--status-InProgress)); }
+.bg-status-Completed { background-color: rgb(var(--status-Completed)); }
+.bg-status-Abandoned { background-color: rgb(var(--status-Abandoned)); }
+.bg-status-Platinum { background-color: rgb(var(--status-Platinum)); }
 
 /* Utility per activity */
 .bg-activity-played { background-color: rgb(var(--activity-played)); }
 .bg-activity-added { background-color: rgb(var(--activity-added)); }
 .bg-activity-rated { background-color: rgb(var(--activity-rated)); }
-.bg-activity-completed { background-color: rgb(var(--activity-completed)); }
-.bg-activity-abandoned { background-color: rgb(var(--activity-abandoned)); }
-.bg-activity-platinum { background-color: rgb(var(--activity-platinum)); }
+.bg-activity-Completed { background-color: rgb(var(--activity-Completed)); }
+.bg-activity-Abandoned { background-color: rgb(var(--activity-Abandoned)); }
+.bg-activity-Platinum { background-color: rgb(var(--activity-Platinum)); }

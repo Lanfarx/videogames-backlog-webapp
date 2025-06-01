@@ -13,13 +13,13 @@ interface GameTimelineCardProps {
 
 const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showHistoryPopover, setShowHistoryPopover] = useState(false);
+  const [showHiStoryPopover, setShowHiStoryPopover] = useState(false);
   
   // Verifichiamo se il gioco ha delle attività
   const hasActivities = activities && activities.length > 0;
   
   // Verifica se il gioco è da iniziare
-  const isNotStarted = game.status === "not-started";
+  const isNotStarted = game.Status === "NotStarted";
   
   // Prepara i dati ottimizzati per il grafico, raggruppando in circa 10 punti
   const getOptimizedGraphData = (activities: Activity[]) => {
@@ -126,9 +126,9 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     );
     
     const addedEvent = sortedActivities.find(a => a.type === 'added');
-    const completedEvent = sortedActivities.find(a => a.type === 'completed');
-    const platinumEvent = sortedActivities.find(a => a.type === 'platinum');
-    const abandonedEvent = sortedActivities.find(a => a.type === 'abandoned');
+    const CompletedEvent = sortedActivities.find(a => a.type === 'Completed');
+    const PlatinumEvent = sortedActivities.find(a => a.type === 'Platinum');
+    const AbandonedEvent = sortedActivities.find(a => a.type === 'Abandoned');
     
     const playedActivities = sortedActivities
       .filter(a => a.type === 'played' && a.additionalInfo?.includes('ore'))
@@ -143,9 +143,9 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     const keyEvents = [];
     
     if (addedEvent) keyEvents.push(addedEvent);
-    if (completedEvent) keyEvents.push(completedEvent);
-    if (platinumEvent) keyEvents.push(platinumEvent);
-    if (abandonedEvent) keyEvents.push(abandonedEvent);
+    if (CompletedEvent) keyEvents.push(CompletedEvent);
+    if (PlatinumEvent) keyEvents.push(PlatinumEvent);
+    if (AbandonedEvent) keyEvents.push(AbandonedEvent);
     
     const remainingSlots = 6 - keyEvents.length;
     if (remainingSlots > 0 && playedActivities.length > 0) {
@@ -166,7 +166,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     
     const isEmptyGraph = isNotStarted || !hasActivities;
     
-    const gamePlayActivities = activities.filter(activity => 
+    const GameplayActivities = activities.filter(activity => 
       activity.timestamp && 
       activity.type === 'played' && 
       activity.additionalInfo?.includes('ore')
@@ -199,7 +199,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       maxHoursFromData = Math.max(...graphData.map(point => point.hours));
     }
     
-    const currentHours = game.hoursPlayed;
+    const currentHours = game.HoursPlayed;
     const maxHours = Math.max(currentHours, maxHoursFromData, 10);
 
     const getHourScale = (max: number) => {
@@ -302,7 +302,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         ctx.fill();
       });
     }
-  }, [hasActivities, activities, game.hoursPlayed, game.purchaseDate, isNotStarted]);
+  }, [hasActivities, activities, game.HoursPlayed, game.PurchaseDate, isNotStarted]);
   
   const keyEvents = hasActivities ? getKeyEvents(activities) : [];
   
@@ -314,7 +314,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         </h2>
         {hasActivities && (
           <button 
-            onClick={() => setShowHistoryPopover(true)}
+            onClick={() => setShowHiStoryPopover(true)}
             className="flex items-center text-text-secondary hover:text-accent-primary transition-colors"
             title="Visualizza tutte le attività"
           >
@@ -358,11 +358,11 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         )}
       </div>
       
-      {showHistoryPopover && (
+      {showHiStoryPopover && (
         <ActivityHistoryPopover 
           activities={activities}
-          onClose={() => setShowHistoryPopover(false)}
-          gameTitle={game.title}
+          onClose={() => setShowHiStoryPopover(false)}
+          gameTitle={game.Title}
         />
       )}
     </div>

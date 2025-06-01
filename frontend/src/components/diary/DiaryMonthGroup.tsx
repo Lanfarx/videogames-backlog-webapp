@@ -42,7 +42,7 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
   // Calcola le statistiche del mese
   const stats = {
     total: sortedActivities.length,
-    completed: sortedActivities.filter(a => a.type === 'completed').length,
+    Completed: sortedActivities.filter(a => a.type === 'Completed').length,
     played: sortedActivities.filter(a => a.type === 'played').length,
     rated: sortedActivities.filter(a => a.type === 'rated').length,
     hours: sortedActivities

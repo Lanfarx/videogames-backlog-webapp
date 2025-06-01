@@ -9,7 +9,7 @@ import PersonalReviewCard from "../../components/catalog/gameinfo/PersonalReview
 import GamePageLayout from "../../components/game/layout/GamePageLayout";
 import GenreTagList from "../../components/ui/GenreTagList";
 import { BookOpen } from "lucide-react";
-import { getGameDetails } from '../../store/api/rawgApi';
+import { getGameDetails } from '../../store/services/rawgService';
 import type { PublicCatalogGame } from '../../types/game';
 import CommunityStats from "../../components/catalog/gameinfo/CommunityStats";
 
@@ -29,26 +29,25 @@ const GameInfoPage: React.FC = () => {
           id: data.id, // <--- AGGIUNGI QUESTO!
           title: data.name,
           description: data.description_raw || data.description || "Nessuna descrizione disponibile.",
-          coverImage: data.background_image || "/placeholder.svg",
-          developer: data.developers?.[0]?.name || "Sconosciuto",
-          publisher: data.publishers?.[0]?.name || "Sconosciuto",
-          releaseYear: data.released ? new Date(data.released).getFullYear() : 0,
-          genres: data.genres?.map((g: any) => ({ id: g.id, name: g.name })) || [],
-          metacritic: data.metacritic,
-          platforms: data.platforms?.map((p: any) => p.platform.name) || [],
+          CoverImage: data.background_image || "/placeholder.svg",
+          Developer: data.Developers?.[0]?.name || "Sconosciuto",
+          Publisher: data.Publishers?.[0]?.name || "Sconosciuto",
+          ReleaseYear: data.released ? new Date(data.released).getFullYear() : 0,
+          Genres: data.Genres?.map((g: any) => ({ id: g.id, name: g.name })) || [],
+          Metacritic: data.Metacritic,
+          Platforms: data.Platforms?.map((p: any) => p.Platform.name) || [],
         };
         setRawgGame(adapted);
       })
       .catch(() => setError('Errore nel caricamento dei dettagli dal catalogo RAWG.'))
-      .finally(() => setLoading(false));
-  }, [id]);
-  // Per la libreria utente, cerca tramite id numerico se disponibile
+      .finally(() => setLoading(false));  }, [id]);
+  // Per la libreria utente, cerca tramite titolo semplice
   // Hook sempre in cima, non condizionale
   const userGameByTitle = useGameByTitle(rawgGame?.title || "");
 
   const isInLibrary = !!userGameByTitle;
-  const personalReview = userGameByTitle && userGameByTitle.review
-    ? { ...userGameByTitle.review, title: userGameByTitle.title }
+  const personalReview = userGameByTitle && userGameByTitle.Review
+    ? { ...userGameByTitle.Review, title: userGameByTitle.Title }
     : undefined;
 
   // Usa rawgGame come game solo se presente
@@ -96,7 +95,7 @@ const GameInfoPage: React.FC = () => {
           <div className="flex justify-center lg:justify-start items-start">
             <div className="relative">
               <img 
-                src={game.coverImage || "/placeholder.svg"} 
+                src={game.CoverImage || "/placeholder.svg"} 
                 alt={game.title} 
                 className="w-full max-w-[420px] h-[520px] object-cover rounded-xl shadow-lg"
               />
@@ -108,13 +107,13 @@ const GameInfoPage: React.FC = () => {
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold text-text-primary">{game.title}</h1>
               </div>
-              <div className="text-lg text-accent-primary font-semibold mb-1">{game.publisher}</div>
+              <div className="text-lg text-accent-primary font-semibold mb-1">{game.Publisher}</div>
               <div className="text-base text-text-secondary mb-3">
-                {game.developer} • {game.releaseYear}
+                {game.Developer} • {game.ReleaseYear}
               </div>
             </div>
 
-            <GenreTagList genres={game.genres.map((g: any) => typeof g === 'string' ? g : g.name)} maxDisplay={6} small={false} />
+            <GenreTagList Genres={game.Genres.map((g: any) => typeof g === 'string' ? g : g.name)} maxDisplay={6} small={false} />
 
             <div className="text-text-primary text-base leading-relaxed">
               {descriptionToShow}
@@ -131,11 +130,11 @@ const GameInfoPage: React.FC = () => {
             <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-400" />
-                <span className="font-semibold text-lg text-text-primary">{game.metacritic}</span>
+                <span className="font-semibold text-lg text-text-primary">{game.Metacritic}</span>
                 <span className="text-sm text-text-secondary">Metacritic</span>
               </div>
             </div>            <div className="text-sm text-text-secondary">
-              <span className="font-medium">Piattaforme:</span> {game.platforms.join(', ')}
+              <span className="font-medium">Piattaforme:</span> {game.Platforms.join(', ')}
             </div>
           </div>
 
@@ -145,7 +144,7 @@ const GameInfoPage: React.FC = () => {
               <span
                 className="absolute left-0 top-0 bg-accent-primary text-white px-4 py-2 rounded-full flex items-center gap-2 text-base font-semibold whitespace-nowrap truncate hover:bg-accent-secondary transition-colors cursor-pointer z-10"
                 onClick={() => {
-                  if (userGameByTitle) navigate(`/library/${encodeURIComponent(userGameByTitle.title.replace(/ /g, '_'))}`);
+                  if (userGameByTitle) navigate(`/library/${encodeURIComponent(userGameByTitle.Title.replace(/ /g, '_'))}`);
                 }}
                 title="Vai alla tua copia in libreria"
               >
@@ -170,7 +169,7 @@ const GameInfoPage: React.FC = () => {
             {personalReview && (
               <PersonalReviewCard personalReview={personalReview} />
             )}
-            {/* Community reviews reali */}
+            {/* Community Reviews reali */}
             <CommunityReviewsSection 
               gameTitle={game.title}
             />

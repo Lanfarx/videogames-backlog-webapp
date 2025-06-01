@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, Save } from 'lucide-react';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGamePlaytime } from '../../store/slice/gamesSlice';
+import { useGamePlaytimeActions } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { useGameById } from '../../store/hooks/gamesHooks';
 import { createPlaytimeActivity, handlePlaytimeUpdate } from '../../utils/activityUtils';
@@ -15,7 +14,7 @@ interface PlaytimePopoverProps {
 
 const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePopoverProps) => {
   const [hoursToAdd, setHoursToAdd] = useState(1);
-  const dispatch = useAppDispatch();
+  const { updatePlaytime } = useGamePlaytimeActions();
   const { addActivity } = useAllActivitiesActions();
   const game = useGameById(gameId);
   
@@ -50,8 +49,8 @@ const PlaytimePopover = ({ gameId, currentHours, onSave, onCancel }: PlaytimePop
     if (hoursToAdd > 0) {
       const newTotal = currentHours + hoursToAdd;
       
-      // Aggiorna lo stato nel Redux store
-      dispatch(updateGamePlaytime({ gameId, hoursPlayed: newTotal }));
+      // Aggiorna lo stato nel Redux store usando il nuovo metodo
+      updatePlaytime(gameId, newTotal);
       
       // Crea l'attività appropriata solo se abbiamo l'oggetto gioco
       if (game) {

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Game, GameStatus } from '../../types/game';
-import { GAME_PLATFORMS } from '../../constants/gameConstants';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGameStatus, updateGamePlaytime, updateGamePlatform, updateGamePrice, updateGamePurchaseDate, updateGameCompletionDate, updateGamePlatinumDate } from '../../store/slice/gamesSlice';
+import { Game, GameStatus, GameUpdateInput } from '../../types/game';
+import { GAME_PlatformS } from '../../constants/gameConstants';
+import { useGameActions, useGameStatusActions, useGamePlaytimeActions } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { gameStatusToActivityType } from '../../utils/statusUtils';
 import { createStatusChangeActivity, createManualPlaytimeActivity } from '../../utils/activityUtils';
@@ -20,34 +19,36 @@ const EditGameInfoModal = ({
   onSave,
   game
 }: EditGameInfoModalProps) => {
-  const dispatch = useAppDispatch();
+  const { update } = useGameActions();
+  const { updateStatus } = useGameStatusActions();
+  const { updatePlaytime } = useGamePlaytimeActions();
   const { addActivity } = useAllActivitiesActions();
   const [formData, setFormData] = useState({
-    platform: game.platform || '',
-    price: game.price !== undefined ? game.price.toString() : '',
-    purchaseDate: game.purchaseDate || '',
-    hoursPlayed: game.hoursPlayed.toString(),
-    completionDate: game.completionDate || '',
-    platinumDate: game.platinumDate || ''
+    Platform: game.Platform || '',
+    Price: game.Price !== undefined ? game.Price.toString() : '',
+    PurchaseDate: game.PurchaseDate || '',
+    HoursPlayed: game.HoursPlayed.toString(),
+    CompletionDate: game.CompletionDate || '',
+    PlatinumDate: game.PlatinumDate || ''
   });
 
   // Aggiorna lo stato del form quando cambiano i dati del gioco o quando si apre il modale
   React.useEffect(() => {
     if (isOpen) {
       setFormData({
-        platform: game.platform || '',
-        price: game.price !== undefined ? game.price.toString() : '',
-        purchaseDate: game.purchaseDate || '',
-        hoursPlayed: game.hoursPlayed.toString(),
-        completionDate: game.completionDate || '',
-        platinumDate: game.platinumDate || ''
+        Platform: game.Platform || '',
+        Price: game.Price !== undefined ? game.Price.toString() : '',
+        PurchaseDate: game.PurchaseDate || '',
+        HoursPlayed: game.HoursPlayed.toString(),
+        CompletionDate: game.CompletionDate || '',
+        PlatinumDate: game.PlatinumDate || ''
       });
     }
   }, [game, isOpen]);
 
   // Verifica se il gioco è stato completato o platinato
-  const isCompleted = game.status === "completed";
-  const isPlatinum = game.status === "platinum";
+  const isCompleted = game.Status === "Completed";
+  const isPlatinum = game.Status === "Platinum";
   const hasBeenCompleted = isCompleted || isPlatinum;
 
   if (!isOpen) return null;
@@ -58,36 +59,72 @@ const EditGameInfoModal = ({
       ...prev,
       [name]: value
     }));
-  };
-  const handleSubmit = (e: React.FormEvent) => {
+  };  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convertiamo le ore in un numero
-    const newHoursPlayed = parseFloat(formData.hoursPlayed) || 0;
+    const newHoursPlayed = parseFloat(formData.HoursPlayed) || 0;
+      // Costruiamo l'oggetto di aggiornamento con solo i campi modificati
+    const updateData: GameUpdateInput = {};
+    
+    if (formData.Platform && formData.Platform !== game.Platform) {
+      updateData.Platform = formData.Platform;
+    }
+    
+    if (formData.Price && parseFloat(formData.Price) !== game.Price) {
+      updateData.Price = parseFloat(formData.Price);
+    }
+    
+    if (formData.PurchaseDate && formData.PurchaseDate !== game.PurchaseDate) {
+      updateData.PurchaseDate = formData.PurchaseDate;
+    }
+    
+    if (newHoursPlayed !== game.HoursPlayed) {
+      updateData.HoursPlayed = newHoursPlayed;
+    }
+    
+    // Aggiorna le date se modificate
+    if (hasBeenCompleted && formData.CompletionDate !== game.CompletionDate) {
+      if (formData.CompletionDate) {
+        updateData.CompletionDate = formData.CompletionDate;
+      }
+    }
+    
+    if (isPlatinum && formData.PlatinumDate !== game.PlatinumDate) {
+      if (formData.PlatinumDate) {
+        updateData.PlatinumDate = formData.PlatinumDate;
+      }
+    }
     
     // Determiniamo se è necessario cambiare lo stato del gioco
     let newStatus: GameStatus | undefined = undefined;
     
-    // Se le ore vengono impostate a 0 e lo stato non è già "not-started",
-    // cambiamo lo stato a "not-started"
-    if (newHoursPlayed === 0 && game.status !== 'not-started') {
-      newStatus = 'not-started';
+    // Se le ore vengono impostate a 0 e lo stato non è già "NotStarted",
+    // cambiamo lo stato a "NotStarted"
+    if (newHoursPlayed === 0 && game.Status !== 'NotStarted') {
+      newStatus = 'NotStarted';
+      updateData.Status = newStatus;
     }
-    // Se le ore passano da 0 a un valore maggiore e lo stato è "not-started",
-    // cambiamo lo stato a "in-progress"
-    else if (newHoursPlayed > 0 && game.hoursPlayed === 0 && game.status === 'not-started') {
-      newStatus = 'in-progress';
-    }    // Aggiorna i dati attraverso Redux dispatch
-    dispatch(updateGamePlaytime({ gameId: game.id, hoursPlayed: newHoursPlayed }));
+    // Se le ore passano da 0 a un valore maggiore e lo stato è "NotStarted",
+    // cambiamo lo stato a "InProgress"
+    else if (newHoursPlayed > 0 && game.HoursPlayed === 0 && game.Status === 'NotStarted') {
+      newStatus = 'InProgress';
+      updateData.Status = newStatus;
+    }
+    
+    // Esegui l'aggiornamento solo se ci sono campi modificati
+    if (Object.keys(updateData).length > 0) {
+      update(game.id, updateData);
+    }
     
     // Crea attività in base alla modifica delle ore
-    const hoursDifference = newHoursPlayed - game.hoursPlayed;
+    const hoursDifference = newHoursPlayed - game.HoursPlayed;
     
-    // Se si reimposta a 0 le ore e viene cambiato lo stato a "not-started"
-    if (newHoursPlayed === 0 && newStatus === 'not-started') {
+    // Se si reimposta a 0 le ore e viene cambiato lo stato a "NotStarted"
+    if (newHoursPlayed === 0 && newStatus === 'NotStarted') {
       // Registra l'attività di cambio stato utilizzando la funzione di utilità
-      const statusActivity = createStatusChangeActivity(game, 'not-started');
-      addActivity(statusActivity);
+      const StatusActivity = createStatusChangeActivity(game, 'NotStarted');
+      addActivity(StatusActivity);
     } 
     // Se le ore vengono modificate, crea un'attività played
     else if (hoursDifference !== 0) {
@@ -96,45 +133,16 @@ const EditGameInfoModal = ({
       addActivity(playtimeActivity);
     }
     
-    if (formData.platform && formData.platform !== game.platform) {
-      dispatch(updateGamePlatform({ gameId: game.id, platform: formData.platform }));
-    }
-      if (formData.price && parseFloat(formData.price) !== game.price) {
-      dispatch(updateGamePrice({ gameId: game.id, price: parseFloat(formData.price) }));
-    }
-    
-    if (formData.purchaseDate && formData.purchaseDate !== game.purchaseDate) {
-      dispatch(updateGamePurchaseDate({ gameId: game.id, purchaseDate: formData.purchaseDate }));
-    }
-    
-    // Aggiorna le date se modificate
-    if (hasBeenCompleted && formData.completionDate !== game.completionDate) {
-      if (formData.completionDate) {
-        dispatch(updateGameCompletionDate({ gameId: game.id, completionDate: formData.completionDate }));
-      }
-    }
-    
-    if (isPlatinum && formData.platinumDate !== game.platinumDate) {
-      if (formData.platinumDate) {
-        dispatch(updateGamePlatinumDate({ gameId: game.id, platinumDate: formData.platinumDate }));
-      }
-    }
-    
-    // Aggiorna lo stato se necessario
-    if (newStatus) {
-      dispatch(updateGameStatus({ gameId: game.id, status: newStatus }));
-    }
-    
     // Chiama la callback opzionale per backward compatibility
     if (onSave) {
       const updatedGame: Partial<Game> = {
-        platform: formData.platform,
-        price: formData.price ? parseFloat(formData.price) : undefined,
-        purchaseDate: formData.purchaseDate || undefined,
-        hoursPlayed: newHoursPlayed,
-        ...(hasBeenCompleted && { completionDate: formData.completionDate || undefined }),
-        ...(isPlatinum && { platinumDate: formData.platinumDate || undefined }),
-        ...(newStatus && { status: newStatus })
+        Platform: formData.Platform,
+        Price: formData.Price ? parseFloat(formData.Price) : undefined,
+        PurchaseDate: formData.PurchaseDate || undefined,
+        HoursPlayed: newHoursPlayed,
+        ...(hasBeenCompleted && { CompletionDate: formData.CompletionDate || undefined }),
+        ...(isPlatinum && { PlatinumDate: formData.PlatinumDate || undefined }),
+        ...(newStatus && { Status: newStatus })
       };
       onSave(updatedGame);
     }
@@ -143,7 +151,7 @@ const EditGameInfoModal = ({
   };
 
   // Utilizziamo le piattaforme centralizzate
-  const platforms = GAME_PLATFORMS;
+  const Platforms = GAME_PlatformS;
 
   return (
     <>
@@ -161,34 +169,34 @@ const EditGameInfoModal = ({
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 mb-6">
               <div className="space-y-2">
-                <label htmlFor="platform" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Platform" className="block text-text-primary font-secondary text-sm">
                   Piattaforma
                 </label>
                 <select
-                  id="platform"
-                  name="platform"
-                  value={formData.platform}
+                  id="Platform"
+                  name="Platform"
+                  value={formData.Platform}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 >
                   <option value="">Seleziona una piattaforma</option>
-                  {platforms.map(platform => (
-                    <option key={platform} value={platform}>
-                      {platform}
+                  {Platforms.map(Platform => (
+                    <option key={Platform} value={Platform}>
+                      {Platform}
                     </option>
                   ))}
                 </select>
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="price" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Price" className="block text-text-primary font-secondary text-sm">
                   Prezzo (€)
                 </label>
                 <input
                   type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
+                  id="Price"
+                  name="Price"
+                  value={formData.Price}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
@@ -198,14 +206,14 @@ const EditGameInfoModal = ({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="purchaseDate" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="PurchaseDate" className="block text-text-primary font-secondary text-sm">
                   Data di acquisto
                 </label>
                 <input
                   type="date"
-                  id="purchaseDate"
-                  name="purchaseDate"
-                  value={formData.purchaseDate}
+                  id="PurchaseDate"
+                  name="PurchaseDate"
+                  value={formData.PurchaseDate}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
@@ -213,21 +221,21 @@ const EditGameInfoModal = ({
 
               {/* Aggiungiamo il campo per modificare le ore di gioco */}
               <div className="space-y-2">
-                <label htmlFor="hoursPlayed" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="HoursPlayed" className="block text-text-primary font-secondary text-sm">
                   Ore di gioco
                 </label>
                 <input
                   type="number"
-                  id="hoursPlayed"
-                  name="hoursPlayed"
-                  value={formData.hoursPlayed}
+                  id="HoursPlayed"
+                  name="HoursPlayed"
+                  value={formData.HoursPlayed}
                   onChange={handleChange}
                   min="0"
                   step="0.5"
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
                 <p className="text-xs text-text-secondary">
-                  {game.status === 'not-started' 
+                  {game.Status === 'NotStarted' 
                     ? "Nota: aggiungere ore di gioco cambierà automaticamente lo stato del gioco a \"In corso\""
                     : "Nota: reimpostare a 0 le ore di gioco cambierà automaticamente lo stato del gioco a \"Da iniziare\""}
                 </p>
@@ -236,14 +244,14 @@ const EditGameInfoModal = ({
               {/* Data di completamento - mostrata solo se il gioco è stato completato o platinato */}
               {hasBeenCompleted && (
                 <div className="space-y-2">
-                  <label htmlFor="completionDate" className="block text-text-primary font-secondary text-sm">
+                  <label htmlFor="CompletionDate" className="block text-text-primary font-secondary text-sm">
                     Data di completamento
                   </label>
                   <input
                     type="date"
-                    id="completionDate"
-                    name="completionDate"
-                    value={formData.completionDate}
+                    id="CompletionDate"
+                    name="CompletionDate"
+                    value={formData.CompletionDate}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                   />
@@ -256,14 +264,14 @@ const EditGameInfoModal = ({
               {/* Data di platino - mostrata solo se il gioco è platinato */}
               {isPlatinum && (
                 <div className="space-y-2">
-                  <label htmlFor="platinumDate" className="block text-text-primary font-secondary text-sm">
+                  <label htmlFor="PlatinumDate" className="block text-text-primary font-secondary text-sm">
                     Data di platino
                   </label>
                   <input
                     type="date"
-                    id="platinumDate"
-                    name="platinumDate"
-                    value={formData.platinumDate}
+                    id="PlatinumDate"
+                    name="PlatinumDate"
+                    value={formData.PlatinumDate}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                   />

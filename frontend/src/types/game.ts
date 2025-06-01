@@ -1,7 +1,7 @@
 /**
  * Definizione dei tipi di stato dei giochi
  */
-export type GameStatus = 'not-started' | 'in-progress' | 'completed' | 'abandoned' | 'platinum';
+export type GameStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Abandoned' | 'Platinum';
 
 /**
  * Elenco delle piattaforme di gioco supportate
@@ -22,8 +22,8 @@ export type GamePlatform =
 /**
  * Definizione delle opzioni di ordinamento
  */
-export type SortOption = 'title' | 'platform' | 'releaseYear' | 'rating' | 
-'hoursPlayed' | 'price' | 'purchaseDate' | 'completionDate' | 'platinumDate' | 'metacritic';
+export type SortOption = 'title' | 'Platform' | 'ReleaseYear' | 'Rating' | 
+'HoursPlayed' | 'Price' | 'PurchaseDate' | 'CompletionDate' | 'PlatinumDate' | 'Metacritic';
 
 /**
  * Definizione dell'ordine di ordinamento
@@ -40,68 +40,74 @@ export type NumericRange = [number, number];
  */
 export interface GameBasicInfo {
   id: number;
-  title: string;
-  platform: string;
-  releaseYear: number;
-  genres: string[];
-  status: GameStatus;
-  coverImage?: string;
+  Title: string;
+  Platform: string;
+  ReleaseYear: number;
+  Genres: string[];
+  Status: GameStatus;
+  CoverImage?: string;
 }
 
 /**
  * Informazioni finanziarie del gioco
  */
 export interface GameFinancialInfo {
-  price: number;
-  purchaseDate?: string;
+  Price: number;
+  PurchaseDate?: string;
 }
 
 /**
  * Informazioni sullo sviluppo del gioco
  */
 export interface GameDevelopmentInfo {
-  developer?: string;
-  publisher?: string;
+  Developer?: string;
+  Publisher?: string;
 }
 
 /**
  * Informazioni di completamento del gioco
  */
 export interface GameCompletionInfo {
-  completionDate?: string;
-  platinumDate?: string;
+  CompletionDate?: string;
+  PlatinumDate?: string;
 }
 
 /**
  * Informazioni di gioco
  */
 export interface GamePlayInfo {
-  hoursPlayed: number;
-  metacritic: number;
-  rating: number;
-  notes?: string;
+  HoursPlayed: number;
+  Metacritic: number;
+  Rating: number;
+  Notes?: string;
 }
 
 /**
  * Definizione della struttura di una recensione
  */
 export interface GameReview {
-  text: string;
-  gameplay: number;
-  graphics: number;
-  story: number;
-  sound: number;
-  date: string;
-  isPublic?: boolean; // true = pubblica, false/undefined = privata
+  Text: string;
+  Gameplay: number;
+  Graphics: number;
+  Story: number;
+  Sound: number;
+  Date: string;
+  IsPublic?: boolean; // true = pubblica, false/undefined = privata
 }
+
+/**
+ * Input per aggiornare parzialmente una recensione
+ * Rende tutti i campi opzionali per permettere aggiornamenti granulari
+ */
+export type GameReviewUpdateInput = Partial<GameReview>;
 
 /**
  * Definizione della struttura di un commento
  */
 export interface GameComment {
-  id: number;
-  date: string;
-  text: string;
+  Id: number;
+  Date: string;
+  Text: string;
 }
 
 /**
@@ -114,21 +120,21 @@ export interface Game extends
   GameDevelopmentInfo,
   GameCompletionInfo,
   GamePlayInfo {
-  review?: GameReview;
-  comments?: GameComment[];
+  Review?: GameReview;
+  Comments?: GameComment[];
   }
 
 /**
  * Definizione dei filtri per i giochi
  */
 export interface GameFilters {
-  status: GameStatus[];
-  platform: string[];
+  Status: GameStatus[];
+  Platform: string[];
   genre: string[];
-  priceRange: NumericRange;
+  PriceRange: NumericRange;
   hoursRange: NumericRange;
-  metacriticRange: NumericRange;
-  purchaseDate: string;
+  MetacriticRange: NumericRange;
+  PurchaseDate: string;
 }
 
 /**
@@ -147,13 +153,15 @@ export interface GameSearchParams {
  * Input per aggiungere un nuovo gioco
  * Omette i campi che vengono generati automaticamente
  */
-export type GameInput = Omit<Game, 'id' | 'rating' | 'comments'>;
+export type GameInput = Omit<Game, 'id' | 'Rating' | 'Comments'>;
 
 /**
  * Input per aggiornare un gioco esistente
- * Rende tutti i campi opzionali
+ * Rende tutti i campi opzionali e usa GameReviewUpdateInput per la recensione
  */
-export type GameUpdateInput = Partial<Game>;
+export interface GameUpdateInput extends Partial<Omit<Game, 'Review'>> {
+  Review?: GameReviewUpdateInput;
+}
 
 /**
  * Opzioni di visualizzazione per i giochi
@@ -162,15 +170,15 @@ export type GameViewMode = 'grid' | 'list';
 
 /**
  * Tipo per i giochi di esempio usati nella ricerca automatica (sample games)
- * Questi giochi non hanno id, platform obbligatorio, né rating/commenti
+ * Questi giochi non hanno id, Platform obbligatorio, né Rating/commenti
  */
 export interface SampleGame {
   id: string; // id RAWG come stringa
   title: string;
-  coverImage: string;
-  releaseYear: number;
-  genres: string[];
-  metacritic: number;
+  CoverImage: string;
+  ReleaseYear: number;
+  Genres: string[];
+  Metacritic: number;
 }
 
 /**
@@ -180,20 +188,20 @@ export type PublicCatalogGame = {
   id?: number; // id RAWG opzionale
   title: string;
   description: string;
-  coverImage: string;
-  developer: string;
-  publisher: string;
-  releaseYear: number;
-  genres: { id: number; name: string }[]; // ora oggetti con id e nome
-  metacritic: number;
-  platforms: string[];
+  CoverImage: string;
+  Developer: string;
+  Publisher: string;
+  ReleaseYear: number;
+  Genres: { id: number; name: string }[]; // ora oggetti con id e nome
+  Metacritic: number;
+  Platforms: string[];
   communityRating?: number;
   userReview?: {
     text: string;
-    gameplay: number;
-    graphics: number;
-    story: number;
-    sound: number;
+    Gameplay: number;
+    Graphics: number;
+    Story: number;
+    Sound: number;
     date: string;
   };
 };

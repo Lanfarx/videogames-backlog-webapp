@@ -7,12 +7,11 @@ import GenreTagList from '../ui/GenreTagList';
 import StatusChangePopover from '../ui/StatusChangePopover';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import EditGameDetailsModal from './EditGameDetailsModal';
-import { useAppDispatch } from '../../store/hooks';
-import { deleteGame } from '../../store/slice/gamesSlice';
+import { useGameActions } from '../../store/hooks/gamesHooks';
 
 interface GameBannerProps {
   game: Game;
-  onChangeStatus?: (newStatus: Game['status']) => void;
+  onChangeStatus?: (newStatus: Game['Status']) => void;
   onEdit?: (updatedGame: Partial<Game>) => void;
   onDelete?: () => void;
   onBack?: () => void;
@@ -20,15 +19,15 @@ interface GameBannerProps {
 }
 
 const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackButton = false }: GameBannerProps) => {
-  const dispatch = useAppDispatch();
+  const { remove } = useGameActions();
   
   // Ottieni l'etichetta in italiano per lo stato attuale
-  const currentStatusLabel = getStatusLabel(game.status);
+  const currentStatusLabel = getStatusLabel(game.Status);
   const [showStatusPopover, setShowStatusPopover] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   
-  const handleStatusChange = (newStatus: Game['status']) => {
+  const handleStatusChange = (newStatus: Game['Status']) => {
     if (onChangeStatus) {
       onChangeStatus(newStatus);
       setShowStatusPopover(false);
@@ -40,14 +39,12 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
   };
 
   const handleConfirmDelete = () => {
-    // Usa Redux per eliminare il gioco dallo stato globale
-    dispatch(deleteGame(game.id));
-    
+    // Usa la logica centralizzata per eliminare il gioco
+    remove(game.id);
     // Chiama anche il callback opzionale per compatibilità
     if (onDelete) {
       onDelete();
     }
-    
     setShowDeleteConfirmation(false);
   };
   
@@ -79,9 +76,9 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
         {/* Copertina */}
         <div className="mr-20">
           <GameCover 
-            coverImage={game.coverImage} 
-            title={game.title} 
-            status={game.status}
+            CoverImage={game.CoverImage} 
+            title={game.Title} 
+            Status={game.Status}
             size="xl"
           />
         </div>
@@ -89,25 +86,25 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
         {/* Info gioco */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <h1 className="font-primary font-bold text-3xl text-text-primary mb-2">{game.title}</h1>
+            <h1 className="font-primary font-bold text-3xl text-text-primary mb-2">{game.Title}</h1>
             <div className="flex items-center mb-2">
               <p className="font-secondary text-base text-text-secondary">
-                {game.developer} / {game.publisher}
+                {game.Developer} / {game.Publisher}
               </p>
-              {game.metacritic && (
+              {game.Metacritic && (
                 <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
                   <Award className="w-4 h-4 text-yellow-500 mr-1" />
-                  <span className="font-secondary text-base font-semibold">{game.metacritic}</span>
+                  <span className="font-secondary text-base font-semibold">{game.Metacritic}</span>
                 </div>
               )}
             </div>
             <p className="font-secondary text-sm text-text-secondary mb-4">
-              {game.releaseYear}
+              {game.ReleaseYear}
             </p>
             
             {/* Generi - posizionati come nell'immagine */}
             <div className="mb-6">
-              <GenreTagList genres={game.genres} maxDisplay={5} small={false} />
+              <GenreTagList Genres={game.Genres} maxDisplay={5} small={false} />
             </div>
           <div className="flex space-x-4 mt-5">
             <div className="relative">
@@ -121,10 +118,10 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
               
               {showStatusPopover && (
                 <StatusChangePopover 
-                    currentStatus={game.status}
+                    currentStatus={game.Status}
                     onStatusChange={handleStatusChange}
                     onCancel={() => setShowStatusPopover(false)}
-                    hoursPlayed={game.hoursPlayed} // Passiamo le ore di gioco
+                    HoursPlayed={game.HoursPlayed} // Passiamo le ore di gioco
                     gameId={game.id}                />
               )}
             </div>
@@ -152,8 +149,8 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
         onClose={() => setShowDeleteConfirmation(false)}
         onConfirm={handleConfirmDelete}
         title="Elimina gioco"
-        message={`Sei sicuro di voler eliminare "${game.title}" dalla tua collezione? Questa azione non può essere annullata.`}
-        confirmButtonText="Elimina gioco"
+        message={`Sei sicuro di voler eliminare "${game.Title}" dalla tua collezione? Questa azione non può essere annullata.`}
+        confirmButtontext="Elimina gioco"
         type="danger"
       />
       

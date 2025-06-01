@@ -7,19 +7,19 @@ import CatalogSortControls from "../../components/catalog/CatalogSortControls";
 import CatalogSearchBar from "../../components/catalog/CatalogSearchBar";
 import { useAllCommunityRatings } from "../../store/hooks/communityHooks";
 import Pagination from "../../components/ui/Pagination";
-import { getPaginatedGames } from '../../store/api/rawgApi';
+import { getPaginatedGames } from '../../store/services/rawgService';
 import { useNavigate } from "react-router-dom";
 
 const SORT_OPTIONS = [
   { value: "title", label: "Titolo" },
-  { value: "releaseYear", label: "Data di rilascio" },
-  { value: "rating", label: "Rating" },
-  { value: "metacritic", label: "Metacritic" },
+  { value: "ReleaseYear", label: "Data di rilascio" },
+  { value: "Rating", label: "Rating" },
+  { value: "Metacritic", label: "Metacritic" },
 ];
 
 const CatalogPage: React.FC = () => {
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("metacritic");
+  const [sortBy, setSortBy] = useState("Metacritic");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isAddGameModalOpen, setIsAddGameModalOpen] = useState(false);
   const [prefillGame, setPrefillGame] = useState<any>(null);
@@ -64,10 +64,10 @@ const CatalogPage: React.FC = () => {
     getPaginatedGames(currentPage, gamesPerPage, {
       search: search || undefined,
       ordering: sortBy === 'title' ? (sortOrder === 'asc' ? 'name' : '-name')
-        : sortBy === 'releaseYear' ? (sortOrder === 'asc' ? 'released' : '-released')
-        : sortBy === 'metacritic' ? (sortOrder === 'asc' ? 'metacritic' : '-metacritic')
+        : sortBy === 'ReleaseYear' ? (sortOrder === 'asc' ? 'released' : '-released')
+        : sortBy === 'Metacritic' ? (sortOrder === 'asc' ? 'Metacritic' : '-Metacritic')
         : undefined,
-      platforms: '1,4,7,18,22',
+      Platforms: '1,4,7,18,22',
     })
       .then(data => {
         setApiGames(data.results || []);
@@ -83,10 +83,10 @@ const CatalogPage: React.FC = () => {
   const mappedGames = apiGames.map((game: any) => ({
     id: String(game.id), // id RAWG come stringa
     title: game.name,
-    coverImage: game.background_image || "/placeholder.svg",
-    releaseYear: game.released ? new Date(game.released).getFullYear() : 0,
-    genres: game.genres?.map((g: any) => g.name) || [],
-    metacritic: game.metacritic,
+    CoverImage: game.background_image || "/placeholder.svg",
+    ReleaseYear: game.released ? new Date(game.released).getFullYear() : 0,
+    Genres: game.Genres?.map((g: any) => g.name) || [],
+    Metacritic: game.Metacritic,
   }));
 
   // Stato per gestire la navigazione con titolo
@@ -142,7 +142,7 @@ const CatalogPage: React.FC = () => {
                   <CatalogGameCard
                     key={game.id}
                     game={game}
-                    isInLibrary={userGames.some(g => g.title === game.title)}
+                    isInLibrary={userGames.some(g => g.Title === game.title)}
                     onAddToLibrary={() => handleAddToLibrary(game)}
                     onInfoClick={setSelectedGameId}
                   />

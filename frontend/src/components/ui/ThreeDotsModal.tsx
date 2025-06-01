@@ -11,7 +11,7 @@ interface ThreeDotsModalProps {
   position?: 'top-right' | 'right' | 'bottom-right' | 'bottom-left' | 'left' | 'top-left';
   onEdit?: (game: Game) => void;
   onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, status: GameStatus) => void;
+  onStatusChange?: (gameId: string, Status: GameStatus) => void;
 }
 
 const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({ 
@@ -99,23 +99,23 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setActiveActionMenu('statusChange');
+              setActiveActionMenu('StatusChange');
             }}
             className="flex items-center w-full px-4 py-3 text-sm text-text-primary hover:bg-accent-primary/10 hover:text-accent-primary transition-colors"
           >
             <Settings className="h-5 w-5 mr-3 text-green-500" /> {/* Icona verde per "Modifica stato" */}
             Modifica stato
           </button>
-          {activeActionMenu === 'statusChange' && (
+          {activeActionMenu === 'StatusChange' && (
             <StatusChangePopover
               gameId={game.id}
-              currentStatus={game.status}
+              currentStatus={game.Status}
               onStatusChange={(newStatus) => {
                 onStatusChange?.(game.id.toString(), newStatus);
                 setActiveActionMenu(null);
               }}
               onCancel={() => setActiveActionMenu(null)}
-              hoursPlayed={game.hoursPlayed}
+              HoursPlayed={game.HoursPlayed}
             />
           )}
         </li>
@@ -134,7 +134,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           {activeActionMenu === 'addPlaytime' && (
             <PlaytimePopover
               gameId={game.id}
-              currentHours={game.hoursPlayed}
+              currentHours={game.HoursPlayed}
               onSave={() => setActiveActionMenu(null)}
               onCancel={() => setActiveActionMenu(null)}
             />

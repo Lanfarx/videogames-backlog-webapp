@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Activity } from '../../types/activity';
 import { formatRelativeTime } from '../../utils/dateUtils';
-import { getActivityText, getActivityIcon } from '../../utils/activityUtils';
+import { getActivitytext, getActivityIcon } from '../../utils/activityUtils';
 
 interface ActivityCardProps {
   activity: Activity;
@@ -19,7 +19,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   className = ''
 }) => {
   // Recupera i dati dell'attività
-  const activityText = getActivityText(activity);
+  const activitytext = getActivitytext(activity);
   const formattedTime = formatRelativeTime(activity.timestamp);
   const icon = showIcon ? getActivityIcon(activity.type) : null;
   
@@ -28,7 +28,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
       <div className="flex items-center justify-between">
         <div className={`flex-grow ${position === 'right' && showIcon ? 'text-right' : ''}`}>
           <div className={`text-sm text-text-primary font-medium font-secondary ${compact ? 'line-clamp-1' : ''}`}>
-            {activityText}
+            {activitytext}
           </div>
           <div className="text-xs text-text-secondary mt-1">{formattedTime}</div>
         </div>

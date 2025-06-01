@@ -8,39 +8,39 @@ import GenreTagList from './GenreTagList';
 interface GameCardProps {
   id: string;
   title: string;
-  coverImage?: string;
-  platform: string;
-  hoursPlayed: number;
-  rating?: number;
-  genres: string[];
+  CoverImage?: string;
+  Platform: string;
+  HoursPlayed: number;
+  Rating?: number;
+  Genres: string[];
 }
 
 const InProgressGameCard: React.FC<GameCardProps> = ({ 
   id,
   title, 
-  coverImage, 
-  platform, 
-  hoursPlayed, 
-  rating,
-  genres = []
+  CoverImage, 
+  Platform, 
+  HoursPlayed, 
+  Rating,
+  Genres = []
 }) => {
   const navigate = useNavigate();
   // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
   const gameFromStore = useGameById(Number(id));
-  const currentRating = gameFromStore?.rating ?? rating ?? 0;
-  const currentHours = gameFromStore?.hoursPlayed ?? hoursPlayed;
+  const currentRating = gameFromStore?.Rating ?? Rating ?? 0;
+  const currentHours = gameFromStore?.HoursPlayed ?? HoursPlayed;
   
   // Funzione per navigare alla pagina del gioco con il popover delle ore aperto
   const handleResumeGame = () => {
-    navigate(`/game/${id}?addPlaytime=true`);
+    navigate(`/library/${title}?addPlaytime=true`);
   };
   
   return (
     <div className="w-[280px] h-[280px] bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">
       {/* Immagine di copertina con link */}
-      <Link to={`/game/${id}`} className="block h-[140px] w-full relative">
+      <Link to={`/library/${title}`} className="block h-[140px] w-full relative">
         <div className="absolute inset-0 bg-accent-secondary bg-opacity-20 rounded-t-lg"></div>
-        <img src={coverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover rounded-t-lg" /> 
+        <img src={CoverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover rounded-t-lg" /> 
       </Link>
       
       {/* Contenuto */}
@@ -49,7 +49,7 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
           <h3 className="text-base font-semibold text-text-primary truncate font-primary">{title}</h3>
           
           <div className="flex items-center mt-1 text-xs text-text-secondary font-secondary">
-            <span>{platform}</span>
+            <span>{Platform}</span>
             <span className="mx-2">|</span>
             <Clock className="h-3 w-3 mr-1" />
             <span>{currentHours} ore</span>
@@ -59,10 +59,10 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
         {/* Area info aggiuntive e stato */}
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-2">
-            <GenreTagList genres={genres} maxDisplay={2} small={true} />
+            <GenreTagList Genres={Genres} maxDisplay={2} small={true} />
             
             {(currentRating > 0) ? (
-              <RatingStars rating={currentRating} showValue={false} size="sm" />
+              <RatingStars Rating={currentRating} showValue={false} size="sm" />
             ) : (
               <span className="text-xs text-text-disabled font-secondary">Non presente</span>
             )}

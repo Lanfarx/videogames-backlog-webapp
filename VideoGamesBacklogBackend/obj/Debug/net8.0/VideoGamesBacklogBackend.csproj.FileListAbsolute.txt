@@ -46,7 +46,7 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Microsoft.OpenApi.dll
-C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Mono.TextTemplating.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Mono.textTemplating.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Npgsql.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
@@ -63,8 +63,8 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.IO.Pipelines.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.Security.Cryptography.Xml.dll
-C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.Text.Encodings.Web.dll
-C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.Text.Json.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.text.Encodings.Web.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\System.text.Json.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -131,7 +131,7 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
-C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.text.Encodings.Web.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.csproj.AssemblyReference.cache
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.AssemblyInfoInputs.cache

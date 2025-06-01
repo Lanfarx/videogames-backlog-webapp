@@ -14,13 +14,13 @@ import { useAllGamesTitleWithRating } from './gamesHooks';
 
 // Hook per ottenere tutte le recensioni
 export const useAllCommunityReviews = () => {
-  return useSelector((state: RootState) => state.community.reviews);
+  return useSelector((state: RootState) => state.community.Reviews);
 };
 
 // Hook per ottenere le recensioni di un gioco specifico
 export const useCommunityReviewsByGame = (gameTitle: string) => {
   return useSelector((state: RootState) => 
-    state.community.reviews.filter(review => review.gameTitle === gameTitle)
+    state.community.Reviews.filter(Review => Review.gameTitle === gameTitle)
   );
 };
 
@@ -39,16 +39,16 @@ export const useCommunityActions = () => {
   const dispatch = useDispatch();
 
   return {
-    addReview: (review: Omit<CommunityReview, 'id'>) => {
+    addReview: (Review: Omit<CommunityReview, 'id'>) => {
       const newReview = {
-        ...review,
+        ...Review,
         id: Date.now() + Math.random() // Genera un ID temporaneo
       };
       dispatch(addReview(newReview));
     },
     
-    removeReview: (reviewId: number) => {
-      dispatch(removeReview(reviewId));
+    removeReview: (ReviewId: number) => {
+      dispatch(removeReview(ReviewId));
     },
     
     updateGameStats: (gameTitle: string, stats: Partial<CommunityStats>) => {
@@ -63,12 +63,12 @@ export const useCommunityActions = () => {
 
 // Statistiche community aggregate (ex useCommunityStatsByGameAggregated)
 export function useCommunityStatsByGameAggregated(gameTitle: string): CommunityStats {
-  const reviews: CommunityReview[] = useSelector((state: RootState) =>
-    state.community.reviews.filter(r => r.gameTitle === gameTitle)
+  const Reviews: CommunityReview[] = useSelector((state: RootState) =>
+    state.community.Reviews.filter(r => r.gameTitle === gameTitle)
   );
   // Prendi tutti i giochi utente con quel titolo
   const userGames: Game[] = useSelector((state: RootState) =>
-    state.games.games.filter(g => g.title === gameTitle)
+    state.games.games.filter(g => g.Title === gameTitle)
   );
 
   if (userGames.length === 0) {
@@ -84,12 +84,12 @@ export function useCommunityStatsByGameAggregated(gameTitle: string): CommunityS
 
   // Calcolo aggregato
   const totalPlayers = userGames.length;
-  const totalReviews = reviews.length;
-  const averageRating = totalReviews > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews) : 0;
-  const averagePlaytime = userGames.reduce((sum, g) => sum + (g.hoursPlayed || 0), 0) / userGames.length;
-  const completed = userGames.filter(g => g.status === 'completed' || g.status === 'platinum').length;
-  const completionRate = Math.round((completed / userGames.length) * 100);
-  const currentlyPlaying = userGames.filter(g => g.status === 'in-progress').length;
+  const totalReviews = Reviews.length;
+  const averageRating = totalReviews > 0 ? (Reviews.reduce((sum, r) => sum + r.Rating, 0) / totalReviews) : 0;
+  const averagePlaytime = userGames.reduce((sum, g) => sum + (g.HoursPlayed || 0), 0) / userGames.length;
+  const Completed = userGames.filter(g => g.Status === 'Completed' || g.Status === 'Platinum').length;
+  const completionRate = Math.round((Completed / userGames.length) * 100);
+  const currentlyPlaying = userGames.filter(g => g.Status === 'InProgress').length;
 
   return {
     totalPlayers,
@@ -101,21 +101,21 @@ export function useCommunityStatsByGameAggregated(gameTitle: string): CommunityS
   };
 }
 
-// Hook custom per ottenere il community rating medio dato un titolo di gioco
+// Hook custom per ottenere il community Rating medio dato un titolo di gioco
 export function useCommunityCommunityRating(gameTitle: string): number {
-  // Prendi tutti i giochi utente con quel titolo e rating valido
+  // Prendi tutti i giochi utente con quel titolo e Rating valido
   const userGames = useAllGamesTitleWithRating(gameTitle);
   return calculateCommunityRating(userGames);
 }
 
-// Hook custom per ottenere tutti i community ratings per una lista di giochi
+// Hook custom per ottenere tutti i community Ratings per una lista di giochi
 export function useAllCommunityRatings(gameTitles: string[]): Record<string, number> {
   const userGames = useSelector((state: RootState) => state.games.games);
   
-  return gameTitles.reduce((ratings, title) => {
-    const titleGames = userGames.filter(g => g.title === title && g.rating !== undefined);
-    ratings[title] = calculateCommunityRating(titleGames);
-    return ratings;
+  return gameTitles.reduce((Ratings, title) => {
+    const titleGames = userGames.filter(g => g.Title === title && g.Rating !== undefined);
+    Ratings[title] = calculateCommunityRating(titleGames);
+    return Ratings;
   }, {} as Record<string, number>);
 }
 

@@ -1,18 +1,16 @@
 import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { updateReviewPrivacy } from '../../../store/slice/gamesSlice';
-import { useGameByTitle } from '../../../store/hooks/gamesHooks';
-import { selectIsProfilePrivate, selectIsDiaryPrivate } from '../../../store/slice/settingsSlice';
+import { useLoadSingleGameByTitle, useGameActions } from '../../../store/hooks/gamesHooks';
 
 interface PersonalReview {
-  text: string;
-  gameplay: number;
-  graphics: number;
-  story: number;
-  sound: number;
-  date: string;
-  isPublic?: boolean;
+  Text: string;
+  Gameplay: number;
+  Graphics: number;
+  Story: number;
+  Sound: number;
+  Date: string;
+  IsPublic?: boolean;
   title: string;
 }
 
@@ -22,18 +20,19 @@ interface PersonalReviewCardProps {
 
 const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview }) => {
   const dispatch = useAppDispatch();
-  const game = useGameByTitle(personalReview.title);
-  const isPublic = game?.review?.isPublic ?? false;
-  const isDiaryPrivate = useAppSelector(selectIsDiaryPrivate);
-
+  const { game } = useLoadSingleGameByTitle(personalReview.title);
+  const IsPublic = game?.Review?.IsPublic ?? false;
+  const userProfile = useAppSelector(state => state.user.profile);
+  const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
+  const { update: updateGame } = useGameActions();
   // Forza la privacy a privata se il diario è privato
-  const effectiveIsPublic = isDiaryPrivate ? false : isPublic;
+  const effectiveIsPublic = isDiaryPrivate ? false : IsPublic;
 
   return (
     <div className="bg-secondary-bg p-6 rounded-xl">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-xl text-text-primary">La tua recensione</h3>
-        {game?.review && (
+        {game?.Review && (
           <button
             type="button"
             className={`flex items-center gap-2 text-sm ${
@@ -47,10 +46,14 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
               isDiaryPrivate 
                 ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.' 
                 : (effectiveIsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
-            }
-            onClick={() => {
-              if (game && game.review && !isDiaryPrivate) {
-                dispatch(updateReviewPrivacy({ gameId: game.id, isPublic: !effectiveIsPublic }));
+            }            onClick={() => {
+              if (game && game.Review && !isDiaryPrivate) {
+                updateGame(game.id, { 
+                  Review: { 
+                    ...game.Review, 
+                    IsPublic: !effectiveIsPublic 
+                  } 
+                });
               }
             }}
             disabled={isDiaryPrivate}
@@ -64,27 +67,27 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
           </button>
         )}
       </div>
-      <div className="mb-4 text-base text-text-primary leading-relaxed">{personalReview.text}</div>
+      <div className="mb-4 text-base text-text-primary leading-relaxed">{personalReview.Text}</div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div className="text-center">
           <div className="text-text-secondary">Gameplay</div>
-          <div className="font-bold text-text-primary">{personalReview.gameplay}</div>
+          <div className="font-bold text-text-primary">{personalReview.Gameplay}</div>
         </div>
         <div className="text-center">
           <div className="text-text-secondary">Grafica</div>
-          <div className="font-bold text-text-primary">{personalReview.graphics}</div>
+          <div className="font-bold text-text-primary">{personalReview.Graphics}</div>
         </div>
         <div className="text-center">
           <div className="text-text-secondary">Storia</div>
-          <div className="font-bold text-text-primary">{personalReview.story}</div>
+          <div className="font-bold text-text-primary">{personalReview.Story}</div>
         </div>
         <div className="text-center">
           <div className="text-text-secondary">Audio</div>
-          <div className="font-bold text-text-primary">{personalReview.sound}</div>
+          <div className="font-bold text-text-primary">{personalReview.Sound}</div>
         </div>
       </div>
       <div className="mt-3 text-sm text-text-secondary">
-        Recensito il {new Date(personalReview.date).toLocaleDateString('it-IT')}
+        Recensito il {new Date(personalReview.Date).toLocaleDateString('it-IT')}
       </div>
     </div>
   );

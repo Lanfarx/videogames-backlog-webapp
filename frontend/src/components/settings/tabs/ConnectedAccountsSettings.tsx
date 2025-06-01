@@ -1,38 +1,37 @@
 import React, { useState } from "react";
 import SettingsSection from "../SettingsSection";
-import { saveToLocal, loadFromLocal } from '../../../utils/localStorage';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../store';
+import { setUserProfile } from '../../../store/slice/userSlice';
+import { updateProfile } from '../../../store/services/profileService';
+import { getToken } from "../../../utils/getToken";
 
-interface ConnectedAccountsSettingsProps {
-  connectedAccounts: {
-    steam?: string;
-  };
-  onConnectedAccountChange: (platform: string, value: string) => void;
-  onAccountDisconnect: (platform: string) => void;
-}
+const ConnectedAccountsSettings: React.FC = () => {
+  const dispatch = useDispatch();
+  const userProfile = useSelector((state: RootState) => state.user.profile);
+  const token = getToken()
 
-const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
-  connectedAccounts,
-  onConnectedAccountChange,
-  onAccountDisconnect,
-}) => {
   const [steamIdInput, setSteamIdInput] = useState("");
   const [steamIdError, setSteamIdError] = useState("");
-  
+
   const handleSteamIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, ''); // Solo numeri
     setSteamIdInput(value);
-    
     if (value.length > 0 && value.length !== 17) {
       setSteamIdError("Lo Steam ID deve essere di 17 cifre");
     } else {
       setSteamIdError("");
     }
   };
-  
-  const handleConnectSteam = () => {
-    if (steamIdInput.length === 17) {
-      onConnectedAccountChange("steam", steamIdInput);
-      saveToLocal('steamId', steamIdInput); // Salva localmente
+
+  const handleConnectSteam = async () => {
+    if (steamIdInput.length === 17 && userProfile && token) {
+      const newProfile = {
+        ...userProfile,
+        steamId: steamIdInput
+      };
+      const updated = await updateProfile(newProfile, token);
+      dispatch(setUserProfile(updated));
       setSteamIdInput("");
       setSteamIdError("");
     } else {
@@ -40,14 +39,19 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
     }
   };
 
-  React.useEffect(() => {
-    // Carica steamId locale se presente
-    const saved = loadFromLocal('steamId');
-    if (saved && !connectedAccounts.steam) {
-      onConnectedAccountChange('steam', saved);
+  const handleDisconnectSteam = async () => {
+    if (userProfile && token) {
+      const newProfile = {
+        ...userProfile,
+        steamId: undefined
+      };
+      const updated = await updateProfile(newProfile, token);
+      dispatch(setUserProfile(updated));
     }
-  }, []);
-  
+  };
+
+  if (!userProfile) return <div>Caricamento...</div>;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
@@ -55,19 +59,16 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
           Account collegati
         </h2>
       </div>
-
       <SettingsSection title="Servizi di gaming">
         <div className="space-y-6">
           <p className="text-sm text-text-secondary">
-            Collega i tuoi account di gioco per sincronizzare automaticamente la
-            tua libreria e i tuoi progressi.
+            Collega i tuoi account di gioco per sincronizzare automaticamente la tua libreria e i tuoi progressi.
           </p>
-
           {/* Account Steam */}
           <div className="border border-border-color rounded-lg overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-3">
-                <div className="bg-platform-steam p-1.5 rounded">
+                <div className="bg-Platform-steam p-1.5 rounded">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -92,9 +93,9 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                       </div>
                     </div>
                   </div>
-                  {connectedAccounts.steam ? (
+                  {userProfile.steamId ? (
                     <p className="text-xs text-accent-success break-all mb-0">
-                      Steam ID collegato: <span className="font-mono">{connectedAccounts.steam}</span>
+                      Steam ID collegato: <span className="font-mono">{userProfile.steamId}</span>
                     </p>
                   ) : (
                     <p className="text-xs text-text-secondary">
@@ -103,11 +104,10 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
                   )}
                 </div>
               </div>
-
-              {connectedAccounts.steam ? (
+              {userProfile.steamId ? (
                 <button
                   className="text-sm text-accent-danger hover:underline"
-                  onClick={() => onAccountDisconnect("steam")}
+                  onClick={handleDisconnectSteam}
                 >
                   Scollega
                 </button>
@@ -160,14 +160,11 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
           </div>
         </div>
       </SettingsSection>
-
       <SettingsSection title="Altri servizi">
         <div className="space-y-4">
           <p className="text-sm text-text-secondary">
-            Collega altri servizi esterni per integrare funzionalità aggiuntive
-            nella tua esperienza.
+            Collega altri servizi esterni per integrare funzionalità aggiuntive nella tua esperienza.
           </p>
-
           <div className="border border-dashed border-border-color p-4 rounded-lg text-center">
             <p className="text-text-secondary">
               Altri servizi saranno disponibili presto.
@@ -177,6 +174,6 @@ const ConnectedAccountsSettings: React.FC<ConnectedAccountsSettingsProps> = ({
       </SettingsSection>
     </div>
   );
-};
+}
 
 export default ConnectedAccountsSettings;

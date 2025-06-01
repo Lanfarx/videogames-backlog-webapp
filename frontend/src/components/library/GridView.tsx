@@ -6,7 +6,7 @@ interface GridViewProps {
   games: Game[];
   onEdit?: (game: Game) => void;
   onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, status: GameStatus) => void;
+  onStatusChange?: (gameId: string, Status: GameStatus) => void;
   columns?: number;
 }
 

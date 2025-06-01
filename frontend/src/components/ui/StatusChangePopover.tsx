@@ -1,15 +1,13 @@
 import React, { useRef, useEffect } from 'react';
 import { GameStatus } from '../../types/game';
-import { STATUS_OPTIONS } from '../../constants/gameConstants';
-import { useAppDispatch } from '../../store/hooks';
-import { updateGameStatus } from '../../store/slice/gamesSlice';
+import { Status_OPTIONS } from '../../constants/gameConstants';
 
 interface StatusChangePopoverProps {
   gameId: number; // aggiunto id gioco
   currentStatus: GameStatus;
   onStatusChange?: (newStatus: GameStatus) => void;
   onCancel: () => void;
-  hoursPlayed: number; // Aggiungiamo le ore di gioco come prop
+  HoursPlayed: number; // Aggiungiamo le ore di gioco come prop
 }
 
 const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({ 
@@ -17,9 +15,8 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
   currentStatus, 
   onStatusChange, 
   onCancel,
-  hoursPlayed 
+  HoursPlayed 
 }) => {
-  const dispatch = useAppDispatch();
   // Ref per il popover
   const popoverRef = useRef<HTMLDivElement>(null);
   
@@ -39,10 +36,8 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onCancel]);
-
-  const handleStatusChange = (status: GameStatus) => {
-    dispatch(updateGameStatus({ gameId, status }));
-    if (onStatusChange) onStatusChange(status);
+  const handleStatusChange = (Status: GameStatus) => {
+    if (onStatusChange) onStatusChange(Status);
     onCancel();
   };
 
@@ -56,27 +51,27 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
           <h3 className="text-sm font-medium text-text-primary">Cambia stato</h3>
         </div>
         <div className="py-1">
-          {STATUS_OPTIONS.map((option) => {
-            const status = option.value;
+          {Status_OPTIONS.map((option) => {
+            const Status = option.value;
             
             // Filtro degli stati non selezionabili secondo le regole di business:
             
             // Regola 1: Non mostrare "Da iniziare" se ci sono ore di gioco
-            if (status === 'not-started' && hoursPlayed > 0) {
+            if (Status === 'NotStarted' && HoursPlayed > 0) {
               return null;
             }
             
             // Regola 2: Mostra "In corso" solo se il gioco ha già ore di gioco
-            if (status === 'in-progress' && hoursPlayed === 0) {
+            if (Status === 'InProgress' && HoursPlayed === 0) {
               return null;
             }
             
             return (
               <button
-                key={status}
-                onClick={() => handleStatusChange(status)}
+                key={Status}
+                onClick={() => handleStatusChange(Status)}
                 className={`w-full text-left px-4 py-2 text-sm leading-5 flex items-center ${
-                  status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
+                  Status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
                 }`}
               >
                 <span 
