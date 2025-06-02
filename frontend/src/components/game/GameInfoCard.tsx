@@ -25,7 +25,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
   const calculatedRating = currentGame.Rating ?? getGameRating(currentGame);
 
   // Usa sempre le ore aggiornate dallo stato globale
-  const displayedHours = currentGame.HoursPlayed;
+  const disPlayedHours = currentGame.HoursPlayed;
  // Ref per tracciare il rating precedente e evitare aggiornamenti inutili
   const prevRatingRef = useRef(calculatedRating);
 
@@ -100,7 +100,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
         </span>
         <div className="flex items-center relative">
           <span className="font-secondary font-semibold text-lg text-text-primary">
-            {displayedHours} ore
+            {disPlayedHours} ore
           </span>
           
           {onUpdatePlaytime && (
@@ -112,8 +112,8 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
               
               {isEditingHours && (
                 <PlaytimePopover 
-                  gameId={currentGame.id}
-                  currentHours={displayedHours}
+                  GameId={currentGame.id}
+                  currentHours={disPlayedHours}
                   onSave={handleSavePlaytime}
                   onCancel={handleCancelPlaytime}
                 />

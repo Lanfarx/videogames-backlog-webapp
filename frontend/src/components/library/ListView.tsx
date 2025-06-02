@@ -9,8 +9,8 @@ import ThreeDotsModal from '../ui/ThreeDotsModal';
 interface ListViewProps {
   games: Game[];
   onEdit?: (game: Game) => void;
-  onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, Status: GameStatus) => void;
+  onDelete?: (GameId: string) => void;
+  onStatusChange?: (GameId: string, Status: GameStatus) => void;
 }
 
 const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange }) => {

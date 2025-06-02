@@ -9,6 +9,7 @@ import {
   updateGameStatusThunk,
   updateGamePlaytimeThunk,
   deleteGameThunk,
+  deleteAllGamesThunk,
   fetchComments,
   addCommentThunk,
   deleteCommentThunk,
@@ -134,29 +135,40 @@ const gamesSlice = createSlice({
       .addCase(updateGamePlaytimeThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
-      })
-      .addCase(deleteGameThunk.fulfilled, (state, action) => {
+      })      .addCase(deleteGameThunk.fulfilled, (state, action) => {
         state.games = state.games.filter(g => g.id !== action.payload);
+      })
+      .addCase(deleteAllGamesThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAllGamesThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.games = [];
+      })
+      .addCase(deleteAllGamesThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Errore nell\'eliminazione dei giochi';
       })
       // Commenti
       .addCase(fetchComments.fulfilled, (state, action) => {
-        const game = state.games.find(g => g.id === action.payload.gameId);
+        const game = state.games.find(g => g.id === action.payload.GameId);
         if (game) game.Comments = action.payload.Comments;
       })
       .addCase(addCommentThunk.fulfilled, (state, action) => {
-        const game = state.games.find(g => g.id === action.payload.gameId);
+        const game = state.games.find(g => g.id === action.payload.GameId);
         if (game) {
           if (!game.Comments) game.Comments = [];
           game.Comments.push(action.payload.comment);
         }
       })      .addCase(deleteCommentThunk.fulfilled, (state, action) => {
-        const game = state.games.find(g => g.id === action.payload.gameId);
+        const game = state.games.find(g => g.id === action.payload.GameId);
         if (game && game.Comments) {
           game.Comments = game.Comments.filter(c => c.Id !== action.payload.commentId);
         }
       })
       .addCase(updateCommentThunk.fulfilled, (state, action) => {
-        const game = state.games.find(g => g.id === action.payload.gameId);
+        const game = state.games.find(g => g.id === action.payload.GameId);
         if (game && game.Comments) {
           const commentIndex = game.Comments.findIndex(c => c.Id === action.payload.comment.Id);
           if (commentIndex !== -1) {

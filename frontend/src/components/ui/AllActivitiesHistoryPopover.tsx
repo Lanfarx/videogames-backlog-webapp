@@ -1,17 +1,15 @@
 import { useRef, useEffect, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Filter, Calendar } from 'lucide-react';
-import { Activity, ActivityType } from '../../../types/activity';
-import { getActivityColor } from '../../../constants/gameConstants';
-import { getActivities } from '../../../store/services/activityService';
-import ActivityTimelineItem from './ActivityTimelineItem';
+import { Activity, ActivityType } from '../../types/activity';
+import { getActivityColor } from '../../constants/gameConstants';
+import { getActivities } from '../../store/services/activityService';
+import ActivityTimelineItem from '../game/ui/ActivityTimelineItem';
 
-interface ActivityHistoryPopoverProps {
-  gameId: number;
+interface AllActivitiesHistoryPopoverProps {
   onClose: () => void;
-  GameTitle: string;
 }
 
-const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryPopoverProps) => {
+const AllActivitiesHistoryPopover = ({ onClose }: AllActivitiesHistoryPopoverProps) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +27,6 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
     setLoading(true);
     try {
       const filters = {
-        GameId: gameId,
         Types: selectedTypes.length > 0 ? selectedTypes : undefined,
         Year: selectedYear,
         Month: selectedMonth,
@@ -51,7 +48,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
   // Carica le attività quando cambiano i filtri o la pagina
   useEffect(() => {
     loadActivities();
-  }, [gameId, currentPage, selectedTypes, selectedYear, selectedMonth]);
+  }, [currentPage, selectedTypes, selectedYear, selectedMonth]);
 
   // Chiudi il popover quando si clicca fuori
   useEffect(() => {
@@ -59,7 +56,9 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
       if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
         onClose();
       }
-    };    document.addEventListener('mousedown', handleClickOutside);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -108,7 +107,8 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
     { value: 11, label: 'Novembre' },
     { value: 12, label: 'Dicembre' }
   ];
-    // Ordina le attività per data (dalla più recente alla più vecchia)
+  
+  // Ordina le attività per data (dalla più recente alla più vecchia)
   const sortedActivities = [...activities].sort((a, b) => 
     new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
   );
@@ -122,7 +122,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-primary font-semibold text-xl text-text-primary">
-            Cronologia completa: {GameTitle}
+            Cronologia completa attività
           </h3>
           <div className="flex items-center gap-2">
             <button 
@@ -284,7 +284,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
               <p className="text-text-secondary font-secondary text-sm">
                 {(selectedTypes.length > 0 || selectedYear || selectedMonth) 
                   ? 'Nessuna attività trovata con i filtri selezionati.'
-                  : 'Nessuna attività registrata per questo gioco.'}
+                  : 'Nessuna attività registrata.'}
               </p>
             </div>
           )}
@@ -300,8 +300,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
             >
               <ChevronLeft className="h-4 w-4" />
               Precedente
-            </button>            
-            <div className="flex items-center gap-2">
+            </button>            <div className="flex items-center gap-2">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum: number;
                 if (totalPages <= 5) {
@@ -346,4 +345,4 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
   );
 };
 
-export default ActivityHistoryPopover;
+export default AllActivitiesHistoryPopover;

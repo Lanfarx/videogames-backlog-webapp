@@ -28,10 +28,14 @@ namespace VideoGamesBacklogBackend.Data
             builder.Entity<User>(user =>
             {
                 user.OwnsOne(u => u.PrivacySettings);
-                user.OwnsOne(u => u.AppPreferences);
-            });
+                user.OwnsOne(u => u.AppPreferences);            });
             // GameReview come owned type
-            builder.Entity<Game>().OwnsOne(g => g.Review);
+            builder.Entity<Game>().OwnsOne(g => g.Review);            // Configurazione relazione Activity -> Game
+            builder.Entity<Activity>()
+                .HasOne(a => a.Game)
+                .WithMany(g => g.Activities)
+                .HasForeignKey(a => a.GameId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
     }

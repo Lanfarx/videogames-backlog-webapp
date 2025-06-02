@@ -18,24 +18,23 @@ const GameInfoPage: React.FC = () => {
   const navigate = useNavigate();
   const [rawgGame, setRawgGame] = React.useState<PublicCatalogGame | null>(null);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
+  const [error, setError] = React.useState<string | null>(null);  React.useEffect(() => {
     if (!id) return;
     setLoading(true);
     getGameDetails(id)
       .then((data: any) => {
+        // I dati sono già mappati da getGameDetails, quindi usiamo direttamente
         const adapted: PublicCatalogGame = {
-          id: data.id, // <--- AGGIUNGI QUESTO!
-          title: data.name,
-          description: data.description_raw || data.description || "Nessuna descrizione disponibile.",
-          CoverImage: data.background_image || "/placeholder.svg",
-          Developer: data.Developers?.[0]?.name || "Sconosciuto",
-          Publisher: data.Publishers?.[0]?.name || "Sconosciuto",
-          ReleaseYear: data.released ? new Date(data.released).getFullYear() : 0,
-          Genres: data.Genres?.map((g: any) => ({ id: g.id, name: g.name })) || [],
+          id: data.id,
+          title: data.Title, // Usa Title mappato
+          description: data.Description, // Usa Description mappato
+          CoverImage: data.CoverImage,
+          Developer: data.Developer,
+          Publisher: data.Publisher,
+          ReleaseYear: data.ReleaseYear,
+          Genres: data.Genres || [],
           Metacritic: data.Metacritic,
-          Platforms: data.Platforms?.map((p: any) => p.Platform.name) || [],
+          Platforms: data.Platforms || [],
         };
         setRawgGame(adapted);
       })
@@ -160,7 +159,7 @@ const GameInfoPage: React.FC = () => {
           </div>
         </div>
         {/* Community Stats subito sotto le info generali */}
-        <CommunityStats gameTitle={game.title} />
+        <CommunityStats GameTitle={game.title} />
         {/* Content Grid - 60%/40% come da wireframe */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 mt-8">
           {/* Main Content - 60% (3/5 columns) */}
@@ -171,7 +170,7 @@ const GameInfoPage: React.FC = () => {
             )}
             {/* Community Reviews reali */}
             <CommunityReviewsSection 
-              gameTitle={game.title}
+              GameTitle={game.title}
             />
           </div>
           {/* Sidebar - 40% (2/5 columns) */}

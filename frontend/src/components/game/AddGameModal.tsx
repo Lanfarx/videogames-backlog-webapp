@@ -4,13 +4,11 @@ import { Game, GameStatus } from '../../types/game';
 import { Status_OPTIONS, GAME_PlatformS, Genres } from '../../constants/gameConstants';
 import { useAppDispatch } from '../../store/hooks';
 import { useGameActions } from '../../store/hooks/gamesHooks';
-import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import FormErrorInline from '../ui/atoms/FormErrorInline';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
-import { createStatusChangeActivity, createPlaytimeActivity } from '../../utils/activityUtils';
+
 import { getGameDetails, searchGames } from '../../store/services/rawgService';
-import { fetchGames } from '../../store/thunks/gamesThunks';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "Rating"> & { id?: number, CompletionDate?: string, PlatinumDate?: string }
@@ -43,9 +41,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   onClose,
   prefillGame
 }) => {
-  const dispatch = useAppDispatch();
-  const { add } = useGameActions();
-  const { addActivity } = useAllActivitiesActions();
+  const dispatch = useAppDispatch();  const { add } = useGameActions();
   const [activeTab, setActiveTab] = useState<"search" | "manual">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -82,7 +78,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       setIsAutoFilled(true);
     }
   }, [isOpen, prefillGame]);
-
   // Gestisce la ricerca
   const handleSearch = async (query: string) => {
     if (query.length < 3) {
@@ -94,51 +89,39 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     
     try {
       const data = await searchGames(query);
-      // Mappa i risultati dell'API al formato che ti serve
-     const formattedResults = data.results
-      .filter((game: any) => game.Metacritic && game.Ratings_count > 5)
-      .map((game: any) => ({
-        id: game.id,
-        Title: game.name,
-        CoverImage: game.background_image || "/placeholder.svg",
-        ReleaseYear: game.released ? new Date(game.released).getFullYear() : null,
-        Genres: game.Genres?.map((g: any) => g.name) || [],
-        Metacritic: game.Metacritic,
-        Rating: game.Rating,
-        Platforms: game.Platforms?.map((p: any) => p.Platform.name) || [],
-      }));
+      console.log('Dati ricevuti dalla ricerca:', data);
       
-      setSearchResults(formattedResults);
+      // I dati sono già mappati dal servizio, li usiamo direttamente
+      setSearchResults(data.results);
     } catch (error) {
       console.error('Errore nella ricerca:', error);
     } finally {
       setIsSearching(false);
     }
   };
-
   // Gestisce la selezione di un gioco dalla ricerca
   const handleGameSelect = async (game: any) => {
     try {
-    const fullData = await getGameDetails(game.id);
-    
-    setGameData({
-      ...gameData,
-      Title: fullData.name,
-      CoverImage: fullData.background_image || "/placeholder.svg?height=280&width=280",
-      Developer: fullData.Developers?.[0]?.name || "Sconosciuto",
-      Publisher: fullData.Publishers?.[0]?.name || "Sconosciuto",
-      ReleaseYear: fullData.released ? new Date(fullData.released).getFullYear() : new Date().getFullYear(),
-      Genres: fullData.Genres?.map((g: any) => g.name) || [],
-      Metacritic: fullData.Metacritic || 0,
-    });
-    setActiveTab("manual");
-    setIsAutoFilled(true);
-    setSearchQuery("");
-    setSearchResults([]);
+      const fullData = await getGameDetails(game.id);
+      
+      setGameData({
+        ...gameData,
+        Title: fullData.Title,
+        CoverImage: fullData.CoverImage || "/placeholder.svg?height=280&width=280",
+        Developer: fullData.Developer || "Sconosciuto",
+        Publisher: fullData.Publisher || "Sconosciuto",
+        ReleaseYear: fullData.ReleaseYear || new Date().getFullYear(),
+        Genres: fullData.Genres || [],
+        Metacritic: fullData.Metacritic || 0,
+      });
+      setActiveTab("manual");
+      setIsAutoFilled(true);
+      setSearchQuery("");
+      setSearchResults([]);
     } catch (error) {
-    console.error("Errore durante il caricamento dei dettagli del gioco:", error);
-  }
-};
+      console.error("Errore durante il caricamento dei dettagli del gioco:", error);
+    }
+  };
 
   // Gestisce l'aggiornamento dei dati del gioco
   const handleGameDataChange = (data: Partial<GameFormData>) => {
@@ -231,19 +214,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     const gameToSave = {
       ...gameData
     } as Game;
-    
-    try {
+      try {
       await add(gameToSave);
-
-      // Crea attività appropriate in base al nuovo gioco
-      // 1. Crea l'attività di aggiunta alla libreria (added)
-      const addedActivity = createStatusChangeActivity(gameToSave, 'NotStarted');
-      addActivity(addedActivity);      // 2. Se il gioco ha ore di gioco (stato non è "NotStarted"), crea anche un'attività di gioco
-      if (gameToSave.Status !== 'NotStarted' && gameToSave.HoursPlayed > 0) {
-        const isFirstSession = true; // È la prima sessione dato che è un nuovo gioco
-        const playtimeActivity = createPlaytimeActivity(gameToSave, gameToSave.HoursPlayed, isFirstSession);
-        addActivity(playtimeActivity);
-      }
+      
+      // Le attività sono ora create automaticamente dal backend
+      // quando il gioco viene aggiunto tramite GameService.AddGameAsync
       
       // Chiudi il modal dopo il salvataggio
       onClose();
@@ -356,7 +331,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                           <div>
                             <h3 className="font-montserrat font-medium text-base text-text-primary">{game.Title}</h3>
                             <p className="font-roboto text-sm text-text-secondary">
-                              {game.Developer} • {game.ReleaseYear}
+                              {game.ReleaseYear} • 
                               {game.Metacritic && (
                                 <span className="ml-2 text-yellow-500 font-medium">{game.Metacritic}</span>
                               )}
@@ -442,9 +417,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
                         disabled={isAutoFilled}
                       />
-                    </div>
-
-                    {/* Metacritic */}
+                    </div>                    {/* Metacritic */}
                     <div>
                       <label className="block font-roboto font-medium text-sm text-text-secondary mb-2">
                         <span className="flex items-center">
@@ -455,7 +428,24 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       <input
                         type="number"
                         value={gameData.Metacritic || 0}
-                        onChange={(e) => handleGameDataChange({ Metacritic: Number.parseInt(e.target.value) || 0 })}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          let numericValue = Number.parseInt(value) || 0;
+                          
+                          // Limita il valore tra 0 e 100
+                          if (numericValue < 0) numericValue = 0;
+                          if (numericValue > 100) numericValue = 100;
+                          
+                          handleGameDataChange({ Metacritic: numericValue });
+                        }}
+                        onInput={(e) => {
+                          // Previene l'inserimento diretto di valori > 100
+                          const target = e.target as HTMLInputElement;
+                          const value = target.value;
+                          if (value && Number.parseInt(value) > 100) {
+                            target.value = "100";
+                          }
+                        }}
                         min="0"
                         max="100"
                         className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}

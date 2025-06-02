@@ -13,7 +13,7 @@ interface GameTimelineCardProps {
 
 const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showHiStoryPopover, setShowHiStoryPopover] = useState(false);
+  const [showHistoryPopover, setShowHistoryPopover] = useState(false);
   
   // Verifichiamo se il gioco ha delle attività
   const hasActivities = activities && activities.length > 0;
@@ -23,22 +23,22 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   
   // Prepara i dati ottimizzati per il grafico, raggruppando in circa 10 punti
   const getOptimizedGraphData = (activities: Activity[]) => {
-    const playedActivities = activities
+    const PlayedActivities = activities
       .filter(activity => 
-        activity.timestamp && 
-        activity.type === 'played' && 
-        activity.additionalInfo?.includes('ore')
+        activity.Timestamp && 
+        activity.Type === 'Played' && 
+        activity.AdditionalInfo?.includes('ore')
       )
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      .sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
     
-    if (playedActivities.length === 0) return [];
+    if (PlayedActivities.length === 0) return [];
     
-    if (playedActivities.length <= 10) {
+    if (PlayedActivities.length <= 10) {
       let cumulativeHours = 0;
-      return playedActivities.map(activity => {
+      return PlayedActivities.map(activity => {
         let hoursToAdd = 0;
-        if (activity.additionalInfo) {
-          const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
+        if (activity.AdditionalInfo) {
+          const hoursMatch = activity.AdditionalInfo.match(/(\d+) ore/);
           if (hoursMatch) {
             hoursToAdd = parseInt(hoursMatch[1], 10);
           }
@@ -46,16 +46,16 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         cumulativeHours += hoursToAdd;
         
         return {
-          date: activity.timestamp,
+          date: new Date(activity.Timestamp),
           hours: cumulativeHours,
-          type: activity.type,
-          additionalInfo: activity.additionalInfo
+          type: activity.Type,
+          AdditionalInfo: activity.AdditionalInfo
         };
       });
     }
     
-    const firstDate = playedActivities[0].timestamp;
-    const lastDate = playedActivities[playedActivities.length - 1].timestamp;
+    const firstDate = new Date(PlayedActivities[0].Timestamp);
+    const lastDate = new Date(PlayedActivities[PlayedActivities.length - 1].Timestamp);
     const totalTimeSpan = lastDate.getTime() - firstDate.getTime();
     const timeChunkSize = totalTimeSpan / 9;
     
@@ -67,16 +67,16 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     graphPoints.push({
       date: firstDate,
       hours: 0,
-      type: 'played',
-      additionalInfo: ''
+      type: 'Played',
+      AdditionalInfo: ''
     });
     
-    for (const activity of playedActivities) {
-      const activityTime = activity.timestamp.getTime();
+    for (const activity of PlayedActivities) {
+      const activityTime = new Date(activity.Timestamp).getTime();
       
       let hours = 0;
-      if (activity.additionalInfo) {
-        const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
+      if (activity.AdditionalInfo) {
+        const hoursMatch = activity.AdditionalInfo.match(/(\d+) ore/);
         if (hoursMatch) {
           hours = parseInt(hoursMatch[1], 10);
         }
@@ -88,8 +88,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         graphPoints.push({
           date: new Date(currentChunkEnd),
           hours: totalHours,
-          type: 'played',
-          additionalInfo: `${totalHours} ore totali`
+          type: 'Played',
+          AdditionalInfo: `${totalHours} ore totali`
         });
         
         currentChunkEnd += timeChunkSize;
@@ -99,8 +99,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
           graphPoints.push({
             date: new Date(currentChunkEnd),
             hours: totalHours,
-            type: 'played',
-            additionalInfo: `${totalHours} ore totali`
+            type: 'Played',
+            AdditionalInfo: `${totalHours} ore totali`
           });
           currentChunkEnd += timeChunkSize;
         }
@@ -113,8 +113,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     graphPoints.push({
       date: lastDate,
       hours: totalHours,
-      type: 'played',
-      additionalInfo: `${totalHours} ore totali`
+      type: 'Played',
+      AdditionalInfo: `${totalHours} ore totali`
     });
     
     return graphPoints;
@@ -122,19 +122,19 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   
   const getKeyEvents = (activities: Activity[]) => {
     const sortedActivities = [...activities].sort((a, b) => 
-      a.timestamp.getTime() - b.timestamp.getTime()
+      new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime()
     );
     
-    const addedEvent = sortedActivities.find(a => a.type === 'added');
-    const CompletedEvent = sortedActivities.find(a => a.type === 'Completed');
-    const PlatinumEvent = sortedActivities.find(a => a.type === 'Platinum');
-    const AbandonedEvent = sortedActivities.find(a => a.type === 'Abandoned');
+    const AddedEvent = sortedActivities.find(a => a.Type === 'Added');
+    const CompletedEvent = sortedActivities.find(a => a.Type === 'Completed');
+    const PlatinumEvent = sortedActivities.find(a => a.Type === 'Platinum');
+    const AbandonedEvent = sortedActivities.find(a => a.Type === 'Abandoned');
     
-    const playedActivities = sortedActivities
-      .filter(a => a.type === 'played' && a.additionalInfo?.includes('ore'))
+    const PlayedActivities = sortedActivities
+      .filter(a => a.Type === 'Played' && a.AdditionalInfo?.includes('ore'))
       .sort((a, b) => {
-        const hoursA = a.additionalInfo?.match(/(\d+) ore/);
-        const hoursB = b.additionalInfo?.match(/(\d+) ore/);
+        const hoursA = a.AdditionalInfo?.match(/(\d+) ore/);
+        const hoursB = b.AdditionalInfo?.match(/(\d+) ore/);
         const numA = hoursA ? parseInt(hoursA[1], 10) : 0;
         const numB = hoursB ? parseInt(hoursB[1], 10) : 0;
         return numB - numA;
@@ -142,17 +142,17 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     
     const keyEvents = [];
     
-    if (addedEvent) keyEvents.push(addedEvent);
+    if (AddedEvent) keyEvents.push(AddedEvent);
     if (CompletedEvent) keyEvents.push(CompletedEvent);
     if (PlatinumEvent) keyEvents.push(PlatinumEvent);
     if (AbandonedEvent) keyEvents.push(AbandonedEvent);
     
     const remainingSlots = 6 - keyEvents.length;
-    if (remainingSlots > 0 && playedActivities.length > 0) {
-      keyEvents.push(...playedActivities.slice(0, remainingSlots));
+    if (remainingSlots > 0 && PlayedActivities.length > 0) {
+      keyEvents.push(...PlayedActivities.slice(0, remainingSlots));
     }
     
-    return keyEvents.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return keyEvents.sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
   };
   
   const getAccentPrimaryColor = () => {
@@ -167,9 +167,9 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     const isEmptyGraph = isNotStarted || !hasActivities;
     
     const GameplayActivities = activities.filter(activity => 
-      activity.timestamp && 
-      activity.type === 'played' && 
-      activity.additionalInfo?.includes('ore')
+      activity.Timestamp && 
+      activity.Type === 'Played' && 
+      activity.AdditionalInfo?.includes('ore')
     );
     
     const graphData = !isEmptyGraph ? getOptimizedGraphData(activities) : [];
@@ -314,7 +314,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         </h2>
         {hasActivities && (
           <button 
-            onClick={() => setShowHiStoryPopover(true)}
+            onClick={() => setShowHistoryPopover(true)}
             className="flex items-center text-text-secondary hover:text-accent-primary transition-colors"
             title="Visualizza tutte le attività"
           >
@@ -357,12 +357,11 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
           </p>
         )}
       </div>
-      
-      {showHiStoryPopover && (
+        {showHistoryPopover && (
         <ActivityHistoryPopover 
-          activities={activities}
-          onClose={() => setShowHiStoryPopover(false)}
-          gameTitle={game.Title}
+          gameId={game.id}
+          onClose={() => setShowHistoryPopover(false)}
+          GameTitle={game.Title}
         />
       )}
     </div>

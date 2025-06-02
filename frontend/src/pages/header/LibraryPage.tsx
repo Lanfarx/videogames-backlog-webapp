@@ -136,8 +136,8 @@ const LibraryPage: React.FC = () => {
     };
 
     // Gestisce l'apertura del modale di conferma per l'eliminazione
-    const handleDeleteConfirmation = (gameId: string) => {
-        setGameToDelete(gameId);
+    const handleDeleteConfirmation = (GameId: string) => {
+        setGameToDelete(GameId);
         setIsDeleteModalOpen(true);
     };
 
@@ -151,8 +151,8 @@ const LibraryPage: React.FC = () => {
     };
 
     // Gestisce il cambio di stato di un gioco usando Redux
-    const handleStatusChange = (gameId: string, newStatus: GameStatus) => {
-        update(parseInt(gameId), { Status: newStatus });
+    const handleStatusChange = (GameId: string, newStatus: GameStatus) => {
+        update(parseInt(GameId), { Status: newStatus });
     };
 
     return (
@@ -199,9 +199,8 @@ const LibraryPage: React.FC = () => {
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-12">
-                                <p className="text-text-secondary text-lg mb-4">Nessun gioco trovato con i filtri selezionati</p>
-                                <button
-                                    onClick={() =>
+                                <p className="text-text-secondary text-lg mb-4">Nessun gioco trovato con i filtri selezionati</p>                                <button
+                                    onClick={() => {
                                         setFilters({
                                             Status: [],
                                             Platform: [],
@@ -210,8 +209,9 @@ const LibraryPage: React.FC = () => {
                                             hoursRange: [0, filters.hoursRange[1]],
                                             MetacriticRange: [0, filters.MetacriticRange[1]],
                                             PurchaseDate: "",
-                                        })
-                                    }
+                                        });
+                                        setSearchQuery("");
+                                    }}
                                     className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
                                 >
                                     Reimposta filtri

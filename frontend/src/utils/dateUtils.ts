@@ -21,14 +21,17 @@ interface DateFormatOptions {
 /**
  * Formatta la data in formato compatto con l'anno sotto quando necessario
  */
-export function formatShortDate(date: Date, previousDate?: Date, isLastPoint: boolean = false): string {
-  const day = date.getDate();
-  const month = date.toLocaleString('it-IT', { month: 'short' }).substring(0, 3);
-  const year = date.getFullYear();
+export function formatShortDate(date: Date | string, previousDate?: Date | string, isLastPoint: boolean = false): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const previousDateObj = previousDate ? (typeof previousDate === 'string' ? new Date(previousDate) : previousDate) : undefined;
+  
+  const day = dateObj.getDate();
+  const month = dateObj.toLocaleString('it-IT', { month: 'short' }).substring(0, 3);
+  const year = dateObj.getFullYear();
   const currentYear = new Date().getFullYear();
   
   // Determina se mostrare l'anno
-  const showYear = (previousDate && previousDate.getFullYear() !== year) || (year !== currentYear);
+  const showYear = (previousDateObj && previousDateObj.getFullYear() !== year) || (year !== currentYear);
   
   // Ritorna la data con l'anno su due righe quando necessario
   if (showYear) {

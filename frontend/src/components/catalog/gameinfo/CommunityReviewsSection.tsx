@@ -4,10 +4,10 @@ import RatingStars from '../../ui/atoms/RatingStars';
 import { CommunityReview } from '../../../store/slice/communitySlice';
 import { useCommunityReviewsByGame } from '../../../store/hooks/communityHooks';
 
-const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle }) => {
+const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle }) => {
   const [sortBy, setSortBy] = useState<'newest' | 'Rating'>('newest');
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const Reviews = useCommunityReviewsByGame(gameTitle) || [];
+  const Reviews = useCommunityReviewsByGame(GameTitle) || [];
   const totalReviews = Reviews.length; // conteggio TOTALE recensioni
   const validReviews = Reviews.filter(r => typeof r.Rating === 'number' && !isNaN(r.Rating));
   const averageRating = validReviews.length > 0 ? validReviews.reduce((sum, r) => sum + r.Rating, 0) / validReviews.length : 0;
@@ -22,7 +22,7 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
     }
   });
 
-  const displayedReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
+  const disPlayedReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -94,7 +94,7 @@ const CommunityReviewsSection: React.FC<{ gameTitle: string }> = ({ gameTitle })
 
           {/* Reviews List */}
           <div className="space-y-4">
-            {displayedReviews.map(Review => (
+            {disPlayedReviews.map(Review => (
               <div key={Review.id} className="border border-border-color rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">

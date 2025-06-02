@@ -17,14 +17,14 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
 }) => {
   // Filtra le attività per il mese e l'anno corrente
   const monthActivities = activities.filter(activity => {
-    const activityDate = new Date(activity.timestamp);
+    const activityDate = new Date(activity.Timestamp);
     return activityDate.getMonth() === month && activityDate.getFullYear() === year;
   });
 
   // Filtra ulteriormente in base ai filtri attivi
   const filteredActivities = activeFilters.includes('all')
     ? monthActivities
-    : monthActivities.filter(activity => activeFilters.includes(activity.type));
+    : monthActivities.filter(activity => activeFilters.includes(activity.Type));
 
   // Se non ci sono attività dopo il filtraggio, non mostrare il gruppo
   if (filteredActivities.length === 0) {
@@ -33,7 +33,7 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
 
   // Ordina le attività per data (più recenti prima)
   const sortedActivities = [...filteredActivities].sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
   );
 
   // Formatta il nome del mese in italiano
@@ -42,13 +42,13 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
   // Calcola le statistiche del mese
   const stats = {
     total: sortedActivities.length,
-    Completed: sortedActivities.filter(a => a.type === 'Completed').length,
-    played: sortedActivities.filter(a => a.type === 'played').length,
-    rated: sortedActivities.filter(a => a.type === 'rated').length,
+    Completed: sortedActivities.filter(a => a.Type === 'Completed').length,
+    Played: sortedActivities.filter(a => a.Type === 'Played').length,
+    Rated: sortedActivities.filter(a => a.Type === 'Rated').length,
     hours: sortedActivities
-      .filter(a => a.type === 'played' && a.additionalInfo)
+      .filter(a => a.Type === 'Played' && a.AdditionalInfo)
       .reduce((total, activity) => {
-        const hoursMatch = activity.additionalInfo?.match(/(\d+)\s*ore/);
+        const hoursMatch = activity.AdditionalInfo?.match(/(\d+)\s*ore/);
         return total + (hoursMatch ? parseInt(hoursMatch[1], 10) : 0);
       }, 0)
   };

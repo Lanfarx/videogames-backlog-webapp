@@ -4,9 +4,7 @@ import { Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { useGameById, useGameActions } from '../../store/hooks/gamesHooks';
-import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
-import { createRatingActivity } from '../../utils/activityUtils';
 
 interface NotesReviewCardProps {
   game: Game;
@@ -42,9 +40,7 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
     localGraphicsRating !== (currentGame.Review?.Graphics || 0) ||
     localStoryRating !== (currentGame.Review?.Story || 0) ||
     localSoundRating !== (currentGame.Review?.Sound || 0);
-  
-  const dispatch = useAppDispatch();
-  const { addActivity } = useAllActivitiesActions();
+    const dispatch = useAppDispatch();
   const { update: updateGame } = useGameActions();
   
   // Verifica se il gioco è "da iniziare" (non permette recensioni)
@@ -97,14 +93,13 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
         Date: formattedDate,
         IsPublic: IsPublic, // Usa il valore dal backend, non quello locale
       };const averageRating = calculateRatingFromReview(updatedReview);
-      
-      // Singola chiamata per aggiornare sia la review che il rating
+        // Singola chiamata per aggiornare sia la review che il rating
       updateGame(game.id, { 
         Review: updatedReview,
         Rating: averageRating 
       });
-        const RatingActivity = createRatingActivity(game, averageRating);
-      addActivity(RatingActivity);
+      
+      // Note: Backend automatically creates "Rated" activities when Rating field is updated
       
       setSaveReviewSuccess(true);
       // Assicurati che rimanga nella tab Review dopo il salvataggio

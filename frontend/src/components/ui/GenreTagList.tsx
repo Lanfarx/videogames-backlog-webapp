@@ -20,11 +20,11 @@ const GenreTagList: React.FC<GenreTagListProps> = ({
 
   // Limitiamo il numero di generi da mostrare
   // Supporta sia string[] che {id, name}[]
-  const displayedGenres = Genres.slice(0, maxDisplay).map((g: any) => typeof g === 'string' ? g : g.name);
+  const disPlayedGenres = Genres.slice(0, maxDisplay).map((g: any) => typeof g === 'string' ? g : g.name);
   
   return (
     <div className="flex flex-wrap gap-2">
-      {displayedGenres.map((genreName, index) => (
+      {disPlayedGenres.map((genreName, index) => (
         <GenreTag key={index} genre={genreName} small={small} />
       ))}
     </div>

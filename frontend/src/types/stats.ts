@@ -21,8 +21,8 @@ export interface ActivityStats {
 export interface MonthlyStats {
   total: number;               // Totale attività nel mese
   Completed: number;           // Completamenti nel mese
-  played: number;              // Sessioni nel mese 
-  rated: number;               // Recensioni nel mese
+  Played: number;              // Sessioni nel mese 
+  Rated: number;               // Recensioni nel mese
   hours: number;               // Ore giocate nel mese
 }
 

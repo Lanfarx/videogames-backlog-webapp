@@ -2,10 +2,10 @@
  * Tipi di attività supportate nel sistema
  */
 export type ActivityType = 
-  | 'played'      // Sessione di gioco
+  | 'Played'      // Sessione di gioco
   | 'Completed'   // Completamento del gioco
-  | 'added'       // Aggiunta alla collezione
-  | 'rated'       // Recensione/valutazione
+  | 'Added'       // Aggiunta alla collezione
+  | 'Rated'       // Recensione/valutazione
   | 'Platinum'    // Ottenimento di tutti i trofei/achievement
   | 'Abandoned';  // Abbandono del gioco
 
@@ -14,11 +14,11 @@ export type ActivityType =
  */
 export interface Activity {
   id: number;               // Identificativo univoco
-  type: ActivityType;       // Tipo di attività
-  gameId: number;           // ID del gioco collegato
-  gameTitle: string;        // Titolo del gioco
-  timestamp: Date;          // Data e ora dell'attività
-  additionalInfo?: string;  // Informazioni aggiuntive (es. "5 ore", "dopo 2 ore")
+  Type: ActivityType;       // Tipo di attività
+  GameId: number;           // ID del gioco collegato
+  GameTitle: string;        // Titolo del gioco
+  Timestamp: string;        // Data e ora dell'attività (ISO string per serializzazione Redux)
+  AdditionalInfo?: string;  // Informazioni aggiuntive (es. "5 ore", "dopo 2 ore")
 }
 
 /**
@@ -34,43 +34,10 @@ export interface ActivityGroup {
  * Parametri per filtrare le attività
  */
 export interface ActivityFilters {
-  types?: ActivityType[];  // Tipi di attività da includere
-  year?: number;           // Anno di riferimento
-  month?: number;          // Mese di riferimento
-  gameId?: number;         // Gioco specifico
-  limit?: number;          // Numero massimo di risultati
-  sortDirection?: 'asc' | 'desc'; // Direzione di ordinamento
-}
-
-/**
- * Informazioni specifiche per il tipo di attività "played"
- */
-export interface PlayedActivityData {
-  hours: number;                   // Ore giocate nella sessione
-  isFirstSessionOfMonth: boolean;  // Indica se è la prima sessione nel mese
-}
-
-/**
- * Informazioni specifiche per il tipo di attività "Abandoned"
- */
-export interface AbandonedActivityData {
-  reason?: string;                 // Motivo dell'abbandono
-  HoursPlayed?: number;            // Ore giocate prima di abbandonare
-}
-
-/**
- * Informazioni specifiche per il tipo di attività "rated"
- */
-export interface RatedActivityData {
-  Rating: number;                  // Valutazione (1-10)
-  Reviewtext?: string;             // Testo della recensione
-  HoursPlayed?: number;            // Ore giocate prima della recensione
-}
-
-/**
- * Informazioni specifiche per il tipo di attività "Completed"/"Platinum"
- */
-export interface CompletionActivityData {
-  hoursToComplete: number;         // Ore impiegate per completare il gioco
-  CompletionDate: Date;            // Data di completamento
+  Types?: ActivityType[];  // Tipi di attività da includere
+  Year?: number;           // Anno di riferimento
+  Month?: number;          // Mese di riferimento
+  GameId?: number;         // Gioco specifico
+  Limit?: number;          // Numero massimo di risultati
+  SortDirection?: 'asc' | 'desc'; // Direzione di ordinamento
 }

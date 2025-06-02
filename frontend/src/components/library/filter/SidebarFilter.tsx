@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award, Trash2 } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
 import { Status_OPTIONS } from '../../../constants/gameConstants';
 import { calculateCounts, calculateMaxValues } from '../../../utils/gamesUtils';
+import { useGameActions } from '../../../store/hooks/gamesHooks';
+import ConfirmationModal from '../../ui/ConfirmationModal';
 
 // Interfaccia per i props del componente
 interface SidebarFilterProps {
@@ -15,6 +17,7 @@ interface SidebarFilterProps {
 const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, gamesCount, games }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAllGenres, setShowAllGenres] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     Status: true,
     Platform: true,
@@ -24,6 +27,8 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     Metacritic: true,
     date: true,
   });
+  // Hook per azioni sui giochi
+  const { removeAll } = useGameActions();
 
   // Calcola i conteggi per ogni filtro
   const [StatusCounts, setStatusCounts] = useState<Record<string, number>>({});
@@ -125,7 +130,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   const handlePurchaseDateChange = (date: string) => {
     setFilters((prev) => ({ ...prev, PurchaseDate: date }));
   };
-
   // Reimposta tutti i filtri
   const resetFilters = () => {
     setFilters({
@@ -137,6 +141,19 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       MetacriticRange: [0, maxMetacritic],
       PurchaseDate: "",
     });
+  };
+  // Funzione per eliminare tutti i giochi
+  const handleDeleteAllGames = async () => {
+    try {
+      // Usa l'endpoint ottimizzato per eliminare tutti i giochi in una sola chiamata
+      await removeAll();
+      // Chiudi il modal e reimposta i filtri
+      setShowDeleteModal(false);
+      resetFilters();
+    } catch (error) {
+      console.error('Errore durante l\'eliminazione dei giochi:', error);
+      alert('Errore durante l\'eliminazione dei giochi');
+    }
   };
 
   // Estrai le piattaforme uniche dai dati aggiornati
@@ -400,9 +417,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
                 />
               </div>
             </div>
-          </div>
-
-          {/* Pulsanti azione */}
+          </div>          {/* Pulsanti azione */}
           <div className="flex flex-col space-y-3 mt-8">
             <button
               onClick={resetFilters}
@@ -410,9 +425,32 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
             >
               Reimposta filtri
             </button>
+            
+            {/* Bottone per eliminare tutti i giochi */}
+            {gamesCount > 0 && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full py-2 px-4 bg-accent-danger text-white border border-accent-danger font-roboto font-medium text-sm rounded-lg hover:bg-accent-danger/90 hover:border-accent-danger/90 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Elimina tutti i giochi
+              </button>
+            )}
           </div>
         </div>
       )}
+      
+      {/* Modal di conferma per eliminazione di tutti i giochi */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAllGames}
+        title="Eliminare tutti i giochi?"
+        message={`Sei sicuro di voler eliminare tutti i ${gamesCount} giochi dalla libreria? Questa azione non può essere annullata.`}
+        confirmButtontext="Elimina tutto"
+        cancelButtontext="Annulla"
+        type="danger"
+      />
     </aside>
   );
 };

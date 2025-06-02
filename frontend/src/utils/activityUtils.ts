@@ -1,11 +1,9 @@
-import { Activity, ActivityType, ActivityGroup, ActivityFilters, PlayedActivityData } from '../types/activity';
+import { Activity, ActivityType, ActivityGroup, ActivityFilters } from '../types/activity';
 import { ActivityStats, MonthlyStats } from '../types/stats';
 import { extractHoursFromString, isInLastTwoWeeks } from './dateUtils';
 import { getActivityColor } from '../constants/gameConstants';
 import { Trophy, Clock, Gamepad2, Star, Award, X } from 'lucide-react';
 import React from 'react';
-import { Game } from '../types/game';
-import { gameStatusToActivityType } from './statusUtils';
 
 /**
  * Verifica se un'attività è la prima di un certo tipo per un gioco in un determinato mese
@@ -13,40 +11,22 @@ import { gameStatusToActivityType } from './statusUtils';
 export function isFirstActivityInMonth(
   activity: Activity, 
   allActivities: Activity[], 
-  type: ActivityType = 'played'
+  type: ActivityType = 'Played'
 ): boolean {
-  if (activity.type !== type) return false;
+  if (activity.Type !== type) return false;
   
-  const activityDate = new Date(activity.timestamp);
+  const activityDate = new Date(activity.Timestamp);
   const activityMonth = activityDate.getMonth();
   const activityYear = activityDate.getFullYear();
   
   return !allActivities.some((a: Activity) => 
     a.id !== activity.id && 
-    a.gameId === activity.gameId && 
-    a.type === type && 
-    new Date(a.timestamp).getMonth() === activityMonth &&
-    new Date(a.timestamp).getFullYear() === activityYear &&
-    new Date(a.timestamp) < activityDate
+    a.GameId === activity.GameId && 
+    a.Type === type && 
+    new Date(a.Timestamp).getMonth() === activityMonth &&
+    new Date(a.Timestamp).getFullYear() === activityYear &&
+    new Date(a.Timestamp) < activityDate
   );
-}
-
-/**
- * Ottieni dati specifici per le attività di tipo "played"
- */
-export function getPlayedActivityData(
-  activity: Activity, 
-  allActivities: Activity[]
-): PlayedActivityData | null {
-  if (activity.type !== 'played' || !activity.additionalInfo) return null;
-  
-  const hours = extractHoursFromString(activity.additionalInfo);
-  const isFirstSessionOfMonth = isFirstActivityInMonth(activity, allActivities, 'played');
-  
-  return {
-    hours,
-    isFirstSessionOfMonth
-  };
 }
 
 /**
@@ -54,9 +34,9 @@ export function getPlayedActivityData(
  */
 export function calculateTotalPlaytime(activities: Activity[]): number {
   return activities
-    .filter(a => a.type === 'played' && a.additionalInfo)
+    .filter(a => a.Type === 'Played' && a.AdditionalInfo)
     .reduce((total, activity) => {
-      return total + extractHoursFromString(activity.additionalInfo);
+      return total + extractHoursFromString(activity.AdditionalInfo);
     }, 0);
 }
 
@@ -65,9 +45,9 @@ export function calculateTotalPlaytime(activities: Activity[]): number {
  */
 export function calculateRecentPlaytime(activities: Activity[]): number {
   return activities
-    .filter(a => a.type === 'played' && a.additionalInfo && isInLastTwoWeeks(new Date(a.timestamp)))
+    .filter(a => a.Type === 'Played' && a.AdditionalInfo && isInLastTwoWeeks(new Date(a.Timestamp)))
     .reduce((total, activity) => {
-      return total + extractHoursFromString(activity.additionalInfo);
+      return total + extractHoursFromString(activity.AdditionalInfo);
     }, 0);
 }
 
@@ -79,7 +59,7 @@ export function calculateActivityStats(activities: Activity[]): ActivityStats {
   const lastUpdate = activities.length > 0 
     ? new Date(
         activities.reduce((maxDate, activity) => {
-          const activityDate = new Date(activity.timestamp).getTime();
+          const activityDate = new Date(activity.Timestamp).getTime();
           return activityDate > maxDate ? activityDate : maxDate;
         }, 0)
       )
@@ -88,9 +68,9 @@ export function calculateActivityStats(activities: Activity[]): ActivityStats {
   // Calcola le statistiche
   return {
     totalEntries: activities.length,
-    totalSessions: activities.filter(a => a.type === 'played').length,
-    totalCompletions: activities.filter(a => a.type === 'Completed').length,
-    totalPlatinums: activities.filter(a => a.type === 'Platinum').length,
+    totalSessions: activities.filter(a => a.Type === 'Played').length,
+    totalCompletions: activities.filter(a => a.Type === 'Completed').length,
+    totalPlatinums: activities.filter(a => a.Type === 'Platinum').length,
     totalPlaytime: calculateTotalPlaytime(activities),
     recentPlaytime: calculateRecentPlaytime(activities),
     lastUpdate
@@ -101,16 +81,16 @@ export function calculateActivityStats(activities: Activity[]): ActivityStats {
  * Calcola le statistiche mensili per un gruppo di attività
  */
 export function calculateMonthlyStats(activities: Activity[]): MonthlyStats {
-  const played = activities.filter(a => a.type === 'played').length;
-  const Completed = activities.filter(a => a.type === 'Completed').length;
-  const rated = activities.filter(a => a.type === 'rated').length;
+  const Played = activities.filter(a => a.Type === 'Played').length;
+  const Completed = activities.filter(a => a.Type === 'Completed').length;
+  const Rated = activities.filter(a => a.Type === 'Rated').length;
   const hours = calculateTotalPlaytime(activities);
   
   return {
     total: activities.length,
-    played,
+    Played,
     Completed,
-    rated,
+    Rated,
     hours
   };
 }
@@ -120,7 +100,7 @@ export function calculateMonthlyStats(activities: Activity[]): MonthlyStats {
  */
 export function sortActivitiesByDate(activities: Activity[]): Activity[] {
   return [...activities].sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
   );
 }
 
@@ -132,7 +112,7 @@ export function groupActivitiesByMonth(activities: Activity[]): ActivityGroup[] 
   
   // Raggruppa le attività per chiave anno-mese
   activities.forEach(activity => {
-    const date = new Date(activity.timestamp);
+    const date = new Date(activity.Timestamp);
     const year = date.getFullYear();
     const month = date.getMonth();
     const key = `${year}-${month}`;
@@ -169,37 +149,37 @@ export function filterActivities(
   let filtered = [...activities];
   
   // Filtra per tipo di attività
-  if (filters.types && filters.types.length > 0) {
-    filtered = filtered.filter(a => filters.types!.includes(a.type));
+  if (filters.Types && filters.Types.length > 0) {
+    filtered = filtered.filter(a => filters.Types!.includes(a.Type));
   }
   
   // Filtra per anno
-  if (filters.year !== undefined) {
+  if (filters.Year !== undefined) {
     filtered = filtered.filter(a => 
-      new Date(a.timestamp).getFullYear() === filters.year
+      new Date(a.Timestamp).getFullYear() === filters.Year
     );
   }
   
   // Filtra per mese
-  if (filters.month !== undefined) {
+  if (filters.Month !== undefined) {
     filtered = filtered.filter(a => 
-      new Date(a.timestamp).getMonth() === filters.month
+      new Date(a.Timestamp).getMonth() === filters.Month
     );
   }
   
   // Filtra per gioco
-  if (filters.gameId !== undefined) {
-    filtered = filtered.filter(a => a.gameId === filters.gameId);
+  if (filters.GameId !== undefined) {
+    filtered = filtered.filter(a => a.GameId === filters.GameId);
   }
   
   // Applica ordinamento
-  filtered = filters.sortDirection === 'asc'
-    ? filtered.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  filtered = filters.SortDirection === 'asc'
+    ? filtered.sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime())
     : sortActivitiesByDate(filtered);
   
   // Limita il numero di risultati
-  if (filters.limit !== undefined) {
-    filtered = filtered.slice(0, filters.limit);
+  if (filters.Limit !== undefined) {
+    filtered = filtered.slice(0, filters.Limit);
   }
   
   return filtered;
@@ -210,7 +190,7 @@ export function filterActivities(
  */
 export function filterActivitiesByYear(activities: Activity[], year: number): Activity[] {
   return activities.filter(activity => {
-    const activityDate = new Date(activity.timestamp);
+    const activityDate = new Date(activity.Timestamp);
     return activityDate.getFullYear() === year;
   });
 }
@@ -223,7 +203,7 @@ export function getUniqueMonthsForYear(activities: Activity[], year: number): nu
   const uniqueMonths = new Set<number>();
   
   yearActivities.forEach(activity => {
-    const month = new Date(activity.timestamp).getMonth();
+    const month = new Date(activity.Timestamp).getMonth();
     uniqueMonths.add(month);
   });
   
@@ -234,12 +214,12 @@ export function getActivityIcon(type: ActivityType): React.ReactNode {
   switch(type) {
     case "Completed":
       return React.createElement(Trophy, { className: "h-5 w-5", style: { color: getActivityColor('Completed') } });
-    case "played":
-      return React.createElement(Clock, { className: "h-5 w-5", style: { color: getActivityColor('played') } });
-    case "added":
-      return React.createElement(Gamepad2, { className: "h-5 w-5", style: { color: getActivityColor('added') } });
-    case "rated":
-      return React.createElement(Star, { className: "h-5 w-5", style: { color: getActivityColor('rated') } });
+    case "Played":
+      return React.createElement(Clock, { className: "h-5 w-5", style: { color: getActivityColor('Played') } });
+    case "Added":
+      return React.createElement(Gamepad2, { className: "h-5 w-5", style: { color: getActivityColor('Added') } });
+    case "Rated":
+      return React.createElement(Star, { className: "h-5 w-5", style: { color: getActivityColor('Rated') } });
     case "Platinum":
       return React.createElement(Award, { className: "h-5 w-5", style: { color: getActivityColor('Platinum') } });
     case "Abandoned":
@@ -250,125 +230,42 @@ export function getActivityIcon(type: ActivityType): React.ReactNode {
 }
 
 export function getActivitytext(activity: Activity): string {
-  switch(activity.type) {
+  switch(activity.Type) {
     case "Completed":
-      return `Hai completato ${activity.gameTitle}`;    
-    case "played":
-      // Controlla se l'additionalInfo contiene "ripreso", che indica un cambiamento di stato
-      if (activity.additionalInfo && activity.additionalInfo.includes("ripreso")) {
-        return `Hai ripreso a giocare a ${activity.gameTitle}`;
+      return `Hai completato ${activity.GameTitle}`;    
+    case "Played":
+      // Controlla se l'AdditionalInfo contiene "ripreso", che indica un cambiamento di stato
+      if (activity.AdditionalInfo && activity.AdditionalInfo.includes("ripreso")) {
+        return `Hai ripreso a giocare a ${activity.GameTitle}`;
       }
-      // Controlla se l'additionalInfo contiene "iniziato:", che indica la prima sessione di gioco
-      if (activity.additionalInfo && activity.additionalInfo.includes("iniziato:")) {
-        const ore = activity.additionalInfo.replace("iniziato:", "");
-        return `Hai iniziato ${activity.gameTitle} e giocato ${ore}`;
+      // Controlla se l'AdditionalInfo contiene "iniziato:", che indica la prima sessione di gioco
+      if (activity.AdditionalInfo && activity.AdditionalInfo.includes("iniziato:")) {
+        const ore = activity.AdditionalInfo.replace("iniziato:", "");
+        return `Hai iniziato ${activity.GameTitle} e giocato ${ore}`;
       }
-      // Controlla se l'additionalInfo contiene "impostato:", che indica modifica manuale delle ore
-      if (activity.additionalInfo && activity.additionalInfo.includes("impostato:")) {
-        const ore = activity.additionalInfo.replace("impostato:", "");
-        return `Hai impostato ${ore} di gioco a ${activity.gameTitle}`;
+      // Controlla se l'AdditionalInfo contiene "impostato:", che indica modifica manuale delle ore
+      if (activity.AdditionalInfo && activity.AdditionalInfo.includes("impostato:")) {
+        const ore = activity.AdditionalInfo.replace("impostato:", "");
+        return `Hai impostato ${ore} di gioco a ${activity.GameTitle}`;
       }
-      // Controlla se l'additionalInfo inizia con "-", che indica rimozione di ore
-      if (activity.additionalInfo && activity.additionalInfo.startsWith("-")) {
-        return `Hai rimosso ${activity.additionalInfo.substring(1)} da ${activity.gameTitle}`;
+      // Controlla se l'AdditionalInfo inizia con "-", che indica rimozione di ore
+      if (activity.AdditionalInfo && activity.AdditionalInfo.startsWith("-")) {
+        return `Hai rimosso ${activity.AdditionalInfo.substring(1)} da ${activity.GameTitle}`;
       }
-      return `Hai giocato ${activity.additionalInfo || ''} a ${activity.gameTitle}`;
-    case "added":
-      return `Hai aggiunto ${activity.gameTitle} alla tua libreria`;
-    case "rated":
-      return `Hai valutato ${activity.gameTitle} con ${activity.additionalInfo}`;
+      return `Hai giocato ${activity.AdditionalInfo || ''} a ${activity.GameTitle}`;
+    case "Added":
+      return `Hai aggiunto ${activity.GameTitle} alla tua libreria`;
+    case "Rated":
+      return `Hai valutato ${activity.GameTitle} con ${activity.AdditionalInfo}`;
     case "Platinum":
-      return `Hai platinato ${activity.gameTitle}`;
+      return `Hai platinato ${activity.GameTitle}`;
     case "Abandoned":
-      return `Hai abbandonato ${activity.gameTitle} ${activity.additionalInfo ? activity.additionalInfo : ''}`;
+      return `Hai abbandonato ${activity.GameTitle} ${activity.AdditionalInfo ? activity.AdditionalInfo : ''}`;
     default:
       return '';
   }
 }
 
-/**
- * Crea un'attività generica
- */
-export function createActivity(gameId: number, gameTitle: string, type: ActivityType, additionalInfo?: string): Activity {
-  return {
-    id: Date.now(),
-    type,
-    gameId,
-    gameTitle,
-    timestamp: new Date(),
-    additionalInfo
-  };
-}
-
-/**
- * Crea un'attività per il cambio di stato di un gioco
- */
-export function createStatusChangeActivity(game: Game, newStatus: Game["Status"], prevStatus?: Game["Status"]): Activity {
-  const activityType = gameStatusToActivityType[newStatus];
-  let additionalInfo;
-  
-  // Gestisci il caso specifico di ripresa del gioco (da abbandonato/completato/platinato a in corso)
-  if (newStatus === 'InProgress' && 
-      prevStatus && 
-      (prevStatus === 'Abandoned' || prevStatus === 'Completed' || prevStatus === 'Platinum')) {
-    additionalInfo = 'ripreso';
-  }
-  
-  return createActivity(game.id, game.Title, activityType, additionalInfo);
-}
-
-/**
- * Crea un'attività per l'aggiunta di ore di gioco
- */
-export function createPlaytimeActivity(game: Game, hoursAdded: number, isFirstSession: boolean = false): Activity {
-  let additionalInfo;
-  
-  if (isFirstSession) {
-    // Se è la prima sessione, usa il prefisso "iniziato:"
-    additionalInfo = `iniziato:${Math.abs(hoursAdded)} ore`;
-  } else if (hoursAdded < 0) {
-    // Se si stanno rimuovendo ore, indicalo nel messaggio
-    additionalInfo = `-${Math.abs(hoursAdded)} ore`;
-  } else {
-    additionalInfo = `${hoursAdded} ore`;
-  }
-  
-  return createActivity(game.id, game.Title, 'played', additionalInfo);
-}
-
-/**
- * Crea un'attività per l'impostazione manuale delle ore di gioco
- */
-export function createManualPlaytimeActivity(game: Game, newHours: number): Activity {
-  const additionalInfo = `impostato:${newHours} ore`;
-  return createActivity(game.id, game.Title, 'played', additionalInfo);
-}
-
-/**
- * Crea un'attività per la valutazione di un gioco
- */
-export function createRatingActivity(game: Game, Rating: number): Activity {
-  return createActivity(game.id, game.Title, 'rated', `${Rating.toFixed(1)} stelle`);
-}
-
-/**
- * Gestisci l'aggiornamento delle ore di gioco e crea le attività appropriate
- */
-export function handlePlaytimeUpdate(game: Game, newHours: number): {
-  StatusChanged: boolean;
-  activity: Activity;
-} {
-  const wasNotStarted = game.Status === 'NotStarted';
-  const hoursToAdd = newHours - game.HoursPlayed;
-  let activity;
-  
-  // Se il gioco era "Da iniziare" e ora ha ore di gioco
-  if (wasNotStarted && newHours > 0) {
-    activity = createPlaytimeActivity(game, hoursToAdd, true);
-    return { StatusChanged: true, activity };
-  } else {
-    // Caso normale: attività per le ore aggiunte
-    activity = createPlaytimeActivity(game, hoursToAdd);
-    return { StatusChanged: false, activity };
-  }
-}
+// Le funzioni di creazione attività locali sono state rimosse in favore della creazione automatica lato backend
+// Quando si eseguono operazioni sui giochi (aggiungere, modificare stato, ore, rating), 
+// il backend crea automaticamente le attività corrispondenti tramite ActivityService

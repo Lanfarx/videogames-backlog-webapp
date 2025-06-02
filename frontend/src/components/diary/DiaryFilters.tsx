@@ -5,7 +5,7 @@ interface DiaryFiltersProps {
   year: number;
   onYearChange: (year: number) => void;
   month?: number;
-  onMonthChange?: (month: number) => void;
+  onMonthChange?: (month: number | undefined) => void;
   activeFilters: string[];
   onFilterChange: (filter: string) => void;
 }
@@ -27,10 +27,10 @@ const DiaryFilters: React.FC<DiaryFiltersProps> = ({
   
   const filters = [
     { id: 'all', label: 'Tutto' },
-    { id: 'played', label: 'Giocati' },
+    { id: 'Played', label: 'Giocati' },
     { id: 'Completed', label: 'Completati' },
     { id: 'Abandoned', label: 'Abbandonati' },
-    { id: 'rated', label: 'Recensiti' },
+    { id: 'Rated', label: 'Recensiti' },
     { id: 'Platinum', label: 'Platinati' }
   ];
   
@@ -56,12 +56,14 @@ const DiaryFilters: React.FC<DiaryFiltersProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
-          </div>
-          {onMonthChange && (
+          </div>          {onMonthChange && (
             <div className="relative ml-2">
               <select
                 value={month ?? ''}
-                onChange={e => onMonthChange(Number(e.target.value))}
+                onChange={e => {
+                  const value = e.target.value;
+                  onMonthChange(value === '' ? undefined : Number(value));
+                }}
                 className="pl-2 pr-8 py-1 bg-primary-bg border border-border-color rounded-md text-text-primary appearance-none cursor-pointer"
               >
                 <option value="">Tutti i mesi</option>

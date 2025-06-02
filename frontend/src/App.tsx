@@ -12,9 +12,6 @@ import TermsPage from './pages/footer/TermsPage';
 import ContactPage from './pages/footer/ContactPage';
 import React from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { activitiesData } from './data/activitiesData';
-import { setActivities } from './store/slice/activitiesSlice';
-import { useAllActivities } from './store/hooks/activitiesHooks';
 import CatalogPage from './pages/header/CatalogPage';
 import GameInfoPage from './pages/inner/GameInfoPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -27,7 +24,6 @@ import LoadingSpinner from './components/loading/LoadingSpinner';
 
 function App() {
   const dispatch = useAppDispatch();
-  const allActivities = useAllActivities();
   const location = useLocation();
   const userProfile = useAppSelector((state) => state.user.profile);
   const isProfileLoading = useAppSelector((state) => state.user.isProfileLoading);

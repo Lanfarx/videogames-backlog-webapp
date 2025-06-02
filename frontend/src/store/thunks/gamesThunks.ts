@@ -35,22 +35,26 @@ export const deleteGameThunk = createAsyncThunk('games/delete', async (id: numbe
   return id;
 });
 
+export const deleteAllGamesThunk = createAsyncThunk('games/deleteAll', async () => {
+  return await gamesService.deleteAllGames();
+});
+
 // Commenti
-export const fetchComments = createAsyncThunk('games/fetchComments', async (gameId: number) => {
-  return { gameId, Comments: await gamesService.getComments(gameId) };
+export const fetchComments = createAsyncThunk('games/fetchComments', async (GameId: number) => {
+  return { GameId, Comments: await gamesService.getComments(GameId) };
 });
 
-export const addCommentThunk = createAsyncThunk('games/addComment', async ({ gameId, comment }: { gameId: number, comment: GameComment }) => {
-  return { gameId, comment: await gamesService.addComment(gameId, comment) };
+export const addCommentThunk = createAsyncThunk('games/addComment', async ({ GameId, comment }: { GameId: number, comment: GameComment }) => {
+  return { GameId, comment: await gamesService.addComment(GameId, comment) };
 });
 
-export const deleteCommentThunk = createAsyncThunk('games/deleteComment', async ({ gameId, commentId }: { gameId: number, commentId: number }) => {
-  await gamesService.deleteComment(gameId, commentId);
-  return { gameId, commentId };
+export const deleteCommentThunk = createAsyncThunk('games/deleteComment', async ({ GameId, commentId }: { GameId: number, commentId: number }) => {
+  await gamesService.deleteComment(GameId, commentId);
+  return { GameId, commentId };
 });
 
-export const updateCommentThunk = createAsyncThunk('games/updateComment', async ({ gameId, commentId, comment }: { gameId: number, commentId: number, comment: GameComment }) => {
-  return { gameId, comment: await gamesService.updateComment(gameId, commentId, comment) };
+export const updateCommentThunk = createAsyncThunk('games/updateComment', async ({ GameId, commentId, comment }: { GameId: number, commentId: number, comment: GameComment }) => {
+  return { GameId, comment: await gamesService.updateComment(GameId, commentId, comment) };
 });
 
 // Statistiche

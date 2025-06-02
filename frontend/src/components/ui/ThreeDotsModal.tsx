@@ -10,8 +10,8 @@ interface ThreeDotsModalProps {
   game: Game;
   position?: 'top-right' | 'right' | 'bottom-right' | 'bottom-left' | 'left' | 'top-left';
   onEdit?: (game: Game) => void;
-  onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, Status: GameStatus) => void;
+  onDelete?: (GameId: string) => void;
+  onStatusChange?: (GameId: string, Status: GameStatus) => void;
 }
 
 const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({ 
@@ -108,7 +108,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           </button>
           {activeActionMenu === 'StatusChange' && (
             <StatusChangePopover
-              gameId={game.id}
+              GameId={game.id}
               currentStatus={game.Status}
               onStatusChange={(newStatus) => {
                 onStatusChange?.(game.id.toString(), newStatus);
@@ -133,7 +133,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
           </button>
           {activeActionMenu === 'addPlaytime' && (
             <PlaytimePopover
-              gameId={game.id}
+              GameId={game.id}
               currentHours={game.HoursPlayed}
               onSave={() => setActiveActionMenu(null)}
               onCancel={() => setActiveActionMenu(null)}

@@ -151,9 +151,9 @@ export function getRandomColor(): string {
  * Mappa dei colori per tipi di attività usando variabili CSS dedicate
  */
 export const ACTIVITY_COLORS: Record<string, string> = {
-  'played': getCssVarColor('--activity-played', Status_COLORS['InProgress']),
-  'added': getCssVarColor('--activity-added', Status_COLORS['NotStarted']),
-  'rated': getCssVarColor('--activity-rated', '#8A5CF6'),
+  'Played': getCssVarColor('--activity-Played', Status_COLORS['InProgress']),
+  'Added': getCssVarColor('--activity-Added', Status_COLORS['NotStarted']),
+  'Rated': getCssVarColor('--activity-Rated', '#F59E0B'),
   'Completed': getCssVarColor('--activity-Completed', Status_COLORS['Completed']),
   'Abandoned': getCssVarColor('--activity-Abandoned', Status_COLORS['Abandoned']),
   'Platinum': getCssVarColor('--activity-Platinum', Status_COLORS['Platinum'])
@@ -163,9 +163,9 @@ export const ACTIVITY_COLORS: Record<string, string> = {
  * Etichette in italiano per tipi di attività
  */
 export const ACTIVITY_LABELS: Record<string, string> = {
-  'played': 'Giocato',
-  'added': 'Aggiunto',
-  'rated': 'Valutato',
+  'Played': 'Giocato',
+  'Added': 'Aggiunto',
+  'Rated': 'Valutato',
   'Completed': Status_LABELS['Completed'],
   'Abandoned': Status_LABELS['Abandoned'],
   'Platinum': Status_LABELS['Platinum'],

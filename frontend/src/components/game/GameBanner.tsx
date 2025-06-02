@@ -122,7 +122,7 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
                     onStatusChange={handleStatusChange}
                     onCancel={() => setShowStatusPopover(false)}
                     HoursPlayed={game.HoursPlayed} // Passiamo le ore di gioco
-                    gameId={game.id}                />
+                    GameId={game.id}                />
               )}
             </div>
             <button 

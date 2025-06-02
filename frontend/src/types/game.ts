@@ -174,7 +174,7 @@ export type GameViewMode = 'grid' | 'list';
  */
 export interface SampleGame {
   id: string; // id RAWG come stringa
-  title: string;
+  Title: string;
   CoverImage: string;
   ReleaseYear: number;
   Genres: string[];
