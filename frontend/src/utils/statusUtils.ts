@@ -40,8 +40,8 @@ function getCountForStatus(stats: any, Status: GameStatus): number {
 }
 
 export const gameStatusToActivityType: Record<GameStatus, ActivityType> = {
-  'InProgress': 'played',
-  'NotStarted': 'added',
+  'InProgress': 'Played',
+  'NotStarted': 'Added',
   'Completed': 'Completed',
   'Abandoned': 'Abandoned',
   'Platinum': 'Platinum'

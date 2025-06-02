@@ -20,7 +20,7 @@ import { getToken } from '../../utils/getToken';
 
 const ProfilePage = () => {
   const stats = useGamesStats();
-  const activitiesData = useAllActivities();
+  const { activities: activitiesData, loading: activitiesLoading } = useAllActivities();
   const userProfile = useSelector((state: any) => state.user.profile);
 
   // Stati per privacy e diario

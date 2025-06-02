@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace VideoGamesBacklogBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -181,7 +181,7 @@ namespace VideoGamesBacklogBackend.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "text", nullable: false),
-                    Platform = table.Column<string>(type: "text", nullable: false),
+                    Platform = table.Column<string>(type: "text", nullable: true),
                     ReleaseYear = table.Column<int>(type: "integer", nullable: false),
                     Genres = table.Column<string[]>(type: "text[]", nullable: false),
                     Status = table.Column<string>(type: "varchar(20)", nullable: false),
@@ -194,13 +194,13 @@ namespace VideoGamesBacklogBackend.Migrations
                     PlatinumDate = table.Column<string>(type: "text", nullable: true),
                     HoursPlayed = table.Column<int>(type: "integer", nullable: false),
                     Metacritic = table.Column<int>(type: "integer", nullable: false),
-                    Rating = table.Column<int>(type: "integer", nullable: false),
+                    Rating = table.Column<decimal>(type: "numeric", nullable: false),
                     Notes = table.Column<string>(type: "text", nullable: true),
                     Review_Text = table.Column<string>(type: "text", nullable: true),
-                    Review_Gameplay = table.Column<int>(type: "integer", nullable: true),
-                    Review_Graphics = table.Column<int>(type: "integer", nullable: true),
-                    Review_Story = table.Column<int>(type: "integer", nullable: true),
-                    Review_Sound = table.Column<int>(type: "integer", nullable: true),
+                    Review_Gameplay = table.Column<decimal>(type: "numeric", nullable: true),
+                    Review_Graphics = table.Column<decimal>(type: "numeric", nullable: true),
+                    Review_Story = table.Column<decimal>(type: "numeric", nullable: true),
+                    Review_Sound = table.Column<decimal>(type: "numeric", nullable: true),
                     Review_Date = table.Column<string>(type: "text", nullable: true),
                     Review_IsPublic = table.Column<bool>(type: "boolean", nullable: true),
                     UserId = table.Column<int>(type: "integer", nullable: false)

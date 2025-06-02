@@ -21,7 +21,7 @@ export const useSimilarGames = (
 
           const formatted = results.map((game: any) => ({
             id: game.id,
-            title: game.name,
+            itle: game.name,
             CoverImage: game.background_image,
             Developer: game.Developers?.[0]?.name ?? "Sconosciuto",
             Publisher: game.Publishers?.[0]?.name ?? "Sconosciuto",

@@ -11,6 +11,24 @@ const apiClient = axios.create({
   }
 });
 
+// Funzione per mappare i dati dell'API RAWG al formato interno
+export const mapRawgGameToInternalFormat = (rawgGame: any) => {
+  return {
+    id: rawgGame.id,
+    Title: rawgGame.name,
+    Description: rawgGame.description_raw || rawgGame.description || "Nessuna descrizione disponibile.",
+    CoverImage: rawgGame.background_image || "/placeholder.svg",
+    Developer: rawgGame.developers?.[0]?.name || "Sconosciuto",
+    Publisher: rawgGame.publishers?.[0]?.name || "Sconosciuto",
+    ReleaseYear: rawgGame.released ? new Date(rawgGame.released).getFullYear() : null,
+    Genres: rawgGame.genres?.map((g: any) => g.name) || [],
+    Metacritic: rawgGame.metacritic || 0,
+    Rating: rawgGame.rating || 0,
+    Platforms: rawgGame.platforms?.map((p: any) => p.platform.name) || [],
+    RatingsCount: rawgGame.ratings_count || 0,
+  };
+};
+
 // Funzione per ottenere i giochi
 export const getGames = async (params = {}) => {
   try {
@@ -26,7 +44,7 @@ export const getGames = async (params = {}) => {
 export const getGameDetails = async (gameId: string) => {
   try {
     const response = await apiClient.get(`/games/${gameId}`);
-    return response.data;
+    return mapRawgGameToInternalFormat(response.data);
   } catch (error) {
     console.error(`Errore nel recupero dei dettagli del gioco ${gameId}:`, error);
     throw error;
@@ -37,12 +55,26 @@ export const getGameDetails = async (gameId: string) => {
 export const searchGames = async (query: string) => {
   try {
     const response = await apiClient.get('/games', { 
-    params: { 
-      search: query,
-      Platforms: '1, 4, 7, 18, 22'
-    }
-});
-    return response.data;
+      params: { 
+        search: query,
+        platforms: '1,4,7,18,22' // Corretto il nome del parametro
+      }
+    });
+    
+    // Mappa i risultati usando la funzione di mapping
+    const mappedResults = response.data.results.map(mapRawgGameToInternalFormat);
+    
+    // Filtra i risultati per includere solo giochi con dati sufficienti
+    const filteredResults = mappedResults.filter((game: any) => 
+      game.Title && 
+      game.ReleaseYear && 
+      game.RatingsCount > 3 // Almeno 3 recensioni per validità
+    );
+    
+    return {
+      ...response.data,
+      results: filteredResults
+    };
   } catch (error) {
     console.error('Errore nella ricerca dei giochi:', error);
     throw error;
@@ -69,22 +101,27 @@ export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {
 export const getSimilarGames = async (genreIds: number[], excludeId: number, count: number = 4, Metacritic?: number) => {
   try {
     const params: any = {
-      Genres: genreIds.join(','),
+      genres: genreIds.join(','),
       exclude_additions: true,
-      ordering: '-Rating',
+      ordering: '-metacritic',
       page_size: 20,
-      Platforms: '1,4,7,18,22', // Solo piattaforme principali
+      platforms: '1,4,7,18,22', // Solo piattaforme principali
       dates: '1900-01-01,' + new Date().toISOString().slice(0, 10), // Solo giochi già usciti
     };
     // Se Metacritic fornito, filtra per range simile (+/- 10)
     if (typeof Metacritic === 'number') {
-      params.Metacritic = `${Math.max(0, Metacritic - 10)},${Math.min(100, Metacritic + 10)}`;
-    }
-    const response = await apiClient.get('/games', { params });
+      params.metacritic = `${Math.max(0, Metacritic - 10)},${Math.min(100, Metacritic + 10)}`;
+    }    const response = await apiClient.get('/games', { params });
 
     const results = response.data.results
       .filter((g: any) => g.id !== excludeId)
       .slice(0, count);
+
+    // Debug: stampa i risultati ordinati per Metacritic
+    console.log('Giochi simili ordinati per Metacritic:', results.map((g: any) => ({
+      name: g.name,
+      metacritic: g.metacritic
+    })));
 
     return results;
   } catch (error) {

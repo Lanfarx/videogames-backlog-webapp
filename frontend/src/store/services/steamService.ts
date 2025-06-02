@@ -15,7 +15,7 @@ export async function fetchSteamGames(steamId: string) {
       params: {
         steamid: steamId,
         include_appinfo: 1,
-        include_played_free_games: 0
+        include_Played_free_games: 0
       }
     });
     return response.data.response.games || [];

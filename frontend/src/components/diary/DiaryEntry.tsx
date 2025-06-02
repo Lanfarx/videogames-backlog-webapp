@@ -17,7 +17,7 @@ interface DiaryEntryProps {
 
 const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true, allActivities = [] }) => {
   const [expandedReview, setExpandedReview] = useState(false);
-  const game = useGameById(activity.gameId);  const dispatch = useAppDispatch();
+  const game = useGameById(activity.GameId);  const dispatch = useAppDispatch();
   const userProfile = useAppSelector(state => state.user.profile);
   const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
   const { update: updateGame } = useGameActions();
@@ -25,44 +25,44 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
   // Non procedere se non c'è il gioco
   if (!game) return null;
   
-  // Per le attività di tipo "played", controlla se è la prima volta nel mese usando la funzione di utilità
-  if (activity.type === 'played') {
-    // Mostra l'attività "played" solo se è la prima nel mese o se non ci sono dati per confrontare
-    const isFirstPlayInMonth = isFirstActivityInMonth(activity, allActivities, 'played');
+  // Per le attività di tipo "Played", controlla se è la prima volta nel mese usando la funzione di utilità
+  if (activity.Type === 'Played') {
+    // Mostra l'attività "Played" solo se è la prima nel mese o se non ci sono dati per confrontare
+    const isFirstPlayInMonth = isFirstActivityInMonth(activity, allActivities, 'Played');
     if (!isFirstPlayInMonth && allActivities.length > 0) return null;
   }
 
   const getDiaryEntryLabel = () => {
-    switch (activity.type) {
-      case 'played': {
-        const isFirstInMonth = isFirstActivityInMonth(activity, allActivities, 'played');
+    switch (activity.Type) {
+      case 'Played': {
+        const isFirstInMonth = isFirstActivityInMonth(activity, allActivities, 'Played');
         return isFirstInMonth ? 'Prima sessione del mese' : 'Giocato';
       }
       case 'Platinum':
         return 'Platinato';
-      case 'rated':
+      case 'Rated':
         return 'Recensito';
       case 'Abandoned':
-        return activity.additionalInfo ? `Abbandonato (${activity.additionalInfo})` : 'Abbandonato';
+        return activity.AdditionalInfo ? `Abbandonato (${activity.AdditionalInfo})` : 'Abbandonato';
       case 'Completed':
         return 'Completato';
-      case 'added':
+      case 'Added':
         return 'Aggiunto';
       default:
         return '';
     }
   };
   
-  const hasReview = activity.type === 'rated' && game.Review;
+  const hasReview = activity.Type === 'Rated' && game.Review;
 
   return (
     <div className="border-b border-border-color py-4 flex items-start gap-4">
       <div className="text-center w-10 flex-shrink-0">
         <div className="text-sm font-bold text-text-primary">
-          {new Date(activity.timestamp).getDate()}
+          {new Date(activity.Timestamp).getDate()}
         </div>
         <div className="text-xs text-text-secondary">
-          {new Date(activity.timestamp).toLocaleString('it-IT', { month: 'short' }).toUpperCase()}
+          {new Date(activity.Timestamp).toLocaleString('it-IT', { month: 'short' }).toUpperCase()}
         </div>
       </div>
       
@@ -96,48 +96,48 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({ activity, showCoverImage = true
         
         <div className="flex items-center gap-2 mb-2">
           <div className="flex items-center gap-1">
-            {getActivityIcon(activity.type)}
+            {getActivityIcon(activity.Type)}
             <span className="text-xs font-medium">{getDiaryEntryLabel()}</span>
           </div>
           
           {/* Mostra ore di gioco per ogni tipo di attività */}
-          {activity.type === 'played' && activity.additionalInfo && (
+          {activity.Type === 'Played' && activity.AdditionalInfo && (
             <span className="text-xs text-text-secondary">
-              ({activity.additionalInfo.replace(/:(\d+)/, ': $1').replace(/:(\s*)/, ': ')})
+              ({activity.AdditionalInfo.replace(/:(\d+)/, ': $1').replace(/:(\s*)/, ': ')})
             </span>
           )}
           
           {/* Per completati, mostra il tempo impiegato per finirlo */}
-          {activity.type === 'Completed' && (
+          {activity.Type === 'Completed' && (
             <span className="text-xs text-text-secondary">
               (Completato in {game.HoursPlayed} ore)
             </span>
           )}
           
           {/* Per platinati, mostra una stima del tempo di platino */}
-          {activity.type === 'Platinum' && (
+          {activity.Type === 'Platinum' && (
             <span className="text-xs text-text-secondary">
               (Platinato in {game.HoursPlayed} ore)
             </span>
           )}
           
           {/* Per recensioni, mostra le ore di gioco al momento della recensione */}
-          {activity.type === 'rated' && (
+          {activity.Type === 'Rated' && (
             <span className="text-xs text-text-secondary">
               (Recensito dopo {game.HoursPlayed} ore di gioco)
             </span>
           )}
           
           {/* Le info per l'abbandono sono gestite nel testo dell'attività */}
-          {activity.additionalInfo && activity.type !== 'Abandoned' && activity.type !== 'Completed' && activity.type !== 'Platinum' && activity.type !== 'rated' && activity.type !== 'played' && (
-            <span className="text-xs text-text-secondary">({activity.additionalInfo})</span>
+          {activity.AdditionalInfo && activity.Type !== 'Abandoned' && activity.Type !== 'Completed' && activity.Type !== 'Platinum' && activity.Type !== 'Rated' && activity.Type !== 'Played' && (
+            <span className="text-xs text-text-secondary">({activity.AdditionalInfo})</span>
           )}
         </div>
         
         {/* Abbiamo rimosso il testo per gli abbandoni, viene mostrato direttamente nell'etichetta */}
         
         {/* Note per i giochi completati o platinati (se presenti) */}
-        {(activity.type === 'Completed' || activity.type === 'Platinum') && game.Notes && (
+        {(activity.Type === 'Completed' || activity.Type === 'Platinum') && game.Notes && (
           <div className="bg-secondary-bg p-3 rounded-lg mt-2">
             <div className="flex items-center mb-2">
               <span className="text-sm font-medium text-text-primary">Note</span>

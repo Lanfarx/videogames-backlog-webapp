@@ -71,9 +71,8 @@ namespace VideoGamesBacklogBackend.Controllers
             var game = await _gameService.UpdateGamePlaytimeAsync(User, id, playtimeDto.HoursPlayed);
             if (game == null) return NotFound();
             return Ok(game);
-        }
-
-        [HttpDelete("{id}")]
+        }       
+         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _gameService.DeleteGameAsync(User, id);
@@ -81,12 +80,25 @@ namespace VideoGamesBacklogBackend.Controllers
             return NoContent();
         }
 
-        // Statistiche
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAll()
+        {
+            var deletedCount = await _gameService.DeleteAllGamesAsync(User);
+            return Ok(new { DeletedCount = deletedCount, Message = $"Eliminati {deletedCount} giochi" });
+        }// Statistiche
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats()
         {
             var stats = await _gameService.GetGameStatsAsync(User);
             return Ok(stats);
+        }
+
+        // Giochi in corso paginati
+        [HttpGet("in-progress")]
+        public async Task<IActionResult> GetInProgressPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 6)
+        {
+            var result = await _gameService.GetInProgressGamesPaginatedAsync(User, page, pageSize);
+            return Ok(result);
         }
 
         // Commenti

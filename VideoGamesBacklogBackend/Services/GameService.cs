@@ -12,16 +12,21 @@ namespace VideoGamesBacklogBackend.Services
     public class GameService : IGameService
     {
         private readonly AppDbContext _dbContext;
-        public GameService(AppDbContext dbContext)
+        private readonly IActivityService _activityService;
+        
+        public GameService(AppDbContext dbContext, IActivityService activityService)
         {
             _dbContext = dbContext;
+            _activityService = activityService;
         }
 
         public async Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Where(g => g.UserId == userId).Include(g => g.Comments).ToListAsync();
-        }        public async Task<Game?> GetGameByIdAsync(ClaimsPrincipal userClaims, int gameId)
+        }
+
+        public async Task<Game?> GetGameByIdAsync(ClaimsPrincipal userClaims, int gameId)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
@@ -31,16 +36,20 @@ namespace VideoGamesBacklogBackend.Services
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Title == title && g.UserId == userId);
-        }
-
+        }        
+        
         public async Task<Game> AddGameAsync(ClaimsPrincipal userClaims, Game game)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             game.UserId = userId;
             _dbContext.Games.Add(game);
             await _dbContext.SaveChangesAsync();
+            
+            // Crea automaticamente l'attività "added" e eventuali attività aggiuntive usando il metodo helper ottimizzato
+            await _activityService.CreateAddGameActivityAsync(game, userId);
+            
             return game;
-        }        
+        }
         
         public async Task<Game?> UpdateGameAsync(ClaimsPrincipal userClaims, int gameId, UpdateGameDto updateDto)
         {
@@ -84,10 +93,17 @@ namespace VideoGamesBacklogBackend.Services
             
             if (updateDto.Metacritic.HasValue)
                 game.Metacritic = updateDto.Metacritic.Value;
-            
-            if (updateDto.Rating.HasValue)
+              if (updateDto.Rating.HasValue)
+            {
+                // Salva il rating precedente per creare l'attività
+                var previousRating = game.Rating;
                 game.Rating = updateDto.Rating.Value;
-              if (updateDto.Notes != null)
+                
+                // Crea l'attività "rated" se il rating è cambiato
+                await _activityService.CreateRatingActivityAsync(game, updateDto.Rating.Value, previousRating, userId);
+            }
+            
+            if (updateDto.Notes != null)
                 game.Notes = updateDto.Notes;
             
             // Gestisci l'aggiornamento parziale della recensione
@@ -124,30 +140,33 @@ namespace VideoGamesBacklogBackend.Services
             
             // Gestisci Status utilizzando la logica esistente
             if (!string.IsNullOrEmpty(updateDto.Status))
-                StatusChangeFunction(updateDto.Status, game);
+                await StatusChangeFunctionAsync(updateDto.Status, game, userId);
             
             // Gestisci HoursPlayed utilizzando la logica esistente
             if (updateDto.HoursPlayed.HasValue)
-                PlaytimeChangeFunction(updateDto.HoursPlayed.Value, game);
+                await PlaytimeChangeFunctionAsync(updateDto.HoursPlayed.Value, game, userId);
 
             await _dbContext.SaveChangesAsync();
             return game;
         }
-        
+
         public async Task<Game?> UpdateGameStatusAsync(ClaimsPrincipal userClaims, int gameId, string status)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             var game = await _dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
             if (game == null) return null;
 
-            StatusChangeFunction(status, game);
+            // Salva lo status precedente per la creazione dell'attività
+            var previousStatus = game.Status;
+            
+            await StatusChangeFunctionAsync(status, game, userId);
             await _dbContext.SaveChangesAsync();
             return game;
         }
 
-        private static void StatusChangeFunction(string status, Game game)
+        private async Task StatusChangeFunctionAsync(string status, Game game, int userId)
         {
-            // Salva lo status precedente per gestire le date
+            // Salva lo status precedente per gestire le date e attività
             var previousStatus = game.Status.ToString();
             var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
@@ -183,6 +202,9 @@ namespace VideoGamesBacklogBackend.Services
                         game.PlatinumDate = null;
                     }
                 }
+
+                // Crea l'attività appropriata per il cambio di stato
+                await _activityService.CreateStatusChangeActivityAsync(game, newStatus, previousStatus, userId);
             }
         }
 
@@ -192,23 +214,35 @@ namespace VideoGamesBacklogBackend.Services
             var game = await _dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
             if (game == null) return null;
 
-            PlaytimeChangeFunction(hoursPlayed, game);
+            // Salva le ore precedenti per calcolare la differenza
+            var previousHours = game.HoursPlayed;
+            
+            await PlaytimeChangeFunctionAsync(hoursPlayed, game, userId);
 
             await _dbContext.SaveChangesAsync();
             return game;
         }
 
-        private static void PlaytimeChangeFunction(int hoursPlayed, Game game)
+        private async Task PlaytimeChangeFunctionAsync(int hoursPlayed, Game game, int userId)
         {
+            // Salva le ore precedenti per calcolare la differenza
+            var previousHours = game.HoursPlayed;
+            var wasNotStarted = game.Status == GameStatus.NotStarted;
+            
             // Aggiorna le ore di gioco
             game.HoursPlayed = hoursPlayed;
 
             // Se il gioco era "Da iniziare" e ora ha ore di gioco > 0, imposta lo stato a "In corso"
-            if (game.Status == GameStatus.NotStarted && hoursPlayed > 0)
+            if (wasNotStarted && hoursPlayed > 0)
             {
                 game.Status = GameStatus.InProgress;
             }
-        }        public async Task<bool> DeleteGameAsync(ClaimsPrincipal userClaims, int gameId)
+
+            // Crea l'attività appropriata per il playtime
+            await _activityService.CreatePlaytimeActivityAsync(game, hoursPlayed, previousHours, wasNotStarted, userId);
+        }
+
+        public async Task<bool> DeleteGameAsync(ClaimsPrincipal userClaims, int gameId)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             var game = await _dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
@@ -236,6 +270,134 @@ namespace VideoGamesBacklogBackend.Services
             };
 
             return stats;
+        }
+
+        public async Task<PaginatedGamesDto> GetInProgressGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 6)
+        {
+            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            
+            var query = _dbContext.Games
+                .Where(g => g.UserId == userId && g.Status == GameStatus.InProgress)
+                .OrderByDescending(g => g.Id);
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            
+            var games = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(g => new
+                {
+                    g.Id,
+                    g.Title,
+                    g.CoverImage,
+                    g.Platform,
+                    g.HoursPlayed,
+                    g.Rating,
+                    g.Genres
+                })
+                .ToListAsync();
+
+            return new PaginatedGamesDto
+            {
+                Games = games.Cast<object>().ToList(),
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalItems = totalItems,
+                PageSize = pageSize,
+                HasNextPage = page < totalPages,
+                HasPreviousPage = page > 1
+            };
+        }
+
+        public async Task<List<GameComment>> GetCommentsAsync(ClaimsPrincipal userClaims, int gameId)
+        {
+            var userId = int.Parse(userClaims.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var game = await _dbContext.Games
+                .Include(g => g.Comments)
+                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+            if (game == null)
+                return new List<GameComment>();
+
+            return game.Comments;
+        }
+
+        public async Task<GameComment?> AddCommentAsync(ClaimsPrincipal userClaims, int gameId, GameComment comment)
+        {
+            var userId = int.Parse(userClaims.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var game = await _dbContext.Games
+                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+            if (game == null)
+                return null;
+
+            comment.GameId = gameId;
+            comment.Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            _dbContext.GameComments.Add(comment);
+            await _dbContext.SaveChangesAsync();
+            return comment;
+        }
+
+        public async Task<bool> DeleteCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId)
+        {
+            var userId = int.Parse(userClaims.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var game = await _dbContext.Games
+                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+            if (game == null)
+                return false;
+
+            var comment = await _dbContext.GameComments
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
+
+            if (comment == null)
+                return false;
+
+            _dbContext.GameComments.Remove(comment);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<GameComment?> UpdateCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId, GameComment updatedComment)
+        {
+            var userId = int.Parse(userClaims.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var game = await _dbContext.Games
+                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+            if (game == null)
+                return null;
+
+            var comment = await _dbContext.GameComments
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
+
+            if (comment == null)
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(updatedComment.Text))
+                comment.Text = updatedComment.Text;
+
+            // Aggiorna la data di modifica
+            comment.Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+            await _dbContext.SaveChangesAsync();
+            return comment;
+        }
+
+        public async Task<int> DeleteAllGamesAsync(ClaimsPrincipal userClaims)
+        {
+            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+            // Recupera tutti i giochi dell'utente
+            var games = await _dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
+
+            if (games.Count == 0)
+                return 0;
+
+            _dbContext.Games.RemoveRange(games);
+            await _dbContext.SaveChangesAsync();
+
+            return games.Count;
         }
     }
 }

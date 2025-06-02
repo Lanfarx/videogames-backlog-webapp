@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
 import { getActivityColor } from '../../constants/gameConstants';
 import ActivityCard from '../ui/ActivityCard';
-import ActivityHiStoryPopover from '../game/ui/ActivityHistoryPopover';
+import AllActivitiesHistoryPopover from '../ui/AllActivitiesHistoryPopover';
 import {History } from 'lucide-react';
 
 export default function RecentActivitiesSection() {
-  const recentActivities = useRecentActivities(5);
-  const allRecentActivities = useRecentActivities(100);
-  const [showHiStory, setShowHiStory] = useState(false);
+  const { activities: recentActivities, loading: recentLoading } = useRecentActivities(5);
+  const [showHistory, setShowHistory] = useState(false);
 
   return (
     <section className="mb-10">
@@ -16,16 +15,14 @@ export default function RecentActivitiesSection() {
       <div className='container mx-auto px-6 py-8'> 
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
-          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHiStory(true)}>
+          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
             <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
             <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
           </div>
-        </div>
-        {showHiStory && (
-          <ActivityHiStoryPopover
-            activities={allRecentActivities}
-            onClose={() => setShowHiStory(false)}
-            gameTitle="Tutta la libreria"
+        </div>        
+        {showHistory && (
+          <AllActivitiesHistoryPopover
+            onClose={() => setShowHistory(false)}
           />
         )}
 
@@ -39,7 +36,7 @@ export default function RecentActivitiesSection() {
               // Determina se l'attività è a sinistra o a destra
               const position = index % 2 === 0 ? 'right' : 'left';
               // Ottengo il colore dalla utility centralizzata
-              const dotColor = getActivityColor(activity.type);
+              const dotColor = getActivityColor(activity.Type);
               
               return (
                 <div key={activity.id} className="relative min-h-[60px] flex items-center">

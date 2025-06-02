@@ -12,8 +12,8 @@ import StatusIndicator from '../ui/atoms/StatusIndicator';
 interface GameCardProps {
   game: Game;
   onEdit?: (game: Game) => void;
-  onDelete?: (gameId: string) => void;
-  onStatusChange?: (gameId: string, Status: GameStatus) => void;
+  onDelete?: (GameId: string) => void;
+  onStatusChange?: (GameId: string, Status: GameStatus) => void;
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusChange }) => {

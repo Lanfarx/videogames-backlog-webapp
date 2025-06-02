@@ -109,9 +109,8 @@ const EditGameDetailsModal = ({
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
-              </div>
-
-              <div className="space-y-2">
+              </div>            
+                <div className="space-y-2">
                 <label htmlFor="Metacritic" className="block text-text-primary font-secondary text-sm">
                   Metacritic
                 </label>
@@ -120,7 +119,27 @@ const EditGameDetailsModal = ({
                   id="Metacritic"
                   name="Metacritic"
                   value={formData.Metacritic}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    let numericValue = Number.parseInt(value) || 0;
+                    
+                    // Limita il valore tra 0 e 100
+                    if (numericValue < 0) numericValue = 0;
+                    if (numericValue > 100) numericValue = 100;
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      Metacritic: numericValue
+                    }));
+                  }}
+                  onInput={(e) => {
+                    // Previene l'inserimento diretto di valori > 100
+                    const target = e.target as HTMLInputElement;
+                    const value = target.value;
+                    if (value && Number.parseInt(value) > 100) {
+                      target.value = "100";
+                    }
+                  }}
                   min="0"
                   max="100"
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"

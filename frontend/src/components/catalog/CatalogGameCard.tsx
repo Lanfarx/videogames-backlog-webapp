@@ -14,7 +14,7 @@ interface CatalogGameCardProps {
 }
 
 const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, onAddToLibrary, onInfoClick }) => {
-  const communityRating = useCommunityCommunityRating(game.title);
+  const communityRating = useCommunityCommunityRating(game.Title);
 
   const handleInfoClick = () => {
     onInfoClick(game.id);
@@ -25,11 +25,11 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, on
       {/* Icona se già in libreria rimossa, ora solo nel bottone */}
       <img
         src={game.CoverImage || "/placeholder.svg"}
-        alt={game.title}
+        alt={game.Title}
         className="w-full h-36 object-cover rounded-lg mb-2"
       />
       <div className="flex-1 flex flex-col gap-1">
-        <h3 className="font-bold text-base text-text-primary mb-0.5 line-clamp-1">{game.title}</h3>
+        <h3 className="font-bold text-base text-text-primary mb-0.5 line-clamp-1">{game.Title}</h3>
         <div className="text-xs text-text-secondary mb-0.5 flex flex-wrap items-center gap-1">
           <span>{game.ReleaseYear}</span>
         </div>

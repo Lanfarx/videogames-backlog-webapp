@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { Game, GameStatus, GameUpdateInput } from '../../types/game';
 import { GAME_PlatformS } from '../../constants/gameConstants';
 import { useGameActions, useGameStatusActions, useGamePlaytimeActions } from '../../store/hooks/gamesHooks';
-import { useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
-import { gameStatusToActivityType } from '../../utils/statusUtils';
-import { createStatusChangeActivity, createManualPlaytimeActivity } from '../../utils/activityUtils';
 
 interface EditGameInfoModalProps {
   isOpen: boolean;
@@ -18,11 +15,9 @@ const EditGameInfoModal = ({
   onClose,
   onSave,
   game
-}: EditGameInfoModalProps) => {
-  const { update } = useGameActions();
+}: EditGameInfoModalProps) => {  const { update } = useGameActions();
   const { updateStatus } = useGameStatusActions();
   const { updatePlaytime } = useGamePlaytimeActions();
-  const { addActivity } = useAllActivitiesActions();
   const [formData, setFormData] = useState({
     Platform: game.Platform || '',
     Price: game.Price !== undefined ? game.Price.toString() : '',
@@ -111,26 +106,10 @@ const EditGameInfoModal = ({
       newStatus = 'InProgress';
       updateData.Status = newStatus;
     }
-    
-    // Esegui l'aggiornamento solo se ci sono campi modificati
+      // Esegui l'aggiornamento solo se ci sono campi modificati
     if (Object.keys(updateData).length > 0) {
       update(game.id, updateData);
-    }
-    
-    // Crea attività in base alla modifica delle ore
-    const hoursDifference = newHoursPlayed - game.HoursPlayed;
-    
-    // Se si reimposta a 0 le ore e viene cambiato lo stato a "NotStarted"
-    if (newHoursPlayed === 0 && newStatus === 'NotStarted') {
-      // Registra l'attività di cambio stato utilizzando la funzione di utilità
-      const StatusActivity = createStatusChangeActivity(game, 'NotStarted');
-      addActivity(StatusActivity);
-    } 
-    // Se le ore vengono modificate, crea un'attività played
-    else if (hoursDifference !== 0) {
-      // Utilizza la funzione di utilità per creare l'attività di impostazione manuale delle ore
-      const playtimeActivity = createManualPlaytimeActivity(game, newHoursPlayed);
-      addActivity(playtimeActivity);
+      // Note: Backend automatically creates activities for game updates including status and playtime changes
     }
     
     // Chiama la callback opzionale per backward compatibility

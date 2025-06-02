@@ -12,7 +12,7 @@ export interface CommunityReview {
   Graphics: number;
   Story: number;
   Sound: number;
-  gameTitle: string; // Aggiunto per collegare la recensione al gioco
+  GameTitle: string; // Aggiunto per collegare la recensione al gioco
 }
 
 export interface CommunityStats {
@@ -41,9 +41,9 @@ const communitySlice = createSlice({
     addReview: (state, action: PayloadAction<CommunityReview>) => {
       state.Reviews.push(action.payload);
       // Aggiorna le statistiche del gioco
-      const gameTitle = action.payload.gameTitle;
-      if (!state.stats[gameTitle]) {
-        state.stats[gameTitle] = {
+      const GameTitle = action.payload.GameTitle;
+      if (!state.stats[GameTitle]) {
+        state.stats[GameTitle] = {
           totalPlayers: 0,
           averageRating: 0,
           totalReviews: 0,
@@ -53,8 +53,8 @@ const communitySlice = createSlice({
         };
       }
       
-      const gameStats = state.stats[gameTitle];
-      const gameReviews = state.Reviews.filter(r => r.gameTitle === gameTitle);
+      const gameStats = state.stats[GameTitle];
+      const gameReviews = state.Reviews.filter(r => r.GameTitle === GameTitle);
       
       gameStats.totalReviews = gameReviews.length;
       gameStats.averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
@@ -67,22 +67,22 @@ const communitySlice = createSlice({
         state.Reviews.splice(ReviewIndex, 1);
         
         // Aggiorna le statistiche del gioco
-        const gameTitle = Review.gameTitle;
-        const gameReviews = state.Reviews.filter(r => r.gameTitle === gameTitle);
+        const GameTitle = Review.GameTitle;
+        const gameReviews = state.Reviews.filter(r => r.GameTitle === GameTitle);
         
         if (gameReviews.length > 0) {
-          state.stats[gameTitle].totalReviews = gameReviews.length;
-          state.stats[gameTitle].averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
+          state.stats[GameTitle].totalReviews = gameReviews.length;
+          state.stats[GameTitle].averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
         } else {
-          delete state.stats[gameTitle];
+          delete state.stats[GameTitle];
         }
       }
     },
     
-    updateGameStats: (state, action: PayloadAction<{ gameTitle: string; stats: Partial<CommunityStats> }>) => {
-      const { gameTitle, stats } = action.payload;
-      if (!state.stats[gameTitle]) {
-        state.stats[gameTitle] = {
+    updateGameStats: (state, action: PayloadAction<{ GameTitle: string; stats: Partial<CommunityStats> }>) => {
+      const { GameTitle, stats } = action.payload;
+      if (!state.stats[GameTitle]) {
+        state.stats[GameTitle] = {
           totalPlayers: 0,
           averageRating: 0,
           totalReviews: 0,
@@ -91,7 +91,7 @@ const communitySlice = createSlice({
           currentlyPlaying: 0
         };
       }
-      state.stats[gameTitle] = { ...state.stats[gameTitle], ...stats };
+      state.stats[GameTitle] = { ...state.stats[GameTitle], ...stats };
     },
     
     // Azione per inizializzare con dati di esempio (solo per sviluppo)
@@ -109,7 +109,7 @@ const communitySlice = createSlice({
           Graphics: 4.5,
           Story: 4.5,
           Sound: 5,
-          gameTitle: "The Legend of Zelda: Breath of the Wild"
+          GameTitle: "The Legend of Zelda: Breath of the Wild"
         },
         {
           id: 2,
@@ -122,12 +122,12 @@ const communitySlice = createSlice({
           Graphics: 4,
           Story: 3.5,
           Sound: 4,
-          gameTitle: "The Legend of Zelda: Breath of the Wild"
+          GameTitle: "The Legend of Zelda: Breath of the Wild"
         }
       ];
       
       // Calcoliamo le statistiche in base alle recensioni
-      const gameReviews = state.Reviews.filter(r => r.gameTitle === "The Legend of Zelda: Breath of the Wild");
+      const gameReviews = state.Reviews.filter(r => r.GameTitle === "The Legend of Zelda: Breath of the Wild");
       const averageRating = gameReviews.reduce((sum, r) => sum + r.Rating, 0) / gameReviews.length;
       
       state.stats["The Legend of Zelda: Breath of the Wild"] = {

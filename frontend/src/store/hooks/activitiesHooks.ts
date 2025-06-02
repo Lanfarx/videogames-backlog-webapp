@@ -1,62 +1,118 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { Activity } from '../../types/activity';
+import { useEffect } from 'react';
+import { Activity, ActivityFilters } from '../../types/activity';
 import {
-  setActivities,
-  addActivity,
-  updateActivity,
-  deleteActivity,
-  clearActivities,
-} from '../slice/activitiesSlice';
-import { RootState } from '..';
+  fetchActivities,
+  fetchRecentActivities,
+  fetchActivitiesByGame,
+  fetchActivityStats,
+  createActivity as createActivityThunk,
+  updateActivity as updateActivityThunk,
+  deleteActivity as deleteActivityThunk
+} from '../thunks/activityThunks';
+import { RootState, AppDispatch } from '..';
 
 export function useAllActivities() {
-  return useSelector((state: RootState) => state.activities.activities);
+  const dispatch = useDispatch<AppDispatch>();
+  const activities = useSelector((state: RootState) => state.activities.activities);
+  const loading = useSelector((state: RootState) => state.activities.loading);
+  const activitiesLoaded = useSelector((state: RootState) => state.activities.activitiesLoaded);
+
+  useEffect(() => {
+    if (!activitiesLoaded && !loading) {
+      dispatch(fetchActivities({}));
+    }
+  }, [dispatch, activitiesLoaded, loading]);
+
+  return { activities, loading };
 }
 
 export function useActivityById(id: number | string): Activity | undefined {
-  return useSelector((state: RootState) => state.activities.activities.find(a => a.id === id));
+  const { activities } = useAllActivities();
+  return activities.find((a: Activity) => a.id === id);
 }
 
-export function useAllActivitiesByGameId(gameId: number | string): Activity[] {
-  return useSelector((state: RootState) => state.activities.activities.filter(a => a.gameId === gameId));
-}
+export function useAllActivitiesByGameId(GameId: number | string): { activities: Activity[]; loading: boolean } {
+  const dispatch = useDispatch<AppDispatch>();
+  const allActivities = useSelector((state: RootState) => state.activities.activities);
+  const activitiesByGame = useSelector((state: RootState) => state.activities.activitiesByGame[Number(GameId)]);
+  const loading = useSelector((state: RootState) => state.activities.loading);
 
+  useEffect(() => {
+    if (!activitiesByGame && !loading) {
+      dispatch(fetchActivitiesByGame(Number(GameId)));
+    }
+  }, [dispatch, GameId, activitiesByGame, loading]);
+
+  // Filtra le attività locali se non abbiamo dati specifici per il gioco
+  const activities = activitiesByGame || allActivities.filter((a: Activity) => a.GameId === Number(GameId));
+
+  return { activities, loading };
+}
+ 
 export function useAllActivitiesByType(type: string): Activity[] {
-  return useSelector((state: RootState) => state.activities.activities.filter(a => a.type === type));
+  const { activities } = useAllActivities();
+  return activities.filter((a: Activity) => a.Type === type);
 }
 
 // Hook per attività recenti
-export function useRecentActivities(count: number) {
-  const activities = useAllActivities();
-  // Ordina le attività per timestamp (dalla più recente alla più vecchia)
-  const sortedActivities = [...activities].sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-  return sortedActivities.slice(0, count);
+export function useRecentActivities(count: number = 10): { activities: Activity[]; loading: boolean } {
+  const dispatch = useDispatch<AppDispatch>();
+  const recentActivities = useSelector((state: RootState) => state.activities.recentActivities);
+  const loading = useSelector((state: RootState) => state.activities.loading);
+  const recentActivitiesLoaded = useSelector((state: RootState) => state.activities.recentActivitiesLoaded);
+
+  useEffect(() => {
+    if (!recentActivitiesLoaded && !loading) {
+      dispatch(fetchRecentActivities(count));
+    }
+  }, [dispatch, count, recentActivitiesLoaded, loading]);
+
+  return { 
+    activities: recentActivities.slice(0, count), 
+    loading 
+  };
 }
 
 // Hook per attività filtrate per anno
-export function useAllActivitiesByYear(year: number) {
-  const activities = useAllActivities();
-  return activities.filter(a => new Date(a.timestamp).getFullYear() === year);
+export function useAllActivitiesByYear(year: number): Activity[] {
+  const { activities } = useAllActivities();
+  return activities.filter((a: Activity) => new Date(a.Timestamp).getFullYear() === year);
 }
 
 // Hook per attività filtrate per mese e anno
-export function useAllActivitiesByMonth(year: number, month: number) {
-  const activities = useAllActivities();
-  return activities.filter(a => {
-    const d = new Date(a.timestamp);
+export function useAllActivitiesByMonth(year: number, month: number): Activity[] {
+  const { activities } = useAllActivities();
+  return activities.filter((a: Activity) => {
+    const d = new Date(a.Timestamp);
     return d.getFullYear() === year && d.getMonth() === month;
   });
 }
 
-export function useAllActivitiesActions() {
-  const dispatch = useDispatch();
-  return {
-    setActivities: (activities: Activity[]) => dispatch(setActivities(activities)),
-    addActivity: (activity: Activity) => dispatch(addActivity(activity)),
-    updateActivity: (activity: Activity) => dispatch(updateActivity(activity)),
-    deleteActivity: (id: number | string) => dispatch(deleteActivity(id)),
-    clearActivities: () => dispatch(clearActivities()),
-  };
+// Hook per statistiche attività
+export function useActivityStats(year?: number): { stats: Record<string, number>; loading: boolean } {
+  const dispatch = useDispatch<AppDispatch>();
+  const stats = useSelector((state: RootState) => state.activities.stats);
+  const loading = useSelector((state: RootState) => state.activities.loading);
+
+  useEffect(() => {
+    dispatch(fetchActivityStats(year));
+  }, [dispatch, year]);
+
+  return { stats, loading };
 }
+
+// Hook per lo stato di caricamento e errori
+export function useActivitiesState() {
+  return useSelector((state: RootState) => ({
+    loading: state.activities.loading,
+    error: state.activities.error,
+    pagination: state.activities.pagination,
+    activitiesLoaded: state.activities.activitiesLoaded,
+    recentActivitiesLoaded: state.activities.recentActivitiesLoaded
+  }));
+}
+
+// Le funzioni di gestione locale delle attività (useAllActivitiesActions) 
+// sono state rimosse in favore dell'utilizzo diretto dei thunk asincroni
+// per le operazioni CRUD tramite backend API

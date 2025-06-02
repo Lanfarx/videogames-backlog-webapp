@@ -3,11 +3,11 @@ import { Users, Clock, Trophy, Gamepad2 } from "lucide-react";
 import { useCommunityStatsByGameAggregated } from "../../../store/hooks/communityHooks";
 
 interface CommunityStatsProps {
-  gameTitle: string;
+  GameTitle: string;
 }
 
-const CommunityStats: React.FC<CommunityStatsProps> = ({ gameTitle }) => {
-  const stats = useCommunityStatsByGameAggregated(gameTitle);
+const CommunityStats: React.FC<CommunityStatsProps> = ({ GameTitle }) => {
+  const stats = useCommunityStatsByGameAggregated(GameTitle);
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl px-8 py-6 mb-8">

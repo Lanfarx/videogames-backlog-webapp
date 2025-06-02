@@ -10,17 +10,16 @@ import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
 import { useStatusData } from '../../utils/statusUtils';
-import ActivityHistoryPopover from '../../components/game/ui/ActivityHistoryPopover';
+import AllActivitiesHistoryPopover from '../../components/ui/AllActivitiesHistoryPopover';
 import { History } from 'lucide-react';
 
 
 const DashboardPage: React.FC = () => {
     const { stats, loading, error } = useGamesStats();
     const allGames = useAllGames();
-    const recentActivities = useRecentActivities(5);
-    const allRecentActivities = useRecentActivities(100);
+    const { activities: recentActivities, loading: recentLoading } = useRecentActivities(5);
     const StatusData = useStatusData();
-    const [showHiStory, setShowHiStory] = React.useState(false);
+    const [showHistory, setShowHistory] = React.useState(false);
 
     // Usa la funzione centralizzata per la distribuzione piattaforme
     const PlatformData = generatePlatformDistributionData(allGames)
@@ -81,16 +80,12 @@ const DashboardPage: React.FC = () => {
                         <Clock className="h-5 w-5 text-accent-primary mr-2" />
                         Attività Recente
                       </h2>
-                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHiStory(true)}>
+                      <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
                         <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
                         <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
-                      </div>
-                    </div>
-                    {showHiStory && (
-                      <ActivityHistoryPopover
-                        activities={allRecentActivities}
-                        onClose={() => setShowHiStory(false)}
-                        gameTitle="Tutta la libreria"
+                      </div>                    </div>                    {showHistory && (
+                      <AllActivitiesHistoryPopover
+                        onClose={() => setShowHistory(false)}
                       />
                     )}
                     <RecentActivitiesList 

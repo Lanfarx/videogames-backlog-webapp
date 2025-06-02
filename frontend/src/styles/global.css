@@ -45,9 +45,9 @@
   --status-abandoned: 239, 68, 68;     /* #EF4444 */
   --status-platinum:  192, 132, 252;   /* #C084FC  */
   /* Variabili per activity color */
-  --activity-played: var(--status-InProgress);
-  --activity-added: var(--status-NotStarted);
-  --activity-rated: 245, 158, 11;    /* #F59E0B */
+  --activity-Played: var(--status-InProgress);
+  --activity-Added: var(--status-NotStarted);
+  --activity-Rated: 245, 158, 11;    /* #F59E0B */
   --activity-Completed: var(--status-Completed);
   --activity-Abandoned: var(--status-Abandoned);
   --activity-Platinum: var(--status-Platinum);

@@ -27,7 +27,7 @@ const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities,
                             
                             {/* Icona accanto alla timeline */}
                             <div className="flex items-center justify-center ml-4 mr-4">
-                                {getActivityIcon(activity.type)}
+                                {getActivityIcon(activity.Type)}
                             </div>
                             
                             {/* Contenuto testuale */}
@@ -36,7 +36,7 @@ const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities,
                                     {getActivitytext(activity)}
                                 </div>
                                 <div className="text-xs text-text-secondary font-['Roboto'] mt-0.5">
-                                    {formatRelativeTime(activity.timestamp)}
+                                    {formatRelativeTime(activity.Timestamp)}
                                 </div>
                             </div>
                         </div>

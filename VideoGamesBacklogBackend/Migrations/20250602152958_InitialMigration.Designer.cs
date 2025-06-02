@@ -12,8 +12,8 @@ using VideoGamesBacklogBackend.Data;
 namespace VideoGamesBacklogBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250530170838_Initial")]
-    partial class Initial
+    [Migration("20250602152958_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -219,7 +219,6 @@ namespace VideoGamesBacklogBackend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PlatinumDate")
@@ -234,8 +233,8 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<string>("PurchaseDate")
                         .HasColumnType("text");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Rating")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("ReleaseYear")
                         .HasColumnType("integer");
@@ -448,20 +447,20 @@ namespace VideoGamesBacklogBackend.Migrations
                                 .IsRequired()
                                 .HasColumnType("text");
 
-                            b1.Property<int>("Gameplay")
-                                .HasColumnType("integer");
+                            b1.Property<decimal>("Gameplay")
+                                .HasColumnType("numeric");
 
-                            b1.Property<int>("Graphics")
-                                .HasColumnType("integer");
+                            b1.Property<decimal>("Graphics")
+                                .HasColumnType("numeric");
 
                             b1.Property<bool?>("IsPublic")
                                 .HasColumnType("boolean");
 
-                            b1.Property<int>("Sound")
-                                .HasColumnType("integer");
+                            b1.Property<decimal>("Sound")
+                                .HasColumnType("numeric");
 
-                            b1.Property<int>("Story")
-                                .HasColumnType("integer");
+                            b1.Property<decimal>("Story")
+                                .HasColumnType("numeric");
 
                             b1.Property<string>("Text")
                                 .IsRequired()

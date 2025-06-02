@@ -11,6 +11,7 @@ import {
   updateGameStatusThunk,
   updateGamePlaytimeThunk,
   deleteGameThunk,
+  deleteAllGamesThunk,
   fetchComments,
   addCommentThunk,
   deleteCommentThunk,
@@ -181,29 +182,29 @@ export function useAllGamesTitleWithRating(title: string): Game[] {
 }
 
 // Hook per commenti
-export function useGameComments(gameId: number) {
+export function useGameComments(GameId: number) {
   const dispatch = useAppDispatch();
-  const game = useGameById(gameId);
+  const game = useGameById(GameId);
   const Comments = game?.Comments || [];
   
   const loadComments = useCallback(() => {
-    dispatch(fetchComments(gameId));
-  }, [dispatch, gameId]);
+    dispatch(fetchComments(GameId));
+  }, [dispatch, GameId]);
   
   const addComment = useCallback(async (comment: GameComment) => {
-    const result = await dispatch(addCommentThunk({ gameId, comment }));
+    const result = await dispatch(addCommentThunk({ GameId, comment }));
     return result;
-  }, [dispatch, gameId]);
+  }, [dispatch, GameId]);
   
   const deleteComment = useCallback(async (commentId: number) => {
-    const result = await dispatch(deleteCommentThunk({ gameId, commentId }));
+    const result = await dispatch(deleteCommentThunk({ GameId, commentId }));
     return result;
-  }, [dispatch, gameId]);
+  }, [dispatch, GameId]);
   
   const updateComment = useCallback(async (commentId: number, comment: GameComment) => {
-    const result = await dispatch(updateCommentThunk({ gameId, commentId, comment }));
+    const result = await dispatch(updateCommentThunk({ GameId, commentId, comment }));
     return result;
-  }, [dispatch, gameId]);
+  }, [dispatch, GameId]);
   
   return { Comments, loadComments, addComment, deleteComment, updateComment };
 }
@@ -231,21 +232,25 @@ export function useGameActions() {
     const result = await dispatch(updateGamePlaytimeThunk({ id, hoursPlayed }));
     return result;
   }, [dispatch]);
-  
-  const remove = useCallback(async (id: number) => {
+    const remove = useCallback(async (id: number) => {
     const result = await dispatch(deleteGameThunk(id));
     return result;
   }, [dispatch]);
 
-  return { add, update, updateStatus, updatePlaytime, remove };
+  const removeAll = useCallback(async () => {
+    const result = await dispatch(deleteAllGamesThunk());
+    return result;
+  }, [dispatch]);
+
+  return { add, update, updateStatus, updatePlaytime, remove, removeAll };
 }
 
 // Hook specifico per azioni di aggiornamento dello status
 export function useGameStatusActions() {
   const dispatch = useAppDispatch();
   
-  const updateStatus = useCallback(async (gameId: number, status: string) => {
-    const result = await dispatch(updateGameStatusThunk({ id: gameId, status }));
+  const updateStatus = useCallback(async (GameId: number, status: string) => {
+    const result = await dispatch(updateGameStatusThunk({ id: GameId, status }));
     return result;
   }, [dispatch]);
 
@@ -256,8 +261,8 @@ export function useGameStatusActions() {
 export function useGamePlaytimeActions() {
   const dispatch = useAppDispatch();
   
-  const updatePlaytime = useCallback(async (gameId: number, hoursPlayed: number) => {
-    const result = await dispatch(updateGamePlaytimeThunk({ id: gameId, hoursPlayed }));
+  const updatePlaytime = useCallback(async (GameId: number, hoursPlayed: number) => {
+    const result = await dispatch(updateGamePlaytimeThunk({ id: GameId, hoursPlayed }));
     return result;
   }, [dispatch]);
 

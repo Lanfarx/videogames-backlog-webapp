@@ -99,24 +99,29 @@ export const deleteGame = async (id: number): Promise<void> => {
   await apiClient.delete(`${API_URL}/${id}`);
 };
 
+export const deleteAllGames = async (): Promise<{ deletedCount: number; message: string }> => {
+  const res = await apiClient.delete(`${API_URL}/all`);
+  return res.data;
+};
+
 // Commenti
 
-export const getComments = async (gameId: number): Promise<GameComment[]> => {
-  const res = await apiClient.get(`${API_URL}/${gameId}/Comments`);
+export const getComments = async (GameId: number): Promise<GameComment[]> => {
+  const res = await apiClient.get(`${API_URL}/${GameId}/Comments`);
   return Array.isArray(res.data) ? res.data.map(mapCommentFromApi) : [];
 };
 
-export const addComment = async (gameId: number, comment: GameComment): Promise<GameComment> => {
-  const res = await apiClient.post(`${API_URL}/${gameId}/Comments`, comment);
+export const addComment = async (GameId: number, comment: GameComment): Promise<GameComment> => {
+  const res = await apiClient.post(`${API_URL}/${GameId}/Comments`, comment);
   return mapCommentFromApi(res.data);
 };
 
-export const deleteComment = async (gameId: number, commentId: number): Promise<void> => {
-  await apiClient.delete(`${API_URL}/${gameId}/Comments/${commentId}`);
+export const deleteComment = async (GameId: number, commentId: number): Promise<void> => {
+  await apiClient.delete(`${API_URL}/${GameId}/Comments/${commentId}`);
 };
 
-export const updateComment = async (gameId: number, commentId: number, comment: GameComment): Promise<GameComment> => {
-  const res = await apiClient.put(`${API_URL}/${gameId}/Comments/${commentId}`, comment);
+export const updateComment = async (GameId: number, commentId: number, comment: GameComment): Promise<GameComment> => {
+  const res = await apiClient.put(`${API_URL}/${GameId}/Comments/${commentId}`, comment);
   return mapCommentFromApi(res.data);
 };
 
@@ -139,5 +144,27 @@ export const getGameStats = async (): Promise<{
     abandoned: res.data.abandoned,
     platinum: res.data.platinum,
     totalHours: res.data.totalHours
+  };
+};
+
+// Giochi in corso paginati
+export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number = 6): Promise<{
+  games: any[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}> => {
+  const res = await apiClient.get(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
+  return {
+    games: res.data.games,
+    currentPage: res.data.currentPage,
+    totalPages: res.data.totalPages,
+    totalItems: res.data.totalItems,
+    pageSize: res.data.pageSize,
+    hasNextPage: res.data.hasNextPage,
+    hasPreviousPage: res.data.hasPreviousPage
   };
 };

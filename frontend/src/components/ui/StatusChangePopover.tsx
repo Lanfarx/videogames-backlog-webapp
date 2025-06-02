@@ -3,7 +3,7 @@ import { GameStatus } from '../../types/game';
 import { Status_OPTIONS } from '../../constants/gameConstants';
 
 interface StatusChangePopoverProps {
-  gameId: number; // aggiunto id gioco
+  GameId: number; // aggiunto id gioco
   currentStatus: GameStatus;
   onStatusChange?: (newStatus: GameStatus) => void;
   onCancel: () => void;
@@ -11,7 +11,7 @@ interface StatusChangePopoverProps {
 }
 
 const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({ 
-  gameId,
+  GameId,
   currentStatus, 
   onStatusChange, 
   onCancel,

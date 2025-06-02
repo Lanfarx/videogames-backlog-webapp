@@ -7,7 +7,7 @@ import CatalogSortControls from "../../components/catalog/CatalogSortControls";
 import CatalogSearchBar from "../../components/catalog/CatalogSearchBar";
 import { useAllCommunityRatings } from "../../store/hooks/communityHooks";
 import Pagination from "../../components/ui/Pagination";
-import { getPaginatedGames } from '../../store/services/rawgService';
+import { getPaginatedGames, getGameDetails } from '../../store/services/rawgService';
 import { useNavigate } from "react-router-dom";
 
 const SORT_OPTIONS = [
@@ -65,7 +65,7 @@ const CatalogPage: React.FC = () => {
       search: search || undefined,
       ordering: sortBy === 'title' ? (sortOrder === 'asc' ? 'name' : '-name')
         : sortBy === 'ReleaseYear' ? (sortOrder === 'asc' ? 'released' : '-released')
-        : sortBy === 'Metacritic' ? (sortOrder === 'asc' ? 'Metacritic' : '-Metacritic')
+        : sortBy === 'Metacritic' ? (sortOrder === 'asc' ? 'metacritic' : '-metacritic')
         : undefined,
       Platforms: '1,4,7,18,22',
     })
@@ -80,13 +80,13 @@ const CatalogPage: React.FC = () => {
   }, [currentPage, gamesPerPage, search, sortBy, sortOrder, columns]);
 
   // Mappa solo i dati necessari per CatalogGameCard
-  const mappedGames = apiGames.map((game: any) => ({
-    id: String(game.id), // id RAWG come stringa
-    title: game.name,
-    CoverImage: game.background_image || "/placeholder.svg",
-    ReleaseYear: game.released ? new Date(game.released).getFullYear() : 0,
-    Genres: game.Genres?.map((g: any) => g.name) || [],
-    Metacritic: game.Metacritic,
+  const mappedGames = apiGames.map((rawgGame: any) => ({
+    id: String(rawgGame.id), // id RAWG come stringa
+    Title: rawgGame.name,
+    CoverImage: rawgGame.background_image || "/placeholder.svg",
+    ReleaseYear: rawgGame.released ? new Date(rawgGame.released).getFullYear() : 0,
+    Genres: rawgGame.genres?.map((g: any) => g.name) || [],
+    Metacritic: rawgGame.metacritic,
   }));
 
   // Stato per gestire la navigazione con titolo
@@ -101,10 +101,21 @@ const CatalogPage: React.FC = () => {
 
   // Responsive grid dinamica: 6 colonne su 2xl, 5 su xl, 4 su lg, 3 su md, 2 su sm, 1 su base
   const gridClass = `grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`;
-
-  const handleAddToLibrary = (game: any) => {
-    setPrefillGame(game);
-    setIsAddGameModalOpen(true);
+  const handleAddToLibrary = async (game: any) => {
+    try {
+      setIsLoading(true);
+      // Ottieni i dettagli completi del gioco dall'API RAWG
+      const gameDetails = await getGameDetails(game.id.toString());
+      setPrefillGame(gameDetails);
+      setIsAddGameModalOpen(true);
+    } catch (error) {
+      console.error('Errore nel caricamento dei dettagli del gioco:', error);
+      // Fallback: usa i dati base del gioco
+      setPrefillGame(game);
+      setIsAddGameModalOpen(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -142,7 +153,7 @@ const CatalogPage: React.FC = () => {
                   <CatalogGameCard
                     key={game.id}
                     game={game}
-                    isInLibrary={userGames.some(g => g.Title === game.title)}
+                    isInLibrary={userGames.some(g => g.Title === game.Title)}
                     onAddToLibrary={() => handleAddToLibrary(game)}
                     onInfoClick={setSelectedGameId}
                   />

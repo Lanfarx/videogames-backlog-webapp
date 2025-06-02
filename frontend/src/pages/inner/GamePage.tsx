@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {useGameComments, useGameActions, useGameByTitle, useLoadSingleGameByTitle } from '../../store/hooks/gamesHooks';
-import { useAllActivitiesByGameId, useAllActivitiesActions } from '../../store/hooks/activitiesHooks';
-import { createStatusChangeActivity, handlePlaytimeUpdate } from '../../utils/activityUtils';
+import { useAllActivitiesByGameId } from '../../store/hooks/activitiesHooks';
 
 import { Game, GameComment, GameStatus, GameReview } from '../../types/game';
 import GameBanner from '../../components/game/GameBanner';
@@ -17,14 +16,15 @@ export default function GamePage() {
   const { title } = useParams<{ title: string }>();
   const navigate = useNavigate();
   const decodedTitle = title ? decodeURIComponent(title.replace(/_/g, ' ')) : '';
-  
-  // Aggiungiamo l'hook per caricare il gioco
+    // Aggiungiamo l'hook per caricare il gioco
   const { game, loading: gameLoading } = useLoadSingleGameByTitle(decodedTitle);
   
-  const { addActivity } = useAllActivitiesActions();
-  const activities = useAllActivitiesByGameId(game?.id ?? -1);
+  // TEMPORANEAMENTE DISABILITATO - Previene spam di chiamate API per le attività
+  // const { activities, loading: activitiesLoading } = useAllActivitiesByGameId(game?.id ?? -1);
+  const activities: any[] = []; // Array vuoto temporaneo
+  const activitiesLoading = false;
   // Nuova logica commenti asincrona con prevenzione flooding
-  const { Comments, loadComments, addComment, deleteComment, updateComment } = useGameComments(game?.id ?? -1);
+  const { Comments, addComment, deleteComment, updateComment } = useGameComments(game?.id ?? -1);
   // Nuova logica CRUD giochi
   const { update, remove } = useGameActions();
   
@@ -56,29 +56,24 @@ export default function GamePage() {
         </div>
       </div>
     );  
-  }
-
-  // Gestione delle azioni
-  const handleChangeStatus = (newStatus: GameStatus) => {
-    if (game.Status === newStatus) return;    // Controlli di business:
+  }  // Gestione delle azioni
+  const handleChangeStatus = async (newStatus: GameStatus) => {
+    if (game.Status === newStatus) return;    
+    
+    // Controlli di business:
     // 1. Non permettere il cambio a "InProgress" se non ci sono ore giocate
     if (newStatus === 'InProgress' && game.HoursPlayed === 0) {
       console.warn('Non è possibile impostare lo stato "In corso" per un gioco senza tempo di gioco registrato.');
       return;
     }
-      // 2. Non permettere di impostare "NotStarted" se il gioco ha già tempo di gioco registrato
+    // 2. Non permettere di impostare "NotStarted" se il gioco ha già tempo di gioco registrato
     if (newStatus === 'NotStarted' && game.HoursPlayed > 0) {
       console.warn('Non è possibile impostare lo stato "Da iniziare" per un gioco con tempo di gioco registrato.');
       return;
-    }    // Stato precedente per la funzione di creazione attività
-    const prevStatus = game.Status;
+    }    
     
-    // Aggiorna lo stato nel Redux store
+    // Aggiorna lo stato nel Redux store - il backend creerà automaticamente l'attività
     update(game.id, { Status: newStatus });
-    
-    // Crea e aggiungi l'attività utilizzando la funzione di utilità
-    const activity = createStatusChangeActivity(game, newStatus, prevStatus);
-    addActivity(activity);
   };
   const handleEditGame = (updatedGameDetails: Partial<Game>) => {
     update(game.id, updatedGameDetails);
@@ -89,15 +84,10 @@ export default function GamePage() {
   const handleDeleteGame = () => {
     remove(game.id);
     navigate('/library');
-  };
-
-  const handleUpdatePlaytime = (newHours: number) => {
+  };  const handleUpdatePlaytime = async (newHours: number) => {
+    // Aggiorna il playtime nel Redux store - il backend creerà automaticamente l'attività
     update(game.id, { HoursPlayed: newHours });
-    
-    // Usa la funzione di utilità per gestire la creazione di attività
-    const result = handlePlaytimeUpdate(game, newHours);
-    addActivity(result.activity);
-  };  // Commenti asincroni
+  };// Commenti asincroni
   const handleAddComment = (text: string) => {
     const today = new Date();
     const newComment: GameComment = {
@@ -143,13 +133,23 @@ export default function GamePage() {
             <div className="w-full lg:w-[60%] px-4 mb-8">              {/* Note e Recensione */}
               <NotesReviewCard 
                 game={game}            
-              />
-
-              {/* Timeline di Gioco */}
+              />              {/* Timeline di Gioco - TEMPORANEAMENTE DISABILITATA */}
+              {/* 
               <GameTimelineCard 
                 activities={activities} 
                 game={game} 
               />
+              */}
+              <div className="bg-primaryBg border border-border-color rounded-xl p-6 mt-6">
+                <div className="text-center py-8">
+                  <h3 className="font-primary font-semibold text-xl text-text-primary mb-2">
+                    Timeline di Gioco
+                  </h3>
+                  <p className="text-text-secondary font-secondary">
+                    Funzionalità temporaneamente disabilitata per ottimizzazioni.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Colonna destra (40%) */}
