@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\models\\activity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:models\\activity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\controllers\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:controllers\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\services\\gameservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:services\\gameservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\models\\activity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|solutionrelative:models\\activity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9FDBAC74-CDCC-4572-948A-97958CD05541}|VideoGamesBacklogBackend.csproj|c:\\users\\loryn\\documents\\github\\videogames-backlog-webapp\\videogamesbacklogbackend\\controllers\\gamescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -39,19 +43,32 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "NotificationController.cs",
+              "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Controllers\\NotificationController.cs",
+              "RelativeDocumentMoniker": "Controllers\\NotificationController.cs",
+              "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Controllers\\NotificationController.cs",
+              "RelativeToolTip": "Controllers\\NotificationController.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAowIsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-03T12:51:50.622Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Activity.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\Activity.cs",
               "RelativeDocumentMoniker": "Models\\Activity.cs",
               "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\Activity.cs",
               "RelativeToolTip": "Models\\Activity.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-02T08:43:48.452Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Models\\User.cs",
               "RelativeDocumentMoniker": "Models\\User.cs",
@@ -63,7 +80,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "ProfileService.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Services\\ProfileService.cs",
               "RelativeDocumentMoniker": "Services\\ProfileService.cs",
@@ -75,7 +92,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
@@ -93,14 +110,14 @@
               "RelativeDocumentMoniker": "Services\\GameService.cs",
               "ToolTip": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Services\\GameService.cs",
               "RelativeToolTip": "Services\\GameService.cs",
-              "ViewState": "AgIAAGYBAAAAAAAAAAAjwHwBAABCAAAAAAAAAA==",
+              "ViewState": "AgIAAOcAAAAAAAAAAAAtwAUBAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-30T17:02:36.501Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "GamesController.cs",
               "DocumentMoniker": "C:\\Users\\loryn\\Documents\\GitHub\\videogames-backlog-webapp\\VideoGamesBacklogBackend\\Controllers\\GamesController.cs",
               "RelativeDocumentMoniker": "Controllers\\GamesController.cs",
@@ -108,8 +125,7 @@
               "RelativeToolTip": "Controllers\\GamesController.cs",
               "ViewState": "AgIAAEsAAAAAAAAAAAAwwHIAAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T08:44:54.236Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T08:44:54.236Z"
             }
           ]
         }

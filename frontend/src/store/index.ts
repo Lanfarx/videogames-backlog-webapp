@@ -3,6 +3,8 @@ import userReducer from './slice/userSlice';
 import gamesReducer from './slice/gamesSlice';
 import activitiesReducer from './slice/activitiesSlice';
 import communityReducer from './slice/communitySlice';
+import friendshipReducer from './slice/friendshipSlice';
+import notificationReducer from './slice/notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +12,8 @@ export const store = configureStore({
     games: gamesReducer,
     activities: activitiesReducer,
     community: communityReducer,
+    friendship: friendshipReducer,
+    notification: notificationReducer,
   },
 });
 

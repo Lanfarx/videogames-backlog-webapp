@@ -6,19 +6,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
-import { getToken } from '../../../utils/getToken';
 
 const PrivacySettings: React.FC = () => {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
-  const token = getToken()
 
   if (!userProfile) return <div>Caricamento...</div>;
 
   // Helper per update e dispatch
   const handleProfileUpdate = async (newProfile: typeof userProfile) => {
-    if (!token) return;
-    const updated = await updateProfile(newProfile, token);
+    const updated = await updateProfile(newProfile);
     dispatch(setUserProfile(updated));
   };
 

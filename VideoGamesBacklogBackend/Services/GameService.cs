@@ -256,6 +256,13 @@ namespace VideoGamesBacklogBackend.Services
         public async Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            var stats = GetUserStatsAsync(userId).Result;
+
+            return stats;
+        }
+
+        public async Task<GameStatsDto> GetUserStatsAsync(int userId)
+        {
             var games = await _dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
 
             var stats = new GameStatsDto

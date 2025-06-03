@@ -27,11 +27,10 @@ const LoginPage: React.FC = () => {
       } else {
         sessionStorage.setItem('token', res.data.token);
         localStorage.removeItem('token');
-      }
-      // Aggiorna subito lo stato globale utente
+      }      // Aggiorna subito lo stato globale utente
       const token = getToken();
       if (token) {
-        const profile = await getProfile(token);
+        const profile = await getProfile();
         dispatch(setUserProfile(profile));
       }
       navigate('/');

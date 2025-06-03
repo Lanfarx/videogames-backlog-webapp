@@ -42,13 +42,12 @@ const ProfilePage = () => {
   useEffect(() => {
     setActivities(activitiesData);
   }, [activitiesData]);
-
   // Carica il profilo utente all'avvio della pagina SOLO se non già presente
   useEffect(() => {
     if (!userProfile) {
       const token = getToken();
       if (token) {
-        getProfileFull(token).then(profile => {
+        getProfileFull().then(profile => {
           dispatch(setUserProfile(profile));
           setIsProfilePrivate(profile.privacySettings?.isPrivate ?? false);
           setPrivacySettings({

@@ -7,7 +7,6 @@ import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
 import { changePassword } from '../../../store/services/passwordService';
 import type { UserProfile } from '../../../types/profile';
-import { getToken } from '../../../utils/getToken';
 import Input from '../../auth/Input';
 import PasswordStrengthBar from '../../auth/PasswordStrengthBar';
 
@@ -37,24 +36,19 @@ const ProfileSettings: React.FC = () => {
   useEffect(() => {
     setProfile(userProfile);
   }, [userProfile]);
-
   // Gestisce i cambiamenti nei campi del form
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (!profile) return;
     const updatedProfile = { ...profile, [name]: value };
     setProfile(updatedProfile);
-    const token = getToken()
-    if (token) {
-      try {
-        const updated = await updateProfile(updatedProfile, token);
-        dispatch(setUserProfile(updated));
-      } catch (err) {
-        alert('Errore durante il salvataggio del profilo.');
-      }
+    try {
+      const updated = await updateProfile(updatedProfile);
+      dispatch(setUserProfile(updated));
+    } catch (err) {
+      alert('Errore durante il salvataggio del profilo.');
     }
   };
-
   // Gestisce il caricamento dell'avatar
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && profile) {
@@ -64,14 +58,11 @@ const ProfileSettings: React.FC = () => {
         if (target && target.result) {
           const updatedProfile = { ...profile, avatar: target.result as string };
           setProfile(updatedProfile);
-          const token = getToken()
-          if (token) {
-            try {
-              const updated = await updateProfile(updatedProfile, token);
-              dispatch(setUserProfile(updated));
-            } catch (err) {
-              alert('Errore durante il salvataggio del profilo.');
-            }
+          try {
+            const updated = await updateProfile(updatedProfile);
+            dispatch(setUserProfile(updated));
+          } catch (err) {
+            alert('Errore durante il salvataggio del profilo.');
           }
         }
       };
@@ -124,17 +115,11 @@ const ProfileSettings: React.FC = () => {
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
-  // Gestisce il salvataggio della password
+    // Gestisce il salvataggio della password
   const handleSavePassword = async () => {
     if (validatePassword()) {
-      const token = getToken()
-      if (!token) {
-        setPasswordErrors({ general: 'Sessione scaduta. Effettua di nuovo il login.' });
-        return;
-      }
       try {
-        await changePassword(passwordData.currentPassword, passwordData.newPassword, token);
+        await changePassword(passwordData.currentPassword, passwordData.newPassword);
         setPasswordData({
           currentPassword: '',
           newPassword: '',

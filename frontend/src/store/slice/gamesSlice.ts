@@ -63,6 +63,10 @@ const gamesSlice = createSlice({
       state.stats = null;
       state.statsLoading = false;
       state.statsError = null;
+    },
+    // Azione per invalidare le statistiche quando i giochi cambiano
+    invalidateStats: (state) => {
+      state.stats = null;
     }
   },
   extraReducers: (builder) => {
@@ -120,31 +124,41 @@ const gamesSlice = createSlice({
       .addCase(fetchGameByTitle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Errore nel caricamento';
-      })
-      .addCase(addGame.fulfilled, (state, action) => {
+      })      .addCase(addGame.fulfilled, (state, action) => {
         state.games.push(action.payload);
+        // Invalida le statistiche quando viene aggiunto un gioco
+        state.stats = null;
       })      
       .addCase(updateGameThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
+        // Invalida le statistiche quando viene aggiornato un gioco
+        state.stats = null;
       })      
       .addCase(updateGameStatusThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
+        // Invalida le statistiche quando viene cambiato lo status
+        state.stats = null;
       })
       .addCase(updateGamePlaytimeThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
+        // Invalida le statistiche quando vengono aggiornate le ore
+        state.stats = null;
       })      .addCase(deleteGameThunk.fulfilled, (state, action) => {
         state.games = state.games.filter(g => g.id !== action.payload);
+        // Invalida le statistiche quando viene eliminato un gioco
+        state.stats = null;
       })
       .addCase(deleteAllGamesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
-      })
-      .addCase(deleteAllGamesThunk.fulfilled, (state, action) => {
+      })      .addCase(deleteAllGamesThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.games = [];
+        // Invalida le statistiche quando vengono eliminati tutti i giochi
+        state.stats = null;
       })
       .addCase(deleteAllGamesThunk.rejected, (state, action) => {
         state.loading = false;
@@ -192,5 +206,5 @@ const gamesSlice = createSlice({
   }
 });
 
-export const { resetGamesState } = gamesSlice.actions;
+export const { resetGamesState, invalidateStats } = gamesSlice.actions;
 export default gamesSlice.reducer;

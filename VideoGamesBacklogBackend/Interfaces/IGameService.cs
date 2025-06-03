@@ -14,7 +14,8 @@ namespace VideoGamesBacklogBackend.Interfaces
         Task<Game?> UpdateGameAsync(ClaimsPrincipal userClaims, int gameId, UpdateGameDto updateDto);
         Task<Game?> UpdateGameStatusAsync(ClaimsPrincipal userClaims, int gameId, string status);        Task<Game?> UpdateGamePlaytimeAsync(ClaimsPrincipal userClaims, int gameId, int hoursPlayed);
         Task<bool> DeleteGameAsync(ClaimsPrincipal userClaims, int gameId);
-        Task<int> DeleteAllGamesAsync(ClaimsPrincipal userClaims);Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims);
+        Task<int> DeleteAllGamesAsync(ClaimsPrincipal userClaims);        Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims);
+        Task<GameStatsDto> GetUserStatsAsync(int userId);
         Task<PaginatedGamesDto> GetInProgressGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 6);
         Task<List<GameComment>> GetCommentsAsync(ClaimsPrincipal userClaims, int gameId);
         Task<GameComment?> AddCommentAsync(ClaimsPrincipal userClaims, int gameId, GameComment comment);

@@ -151,3 +151,4 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.pdb
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.genruntimeconfig.cache
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\ref\VideoGamesBacklogBackend.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
