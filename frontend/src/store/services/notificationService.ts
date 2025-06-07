@@ -1,13 +1,12 @@
-
 import axios from 'axios';
 import { Notification } from '../../types/notification';
 import { getToken } from '../../utils/getToken';
 
-const API_BASE_URL = 'http://localhost:5097/api';
+const API_BASE_URL = 'http://localhost:5097/api/notification'; // corretto: senza la 's'
 
 // Crea istanza axios per le notifiche
 const notificationApi = axios.create({
-  baseURL: `${API_BASE_URL}/notifications`,
+  baseURL: API_BASE_URL
 });
 
 // Interceptor per aggiungere automaticamente il token

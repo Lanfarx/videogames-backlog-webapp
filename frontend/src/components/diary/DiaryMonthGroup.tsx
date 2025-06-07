@@ -7,24 +7,29 @@ interface DiaryMonthGroupProps {
   year: number;
   activities: Activity[];
   activeFilters: string[];
+  // Aggiungiamo il contesto del profilo pubblico
+  publicProfile?: {
+    canViewDiary: boolean;
+    isFriend: boolean;
+    isOwnProfile: boolean;
+  };
 }
 
 const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
   month,
-  year,
-  activities,
-  activeFilters
+  year,  activities,
+  activeFilters,
+  publicProfile
 }) => {
   // Filtra le attività per il mese e l'anno corrente
   const monthActivities = activities.filter(activity => {
-    const activityDate = new Date(activity.Timestamp);
-    return activityDate.getMonth() === month && activityDate.getFullYear() === year;
+    const activityDate = new Date(activity.timestamp);    return activityDate.getMonth() === month && activityDate.getFullYear() === year;
   });
 
   // Filtra ulteriormente in base ai filtri attivi
   const filteredActivities = activeFilters.includes('all')
     ? monthActivities
-    : monthActivities.filter(activity => activeFilters.includes(activity.Type));
+    : monthActivities.filter(activity => activeFilters.includes(activity.type));
 
   // Se non ci sono attività dopo il filtraggio, non mostrare il gruppo
   if (filteredActivities.length === 0) {
@@ -33,7 +38,7 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
 
   // Ordina le attività per data (più recenti prima)
   const sortedActivities = [...filteredActivities].sort((a, b) => 
-    new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   // Formatta il nome del mese in italiano
@@ -42,13 +47,13 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
   // Calcola le statistiche del mese
   const stats = {
     total: sortedActivities.length,
-    Completed: sortedActivities.filter(a => a.Type === 'Completed').length,
-    Played: sortedActivities.filter(a => a.Type === 'Played').length,
-    Rated: sortedActivities.filter(a => a.Type === 'Rated').length,
+    Completed: sortedActivities.filter(a => a.type === 'Completed').length,
+    Played: sortedActivities.filter(a => a.type === 'Played').length,
+    Rated: sortedActivities.filter(a => a.type === 'Rated').length,
     hours: sortedActivities
-      .filter(a => a.Type === 'Played' && a.AdditionalInfo)
+      .filter(a => a.type === 'Played' && a.additionalInfo)
       .reduce((total, activity) => {
-        const hoursMatch = activity.AdditionalInfo?.match(/(\d+)\s*ore/);
+        const hoursMatch = activity.additionalInfo?.match(/(\d+)\s*ore/);
         return total + (hoursMatch ? parseInt(hoursMatch[1], 10) : 0);
       }, 0)
   };
@@ -66,15 +71,16 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
           </div>
         </div>
       </div>
-      
-      <div className="space-y-1">
-        {sortedActivities.map(activity => (
-          <DiaryEntry 
-            key={activity.id} 
-            activity={activity} 
-            allActivities={activities}
-          />
-        ))}
+        <div className="space-y-1">        {sortedActivities.map(activity => {
+          return (
+            <DiaryEntry 
+              key={activity.id} 
+              activity={activity} 
+              allActivities={activities}
+              publicProfile={publicProfile}
+            />
+          );
+        })}
       </div>
     </div>
   );

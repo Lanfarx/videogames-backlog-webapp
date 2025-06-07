@@ -50,10 +50,10 @@ namespace VideoGamesBacklogBackend.Dto
         public bool AcceptsFriendRequests { get; set; }
         
         // Stats (if visible)
-        public GameStatsDto? Stats { get; set; }
-        
-        // Friendship info (if any)
+        public GameStatsDto? Stats { get; set; }        // Friendship info (if any)
+        public int? FriendshipId { get; set; }
         public string? FriendshipStatus { get; set; }
         public bool IsFriend { get; set; }
+        public bool IsRequestSender { get; set; }
     }
 }

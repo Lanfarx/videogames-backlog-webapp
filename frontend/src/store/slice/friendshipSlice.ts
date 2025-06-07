@@ -170,42 +170,80 @@ const friendshipSlice = createSlice({
         state.sendingRequest = false;
         // Aggiorna i risultati di ricerca se presenti
         if (state.searchResults) {
-          const userId = action.payload;
-          const userIndex = state.searchResults.users.findIndex(u => u.userId === userId);
+          const userName = action.payload;
+          const userIndex = state.searchResults.users.findIndex(u => u.userName === userName);
           if (userIndex !== -1) {
             state.searchResults.users[userIndex].friendshipStatus = 'Pending';
           }
         }
         // Aggiorna il profilo corrente se presente
-        if (state.currentProfile && state.currentProfile.userId === action.payload) {
+        if (state.currentProfile && state.currentProfile.userName === action.payload) {
           state.currentProfile.friendshipStatus = 'Pending';
         }
       })
       .addCase(sendFriendRequestThunk.rejected, (state) => {
         state.sendingRequest = false;
-      })
-
-      // Accept friend request
+      })      // Accept friend request
       .addCase(acceptFriendRequestThunk.pending, (state) => {
         state.processingRequest = true;
       })
       .addCase(acceptFriendRequestThunk.fulfilled, (state, action) => {
         state.processingRequest = false;
+        // Trova la richiesta pending prima di rimuoverla
+        const pendingRequest = state.pendingRequests.find(req => req.id === action.payload);
+        
         // Rimuovi la richiesta dalla lista pending
         state.pendingRequests = state.pendingRequests.filter(req => req.id !== action.payload);
+        
+        // Aggiorna lo stato dell'utente nei risultati di ricerca invece di rimuoverlo
+        if (state.searchResults && pendingRequest) {
+          const userIndex = state.searchResults.users.findIndex(u => u.userId === pendingRequest.fromUserId);
+          if (userIndex !== -1) {
+            state.searchResults.users[userIndex].friendshipStatus = 'Accepted';
+            state.searchResults.users[userIndex].isFriend = true;
+            // Rimuovi il friendshipId poiché non c'è più una richiesta attiva
+            delete state.searchResults.users[userIndex].friendshipId;
+          }
+        }
+        
+        // Aggiorna il profilo corrente se presente
+        if (state.currentProfile && pendingRequest && state.currentProfile.userId === pendingRequest.fromUserId) {
+          state.currentProfile.friendshipStatus = 'Accepted';
+          state.currentProfile.isFriend = true;
+          delete state.currentProfile.friendshipId;
+        }
       })
       .addCase(acceptFriendRequestThunk.rejected, (state) => {
         state.processingRequest = false;
-      })
-
-      // Reject friend request
+      })      // Reject friend request
       .addCase(rejectFriendRequestThunk.pending, (state) => {
         state.processingRequest = true;
       })
       .addCase(rejectFriendRequestThunk.fulfilled, (state, action) => {
         state.processingRequest = false;
+        // Trova la richiesta pending prima di rimuoverla
+        const pendingRequest = state.pendingRequests.find(req => req.id === action.payload);
+        
         // Rimuovi la richiesta dalla lista pending
         state.pendingRequests = state.pendingRequests.filter(req => req.id !== action.payload);
+        
+        // Aggiorna lo stato dell'utente nei risultati di ricerca invece di rimuoverlo
+        if (state.searchResults && pendingRequest) {
+          const userIndex = state.searchResults.users.findIndex(u => u.userId === pendingRequest.fromUserId);
+          if (userIndex !== -1) {
+            state.searchResults.users[userIndex].friendshipStatus = 'Rejected';
+            state.searchResults.users[userIndex].isFriend = false;
+            // Rimuovi il friendshipId poiché non c'è più una richiesta attiva
+            delete state.searchResults.users[userIndex].friendshipId;
+          }
+        }
+        
+        // Aggiorna il profilo corrente se presente
+        if (state.currentProfile && pendingRequest && state.currentProfile.userId === pendingRequest.fromUserId) {
+          state.currentProfile.friendshipStatus = 'Rejected';
+          state.currentProfile.isFriend = false;
+          delete state.currentProfile.friendshipId;
+        }
       })
       .addCase(rejectFriendRequestThunk.rejected, (state) => {
         state.processingRequest = false;

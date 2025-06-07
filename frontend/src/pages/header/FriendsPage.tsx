@@ -1,21 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Search, UserPlus, Bell, Settings } from 'lucide-react';
-import FriendsList from '../components/friends/FriendsList';
-import FriendRequests from '../components/friends/FriendRequests';
-import UserSearch from '../components/friends/UserSearch';
-import { useFriends, usePendingRequests } from '../store/hooks/friendshipHooks';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Search, Bell, Settings } from 'lucide-react';
+import FriendsList from '../../components/friends/FriendsList';
+import FriendRequests, { FriendRequestsRef } from '../../components/friends/FriendRequests';
+import UserSearch from '../../components/friends/UserSearch';
+import { useFriends, usePendingRequests } from '../../store/hooks/friendshipHooks';
+import { useNavigate } from 'react-router-dom';
+import { FriendsSection, RequestsSubSection } from '../../store/hooks/navigationHooks';
 
 const FriendsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'search'>('friends');
+  const [requestsSubSection, setRequestsSubSection] = useState<RequestsSubSection>('received');
+  const navigate = useNavigate();
+  const friendRequestsRef = useRef<FriendRequestsRef | null>(null);
   
   const { loadFriends } = useFriends();
   const { loadPendingRequests, requests: pendingRequests } = usePendingRequests();
-
   useEffect(() => {
     // Carica i dati iniziali
     loadFriends();
     loadPendingRequests();
   }, [loadFriends, loadPendingRequests]);
+
+  // Listener per eventi di navigazione personalizzati
+  useEffect(() => {
+    const handleNavigation = (event: CustomEvent<{ section: FriendsSection; subSection?: RequestsSubSection }>) => {
+      const { section, subSection } = event.detail;
+      
+      setActiveTab(section);
+      
+      if (section === 'requests' && subSection) {
+        setRequestsSubSection(subSection);
+        // Se il componente FriendRequests è già montato, aggiorna anche il suo stato
+        if (friendRequestsRef.current) {
+          friendRequestsRef.current.setActiveTab(subSection);
+        }
+      }
+    };
+
+    window.addEventListener('navigateToFriendsSection', handleNavigation as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigateToFriendsSection', handleNavigation as EventListener);
+    };
+  }, []);
 
   const pendingRequestsCount = pendingRequests.filter(req => req.status === 'Pending').length;
 
@@ -56,15 +83,9 @@ const FriendsPage: React.FC = () => {
             {/* Azioni rapide */}
             <div className="flex gap-3">
               <button
-                onClick={() => setActiveTab('search')}
-                className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2"
-              >
-                <UserPlus className="h-4 w-4" />
-                Trova Amici
-              </button>
-              
-              <button
-                onClick={() => {/* TODO: Implementare impostazioni privacy */}}
+                onClick={() => {
+                  navigate('/settings');
+                }}
                 className="px-4 py-2 bg-secondary-bg text-text-primary rounded-lg hover:bg-hover-color transition-colors flex items-center gap-2"
               >
                 <Settings className="h-4 w-4" />
@@ -106,11 +127,12 @@ const FriendsPage: React.FC = () => {
             <div>
               <FriendsList />
             </div>
-          )}
-
-          {activeTab === 'requests' && (
+          )}          {activeTab === 'requests' && (
             <div>
-              <FriendRequests />
+              <FriendRequests 
+                ref={friendRequestsRef}
+                initialActiveTab={requestsSubSection}
+              />
             </div>
           )}
 

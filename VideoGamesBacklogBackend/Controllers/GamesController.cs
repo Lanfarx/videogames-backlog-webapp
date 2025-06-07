@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using VideoGamesBacklogBackend.Interfaces;
 using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Dto;
@@ -15,13 +16,18 @@ namespace VideoGamesBacklogBackend.Controllers
         public GamesController(IGameService gameService)
         {
             _gameService = gameService;
-        }
-
-        [HttpGet]
+        }        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var games = await _gameService.GetAllGamesAsync(User);
             return Ok(games);
+        }
+
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 12, [FromQuery] string? filters = null, [FromQuery] string? sortBy = null, [FromQuery] string? sortOrder = null, [FromQuery] string? search = null)
+        {
+            var result = await _gameService.GetGamesPaginatedAsync(User, page, pageSize, filters, sortBy, sortOrder, search);
+            return Ok(result);
         }        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -38,7 +44,33 @@ namespace VideoGamesBacklogBackend.Controllers
             var game = await _gameService.GetGameByTitleAsync(User, decodedTitle);
             if (game == null) return NotFound();
             return Ok(game);
+        }        /// <summary>
+        /// Recupera informazioni pubbliche di base su un gioco per ID
+        /// Utilizzato per visualizzare dati sui giochi nelle attività di altri utenti
+        /// Rispetta le impostazioni di privacy per la visualizzazione delle recensioni
+        /// </summary>
+        [HttpGet("public/{id}")]
+        public async Task<IActionResult> GetPublicGameInfo(int id)
+        {            // Ottieni l'ID dell'utente corrente (se autenticato)
+            int? currentUserId = null;
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out int userId))
+                {
+                    currentUserId = userId;
+                }
+            }
+            
+            var gameInfo = await _gameService.GetGamePublicInfoByIdAsync(id, currentUserId);
+            if (gameInfo == null)
+            {
+                return NotFound();
+            }
+            
+            return Ok(gameInfo);
         }
+        
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] Game game)
         {

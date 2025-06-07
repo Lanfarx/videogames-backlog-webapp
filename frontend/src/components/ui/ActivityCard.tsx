@@ -15,7 +15,7 @@ interface ActivityCardProps {
 // Funzione helper per dividere il testo dell'attività e il nome del gioco
 const parseActivityText = (activity: Activity) => {
   const fullText = getActivitytext(activity);
-  const gameTitle = activity.GameTitle;
+  const gameTitle = activity.gameTitle;
   
   // Trova la posizione del nome del gioco nel testo
   const gameIndex = fullText.indexOf(gameTitle);
@@ -37,26 +37,24 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
   showIcon = true, 
   compact = false,
   className = ''
-}) => {
-  // Recupera i dati dell'attività
-  const formattedTime = formatRelativeTime(activity.Timestamp);
-  const icon = showIcon ? getActivityIcon(activity.Type) : null;
+}) => {  // Recupera i dati dell'attività
+  const formattedTime = formatRelativeTime(activity.timestamp);
+  const icon = showIcon ? getActivityIcon(activity.type) : null;
   const { prefix, suffix } = parseActivityText(activity);
   
   // Genera il link alla pagina del gioco
-  const gamePageUrl = `/library/${encodeURIComponent(activity.GameTitle.replace(/ /g, '_'))}`;
+  const gamePageUrl = `/library/${encodeURIComponent(activity.gameTitle.replace(/ /g, '_'))}`;
   
   return (
-    <div className={`bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-3' : 'p-4'} ${className}`}>
+    <div className={`bg-primary-bg border border-border-color rounded-lg shadow-sm hover:shadow-md transition-shadow ${compact ? 'p-3' : 'p-4'} ${className}`}>
       <div className="flex items-center justify-between">
         <div className={`flex-grow ${position === 'right' && showIcon ? 'text-right' : ''}`}>
           <div className={`text-sm text-text-primary font-medium font-secondary ${compact ? 'line-clamp-1' : ''}`}>
-            {prefix}
-            <Link 
+            {prefix}            <Link 
               to={gamePageUrl}
               className="text-accent-primary hover:underline font-semibold"
             >
-              {activity.GameTitle}
+              {activity.gameTitle}
             </Link>
             {suffix}
           </div>

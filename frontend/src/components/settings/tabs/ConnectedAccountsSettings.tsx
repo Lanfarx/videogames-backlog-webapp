@@ -121,7 +121,7 @@ const ConnectedAccountsSettings: React.FC = () => {
                         maxLength={17}
                         className={`px-3 py-1 text-sm border ${
                           steamIdError ? "border-red-500" : "border-border-color"
-                        } rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
+                        } rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
                       />
                       {steamIdError && (
                         <p className="text-xs text-red-500 mb-1 absolute top-0 transform -translate-y-5">

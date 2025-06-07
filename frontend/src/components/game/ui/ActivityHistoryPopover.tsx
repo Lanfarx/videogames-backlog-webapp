@@ -110,14 +110,14 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
   ];
     // Ordina le attività per data (dalla più recente alla più vecchia)
   const sortedActivities = [...activities].sort((a, b) => 
-    new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div 
         ref={popoverRef}
-        className="bg-primaryBg border border-border-color rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-lg flex flex-col"
+        className="bg-primary-bg border border-border-color rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-lg flex flex-col"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -147,7 +147,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
 
         {/* Filtri */}
         {showFilters && (
-          <div className="bg-secondaryBg border border-border-color rounded-lg p-4 mb-4">
+          <div className="bg-secondary-bg border border-border-color rounded-lg p-4 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Filtro per tipo di attività */}
               <div>
@@ -185,7 +185,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
                 <select
                   value={selectedYear || ''}
                   onChange={(e) => handleYearChange(e.target.value)}
-                  className="w-full p-2 border border-border-color rounded-lg bg-primaryBg text-text-primary"
+                  className="w-full p-2 border border-border-color rounded-lg bg-primary-bg text-text-primary"
                 >
                   <option value="">Tutti gli anni</option>
                   {years.map(year => (
@@ -202,7 +202,7 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
                 <select
                   value={selectedMonth || ''}
                   onChange={(e) => handleMonthChange(e.target.value)}
-                  className="w-full p-2 border border-border-color rounded-lg bg-primaryBg text-text-primary"
+                  className="w-full p-2 border border-border-color rounded-lg bg-primary-bg text-text-primary"
                 >
                   <option value="">Tutti i mesi</option>
                   {months.map(month => (
@@ -249,23 +249,22 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
                 
                 // Mostra la data solo se è diversa dalla precedente
                 const showDate =
-                  i === 0 ||
-                  new Date(activity.Timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) !==
-                    new Date(sortedActivities[i - 1].Timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
+                  i === 0 || new Date(activity.timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) !==
+                    new Date(sortedActivities[i - 1].timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
                 
                 return (
                   <div key={activity.id} className="pb-4 border-b border-border-color last:border-0 flex items-center">
                     {/* Timeline dot con colore dinamico */}
                     <div 
                       className="w-3 h-3 rounded-full mr-3 shrink-0"
-                      style={{ backgroundColor: getActivityColor(activity.Type) }}
+                      style={{ backgroundColor: getActivityColor(activity.type) }}
                     ></div>
                     <div className="flex-1">
                       {showDate && (
                         <div className="text-xs text-text-secondary font-secondary mb-1 flex items-center gap-2">
                           <Calendar className="h-3 w-3" />
-                          <span>{new Date(activity.Timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                          <span>{new Date(activity.Timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>{new Date(activity.timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                          <span>{new Date(activity.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       )}
                       <ActivityTimelineItem 

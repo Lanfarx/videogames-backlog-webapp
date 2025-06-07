@@ -1,26 +1,43 @@
 import axios from 'axios';
+import { getToken } from '../../utils/getToken';
 
-const STEAM_API_BASE_URL = 'https://api.steampowered.com';
+const API_BASE_URL = "http://localhost:5097/api/steam";
 
-const steamApiClient = axios.create({
-  baseURL: STEAM_API_BASE_URL,
-  params: {
-    key: process.env.REACT_APP_STEAM_API_KEY
+// Istanza axios che aggiunge il token JWT se presente
+const apiClient = axios.create();
+apiClient.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
+  return config;
 });
 
-export async function fetchSteamGames(steamId: string) {
-  try {
-    const response = await steamApiClient.get('/IPlayerService/GetOwnedGames/v1/', {
-      params: {
-        steamid: steamId,
-        include_appinfo: 1,
-        include_Played_free_games: 0
-      }
-    });
-    return response.data.response.games || [];
-  } catch (error) {
-    console.error('Errore nel recupero dei giochi Steam:', error);
-    throw error;
-  }
+export interface SteamGame {
+  appid: number;
+  name: string;
+  playtime_forever: number;
+  img_icon_url?: string;
+  img_logo_url?: string;
+}
+
+export interface SteamSyncResponse {
+  message: string;
+  count: number;
+  debugInfo?: any; // Per informazioni di debug
+}
+
+export async function syncWithSteam(steamId: string, syncType: 'initial_load' | 'update_hours'): Promise<SteamSyncResponse> {
+  const response = await apiClient.post(`${API_BASE_URL}/sync`, {
+    steamId,
+    syncType
+  });
+
+  return response.data;
+}
+
+export async function getSteamGames(steamId: string): Promise<{ games: SteamGame[] }> {
+  const response = await apiClient.get(`${API_BASE_URL}/games/${steamId}`);
+  return response.data;
 }

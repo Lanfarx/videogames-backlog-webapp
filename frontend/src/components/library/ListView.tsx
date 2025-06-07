@@ -1,19 +1,29 @@
 import React, { useState } from 'react';
 import { Monitor, Clock, Calendar, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Game, GameStatus } from '../../types/game';
+import type { Game, GameStatus, GameFilters, SortOption, SortOrder } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import ThreeDotsModal from '../ui/ThreeDotsModal';
+import { formatPrice, formatPurchaseDate, formatMetacriticScore } from '../../utils/gameDisplayUtils';
+
+// Interfaccia per i parametri di navigazione
+interface NavigationParams {
+  filters: GameFilters;
+  sortBy: SortOption;
+  sortOrder: SortOrder;
+  search: string;
+}
 
 interface ListViewProps {
   games: Game[];
   onEdit?: (game: Game) => void;
   onDelete?: (GameId: string) => void;
   onStatusChange?: (GameId: string, Status: GameStatus) => void;
+  navigationParams?: NavigationParams;
 }
 
-const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange }) => {
+const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange, navigationParams }) => {
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   return (
@@ -73,8 +83,11 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                       alt={game.Title}
                       className="h-full w-full object-cover"
                     />
-                  </div>
-                  <Link to={`/library/${game.Title}`} className="font-montserrat font-medium text-sm text-text-primary hover:text-accent-primary transition-colors">
+                  </div>                  <Link 
+                    to={`/library/${game.Title}`} 
+                    state={{ navigationParams }}
+                    className="font-montserrat font-medium text-sm text-text-primary hover:text-accent-primary transition-colors"
+                  >
                     {game.Title}
                   </Link>
                 </div>
@@ -93,16 +106,13 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
               </td>
               <td className="p-3 border-b border-border-color">
                 <StatusBadge Status={game.Status} />
-              </td>
-              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.Metacritic ? (
-                  <div className="flex items-center">
-                    <span className="font-bold text-accent-primary mr-1">{game.Metacritic}</span>
+              </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">  
+                <div className="flex items-center">
+                  <span className="font-bold text-accent-primary mr-1">{formatMetacriticScore(game.Metacritic)}</span>
+                  {game.Metacritic && game.Metacritic > 0 && (
                     <span className="text-xs text-text-secondary">/ 100</span>
-                  </div>
-                ) : (
-                  "-"
-                )}
+                  )}
+                </div>
               </td>
               <td className="p-3 border-b border-border-color">
                 {game.Rating > 0 ? (
@@ -110,19 +120,13 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                 ) : (
                   <span className="text-xs text-text-disabled">Non valutato</span>
                 )}
-              </td>
-              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.Price > 0 ? `${game.Price.toFixed(2)} €` : "-"}
-              </td>
-              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.PurchaseDate ? (
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(game.PurchaseDate).toLocaleDateString()}
-                  </div>
-                ) : (
-                  "-"
-                )}
+              </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
+                {game.Price !== undefined ? formatPrice(game.Price) : "-"}
+              </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {formatPurchaseDate(game.PurchaseDate)}
+                </div>
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 {game.CompletionDate ? (

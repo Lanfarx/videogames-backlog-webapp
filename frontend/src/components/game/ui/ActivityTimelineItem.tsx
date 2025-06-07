@@ -21,8 +21,8 @@ const ActivityTimelineItem = ({
         {showDate && (
           <span className="text-xs font-secondary text-text-secondary mr-1">
             {formatShortDate(
-              activity.Timestamp, 
-              previousActivity?.Timestamp,
+              activity.timestamp, 
+              previousActivity?.timestamp,
               isLastActivity
             )}:
           </span>

@@ -30,7 +30,6 @@ const PrivacySettings: React.FC = () => {
     };
     await handleProfileUpdate(newProfile);
   };
-
   // Cambia opzioni privacy
   const handlePrivacyOptionChange = async (option: string, value: boolean) => {
     const newProfile = {
@@ -72,7 +71,7 @@ const PrivacySettings: React.FC = () => {
       </div>
       {/* Sezione Visibilità Profilo */}
       <SettingsSection title="Visibilità del profilo">
-        <div className="flex items-center justify-between bg-tertiaryBg p-4 rounded-lg mb-4">
+        <div className="flex items-center justify-between bg-tertiary-bg p-4 rounded-lg mb-4">
           <div className="flex items-center space-x-3">
             {isProfilePublic ? (
               <Globe className="w-5 h-5 text-accent-success" />
@@ -82,11 +81,10 @@ const PrivacySettings: React.FC = () => {
             <div>
               <h3 className="font-medium text-text-primary">
                 {isProfilePublic ? 'Profilo pubblico' : 'Profilo privato'}
-              </h3>
-              <p className="text-sm text-text-secondary">
+              </h3>              <p className="text-sm text-text-secondary">
                 {isProfilePublic 
                   ? 'Il tuo profilo e le tue statistiche sono visibili agli altri utenti' 
-                  : 'Solo tu puoi vedere il tuo profilo e le tue statistiche'}
+                  : 'Solo tu e i tuoi amici potete vedere le tue statistiche'}
               </p>
             </div>
           </div>

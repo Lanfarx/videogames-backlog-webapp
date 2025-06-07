@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {    public interface IGameService
-    {
-        Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims);
+    {        Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims);
+        Task<PaginatedGamesDto> GetGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 12, string? filters = null, string? sortBy = null, string? sortOrder = null, string? search = null);
         Task<Game?> GetGameByIdAsync(ClaimsPrincipal userClaims, int gameId);
         Task<Game?> GetGameByTitleAsync(ClaimsPrincipal userClaims, string title);
+        Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null);
         Task<Game> AddGameAsync(ClaimsPrincipal userClaims, Game game);
         Task<Game?> UpdateGameAsync(ClaimsPrincipal userClaims, int gameId, UpdateGameDto updateDto);
         Task<Game?> UpdateGameStatusAsync(ClaimsPrincipal userClaims, int gameId, string status);        Task<Game?> UpdateGamePlaytimeAsync(ClaimsPrincipal userClaims, int gameId, int hoursPlayed);

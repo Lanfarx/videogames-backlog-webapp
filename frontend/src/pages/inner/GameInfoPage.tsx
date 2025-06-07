@@ -12,6 +12,7 @@ import { BookOpen } from "lucide-react";
 import { getGameDetails } from '../../store/services/rawgService';
 import type { PublicCatalogGame } from '../../types/game';
 import CommunityStats from "../../components/catalog/gameinfo/CommunityStats";
+import { formatMetacriticScore } from '../../utils/gameDisplayUtils';
 
 const GameInfoPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -123,16 +124,14 @@ const GameInfoPage: React.FC = () => {
                 >
                   {showFullDescription ? 'Mostra meno' : 'Mostra altro'}
                 </button>
-              )}
-            </div>
-
+              )}            </div>          
             <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-400" />
-                <span className="font-semibold text-lg text-text-primary">{game.Metacritic}</span>
+                <span className="font-semibold text-lg text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
                 <span className="text-sm text-text-secondary">Metacritic</span>
               </div>
-            </div>            <div className="text-sm text-text-secondary">
+            </div><div className="text-sm text-text-secondary">
               <span className="font-medium">Piattaforme:</span> {game.Platforms.join(', ')}
             </div>
           </div>

@@ -47,10 +47,10 @@ export const fetchSentRequestsThunk = createAsyncThunk(
 // Thunk per inviare richiesta di amicizia
 export const sendFriendRequestThunk = createAsyncThunk(
   'friendship/sendFriendRequest',
-  async (toUserId: number, { rejectWithValue }) => {
+  async (toUserName: string, { rejectWithValue }) => {
     try {
-      await friendshipService.sendFriendRequest(toUserId);
-      return toUserId;
+      await friendshipService.sendFriendRequest(toUserName);
+      return toUserName;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Errore nell\'invio della richiesta';
       return rejectWithValue(message);

@@ -18,25 +18,19 @@ namespace VideoGamesBacklogBackend.Controllers
         public ProfileController(IProfileService profileService)
         {
             _profileService = profileService;
-        }
-
-        [HttpGet]
+        }        [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
             var user = await _profileService.GetProfileAsync(User);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound();  
             return Ok(user);
-        }
-
-        [HttpPut]
+        }        [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] User updated)
         {
             var user = await _profileService.UpdateProfileAsync(User, updated);
             if (user == null) return NotFound();
             return Ok(user);
-        }
-
-        [HttpPost("ChangePassword")]
+        }        [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
         {
             var result = await _profileService.ChangePasswordAsync(User, req.CurrentPassword, req.NewPassword);

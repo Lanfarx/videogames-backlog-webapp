@@ -56,13 +56,13 @@ const PlaytimePopover = ({ GameId, currentHours, onSave, onCancel }: PlaytimePop
   return (
     <div 
       ref={popoverRef}
-      className="absolute top-full right-0 mt-2 p-4 bg-primaryBg border border-border-color rounded-lg shadow-md z-10 w-56"    >      <div className="text-sm text-text-secondary mb-3 font-secondary">
+      className="absolute top-full right-0 mt-2 p-4 bg-primary-bg border border-border-color rounded-lg shadow-md z-10 w-56"    >      <div className="text-sm text-text-secondary mb-3 font-secondary">
         Aggiungi ore di gioco:
       </div>
       
       <div className="flex items-center justify-center space-x-3 mb-4">
         <button 
-          className="p-1.5 rounded-full bg-secondaryBg hover:bg-tertiaryBg transition-colors"
+          className="p-1.5 rounded-full bg-secondary-bg hover:bg-tertiary-bg transition-colors"
           onClick={decrementHours}
           aria-label="Diminuisci ore"
         >
@@ -74,7 +74,7 @@ const PlaytimePopover = ({ GameId, currentHours, onSave, onCancel }: PlaytimePop
         </span>
         
         <button 
-          className="p-1.5 rounded-full bg-secondaryBg hover:bg-tertiaryBg transition-colors"
+          className="p-1.5 rounded-full bg-secondary-bg hover:bg-tertiary-bg transition-colors"
           onClick={incrementHours}
           aria-label="Aumenta ore"
         >

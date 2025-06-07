@@ -53,9 +53,7 @@ namespace VideoGamesBacklogBackend.Services
             }
 
             var totalCount = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-
-            var activities = await query
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);            var activities = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(a => new ActivityDto
@@ -448,10 +446,130 @@ namespace VideoGamesBacklogBackend.Services
                 }
             }
             catch (Exception ex)
-            {
-                // Log l'errore ma non fermare l'operazione principale
+            {                // Log l'errore ma non fermare l'operazione principale
                 Console.WriteLine($"Errore durante la creazione dell'attività per aggiunta gioco: {ex.Message}");
             }
         }
+
+        public async Task<PaginatedActivitiesDto> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
+        {
+            // Prima determina l'ID dell'utente target
+            int targetUserId;
+            User? targetUser = null;
+
+            if (int.TryParse(userIdOrUsername, out targetUserId))
+            {
+                // È un ID numerico
+                targetUser = await _context.Users.FindAsync(targetUserId);
+            }
+            else
+            {
+                // È un username
+                targetUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == userIdOrUsername);
+                if (targetUser != null)
+                {
+                    targetUserId = targetUser.Id;
+                }
+            }
+
+            if (targetUser == null)
+            {
+                throw new ArgumentException("Utente non trovato");
+            }
+
+            // Controlla i permessi di visibilità
+            bool canViewDiary = await CanViewUserDiary(targetUserId, currentUserId);
+            
+            if (!canViewDiary)
+            {
+                throw new UnauthorizedAccessException("Non hai i permessi per visualizzare il diario di questo utente");
+            }
+
+            // Ottieni le attività usando la stessa logica del metodo principale
+            var query = _context.Activities
+                .Include(a => a.Game)
+                .Where(a => a.Game!.UserId == targetUserId);
+
+            // Applicazione filtri (stessa logica di GetActivitiesAsync)
+            if (filters.Types?.Any() == true)
+            {
+                query = query.Where(a => filters.Types.Contains(a.Type));
+            }
+
+            if (filters.Year.HasValue)
+            {
+                query = query.Where(a => a.Timestamp.Year == filters.Year.Value);
+            }
+
+            if (filters.Month.HasValue)
+            {
+                query = query.Where(a => a.Timestamp.Month == filters.Month.Value);
+            }
+
+            if (filters.GameId.HasValue)
+            {
+                query = query.Where(a => a.GameId == filters.GameId.Value);
+            }
+
+            // Ordinamento
+            if (filters.SortDirection?.ToLower() == "asc")
+            {
+                query = query.OrderBy(a => a.Timestamp);
+            }
+            else
+            {
+                query = query.OrderByDescending(a => a.Timestamp);
+            }
+
+            // Conta il totale prima della paginazione
+            var totalCount = await query.CountAsync();
+
+            // Applica paginazione
+            var activities = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new ActivityDto
+                {
+                    Id = a.Id,
+                    Type = a.Type,
+                    GameId = a.GameId,
+                    GameTitle = a.Game!.Title,
+                    GameImageUrl = a.Game!.CoverImage,
+                    Timestamp = a.Timestamp,
+                    AdditionalInfo = a.AdditionalInfo
+                })
+                .ToListAsync();
+
+            return new PaginatedActivitiesDto
+            {
+                Activities = activities,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };        }
+
+        private async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
+        {
+            // Se è lo stesso utente, può sempre vedere
+            if (targetUserId == currentUserId)
+            {
+                return true;
+            }
+
+            var targetUser = await _context.Users.FindAsync(targetUserId);
+            if (targetUser == null)
+            {
+                return false;
+            }            // Se il profilo è privato, controlla se sono amici
+            if (targetUser.PrivacySettings.IsPrivate)
+            {                var friendship = await _context.Friendships
+                    .FirstOrDefaultAsync(f =>
+                        ((f.SenderId == currentUserId && f.ReceiverId == targetUserId) ||
+                         (f.SenderId == targetUserId && f.ReceiverId == currentUserId)) &&
+                        f.Status == FriendshipStatus.Accepted);return friendship != null;
+            }            // Altrimenti, il diario e pubblico
+            return true;
         }
     }
+}

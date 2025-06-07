@@ -22,7 +22,7 @@ export const mapRawgGameToInternalFormat = (rawgGame: any) => {
     Publisher: rawgGame.publishers?.[0]?.name || "Sconosciuto",
     ReleaseYear: rawgGame.released ? new Date(rawgGame.released).getFullYear() : null,
     Genres: rawgGame.genres?.map((g: any) => g.name) || [],
-    Metacritic: rawgGame.metacritic || 0,
+    Metacritic: (rawgGame.metacritic && typeof rawgGame.metacritic === 'number' && rawgGame.metacritic > 0) ? rawgGame.metacritic : 0,
     Rating: rawgGame.rating || 0,
     Platforms: rawgGame.platforms?.map((p: any) => p.platform.name) || [],
     RatingsCount: rawgGame.ratings_count || 0,
@@ -111,17 +111,9 @@ export const getSimilarGames = async (genreIds: number[], excludeId: number, cou
     // Se Metacritic fornito, filtra per range simile (+/- 10)
     if (typeof Metacritic === 'number') {
       params.metacritic = `${Math.max(0, Metacritic - 10)},${Math.min(100, Metacritic + 10)}`;
-    }    const response = await apiClient.get('/games', { params });
-
-    const results = response.data.results
+    }    const response = await apiClient.get('/games', { params });    const results = response.data.results
       .filter((g: any) => g.id !== excludeId)
       .slice(0, count);
-
-    // Debug: stampa i risultati ordinati per Metacritic
-    console.log('Giochi simili ordinati per Metacritic:', results.map((g: any) => ({
-      name: g.name,
-      metacritic: g.metacritic
-    })));
 
     return results;
   } catch (error) {

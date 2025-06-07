@@ -146,7 +146,7 @@ const ProfileSettings: React.FC = () => {
       {/* Sezione Avatar */}
       <div className="flex flex-col items-center md:flex-row gap-6 mb-8">
         <div className="relative">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-tertiaryBg border border-border-color flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-tertiary-bg border border-border-color flex items-center justify-center">
             {profile.avatar ? (
               <img 
                 src={profile.avatar} 
@@ -188,7 +188,7 @@ const ProfileSettings: React.FC = () => {
               value={profile.userName}
               readOnly
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
              <p className="text-xs text-text-secondary">Il nome utente non può essere modificato</p>
           </div>
@@ -203,7 +203,7 @@ const ProfileSettings: React.FC = () => {
               name="email"
               value={profile.email}
               readOnly
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiaryBg text-text-secondary focus:outline-none cursor-not-allowed"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiary-bg text-text-secondary focus:outline-none cursor-not-allowed"
             />
             <p className="text-xs text-text-secondary">L'email non può essere modificata</p>
           </div>
@@ -218,7 +218,7 @@ const ProfileSettings: React.FC = () => {
               name="fullName"
               value={profile.fullName || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
           </div>
           
@@ -232,7 +232,7 @@ const ProfileSettings: React.FC = () => {
               value={profile.bio || ''}
               onChange={handleChange}
               rows={4}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
               placeholder="Scrivi qualcosa su di te..."
             />
             <p className="text-xs text-text-secondary">

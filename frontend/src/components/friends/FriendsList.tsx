@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Users, UserMinus, MessageCircle, MoreVertical, UserCheck } from 'lucide-react';
+import { Users, UserMinus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useFriends, useFriendshipActions } from '../../store/hooks/friendshipHooks';
 import LoadingSpinner from '../loading/LoadingSpinner';
 
@@ -97,13 +98,14 @@ const FriendsList: React.FC<FriendsListProps> = ({ className = '' }) => {
                   {friend.isOnline && (
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent-success rounded-full border-2 border-primary-bg"></div>
                   )}
-                </div>
-
-                {/* Info utente */}
+                </div>                {/* Info utente */}
                 <div>
-                  <h3 className="font-semibold text-text-primary">
+                  <Link 
+                    to={`/profile/${friend.userName}`}
+                    className="font-semibold text-text-primary hover:text-accent-primary transition-colors cursor-pointer"
+                  >
                     {friend.fullName || friend.userName}
-                  </h3>
+                  </Link>
                   <p className="text-sm text-text-secondary">@{friend.userName}</p>
                   {friend.bio && (
                     <p className="text-xs text-text-secondary mt-1 max-w-md truncate">
@@ -121,32 +123,8 @@ const FriendsList: React.FC<FriendsListProps> = ({ className = '' }) => {
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* Azioni */}
+              </div>              {/* Azioni */}
               <div className="flex items-center gap-2">
-                <button
-                  className="p-2 hover:bg-accent-primary hover:text-white rounded-lg transition-colors text-text-secondary"
-                  title="Invia messaggio"
-                  onClick={() => {
-                    // TODO: Implementare sistema messaggi
-                    console.log('Invia messaggio a', friend.userName);
-                  }}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </button>
-
-                <button
-                  className="p-2 hover:bg-accent-primary hover:text-white rounded-lg transition-colors text-text-secondary"
-                  title="Visualizza profilo"
-                  onClick={() => {
-                    // TODO: Navigare al profilo dell'utente
-                    console.log('Visualizza profilo di', friend.userName);
-                  }}
-                >
-                  <UserCheck className="h-4 w-4" />
-                </button>
-
                 <div className="relative group">
                   <button
                     className="p-2 hover:bg-accent-danger hover:text-white rounded-lg transition-colors text-text-secondary"

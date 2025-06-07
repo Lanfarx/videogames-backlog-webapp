@@ -25,8 +25,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     Price: true,
     hours: true,
     Metacritic: true,
-    date: true,
-  });
+    date: true,  });
   // Hook per azioni sui giochi
   const { removeAll } = useGameActions();
 
@@ -97,9 +96,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
         : [...prev.genre, genre];
       return { ...prev, genre: newGenre };
     });
-  };
-
-  // Gestisce il cambio del range di prezzo
+  };  // Gestisce il cambio del range di prezzo
   const handlePriceRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
       const newPriceRange = [...prev.PriceRange] as [number, number];

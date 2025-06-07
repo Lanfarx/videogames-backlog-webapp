@@ -111,7 +111,7 @@ const GeneralSettings: React.FC = () => {
               </div>
             </div>
             <select 
-              className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={language}
               onChange={(e) => handleProfileUpdate({ language: e.target.value })}
             >
@@ -132,7 +132,7 @@ const GeneralSettings: React.FC = () => {
               </div>
             </div>
             <select 
-              className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={dateFormat}
               onChange={(e) => handleProfileUpdate({ dateFormat: e.target.value })}
             >

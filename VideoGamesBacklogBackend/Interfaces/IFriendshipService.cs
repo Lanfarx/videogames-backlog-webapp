@@ -19,7 +19,7 @@ namespace VideoGamesBacklogBackend.Interfaces
         Task<List<FriendDto>> GetFriendsAsync(ClaimsPrincipal userClaims);
         
         // Ricerca utenti e profili pubblici
-        Task<List<PublicProfileDto>> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery);
+        Task<PaginatedUsersDto> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery, int page, int pageSize);
         Task<PublicProfileDto?> GetPublicProfileAsync(ClaimsPrincipal userClaims, string userName);
     }
 }

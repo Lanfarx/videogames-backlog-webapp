@@ -21,7 +21,7 @@ import { getToken } from './utils/getToken';
 import { getProfile } from './store/services/profileService';
 import { setUserProfile, setProfileLoading, setProfileLoadError } from './store/slice/userSlice';
 import LoadingSpinner from './components/loading/LoadingSpinner';
-import FriendsPage from './pages/FriendsPage';
+import FriendsPage from './pages/header/FriendsPage';
 import PublicProfileView from './components/friends/PublicProfileView';
 
 function App() {
@@ -107,7 +107,7 @@ function App() {
             <Route path="catalog" element={<CatalogPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="friends" element={<FriendsPage />} />
-            <Route path="friends/profile/:userName" element={<PublicProfileView />} />
+            <Route path="profile/:userName" element={<PublicProfileView />} />
             <Route path="diario" element={<DiarioPage />} />
             <Route path="settings" element={<SettingsPage />} />
           

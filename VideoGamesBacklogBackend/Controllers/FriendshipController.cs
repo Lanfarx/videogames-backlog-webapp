@@ -150,12 +150,12 @@ namespace VideoGamesBacklogBackend.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchUsers([FromQuery] string query)
+        public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
-                var users = await _friendshipService.SearchUsersAsync(User, query);
-                return Ok(users);
+                var result = await _friendshipService.SearchUsersAsync(User, query, page, pageSize);
+                return Ok(result);
             }
             catch (Exception ex)
             {

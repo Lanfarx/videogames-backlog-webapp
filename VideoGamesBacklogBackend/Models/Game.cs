@@ -45,6 +45,7 @@ namespace VideoGamesBacklogBackend.Models
         public string? Publisher { get; set; }
         public string? CompletionDate { get; set; }
         public string? PlatinumDate { get; set; }
+   
         public int HoursPlayed { get; set; }
         public int Metacritic { get; set; }        // Inizializza il Rating a 0
         public decimal Rating { get; set; } = 0;
@@ -57,6 +58,7 @@ namespace VideoGamesBacklogBackend.Models
         // Foreign key per l'utente proprietario
         [ForeignKey("User")]
         public int UserId { get; set; }
+        [JsonIgnore] // Evita il loop di serializzazione
         public User? User { get; set; }
 
         // Relazione uno-a-molti: un gioco ha molte attivit�

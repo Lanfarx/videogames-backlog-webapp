@@ -55,7 +55,7 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
     }));
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-primary-bg p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
                 {icon}
                 {title}

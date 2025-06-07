@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useCommunityCommunityRating } from '../../store/hooks/communityHooks';
 import RatingStars from '../ui/atoms/RatingStars';
 import { SampleGame } from "../../types/game";
+import { formatMetacriticScore } from '../../utils/gameDisplayUtils';
 
 interface CatalogGameCardProps {
   game: SampleGame;
@@ -39,11 +40,10 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, on
           ))}
           {game.Genres.length > 3 && (
             <span className="px-2 py-0.5 bg-tertiary-bg text-xs rounded-full text-text-secondary">+{game.Genres.length - 3}</span>
-          )}
-        </div>
+          )}        </div>       
         <div className="flex items-center gap-2 mb-1">
           <Award className="h-4 w-4 text-yellow-400" />
-          <span className="font-semibold text-xs text-text-primary">{game.Metacritic}</span>
+          <span className="font-semibold text-xs text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
           <span className="text-xs text-text-secondary">Metacritic</span>
         </div>
         {/* Recensioni utenti aggregate */}

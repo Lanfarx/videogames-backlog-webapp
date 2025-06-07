@@ -171,8 +171,8 @@ export function useFriendshipActions() {
     blockingUser 
   } = useSelector((state: RootState) => state.friendship);
 
-  const sendFriendRequest = useCallback((toUserId: number) => {
-    dispatch(sendFriendRequestThunk(toUserId));
+  const sendFriendRequest = useCallback((toUserName: string) => {
+    dispatch(sendFriendRequestThunk(toUserName));
   }, [dispatch]);
 
   const acceptFriendRequest = useCallback((requestId: number) => {

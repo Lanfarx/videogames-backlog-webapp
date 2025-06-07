@@ -25,11 +25,11 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   const getOptimizedGraphData = (activities: Activity[]) => {
     const PlayedActivities = activities
       .filter(activity => 
-        activity.Timestamp && 
-        activity.Type === 'Played' && 
-        activity.AdditionalInfo?.includes('ore')
+        activity.timestamp && 
+        activity.type === 'Played' && 
+        activity.additionalInfo?.includes('ore')
       )
-      .sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     if (PlayedActivities.length === 0) return [];
     
@@ -37,8 +37,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       let cumulativeHours = 0;
       return PlayedActivities.map(activity => {
         let hoursToAdd = 0;
-        if (activity.AdditionalInfo) {
-          const hoursMatch = activity.AdditionalInfo.match(/(\d+) ore/);
+        if (activity.additionalInfo) {
+          const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
           if (hoursMatch) {
             hoursToAdd = parseInt(hoursMatch[1], 10);
           }
@@ -46,16 +46,16 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         cumulativeHours += hoursToAdd;
         
         return {
-          date: new Date(activity.Timestamp),
+          date: new Date(activity.timestamp),
           hours: cumulativeHours,
-          type: activity.Type,
-          AdditionalInfo: activity.AdditionalInfo
+          type: activity.type,
+          AdditionalInfo: activity.additionalInfo
         };
       });
     }
     
-    const firstDate = new Date(PlayedActivities[0].Timestamp);
-    const lastDate = new Date(PlayedActivities[PlayedActivities.length - 1].Timestamp);
+    const firstDate = new Date(PlayedActivities[0].timestamp);
+    const lastDate = new Date(PlayedActivities[PlayedActivities.length - 1].timestamp);
     const totalTimeSpan = lastDate.getTime() - firstDate.getTime();
     const timeChunkSize = totalTimeSpan / 9;
     
@@ -72,11 +72,11 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     });
     
     for (const activity of PlayedActivities) {
-      const activityTime = new Date(activity.Timestamp).getTime();
+      const activityTime = new Date(activity.timestamp).getTime();
       
       let hours = 0;
-      if (activity.AdditionalInfo) {
-        const hoursMatch = activity.AdditionalInfo.match(/(\d+) ore/);
+      if (activity.additionalInfo) {
+        const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
         if (hoursMatch) {
           hours = parseInt(hoursMatch[1], 10);
         }
@@ -122,19 +122,19 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   
   const getKeyEvents = (activities: Activity[]) => {
     const sortedActivities = [...activities].sort((a, b) => 
-      new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime()
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
-    const AddedEvent = sortedActivities.find(a => a.Type === 'Added');
-    const CompletedEvent = sortedActivities.find(a => a.Type === 'Completed');
-    const PlatinumEvent = sortedActivities.find(a => a.Type === 'Platinum');
-    const AbandonedEvent = sortedActivities.find(a => a.Type === 'Abandoned');
+    const AddedEvent = sortedActivities.find(a => a.type === 'Added');
+    const CompletedEvent = sortedActivities.find(a => a.type === 'Completed');
+    const PlatinumEvent = sortedActivities.find(a => a.type === 'Platinum');
+    const AbandonedEvent = sortedActivities.find(a => a.type === 'Abandoned');
     
-    const PlayedActivities = sortedActivities
-      .filter(a => a.Type === 'Played' && a.AdditionalInfo?.includes('ore'))
+    const PlayedActivities2 = sortedActivities
+      .filter(a => a.type === 'Played' && a.additionalInfo?.includes('ore'))
       .sort((a, b) => {
-        const hoursA = a.AdditionalInfo?.match(/(\d+) ore/);
-        const hoursB = b.AdditionalInfo?.match(/(\d+) ore/);
+        const hoursA = a.additionalInfo?.match(/(\d+) ore/);
+        const hoursB = b.additionalInfo?.match(/(\d+) ore/);
         const numA = hoursA ? parseInt(hoursA[1], 10) : 0;
         const numB = hoursB ? parseInt(hoursB[1], 10) : 0;
         return numB - numA;
@@ -148,11 +148,11 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     if (AbandonedEvent) keyEvents.push(AbandonedEvent);
     
     const remainingSlots = 6 - keyEvents.length;
-    if (remainingSlots > 0 && PlayedActivities.length > 0) {
-      keyEvents.push(...PlayedActivities.slice(0, remainingSlots));
+    if (remainingSlots > 0 && PlayedActivities2.length > 0) {
+      keyEvents.push(...PlayedActivities2.slice(0, remainingSlots));
     }
     
-    return keyEvents.sort((a, b) => new Date(a.Timestamp).getTime() - new Date(b.Timestamp).getTime());
+    return keyEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   };
   
   const getAccentPrimaryColor = () => {
@@ -167,9 +167,9 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     const isEmptyGraph = isNotStarted || !hasActivities;
     
     const GameplayActivities = activities.filter(activity => 
-      activity.Timestamp && 
-      activity.Type === 'Played' && 
-      activity.AdditionalInfo?.includes('ore')
+      activity.timestamp && 
+      activity.type === 'Played' && 
+      activity.additionalInfo?.includes('ore')
     );
     
     const graphData = !isEmptyGraph ? getOptimizedGraphData(activities) : [];
@@ -305,9 +305,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   }, [hasActivities, activities, game.HoursPlayed, game.PurchaseDate, isNotStarted]);
   
   const keyEvents = hasActivities ? getKeyEvents(activities) : [];
-  
-  return (
-    <div className="bg-primaryBg border border-border-color rounded-xl p-6">
+    return (
+    <div className="bg-primary-bg border border-border-color rounded-xl p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="font-primary font-semibold text-xl text-text-primary">
           Timeline di Gioco

@@ -2,6 +2,8 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Search, User, Plus, UserCheck, UserX, Ban, Loader, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useFriendshipActions, useUserSearch } from '../../store/hooks/friendshipHooks';
 import { PublicProfile } from '../../store/services/friendshipService';
+import { useNavigate } from 'react-router-dom';
+import { useFriendsNavigation } from '../../store/hooks/navigationHooks';
 
 interface UserSearchProps {
   className?: string;
@@ -14,6 +16,8 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
   
   const { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, blockUser, searchUsers } = useFriendshipActions();
   const { results: searchResults, loading: searchLoading, error: searchError } = useUserSearch();
+  const { navigateToSentRequests, navigateToFriends } = useFriendsNavigation();
+  const navigate = useNavigate();
   
   // Derive pagination values from search results
   const searchTotal = searchResults?.totalCount || 0;
@@ -49,18 +53,25 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
     if (searchQuery.trim()) {
       handleSearch(searchQuery, page);
     }
-  };
-  const handleAction = async (user: PublicProfile, action: string) => {
+  };  const handleAction = async (user: PublicProfile, action: string) => {
     try {
       switch (action) {
         case 'sendRequest':
-          await sendFriendRequest(user.userId);
+          await sendFriendRequest(user.userName);
+          // Naviga automaticamente alla sezione "Richieste inviate"
+          navigateToSentRequests();
           break;
         case 'accept':
-          await acceptFriendRequest(user.userId);
+          if (user.friendshipId) {
+            await acceptFriendRequest(user.friendshipId);
+            // Naviga automaticamente alla sezione "I miei amici"
+            navigateToFriends();
+          }
           break;
         case 'reject':
-          await rejectFriendRequest(user.userId);
+          if (user.friendshipId) {
+            await rejectFriendRequest(user.friendshipId);
+          }
           break;
         case 'remove':
           await removeFriend(user.userId);
@@ -72,9 +83,10 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
           break;
       }
       
-      // Ricarica i risultati di ricerca per aggiornare lo stato
+      // Dopo qualsiasi azione, ricarica i risultati di ricerca per garantire 
+      // che l'interfaccia rifletta lo stato più aggiornato dal backend
       if (searchQuery.trim()) {
-        handleSearch(searchQuery, currentPage);
+        await handleSearch(searchQuery, currentPage);
       }
     } catch (error) {
       console.error('Errore durante l\'azione:', error);
@@ -90,8 +102,16 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
       );
     }
 
-    switch (user.friendshipStatus) {
-      case 'Pending':
+    switch (user.friendshipStatus) {      case 'Pending':
+        // Se l'utente corrente ha inviato la richiesta, mostra solo messaggio di attesa
+        if (user.isRequestSender) {
+          return (
+            <div className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300 text-sm">
+              Richiesta inviata
+            </div>
+          );
+        }
+        // Se l'utente corrente ha ricevuto la richiesta, mostra i bottoni accetta/rifiuta
         return (
           <div className="flex gap-2">
             <button
@@ -110,8 +130,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
             </button>
           </div>
         );
-      
-      case 'Accepted':
+        case 'Accepted':
         return (
           <div className="flex gap-2">
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm">
@@ -122,6 +141,22 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
               className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
             >
               Rimuovi
+            </button>
+          </div>
+        );
+      
+      case 'Rejected':
+        return (
+          <div className="flex gap-2">
+            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm">
+              Richiesta rifiutata
+            </span>
+            <button
+              onClick={() => handleAction(user, 'sendRequest')}
+              className="px-3 py-1 bg-accent-primary text-white rounded-lg text-sm hover:bg-accent-primary/90 transition-colors flex items-center gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              Riprova
             </button>
           </div>
         );
@@ -272,7 +307,11 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
               {/* Info utente */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-medium text-text-primary truncate">
+                  <h3
+                    className="font-medium text-text-primary truncate cursor-pointer hover:underline"
+                    title={user.userName}
+                    onClick={() => navigate(`/profile/${user.userName}`)}
+                  >
                     {user.userName}
                   </h3>
                   {user.isProfilePrivate && (

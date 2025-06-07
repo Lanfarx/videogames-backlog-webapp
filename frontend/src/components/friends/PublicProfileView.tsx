@@ -1,8 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { User, Calendar, Trophy, Clock, Gamepad2, Lock, Eye, EyeOff, ArrowLeft, MessageCircle, UserPlus, UserMinus, Ban, UserCheck, UserX } from 'lucide-react';
+import { User, ArrowLeft, UserPlus, UserMinus, Ban, UserCheck, UserX } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFriendshipActions, usePublicProfile } from '../../store/hooks/friendshipHooks';
-import { PublicProfile } from '../../store/services/friendshipService';
+import { useFriendsNavigation } from '../../store/hooks/navigationHooks';
+import { Activity } from '../../types/activity';
+import { getPublicActivities } from '../../store/services/activityService';
+import { 
+  calculateActivityStats, 
+  getUniqueMonthsForYear,
+} from '../../utils/activityUtils';
+
+// Import dei nuovi componenti riutilizzabili
+import ProfileHeader from '../profile/ProfileHeader';
+import ProfileStats from '../profile/ProfileStats';
+import ProfileDiary from '../profile/ProfileDiary';
 
 interface PublicProfileViewProps {
   className?: string;
@@ -11,17 +22,80 @@ interface PublicProfileViewProps {
 
 const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', userName: propUserName }) => {
   const { userName: urlUserName } = useParams<{ userName: string }>();
-  const userName = propUserName || urlUserName; // Usa la prop se fornita, altrimenti usa quella dalla URL
+  const userName = propUserName || urlUserName;
   const navigate = useNavigate();
+  const { navigateToSentRequests, navigateToFriends } = useFriendsNavigation();
   const { 
     sendFriendRequest, 
     acceptFriendRequest, 
     rejectFriendRequest, 
     removeFriend, 
-    blockUser 
+    blockUser
   } = useFriendshipActions();
   
   const { profile, loading, error, loadProfile, loadProfileByUsername } = usePublicProfile();
+  // Stati per il diario (simili a ProfilePage)
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);  // Caricamento delle attività pubbliche
+  useEffect(() => {
+    const loadPublicActivities = async () => {
+      // Non caricare le attività se:
+      // 1. Non abbiamo il profilo
+      // 2. Il profilo è privato e non siamo amici
+      // 3. Non possiamo vedere il diario
+      if (!profile || !userName) return;
+      if (profile.isProfilePrivate && !profile.isFriend) return;
+      if (!profile.canViewDiary) return;
+      
+      setLoadingActivities(true);
+      try {
+        const result = await getPublicActivities(
+          userName,
+          {}, // Non filtriamo per anno qui, lasciamo che ProfileDiary gestisca il filtraggio
+          1,
+          100 // Carichiamo più attività per il profilo
+        );
+        setActivities(result.activities);
+      } catch (error) {
+        console.error('Errore nel caricamento delle attività pubbliche:', error);
+        setActivities([]);
+      } finally {
+        setLoadingActivities(false);
+      }
+    };
+
+    loadPublicActivities();
+  }, [profile, userName]); // Rimuoviamo selectedYear dalle dipendenze
+  // Gestione filtri diario (simile a DiarioPage)
+  const handleFilterChange = (filter: string) => {
+    if (filter === 'all') {
+      setActiveFilters(['all']);
+    } else {
+      const newFilters = activeFilters.filter(f => f !== 'all');
+      if (newFilters.includes(filter)) {
+        // Rimuovi il filtro se già presente
+        const updatedFilters = newFilters.filter(f => f !== filter);
+        // Se rimosso l'ultimo filtro, imposta su "all"
+        setActiveFilters(updatedFilters.length === 0 ? ['all'] : updatedFilters);
+      } else {
+        // Aggiungi il filtro
+        setActiveFilters([...newFilters, filter]);
+      }
+    }
+  };  // Calcolo mesi disponibili per il diario - solo se possiamo vedere il diario
+  const months = (activities.length > 0 && profile?.canViewDiary && (!profile?.isProfilePrivate || profile?.isFriend)) 
+    ? getUniqueMonthsForYear(activities, selectedYear) 
+    : [];
+  
+  // Statistiche del diario ora calcolate dinamicamente nel componente
+  const placeholderDiaryStats = {
+    totalEntries: 0,
+    recentPlaytime: 0,
+    lastUpdate: null
+  };
 
   useEffect(() => {
     if (userName) {
@@ -33,21 +107,26 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
         loadProfileByUsername(userName);
       }
     }
-  }, [userName, loadProfile, loadProfileByUsername]);
-
-  const handleAction = async (action: string) => {
+  }, [userName, loadProfile, loadProfileByUsername]);  const handleAction = async (action: string) => {
     if (!profile) return;
-    
     try {
       switch (action) {
         case 'sendRequest':
-          await sendFriendRequest(profile.userId);
+          await sendFriendRequest(profile.userName);
+          // Naviga automaticamente alla sezione "Richieste inviate"
+          navigateToSentRequests();
           break;
         case 'accept':
-          await acceptFriendRequest(profile.userId);
+          if (profile.friendshipId) {
+            await acceptFriendRequest(profile.friendshipId);
+            // Naviga automaticamente alla sezione "I miei amici"
+            navigateToFriends();
+          }
           break;
         case 'reject':
-          await rejectFriendRequest(profile.userId);
+          if (profile.friendshipId) {
+            await rejectFriendRequest(profile.friendshipId);
+          }
           break;
         case 'remove':
           if (window.confirm(`Sei sicuro di voler rimuovere ${profile.userName} dagli amici?`)) {
@@ -55,18 +134,25 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
           }
           break;
         case 'block':
-          if (window.confirm(`Sei sicuro di voler bloccare ${profile.userName}?`)) {
-            await blockUser(profile.userId);
+          if (profile.friendshipStatus === 'Blocked') {
+            if (window.confirm(`Vuoi sbloccare ${profile.userName}?`)) {
+              await blockUser(profile.userId); // toggle: sblocca
+            }
+          } else {
+            if (window.confirm(`Sei sicuro di voler bloccare ${profile.userName}?`)) {
+              await blockUser(profile.userId); // toggle: blocca
+            }
           }
-          break;      }
+          break;}
       
-      // Ricarica il profilo per aggiornare lo stato
+      // Dopo qualsiasi azione, ricarica il profilo per garantire 
+      // che l'interfaccia rifletta lo stato più aggiornato dal backend
       if (userName) {
         const userId = parseInt(userName);
         if (!isNaN(userId)) {
-          loadProfile(userId);
+          await loadProfile(userId);
         } else {
-          loadProfileByUsername(userName);
+          await loadProfileByUsername(userName);
         }
       }
     } catch (error) {
@@ -75,10 +161,17 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
   };
 
   const getActionButtons = () => {
-    if (!profile || !profile.acceptsFriendRequests && !profile.isFriend) return null;
-
-    switch (profile.friendshipStatus) {
-      case 'Pending':
+    if (!profile || (!profile.acceptsFriendRequests && !profile.isFriend && profile.friendshipStatus !== 'Blocked')) return null;
+    switch (profile.friendshipStatus) {      case 'Pending':
+        // Se l'utente corrente ha inviato la richiesta, mostra solo messaggio di attesa
+        if (profile.isRequestSender) {
+          return (
+            <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300">
+              <span className="text-sm">Richiesta di amicizia inviata</span>
+            </div>
+          );
+        }
+        // Se l'utente corrente ha ricevuto la richiesta, mostra i bottoni accetta/rifiuta
         return (
           <div className="flex gap-2">
             <button
@@ -96,18 +189,9 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
               Rifiuta
             </button>
           </div>
-        );
-      
-      case 'Accepted':
+        );case 'Accepted':
         return (
           <div className="flex gap-2">
-            <button
-              onClick={() => {/* TODO: Implementare messaggio */}}
-              className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Messaggio
-            </button>
             <button
               onClick={() => handleAction('remove')}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
@@ -115,17 +199,42 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
               <UserMinus className="h-4 w-4" />
               Rimuovi Amico
             </button>
+            <button
+              onClick={() => handleAction('block')}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <Ban className="h-4 w-4" />
+              Blocca
+            </button>
+          </div>        );
+      
+      case 'Rejected':
+        return (
+          <div className="flex gap-2">
+            <div className="px-4 py-2 bg-red-100 text-red-800 rounded-lg border border-red-300">
+              <span className="text-sm">Richiesta rifiutata</span>
+            </div>
+            <button
+              onClick={() => handleAction('sendRequest')}
+              className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Riprova
+            </button>
           </div>
         );
-      
       case 'Blocked':
         return (
-          <div className="px-4 py-2 bg-gray-500 text-white rounded-lg">
-            <Ban className="h-4 w-4 inline mr-2" />
-            Utente Bloccato
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleAction('block')}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2"
+            >
+              <Ban className="h-4 w-4" />
+              Sblocca
+            </button>
           </div>
         );
-      
       default:
         return (
           <div className="flex gap-2">
@@ -150,20 +259,27 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
 
   if (loading) {
     return (
-      <div className={`bg-primary-bg border border-border-color rounded-xl p-6 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-6 bg-secondary-bg rounded mb-4"></div>
-          <div className="flex gap-4 mb-6">
-            <div className="w-24 h-24 bg-secondary-bg rounded-full"></div>
-            <div className="flex-1">
-              <div className="h-8 bg-secondary-bg rounded mb-2"></div>
-              <div className="h-4 bg-secondary-bg rounded mb-2"></div>
-              <div className="h-4 bg-secondary-bg rounded w-2/3"></div>
+      <div className={`min-h-screen bg-primary-bg font-secondary ${className}`}>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="animate-pulse">
+            <div className="bg-secondary-bg rounded-lg p-6 mb-10">
+              <div className="h-8 bg-tertiary-bg rounded mb-4"></div>
+              <div className="flex gap-8">
+                <div className="w-32 h-32 bg-tertiary-bg rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-8 bg-tertiary-bg rounded mb-2"></div>
+                  <div className="h-4 bg-tertiary-bg rounded mb-2"></div>
+                  <div className="h-16 bg-tertiary-bg rounded"></div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="h-32 bg-secondary-bg rounded"></div>
-            <div className="h-32 bg-secondary-bg rounded"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+              <div className="h-24 bg-secondary-bg rounded"></div>
+              <div className="h-24 bg-secondary-bg rounded"></div>
+              <div className="h-24 bg-secondary-bg rounded"></div>
+              <div className="h-24 bg-secondary-bg rounded"></div>
+            </div>
+            <div className="h-64 bg-secondary-bg rounded"></div>
           </div>
         </div>
       </div>
@@ -172,229 +288,81 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
 
   if (error || !profile) {
     return (
-      <div className={`bg-primary-bg border border-border-color rounded-xl p-6 ${className}`}>
-        <div className="text-center py-12">
-          <User className="h-12 w-12 mx-auto mb-4 text-text-secondary opacity-50" />
-          <h3 className="text-lg font-medium text-text-primary mb-2">
-            Profilo non trovato
-          </h3>
-          <p className="text-text-secondary mb-4">
-            {error || 'L\'utente richiesto non esiste o non è disponibile.'}
-          </p>
-          <button
-            onClick={() => navigate('/friends')}
-            className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2 mx-auto"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Torna agli Amici
-          </button>
+      <div className={`min-h-screen bg-primary-bg font-secondary ${className}`}>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="text-center py-20">
+            <User className="h-16 w-16 mx-auto mb-6 text-text-secondary opacity-50" />
+            <h2 className="text-2xl font-bold text-text-primary mb-4">
+              Profilo non trovato
+            </h2>
+            <p className="text-text-secondary mb-8 max-w-md mx-auto">
+              {error || 'L\'utente richiesto non esiste o non è disponibile.'}
+            </p>
+            <button
+              onClick={() => navigate('/friends')}
+              className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors flex items-center gap-2 mx-auto"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Torna agli Amici
+            </button>
+          </div>
         </div>
-      </div>
-    );
+      </div>    );
   }
-
   return (
-    <div className={`bg-primary-bg border border-border-color rounded-xl ${className}`}>
-      {/* Header con torna indietro */}
-      <div className="p-6 border-b border-border-color">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Torna indietro
-        </button>
+    <div className={`min-h-screen bg-primary-bg font-secondary ${className}`}>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">        {/* Header del profilo pubblico */}
+        <ProfileHeader
+          userProfile={profile}
+          isProfilePrivate={profile.isProfilePrivate}
+          isOwnProfile={false}
+          backButton={
+            <button
+              onClick={() => navigate('/friends')}
+              className="px-4 py-2 bg-secondary-bg text-text-primary rounded-lg hover:bg-tertiary-bg transition-colors flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Torna agli Amici
+            </button>
+          }
+          actionButton={getActionButtons()}
+        />
         
-        <div className="flex items-start gap-6">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt={profile.userName}
-                className="w-24 h-24 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-accent-primary/20 flex items-center justify-center">
-                <User className="h-12 w-12 text-accent-primary" />
-              </div>
-            )}
-          </div>
-
-          {/* Info principale */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold text-text-primary">
-                {profile.userName}
-              </h1>
-              {profile.isProfilePrivate && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-gray-500 text-white text-sm rounded">
-                  <Lock className="h-3 w-3" />
-                  Privato
-                </div>
-              )}
-              {profile.isFriend && (
-                <div className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
-                  Amico
-                </div>
-              )}
+        {/* Se il profilo è privato e non siamo amici, mostra solo il messaggio di privacy */}
+        {profile.isProfilePrivate && !profile.isFriend ? (
+          <div className="mt-6 p-6 bg-secondary-bg border border-border-color rounded-lg">
+            <div className="flex items-center gap-3 text-text-primary mb-2">
+              <span className="font-medium text-lg">Profilo Privato</span>
             </div>
-            
-            {profile.fullName && (
-              <p className="text-lg text-text-secondary mb-2">
-                {profile.fullName}
-              </p>
-            )}
-            
-            {profile.bio && (
-              <p className="text-text-secondary mb-4">
-                {profile.bio}
-              </p>
-            )}            {/* Tags */}
-            {profile.tags && profile.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {profile.tags.map((tag: string, index: number) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-accent-primary/20 text-accent-primary rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Info base */}
-            <div className="flex items-center gap-4 text-sm text-text-secondary mb-4">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                Membro dal {new Date(profile.memberSince).toLocaleDateString()}
-              </div>
-            </div>
-
-            {/* Azioni */}
-            <div className="flex flex-wrap gap-2">
-              {getActionButtons()}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contenuto principale */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Statistiche Gaming */}
-          <div className="bg-secondary-bg rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Trophy className="h-5 w-5 text-accent-primary" />
-              <h3 className="text-lg font-semibold text-text-primary">
-                Statistiche Gaming
-              </h3>
-              {!profile.canViewStats && (
-                <div className="flex items-center gap-1 text-text-secondary">
-                  <EyeOff className="h-4 w-4" />
-                  <span className="text-sm">Privato</span>
-                </div>
-              )}
-            </div>
-
-            {profile.canViewStats && profile.stats ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-accent-primary">
-                    {profile.stats.total}
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    Giochi Totali
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {profile.stats.completed}
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    Completati
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {profile.stats.inProgress}
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    In Corso
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {profile.stats.platinum}
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    Platino
-                  </div>
-                </div>
-                <div className="col-span-2 text-center mt-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock className="h-4 w-4 text-text-secondary" />
-                    <span className="text-lg font-semibold text-text-primary">
-                      {profile.stats.totalHours}h
-                    </span>
-                    <span className="text-sm text-text-secondary">
-                      di gioco
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-text-secondary">
-                <Lock className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                <p>Le statistiche sono private</p>
-              </div>
-            )}
-          </div>
-
-          {/* Diario Gaming */}
-          <div className="bg-secondary-bg rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Gamepad2 className="h-5 w-5 text-accent-primary" />
-              <h3 className="text-lg font-semibold text-text-primary">
-                Attività Recenti
-              </h3>
-              {!profile.canViewDiary && (
-                <div className="flex items-center gap-1 text-text-secondary">
-                  <EyeOff className="h-4 w-4" />
-                  <span className="text-sm">Privato</span>
-                </div>
-              )}
-            </div>
-
-            {profile.canViewDiary ? (
-              <div className="space-y-3">
-                {/* TODO: Implementare chiamata per attività recenti */}
-                <div className="text-center py-8 text-text-secondary">
-                  <Gamepad2 className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                  <p>Attività recenti non ancora implementate</p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-text-secondary">
-                <Lock className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                <p>Il diario è privato</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Messaggio privacy */}
-        {profile.isProfilePrivate && !profile.isFriend && (
-          <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
-            <div className="flex items-center gap-2 text-gray-700">
-              <Lock className="h-5 w-5" />
-              <span className="font-medium">Profilo Privato</span>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Questo utente ha un profilo privato. Diventa amico per vedere più informazioni.
+            <p className="text-text-secondary">
+              Questo utente ha un profilo privato. Per vedere i contenuti del profilo, 
+              devi essere amico di questo utente.
             </p>
           </div>
+        ) : (
+          <>
+            {/* Statistiche - mostrate solo se il profilo è pubblico o siamo amici */}
+            <ProfileStats
+              stats={profile.stats}
+              userProfile={profile}
+              isPrivate={!profile.canViewStats}
+              showPrivacyIndicator={!profile.isFriend}
+              title="Statistiche di gioco"
+            />
+              {/* Diario di gioco - mostrato solo se il profilo è pubblico o siamo amici */}
+            <ProfileDiary
+              activities={activities}
+              selectedYear={selectedYear}
+              activeFilters={activeFilters}
+              diaryStats={placeholderDiaryStats}
+              months={months}
+              isPrivate={!profile.canViewDiary}
+              showPrivacyIndicator={!profile.isFriend}
+              onYearChange={setSelectedYear}
+              onFilterChange={handleFilterChange}
+              isOwnProfile={false}
+            />
+          </>
         )}
       </div>
     </div>

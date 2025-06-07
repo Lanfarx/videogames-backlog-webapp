@@ -5,6 +5,7 @@ import RatingStars from '../../ui/atoms/RatingStars';
 import GenreTagList from '../../ui/GenreTagList';
 import type { PublicCatalogGame } from '../../../types/game';
 import { useCommunityCommunityRating } from '../../../store/hooks/communityHooks';
+import { formatMetacriticScore } from '../../../utils/gameDisplayUtils';
 
 interface SimilarGameItemProps {
   game: PublicCatalogGame;
@@ -34,15 +35,14 @@ export function SimilarGameItem({ game }: SimilarGameItemProps) {
           </h4>
           <p className="text-xs text-text-secondary mb-2">
             {game.ReleaseYear}
-          </p>
-          <div className="flex items-center gap-2 mb-2">
+          </p>            <div className="flex items-center gap-2 mb-2">
             <RatingStars Rating={communityRating} showValue={false} size="sm" readOnly />
             <span className="text-xs text-text-secondary">
               {communityRating > 0 ? communityRating.toFixed(1) : 'N.D.'}
             </span>
             <div className="flex items-center gap-1 ml-auto">
               <Award className="h-3 w-3 text-yellow-400 fill-current" />
-              <span className="text-xs text-text-secondary">{game.Metacritic}</span>
+              <span className="text-xs text-text-secondary">{formatMetacriticScore(game.Metacritic)}</span>
             </div>
           </div>
           <GenreTagList 

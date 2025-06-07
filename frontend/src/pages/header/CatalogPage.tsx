@@ -9,6 +9,7 @@ import { useAllCommunityRatings } from "../../store/hooks/communityHooks";
 import Pagination from "../../components/ui/Pagination";
 import { getPaginatedGames, getGameDetails } from '../../store/services/rawgService';
 import { useNavigate } from "react-router-dom";
+import { findMatchingGame } from '../../utils/gameMatchingUtils';
 
 const SORT_OPTIONS = [
   { value: "title", label: "Titolo" },
@@ -118,8 +119,13 @@ const CatalogPage: React.FC = () => {
     }
   };
 
+  // Applica filtro giochi posseduti se richiesto
+  const filteredGames = hideOwned
+    ? mappedGames.filter(game => !findMatchingGame(userGames, game.Title))
+    : mappedGames;
+
   return (
-    <div className="flex flex-col min-h-screen bg-secondaryBg">
+    <div className="flex flex-col min-h-screen bg-secondary-bg">
       <div className="w-full border-b border-border-color bg-primary-bg">
         <div className="container mx-auto px-6 py-8">
           <h1 className="text-3xl font-bold text-text-primary font-primary mb-2">Catalogo Giochi</h1>
@@ -149,15 +155,18 @@ const CatalogPage: React.FC = () => {
           ) : (
             <>
               <div className={gridClass}>
-                {mappedGames.map(game => (
-                  <CatalogGameCard
-                    key={game.id}
-                    game={game}
-                    isInLibrary={userGames.some(g => g.Title === game.Title)}
-                    onAddToLibrary={() => handleAddToLibrary(game)}
-                    onInfoClick={setSelectedGameId}
-                  />
-                ))}
+                {filteredGames.map(game => {
+                  const isInLibrary = !!findMatchingGame(userGames, game.Title);
+                  return (
+                    <CatalogGameCard
+                      key={game.id}
+                      game={game}
+                      isInLibrary={isInLibrary}
+                      onAddToLibrary={() => handleAddToLibrary(game)}
+                      onInfoClick={setSelectedGameId}
+                    />
+                  );
+                })}
               </div>
               {totalPages > 1 && (
                 <Pagination

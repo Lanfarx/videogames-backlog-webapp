@@ -6,6 +6,8 @@ using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Dto;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace VideoGamesBacklogBackend.Services
 {
@@ -18,12 +20,134 @@ namespace VideoGamesBacklogBackend.Services
         {
             _dbContext = dbContext;
             _activityService = activityService;
-        }
-
-        public async Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims)
+        }        public async Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Where(g => g.UserId == userId).Include(g => g.Comments).ToListAsync();
+        }
+
+        public async Task<PaginatedGamesDto> GetGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 12, string? filters = null, string? sortBy = null, string? sortOrder = null, string? search = null)
+        {
+            var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+            
+            var query = _dbContext.Games.Where(g => g.UserId == userId);
+
+            // Applica ricerca
+            if (!string.IsNullOrEmpty(search))
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(g => 
+                    g.Title.ToLower().Contains(searchLower) ||
+                    (g.Developer != null && g.Developer.ToLower().Contains(searchLower)) ||
+                    (g.Publisher != null && g.Publisher.ToLower().Contains(searchLower)) ||
+                    g.Genres.Any(genre => genre.ToLower().Contains(searchLower))
+                );            }            // Applica filtri
+            if (!string.IsNullOrEmpty(filters))
+            {
+                try
+                {
+                    // Opzioni di deserializzazione per gestire correttamente gli enum
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new JsonStringEnumConverter() }
+                    };                    var gameFilters = JsonSerializer.Deserialize<GameFiltersDto>(filters, options);
+                    if (gameFilters != null)
+                    {
+                        // Filtro per status
+                        if (gameFilters.Status?.Any() == true)
+                        {
+                            query = query.Where(g => gameFilters.Status.Contains(g.Status));
+                        }
+
+                        // Filtro per piattaforma
+                        if (gameFilters.Platform?.Any() == true)
+                        {
+                            query = query.Where(g => gameFilters.Platform.Contains(g.Platform));
+                        }
+
+                        // Filtro per genere
+                        if (gameFilters.Genre?.Any() == true)
+                        {
+                            query = query.Where(g => g.Genres.Any(genre => gameFilters.Genre.Contains(genre)));
+                        }
+
+                        // Filtro per range prezzo
+                        if (gameFilters.PriceRange?.Length == 2)
+                        {
+                            var minPrice = gameFilters.PriceRange[0];
+                            var maxPrice = gameFilters.PriceRange[1];
+                            query = query.Where(g => g.Price >= minPrice && g.Price <= maxPrice);
+                        }
+
+                        // Filtro per range ore di gioco
+                        if (gameFilters.HoursRange?.Length == 2)
+                        {
+                            var minHours = gameFilters.HoursRange[0];
+                            var maxHours = gameFilters.HoursRange[1];
+                            query = query.Where(g => g.HoursPlayed >= minHours && g.HoursPlayed <= maxHours);
+                        }
+
+                        // Filtro per range Metacritic
+                        if (gameFilters.MetacriticRange?.Length == 2)
+                        {
+                            var minMetacritic = gameFilters.MetacriticRange[0];
+                            var maxMetacritic = gameFilters.MetacriticRange[1];
+                            query = query.Where(g => g.Metacritic >= minMetacritic && g.Metacritic <= maxMetacritic);
+                        }                        // Filtro per data di acquisto
+                        if (!string.IsNullOrEmpty(gameFilters.PurchaseDate))
+                        {
+                            query = query.Where(g => g.PurchaseDate == gameFilters.PurchaseDate);
+                        }
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Se il parsing JSON fallisce, ignora i filtri
+                }
+            }
+
+            // Applica ordinamento
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                var isAscending = sortOrder?.ToLower() != "desc";
+                
+                query = sortBy.ToLower() switch
+                {
+                    "title" => isAscending ? query.OrderBy(g => g.Title) : query.OrderByDescending(g => g.Title),
+                    "releasedate" => isAscending ? query.OrderBy(g => g.ReleaseYear) : query.OrderByDescending(g => g.ReleaseYear),
+                    "hoursplayed" => isAscending ? query.OrderBy(g => g.HoursPlayed) : query.OrderByDescending(g => g.HoursPlayed),
+                    "rating" => isAscending ? query.OrderBy(g => g.Rating) : query.OrderByDescending(g => g.Rating),
+                    "metacritic" => isAscending ? query.OrderBy(g => g.Metacritic) : query.OrderByDescending(g => g.Metacritic),
+                    "price" => isAscending ? query.OrderBy(g => g.Price) : query.OrderByDescending(g => g.Price),
+                    "purchasedate" => isAscending ? query.OrderBy(g => g.PurchaseDate) : query.OrderByDescending(g => g.PurchaseDate),
+                    _ => query.OrderBy(g => g.Title)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(g => g.Title);
+            }
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            
+            var games = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Include(g => g.Comments)
+                .ToListAsync();
+
+            return new PaginatedGamesDto
+            {
+                Games = games.Cast<object>().ToList(),
+                CurrentPage = page,
+                TotalPages = totalPages,
+                TotalItems = totalItems,
+                PageSize = pageSize,
+                HasNextPage = page < totalPages,
+                HasPreviousPage = page > 1
+            };
         }
 
         public async Task<Game?> GetGameByIdAsync(ClaimsPrincipal userClaims, int gameId)
@@ -36,8 +160,70 @@ namespace VideoGamesBacklogBackend.Services
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Title == title && g.UserId == userId);
-        }        
-        
+        }        /// <summary>
+        /// Recupera informazioni pubbliche di base su un gioco per ID, senza filtro per utente
+        /// Utilizzato per visualizzare dati sui giochi nelle attività di altri utenti
+        /// Rispetta le impostazioni di privacy per la visualizzazione delle recensioni
+        /// </summary>        
+        public async Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null)
+        {
+            var game = await _dbContext.Games
+                .Include(g => g.User)
+                .FirstOrDefaultAsync(g => g.Id == gameId);
+            
+            if (game == null)
+            {
+                return null;
+            }
+            
+            // Verifica se la recensione può essere mostrata in base alle impostazioni di privacy
+            bool canShowReview = false;
+            bool isOwner = false;
+            
+            if (game.User != null && currentUserId.HasValue)
+            {
+                // Verifica se l'utente corrente è il proprietario
+                isOwner = game.User.Id == currentUserId.Value;
+                
+                if (game.Review != null)
+                {
+                    // Se è il proprietario, può sempre vedere la recensione
+                    if (isOwner)
+                    {
+                        canShowReview = true;
+                    }
+                    else
+                    {
+                        // Altrimenti applica le regole di privacy
+                        canShowReview = await CanViewReview(game.Review, game.User, currentUserId.Value);
+                    }
+                }
+            }
+            
+            // Restituisci le informazioni pubbliche essenziali
+            return new
+            {
+                id = game.Id,
+                title = game.Title,
+                platform = game.Platform,
+                releaseYear = game.ReleaseYear,
+                coverImage = game.CoverImage,
+                developer = game.Developer,
+                publisher = game.Publisher,
+                userId = game.UserId,
+                // Includi la recensione solo se può essere visualizzata
+                review = canShowReview ? new {
+                    text = game.Review?.Text,
+                    gameplay = game.Review?.Gameplay,
+                    graphics = game.Review?.Graphics,
+                    story = game.Review?.Story,
+                    sound = game.Review?.Sound,
+                    date = game.Review?.Date,
+                    isPublic = game.Review?.IsPublic
+                } : null
+            };
+        }
+
         public async Task<Game> AddGameAsync(ClaimsPrincipal userClaims, Game game)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
@@ -405,6 +591,56 @@ namespace VideoGamesBacklogBackend.Services
             await _dbContext.SaveChangesAsync();
 
             return games.Count;
+        }        private async Task<bool> CanViewReview(GameReview? review, User targetUser, int currentUserId)
+        {
+            // Se la recensione non esiste, non può essere visualizzata
+            if (review == null)
+            {
+                return false;
+            }
+
+            // REGOLA 1: Il proprietario può sempre vedere le proprie recensioni
+            if (targetUser.Id == currentUserId)
+            {
+                return true;
+            }
+
+            // REGOLA 2: Le recensioni private non sono mai visibili agli altri
+            var isReviewPublic = review.IsPublic ?? false;
+            if (!isReviewPublic)
+            {
+                return false;
+            }
+            
+            // Controlla se gli utenti sono amici
+            var areFriends = await AreUsersFriendsAsync(currentUserId, targetUser.Id);
+            
+            // REGOLA 3: Per i profili privati, solo gli amici possono vedere i contenuti
+            if (targetUser.PrivacySettings.IsPrivate)
+            {
+                return areFriends;
+            }
+
+            // REGOLA 4: Per profili pubblici con diari privati, solo gli amici possono vedere le recensioni
+            if (!targetUser.PrivacySettings.ShowDiary)
+            {
+                return areFriends;
+            }
+            
+            // REGOLA 5: Profilo pubblico + diario pubblico + recensione pubblica = visibile a tutti
+            return true;
+        }
+        
+        // Metodo di utility per verificare se due utenti sono amici
+        private async Task<bool> AreUsersFriendsAsync(int userId1, int userId2)
+        {
+            var friendship = await _dbContext.Friendships
+                .FirstOrDefaultAsync(f =>
+                    ((f.SenderId == userId1 && f.ReceiverId == userId2) ||
+                     (f.SenderId == userId2 && f.ReceiverId == userId1)) &&
+                    f.Status == FriendshipStatus.Accepted);
+                
+            return friendship != null;
         }
     }
 }

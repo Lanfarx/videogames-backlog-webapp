@@ -61,3 +61,22 @@ export const updateCommentThunk = createAsyncThunk('games/updateComment', async 
 export const fetchGameStats = createAsyncThunk('games/fetchStats', async () => {
   return await gamesService.getGameStats();
 });
+
+// Nuovo thunk per la paginazione lato server
+export const fetchGamesPaginated = createAsyncThunk('games/fetchPaginated', async (params: {
+  page: number;
+  pageSize: number;
+  filters?: any;
+  sortBy?: string;
+  sortOrder?: string;
+  search?: string;
+}) => {
+  return await gamesService.getGamesPaginated(
+    params.page, 
+    params.pageSize, 
+    params.filters, 
+    params.sortBy, 
+    params.sortOrder, 
+    params.search
+  );
+});

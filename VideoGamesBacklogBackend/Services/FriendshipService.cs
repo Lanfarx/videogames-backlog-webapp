@@ -43,8 +43,16 @@ namespace VideoGamesBacklogBackend.Services
                     (f.SenderId == senderId && f.ReceiverId == targetUser.Id) ||
                     (f.SenderId == targetUser.Id && f.ReceiverId == senderId));
 
+            // Permetti di reinviare la richiesta solo se la precedente è stata rifiutata
             if (existingFriendship != null)
-                return false;            var friendship = new Friendship
+            {
+                if (existingFriendship.Status == FriendshipStatus.Rejected) {
+                    _context.Friendships.Remove(existingFriendship);
+                    await _context.SaveChangesAsync();
+                } else {
+                    return false;
+                }
+            }            var friendship = new Friendship
             {
                 SenderId = senderId,
                 ReceiverId = targetUser.Id,
@@ -135,8 +143,7 @@ namespace VideoGamesBacklogBackend.Services
         public async Task<bool> BlockUserAsync(ClaimsPrincipal userClaims, int targetUserId)
         {
             var userId = GetUserId(userClaims);
-            
-            // Rimuovi qualsiasi amicizia esistente
+            // Rimuovi qualsiasi amicizia o blocco esistente
             var existingFriendship = await _context.Friendships
                 .FirstOrDefaultAsync(f => 
                     (f.SenderId == userId && f.ReceiverId == targetUserId) ||
@@ -144,7 +151,16 @@ namespace VideoGamesBacklogBackend.Services
 
             if (existingFriendship != null)
             {
+                // Se già bloccato, sblocca (rimuovi il blocco e non aggiungere un nuovo blocco)
+                if (existingFriendship.Status == FriendshipStatus.Blocked && existingFriendship.SenderId == userId)
+                {
+                    _context.Friendships.Remove(existingFriendship);
+                    await _context.SaveChangesAsync();
+                    return true; // Utente sbloccato
+                }
+                // Se non è un blocco, rimuovi la relazione per poi bloccare
                 _context.Friendships.Remove(existingFriendship);
+                await _context.SaveChangesAsync();
             }
 
             // Crea un nuovo record di blocco
@@ -233,30 +249,41 @@ namespace VideoGamesBacklogBackend.Services
             return friends;
         }
 
-        public async Task<List<PublicProfileDto>> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery)
+        public async Task<PaginatedUsersDto> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery, int page = 1, int pageSize = 10)
         {
             var userId = GetUserId(userClaims);
-            
             if (string.IsNullOrWhiteSpace(searchQuery) || searchQuery.Length < 2)
-                return new List<PublicProfileDto>();
+            {
+                return new PaginatedUsersDto
+                {
+                    Users = new List<PublicProfileDto>(),
+                    TotalCount = 0,
+                    CurrentPage = page,
+                    TotalPages = 0,
+                    PageSize = pageSize
+                };
+            }
 
-            var users = await _context.Users
-                .Where(u => u.Id != userId && 
-                           (u.UserName!.Contains(searchQuery) || 
-                            (u.FullName != null && u.FullName.Contains(searchQuery))))
-                .Take(20)
+            var queryable = _context.Users
+                .Where(u => u.Id != userId &&
+                           (u.UserName!.Contains(searchQuery) ||
+                            (u.FullName != null && u.FullName.Contains(searchQuery))));
+
+            var totalCount = await queryable.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            var users = await queryable
+                .OrderBy(u => u.UserName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             var result = new List<PublicProfileDto>();
-            
             foreach (var user in users)
             {
                 var friendship = await _context.Friendships
-                    .FirstOrDefaultAsync(f => 
+                    .FirstOrDefaultAsync(f =>
                         (f.SenderId == userId && f.ReceiverId == user.Id) ||
-                        (f.SenderId == user.Id && f.ReceiverId == userId));
-
-                var profile = new PublicProfileDto
+                        (f.SenderId == user.Id && f.ReceiverId == userId));                var profile = new PublicProfileDto
                 {
                     UserId = user.Id,
                     UserName = user.UserName ?? "",
@@ -269,14 +296,22 @@ namespace VideoGamesBacklogBackend.Services
                     CanViewStats = !user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowStats,
                     CanViewDiary = !user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowDiary,
                     AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
+                    FriendshipId = friendship?.Id,
                     FriendshipStatus = friendship?.Status.ToString(),
-                    IsFriend = friendship?.Status == FriendshipStatus.Accepted
+                    IsFriend = friendship?.Status == FriendshipStatus.Accepted,
+                    IsRequestSender = friendship?.SenderId == userId
                 };
-
                 result.Add(profile);
             }
 
-            return result;
+            return new PaginatedUsersDto
+            {
+                Users = result,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                PageSize = pageSize
+            };
         }
 
         public async Task<PublicProfileDto?> GetPublicProfileAsync(ClaimsPrincipal userClaims, string userName)
@@ -294,9 +329,7 @@ namespace VideoGamesBacklogBackend.Services
                     (f.SenderId == user.Id && f.ReceiverId == userId));
 
             var isFriend = friendship?.Status == FriendshipStatus.Accepted;
-            var canViewPrivateContent = user.Id == userId || isFriend;
-
-            var profile = new PublicProfileDto
+            var canViewPrivateContent = user.Id == userId || isFriend;            var profile = new PublicProfileDto
             {
                 UserId = user.Id,
                 UserName = user.UserName ?? "",
@@ -309,8 +342,10 @@ namespace VideoGamesBacklogBackend.Services
                 CanViewStats = (!user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowStats) || canViewPrivateContent,
                 CanViewDiary = (!user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowDiary) || canViewPrivateContent,
                 AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
+                FriendshipId = friendship?.Id,
                 FriendshipStatus = friendship?.Status.ToString(),
-                IsFriend = isFriend
+                IsFriend = isFriend,
+                IsRequestSender = friendship?.SenderId == userId
             };
 
             // Aggiungi statistiche se visibili

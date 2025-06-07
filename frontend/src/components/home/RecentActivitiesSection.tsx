@@ -36,7 +36,7 @@ export default function RecentActivitiesSection() {
               // Determina se l'attività è a sinistra o a destra
               const position = index % 2 === 0 ? 'right' : 'left';
               // Ottengo il colore dalla utility centralizzata
-              const dotColor = getActivityColor(activity.Type);
+              const dotColor = getActivityColor(activity.type);
               
               return (
                 <div key={activity.id} className="relative min-h-[60px] flex items-center">

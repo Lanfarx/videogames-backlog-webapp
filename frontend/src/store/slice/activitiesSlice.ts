@@ -126,9 +126,9 @@ const activitySlice = createSlice({
           state.recentActivities = state.recentActivities.slice(0, 10);
         }
         // Aggiorna anche le attività per gioco se presenti
-        const GameId = action.payload.GameId;
-        if (state.activitiesByGame[GameId]) {
-          state.activitiesByGame[GameId].unshift(action.payload);
+        const gameId = action.payload.gameId;
+        if (state.activitiesByGame[gameId]) {
+          state.activitiesByGame[gameId].unshift(action.payload);
         }
       })
       .addCase(createActivity.rejected, (state, action) => {
@@ -164,11 +164,11 @@ const activitySlice = createSlice({
         }
         
         // Aggiorna nelle attività per gioco
-        const GameId = updatedActivity.GameId;
-        if (state.activitiesByGame[GameId]) {
-          const gameActivityIndex = state.activitiesByGame[GameId].findIndex(a => a.id === updatedActivity.id);
+        const gameId2 = updatedActivity.gameId;
+        if (state.activitiesByGame[gameId2]) {
+          const gameActivityIndex = state.activitiesByGame[gameId2].findIndex(a => a.id === updatedActivity.id);
           if (gameActivityIndex !== -1) {
-            state.activitiesByGame[GameId][gameActivityIndex] = updatedActivity;
+            state.activitiesByGame[gameId2][gameActivityIndex] = updatedActivity;
           }
         }
       })

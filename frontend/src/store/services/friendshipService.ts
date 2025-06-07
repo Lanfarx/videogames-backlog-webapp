@@ -22,6 +22,11 @@ export interface FriendRequest {
   fromUserName: string;
   toUserId: number;
   toUserName: string;
+  // Campi opzionali per compatibilità backend
+  receiverUserName?: string;
+  receiverFullName?: string;
+  receiverAvatar?: string;
+  createdAt?: string;
   status: 'Pending' | 'Accepted' | 'Rejected' | 'Blocked';
   requestDate: string;
 }
@@ -61,6 +66,8 @@ export interface PublicProfile {
   stats?: any; // GameStatsDto
   friendshipStatus?: string;
   isFriend: boolean;
+  isRequestSender: boolean;
+  friendshipId?: number;
 }
 
 export interface SearchUsersResponse {
@@ -73,10 +80,10 @@ export interface SearchUsersResponse {
 
 export const friendshipService = {
   // Invia richiesta di amicizia
-  sendFriendRequest: async (toUserId: number): Promise<void> => {
+  sendFriendRequest: async (toUserName: string): Promise<void> => {
     await apiClient.post(
-      `${API_URL}/request`,
-      { toUserId }
+      `${API_URL}/send-request`,
+      { userName: toUserName }
     );
   },
 

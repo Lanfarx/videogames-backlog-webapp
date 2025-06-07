@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Pencil, Trash2, Award, ArrowLeft } from 'lucide-react';
+import { ChevronDown, Pencil, Trash2, Award, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Game } from '../../types/game';
 import { getStatusColor, getStatusLabel } from '../../constants/gameConstants';
 import GameCover from './GameCover';
@@ -8,6 +8,7 @@ import StatusChangePopover from '../ui/StatusChangePopover';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import EditGameDetailsModal from './EditGameDetailsModal';
 import { useGameActions } from '../../store/hooks/gamesHooks';
+import { formatMetacriticScore } from '../../utils/gameDisplayUtils';
 
 interface GameBannerProps {
   game: Game;
@@ -16,9 +17,29 @@ interface GameBannerProps {
   onDelete?: () => void;
   onBack?: () => void;
   showBackButton?: boolean;
+  // Nuove props per la navigazione
+  canGoToPrevious?: boolean;
+  canGoToNext?: boolean;
+  onGoToPrevious?: () => void;
+  onGoToNext?: () => void;
+  currentIndex?: number;
+  totalGames?: number;
 }
 
-const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackButton = false }: GameBannerProps) => {
+const GameBanner = ({ 
+  game, 
+  onChangeStatus, 
+  onEdit, 
+  onDelete, 
+  onBack, 
+  showBackButton = false,
+  canGoToPrevious = false,
+  canGoToNext = false,
+  onGoToPrevious,
+  onGoToNext,
+  currentIndex,
+  totalGames
+}: GameBannerProps) => {
   const { remove } = useGameActions();
   
   // Ottieni l'etichetta in italiano per lo stato attuale
@@ -81,22 +102,60 @@ const GameBanner = ({ game, onChangeStatus, onEdit, onDelete, onBack, showBackBu
             Status={game.Status}
             size="xl"
           />
-        </div>
-
-        {/* Info gioco */}
+        </div>        {/* Info gioco */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <h1 className="font-primary font-bold text-3xl text-text-primary mb-2">{game.Title}</h1>
-            <div className="flex items-center mb-2">
+            {/* Header con titolo e frecce di navigazione */}
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="font-primary font-bold text-3xl text-text-primary">{game.Title}</h1>
+              
+              {/* Frecce di navigazione */}
+              {(canGoToPrevious || canGoToNext) && (
+                <div className="flex items-center gap-2">
+                  {/* Indicatore posizione */}
+                  {currentIndex !== undefined && totalGames !== undefined && (
+                    <span className="text-text-secondary font-secondary text-sm px-3">
+                      {currentIndex + 1} di {totalGames}
+                    </span>
+                  )}
+                  
+                  {/* Freccia precedente */}
+                  <button
+                    onClick={onGoToPrevious}
+                    disabled={!canGoToPrevious}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      canGoToPrevious
+                        ? 'bg-primary-bg border-border-color text-text-primary hover:bg-secondary-bg hover:text-accent-primary'
+                        : 'bg-primary-bg border-border-color text-text-disabled cursor-not-allowed'
+                    }`}
+                    title="Gioco precedente"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  
+                  {/* Freccia successiva */}
+                  <button
+                    onClick={onGoToNext}
+                    disabled={!canGoToNext}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      canGoToNext
+                        ? 'bg-primary-bg border-border-color text-text-primary hover:bg-secondary-bg hover:text-accent-primary'
+                        : 'bg-primary-bg border-border-color text-text-disabled cursor-not-allowed'
+                    }`}
+                    title="Gioco successivo"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>            <div className="flex items-center mb-2">
               <p className="font-secondary text-base text-text-secondary">
                 {game.Developer} / {game.Publisher}
               </p>
-              {game.Metacritic && (
-                <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
-                  <Award className="w-4 h-4 text-yellow-500 mr-1" />
-                  <span className="font-secondary text-base font-semibold">{game.Metacritic}</span>
-                </div>
-              )}
+              <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
+                <Award className="w-4 h-4 text-yellow-500 mr-1" />
+                <span className="font-secondary text-base font-semibold">{formatMetacriticScore(game.Metacritic)}</span>
+              </div>
             </div>
             <p className="font-secondary text-sm text-text-secondary mb-4">
               {game.ReleaseYear}

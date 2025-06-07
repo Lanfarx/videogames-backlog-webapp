@@ -13,7 +13,7 @@ interface GenreBarChartProps {
 
 const GenreBarChart: React.FC<GenreBarChartProps> = ({ data, icon, title }) => {
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-primary-bg p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
                 {icon}
                 {title}
@@ -28,7 +28,7 @@ const GenreBarChart: React.FC<GenreBarChartProps> = ({ data, icon, title }) => {
                                 <span>{item.genre}</span>
                                 <span className="font-semibold">{item.count}</span>
                             </div>
-                            <div className="w-full bg-tertiaryBg h-3 rounded-full overflow-hidden">
+                            <div className="w-full bg-tertiary-bg h-3 rounded-full overflow-hidden">
                                 <div 
                                     className="h-full rounded-full"
                                     style={{ 

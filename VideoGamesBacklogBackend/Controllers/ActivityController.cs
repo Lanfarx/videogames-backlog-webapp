@@ -173,9 +173,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Ottiene statistiche delle attività per tipo
         /// </summary>
         [HttpGet("stats")]
@@ -186,6 +184,36 @@ namespace VideoGamesBacklogBackend.Controllers
                 var userId = GetUserId();
                 var stats = await _activityService.GetActivityStatsByTypeAsync(userId, year);
                 return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Ottiene le attività pubbliche di un utente per il suo profilo pubblico
+        /// </summary>
+        [HttpGet("public/{userIdOrUsername}")]
+        public async Task<ActionResult<PaginatedActivitiesDto>> GetPublicActivities(
+            string userIdOrUsername,
+            [FromQuery] ActivityFiltersDto filters,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                var currentUserId = GetUserId();
+                
+                // Assicurati che filters non sia null
+                filters ??= new ActivityFiltersDto();
+                
+                var result = await _activityService.GetPublicActivitiesAsync(userIdOrUsername, currentUserId, filters, page, pageSize);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
             }
             catch (Exception ex)
             {

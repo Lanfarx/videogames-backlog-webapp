@@ -15,7 +15,19 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Tipi DTO per il backend
+// Tipi DTO per il backend (con valori numerici enum)
+interface CreateActivityDtoApi {
+  type: number;
+  GameId: number;
+  AdditionalInfo?: string;
+}
+
+interface UpdateActivityDtoApi {
+  type?: number;
+  AdditionalInfo?: string;
+}
+
+// Tipi DTO per il frontend (con stringhe ActivityType)
 export interface CreateActivityDto {
   type: ActivityType;
   GameId: number;
@@ -28,7 +40,7 @@ export interface UpdateActivityDto {
 }
 
 export interface ActivityFiltersDto {
-  types?: ActivityType[];
+  types?: ActivityType[]; // Il frontend usa stringhe ActivityType
   year?: number;
   month?: number;
   GameId?: number;
@@ -44,15 +56,42 @@ export interface PaginatedActivitiesDto {
   totalPages: number;
 }
 
+// Mapping da valori numerici enum backend a stringhe frontend
+function mapActivityTypeFromApi(backendType: number): ActivityType {
+  switch (backendType) {
+    case 0: return 'Played';
+    case 1: return 'Completed';
+    case 2: return 'Added';
+    case 3: return 'Rated';
+    case 4: return 'Platinum';
+    case 5: return 'Abandoned';
+    default: return 'Played'; // Fallback
+  }
+}
+
+// Mapping da stringhe frontend a valori numerici enum backend
+function mapActivityTypeToApi(frontendType: ActivityType): number {
+  switch (frontendType) {
+    case 'Played': return 0;
+    case 'Completed': return 1;
+    case 'Added': return 2;
+    case 'Rated': return 3;
+    case 'Platinum': return 4;
+    case 'Abandoned': return 5;
+    default: return 0; // Fallback
+  }
+}
+
 // Mappatura da API response a tipo frontend
 function mapActivityFromApi(apiActivity: any): Activity {
   return {
     id: apiActivity.id,
-    Type: apiActivity.type as ActivityType,
-    GameId: apiActivity.gameId,
-    GameTitle: apiActivity.gameTitle,
-    Timestamp: apiActivity.timestamp, // Mantieni come stringa per la serializzazione Redux
-    AdditionalInfo: apiActivity.additionalInfo
+    type: mapActivityTypeFromApi(apiActivity.type),
+    gameId: apiActivity.gameId,
+    gameTitle: apiActivity.gameTitle,
+    timestamp: apiActivity.timestamp, // Mantieni come stringa per la serializzazione Redux
+    additionalInfo: apiActivity.additionalInfo,
+    gameImageUrl: apiActivity.gameImageUrl
   };
 }
 
@@ -67,8 +106,10 @@ export const getActivities = async (
   
   // Mappa i filtri frontend sul formato del DTO backend
   if (filters.Types?.length) {
+    // Converti i tipi stringa in numeri per il backend
+    const numericTypes = filters.Types.map(mapActivityTypeToApi);
     // Per ASP.NET Core model binding, inviamo gli array come: Types[0]=value1&Types[1]=value2
-    filters.Types.forEach((type, index) => {
+    numericTypes.forEach((type, index) => {
       params[`Types[${index}]`] = type;
     });
   }
@@ -95,12 +136,21 @@ export const getActivityById = async (id: number): Promise<Activity> => {
 };
 
 export const createActivity = async (activity: CreateActivityDto): Promise<Activity> => {
-  const res = await apiClient.post(API_URL, activity);
+  const apiActivity: CreateActivityDtoApi = {
+    type: mapActivityTypeToApi(activity.type),
+    GameId: activity.GameId,
+    AdditionalInfo: activity.AdditionalInfo
+  };
+  const res = await apiClient.post(API_URL, apiActivity);
   return mapActivityFromApi(res.data);
 };
 
 export const updateActivity = async (id: number, activity: UpdateActivityDto): Promise<Activity> => {
-  const res = await apiClient.put(`${API_URL}/${id}`, activity);
+  const apiActivity: UpdateActivityDtoApi = {
+    type: activity.type ? mapActivityTypeToApi(activity.type) : undefined,
+    AdditionalInfo: activity.AdditionalInfo
+  };
+  const res = await apiClient.put(`${API_URL}/${id}`, apiActivity);
   return mapActivityFromApi(res.data);
 };
 
@@ -122,5 +172,39 @@ export const getActivityStats = async (year?: number): Promise<Record<string, nu
   const params = year ? { year } : {};
   const res = await apiClient.get(`${API_URL}/stats`, { params });
   return res.data;
+};
+
+export const getPublicActivities = async (
+  userIdOrUsername: string,
+  filters: ActivityFiltersDto = {},
+  page: number = 1,
+  pageSize: number = 20
+): Promise<PaginatedActivitiesDto> => {
+  const params: any = { page, pageSize };
+  
+  // Converti i filtri di tipo da stringa a numero per il backend
+  if (filters.types?.length) {
+    const numericTypes = filters.types.map(mapActivityTypeToApi);
+    numericTypes.forEach((type, index) => {
+      params[`Types[${index}]`] = type;
+    });
+  }
+  
+  // Aggiungi altri filtri se presenti
+  if (filters.year !== undefined) params.Year = filters.year;
+  if (filters.month !== undefined) params.Month = filters.month;
+  if (filters.GameId !== undefined) params.GameId = filters.GameId;
+  if (filters.limit !== undefined) params.Limit = filters.limit;
+  if (filters.sortDirection !== undefined) params.SortDirection = filters.sortDirection;
+  
+  const res = await apiClient.get(`${API_URL}/public/${userIdOrUsername}`, { params });
+  
+  return {
+    activities: res.data.activities.map(mapActivityFromApi),
+    totalCount: res.data.totalCount,
+    pageSize: res.data.pageSize,
+    currentPage: res.data.page,
+    totalPages: res.data.totalPages
+  };
 };
 

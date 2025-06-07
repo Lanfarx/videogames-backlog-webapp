@@ -9,15 +9,10 @@ export const useSimilarGames = (
   const [similar, setSimilar] = useState<PublicCatalogGame[]>([]);
 
   useEffect(() => {
-    const fetchSimilar = async () => {
-      try {
+    const fetchSimilar = async () => {      try {
         const genreIds = currentGame.Genres?.map(g => g.id).filter(Boolean);
-        // DEBUG: logga currentGame per capire se ha id RAWG
-        console.log('currentGame in useSimilarGames:', currentGame);
         if (genreIds && genreIds.length > 0 && currentGame.id) {
           const results = await getSimilarGames(genreIds, currentGame.id, count, currentGame.Metacritic);
-          // DEBUG: logga la risposta
-          console.log('Risposta getSimilarGames:', results);
 
           const formatted = results.map((game: any) => ({
             id: game.id,

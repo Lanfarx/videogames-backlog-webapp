@@ -46,7 +46,7 @@ const DiarioPage = () => {
 
   // Filtra le attività per anno e mese selezionati
   const filteredActivities = activities.filter(a => {
-    const d = new Date(a.Timestamp);
+    const d = new Date(a.timestamp);
     const yearMatch = d.getFullYear() === selectedYear;
     const monthMatch = selectedMonth === undefined ? true : d.getMonth() === selectedMonth;
     return yearMatch && monthMatch;

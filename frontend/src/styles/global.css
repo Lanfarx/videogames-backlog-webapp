@@ -240,11 +240,25 @@
 .bg-platform-android { background-color: rgb(var(--platform-android)); }
 
 /* Utility per status */
-.bg-status-NotStarted { background-color: rgb(var(--status-NotStarted)); }
-.bg-status-InProgress { background-color: rgb(var(--status-InProgress)); }
-.bg-status-Completed { background-color: rgb(var(--status-Completed)); }
-.bg-status-Abandoned { background-color: rgb(var(--status-Abandoned)); }
-.bg-status-Platinum { background-color: rgb(var(--status-Platinum)); }
+.bg-status-NotStarted { background-color: rgb(var(--status-notstarted)); }
+.bg-status-InProgress { background-color: rgb(var(--status-inprogress)); }
+.bg-status-Completed { background-color: rgb(var(--status-completed)); }
+.bg-status-Abandoned { background-color: rgb(var(--status-abandoned)); }
+.bg-status-Platinum { background-color: rgb(var(--status-platinum)); }
+
+/* Utility per text status */
+.text-status-NotStarted { color: rgb(var(--status-notstarted)); }
+.text-status-InProgress { color: rgb(var(--status-inprogress)); }
+.text-status-Completed { color: rgb(var(--status-completed)); }
+.text-status-Abandoned { color: rgb(var(--status-abandoned)); }
+.text-status-Platinum { color: rgb(var(--status-platinum)); }
+
+/* Utility per border status */
+.border-status-NotStarted { border-color: rgb(var(--status-notstarted)); }
+.border-status-InProgress { border-color: rgb(var(--status-inprogress)); }
+.border-status-Completed { border-color: rgb(var(--status-completed)); }
+.border-status-Abandoned { border-color: rgb(var(--status-abandoned)); }
+.border-status-Platinum { border-color: rgb(var(--status-platinum)); }
 
 /* Utility per activity */
 .bg-activity-played { background-color: rgb(var(--activity-played)); }

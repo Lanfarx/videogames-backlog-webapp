@@ -28,9 +28,9 @@ const DashboardPage: React.FC = () => {
 
     // Usa la funzione centralizzata per la distribuzione generi
     const genreData = generateGenreDistributionData(allGames);    return (
-        <div className="flex flex-col bg-secondaryBg min-h-screen p-6">
+        <div className="flex flex-col bg-secondary-bg min-h-screen p-6">
             {/* Intestazione pagina */}
-            <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+            <div className="bg-primary-bg p-6 rounded-lg shadow-sm mb-6">
                 <h1 className="text-3xl font-bold text-text-primary font-['Montserrat']">Dashboard</h1>
             </div>
 
@@ -74,7 +74,7 @@ const DashboardPage: React.FC = () => {
                     icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2" />}
                     title="Generi più giocati" 
                 />
-                <div className="bg-white p-6 shadow-sm rounded-lg">
+                <div className="bg-primary-bg p-6 shadow-sm rounded-lg">
                     <div className="flex items-baseline justify-between mb-6">
                       <h2 className="text-xl font-bold text-text-primary font-['Montserrat'] flex items-center">
                         <Clock className="h-5 w-5 text-accent-primary mr-2" />

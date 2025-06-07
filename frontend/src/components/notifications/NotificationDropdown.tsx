@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Check, X, UserPlus, UserCheck, UserX, Trash2, CheckCheck, Bell } from 'lucide-react';
@@ -156,32 +155,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) 
                         <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0 mt-1 ml-2" />
                       )}
                     </div>
-
-                    {/* Azioni per richieste di amicizia */}
-                    {notification.type === 'friend_request' && notification.data?.requestId && (
-                      <div className="flex items-center gap-2 mt-3">
-                        <button
-                          onClick={() => handleAcceptFriendRequest(
-                            notification.data!.requestId!, 
-                            notification.id
-                          )}
-                          className="px-3 py-1 bg-accent-success text-white text-xs rounded-md hover:bg-accent-success/90 transition-colors flex items-center gap-1"
-                        >
-                          <Check className="h-3 w-3" />
-                          Accetta
-                        </button>
-                        <button
-                          onClick={() => handleRejectFriendRequest(
-                            notification.data!.requestId!, 
-                            notification.id
-                          )}
-                          className="px-3 py-1 bg-accent-danger text-white text-xs rounded-md hover:bg-accent-danger/90 transition-colors flex items-center gap-1"
-                        >
-                          <X className="h-3 w-3" />
-                          Rifiuta
-                        </button>
-                      </div>
-                    )}
 
                     {/* Azioni generali */}
                     <div className="flex items-center justify-end gap-2 mt-2">

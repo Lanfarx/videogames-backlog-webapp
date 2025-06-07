@@ -14,11 +14,12 @@ export type ActivityType =
  */
 export interface Activity {
   id: number;               // Identificativo univoco
-  Type: ActivityType;       // Tipo di attività
-  GameId: number;           // ID del gioco collegato
-  GameTitle: string;        // Titolo del gioco
-  Timestamp: string;        // Data e ora dell'attività (ISO string per serializzazione Redux)
-  AdditionalInfo?: string;  // Informazioni aggiuntive (es. "5 ore", "dopo 2 ore")
+  type: ActivityType;       // Tipo di attività
+  gameId: number;           // ID del gioco collegato
+  gameTitle: string;        // Titolo del gioco
+  timestamp: string;        // Data e ora dell'attività (ISO string per serializzazione Redux)
+  additionalInfo?: string;  // Informazioni aggiuntive (es. "5 ore", "dopo 2 ore")
+  gameImageUrl?: string;    // URL dell'immagine del gioco (se disponibile)
 }
 
 /**

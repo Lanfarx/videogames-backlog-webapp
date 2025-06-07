@@ -98,7 +98,7 @@ const ContinuePlayingSection: React.FC = () => {
           
           {/* Griglia giochi */}
           <div className="flex space-x-6 overflow-hidden py-4 px-2 w-full">
-            {paginationData.games.map((game: any) => (
+            {(Array.isArray(paginationData.games) ? paginationData.games : []).map((game: any) => (
               <InProgressGameCard 
                 key={game.id}
                 id={game.id.toString()}

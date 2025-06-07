@@ -10,6 +10,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string GameTitle { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
         public string? AdditionalInfo { get; set; }
+        public object GameImageUrl { get; internal set; }
     }
 
     public class CreateActivityDto
@@ -42,5 +43,6 @@ namespace VideoGamesBacklogBackend.Dto
         public int PageSize { get; set; }
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
+        public int Page { get; internal set; }
     }
 }
