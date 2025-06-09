@@ -3,7 +3,8 @@ import { User, ArrowLeft, UserPlus, UserMinus, Ban, UserCheck, UserX } from 'luc
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFriendshipActions, usePublicProfile } from '../../store/hooks/friendshipHooks';
 import { useFriendsNavigation } from '../../store/hooks/navigationHooks';
-import { Activity } from '../../types/activity';
+import { usePublicActivitiesWithReactions } from '../../store/hooks/activitiesWithReactionsHooks';
+import { Activity, ActivityWithReactions } from '../../types/activity';
 import { getPublicActivities } from '../../store/services/activityService';
 import { 
   calculateActivityStats, 
@@ -33,22 +34,31 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
     blockUser
   } = useFriendshipActions();
   
-  const { profile, loading, error, loadProfile, loadProfileByUsername } = usePublicProfile();
-  // Stati per il diario (simili a ProfilePage)
+  const { profile, loading, error, loadProfile, loadProfileByUsername } = usePublicProfile();  // Stati per il diario (simili a ProfilePage)
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loadingActivities, setLoadingActivities] = useState(false);  // Caricamento delle attività pubbliche
+  const [activities, setActivities] = useState<(Activity | ActivityWithReactions)[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  // Usa attività con reazioni se l'utente è amico
+  const userId = profile?.userId;
+  const { 
+    activities: activitiesWithReactions, 
+    loading: reactionsLoading 
+  } = usePublicActivitiesWithReactions(userId && profile?.isFriend ? userId : 0);
+
+  // Caricamento delle attività pubbliche (senza reazioni) per utenti non amici
   useEffect(() => {
     const loadPublicActivities = async () => {
       // Non caricare le attività se:
       // 1. Non abbiamo il profilo
       // 2. Il profilo è privato e non siamo amici
       // 3. Non possiamo vedere il diario
+      // 4. L'utente è amico (in questo caso usiamo activitiesWithReactions)
       if (!profile || !userName) return;
       if (profile.isProfilePrivate && !profile.isFriend) return;
       if (!profile.canViewDiary) return;
+      if (profile.isFriend) return; // Se è amico, usa activitiesWithReactions
       
       setLoadingActivities(true);
       try {
@@ -68,7 +78,14 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
     };
 
     loadPublicActivities();
-  }, [profile, userName]); // Rimuoviamo selectedYear dalle dipendenze
+  }, [profile, userName]);
+  // Aggiorna le attività quando arrivano quelle con reazioni
+  useEffect(() => {
+    if (profile?.isFriend && activitiesWithReactions.length >= 0) { // Cambiato da > 0 a >= 0 per includere array vuoti
+      setActivities(activitiesWithReactions);
+      setLoadingActivities(reactionsLoading);
+    }
+  }, [activitiesWithReactions, profile?.isFriend, reactionsLoading]);
   // Gestione filtri diario (simile a DiarioPage)
   const handleFilterChange = (filter: string) => {
     if (filter === 'all') {
@@ -348,20 +365,34 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
               isPrivate={!profile.canViewStats}
               showPrivacyIndicator={!profile.isFriend}
               title="Statistiche di gioco"
-            />
-              {/* Diario di gioco - mostrato solo se il profilo è pubblico o siamo amici */}
-            <ProfileDiary
-              activities={activities}
-              selectedYear={selectedYear}
-              activeFilters={activeFilters}
-              diaryStats={placeholderDiaryStats}
-              months={months}
-              isPrivate={!profile.canViewDiary}
-              showPrivacyIndicator={!profile.isFriend}
-              onYearChange={setSelectedYear}
-              onFilterChange={handleFilterChange}
-              isOwnProfile={false}
-            />
+            />            {/* Diario di gioco - mostrato solo se il profilo è pubblico o siamo amici */}
+            {loadingActivities ? (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-text-primary font-primary">Diario di gioco</h2>
+                </div>
+                <div className="bg-secondary-bg rounded-lg p-6">
+                  <div className="text-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-4"></div>
+                    <p className="text-text-secondary">Caricamento attività...</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ProfileDiary
+                activities={activities}
+                selectedYear={selectedYear}
+                activeFilters={activeFilters}
+                diaryStats={placeholderDiaryStats}
+                months={months}
+                isPrivate={!profile.canViewDiary}
+                showPrivacyIndicator={!profile.isFriend}
+                onYearChange={setSelectedYear}
+                onFilterChange={handleFilterChange}
+                isOwnProfile={false}
+                isFriend={profile.isFriend}
+              />
+            )}
           </>
         )}
       </div>

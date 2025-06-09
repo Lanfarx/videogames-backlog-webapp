@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useGamesStats } from '../../store/hooks/index';
-import { useAllActivities } from '../../store/hooks/activitiesHooks';
+import { useActivitiesWithReactions } from '../../store/hooks/activitiesWithReactionsHooks';
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity } from '../../types/activity';
+import { Activity, ActivityWithReactions } from '../../types/activity';
 import { 
   calculateActivityStats, 
   getUniqueMonthsForYear,
@@ -20,7 +20,7 @@ import ProfileDiary from '../../components/profile/ProfileDiary';
 
 const ProfilePage = () => {
   const stats = useGamesStats();
-  const { activities: activitiesData, loading: activitiesLoading } = useAllActivities();
+  const { activities: activitiesData, loading: activitiesLoading } = useActivitiesWithReactions();
   const userProfile = useSelector((state: any) => state.user.profile);
 
   // Stati per privacy e diario
@@ -34,7 +34,7 @@ const ProfilePage = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<(Activity | ActivityWithReactions)[]>([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 

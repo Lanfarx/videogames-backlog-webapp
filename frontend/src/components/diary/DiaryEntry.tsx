@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Activity } from '../../types/activity';
+import { Activity, ActivityWithReactions } from '../../types/activity';
 import { Game } from '../../types/game';
 import { Gamepad2, Trophy, Star, X, Check, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import RatingStars from '../ui/atoms/RatingStars';
+import ReactionBar from './ReactionBar';
+import ActivityCommentsSection from './ActivityCommentsSection';
 import { useGameById, useGameActions } from '../../store/hooks/gamesHooks';
 import { useGameByIdFetch } from '../../store/hooks/useGameByIdFetch';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
@@ -11,9 +13,10 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { Link } from 'react-router-dom';
 
 interface DiaryEntryProps {
-  activity: Activity;
+  activity: Activity | ActivityWithReactions;
   showCoverImage?: boolean;
   allActivities?: Activity[];
+  showReactions?: boolean;
   // Privacy context per profili pubblici
   publicProfile?: {
     canViewDiary: boolean;
@@ -26,6 +29,7 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({
   activity, 
   showCoverImage = true, 
   allActivities = [],
+  showReactions = true,
   publicProfile 
 }) => {
   const [expandedReview, setExpandedReview] = useState(false);
@@ -162,12 +166,25 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({
             <span className="font-bold text-base text-text-primary truncate" title={game.Title || 'Titolo non disponibile'}>
               {game.Title || 'Titolo non disponibile'}
             </span>
-          )}{/* Mostra anno e piattaforma se disponibili */}
+          )}
+
+          {/* Mostra anno e piattaforma se disponibili */}
           {game.ReleaseYear && (
             <span className="text-xs text-text-secondary">({game.ReleaseYear})</span>
           )}
           {game.Platform && (
             <span className="text-xs text-text-secondary">{game.Platform}</span>
+          )}
+
+          {/* ReactionBar posizionata accanto al titolo */}
+          {showReactions && (
+            <ReactionBar
+              activityId={activity.id}
+              reactions={'reactions' in activity ? activity.reactions : []}
+              reactionSummary={'reactionSummary' in activity ? activity.reactionSummary : []}
+              isOwner={!publicProfile || publicProfile.isOwnProfile}
+              className="ml-2"
+            />
           )}
         </div>
           <div className="flex items-center gap-2 mb-2">
@@ -268,8 +285,7 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({
             </p>
           </div>
         )}
-        
-        {/* Recensione */}
+          {/* Recensione */}
         {showReview && (
           <div className="bg-secondary-bg p-3 rounded-lg mt-2">            <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
@@ -298,8 +314,14 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({
                     Mostra tutto
                   </>
                 )}
-              </button>
-            )}
+              </button>            )}          </div>
+        )}        {/* Sezione commenti - solo per attività di tipo "Rated" */}
+        {activity.type === 'Rated' && showReactions && (
+          <div className="mt-4">
+            <ActivityCommentsSection 
+              activityId={activity.id}
+              commentsCount={('commentsCount' in activity ? activity.commentsCount : 0) || 0}
+            />
           </div>
         )}
       </div>

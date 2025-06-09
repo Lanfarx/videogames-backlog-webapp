@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VideoGamesBacklogBackend.Services;
 using System.Security.Claims;
 using VideoGamesBacklogBackend.Data;
@@ -10,15 +11,16 @@ namespace VideoGamesBacklogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
-    public class ProfileController : ControllerBase
+    [Authorize]    public class ProfileController : ControllerBase
     {
         private readonly IProfileService _profileService;
+        private readonly AppDbContext _context;
 
-        public ProfileController(IProfileService profileService)
+        public ProfileController(IProfileService profileService, AppDbContext context)
         {
             _profileService = profileService;
-        }        [HttpGet]
+            _context = context;
+        }[HttpGet]
         public async Task<IActionResult> GetProfile()
         {
             var user = await _profileService.GetProfileAsync(User);
@@ -36,6 +38,20 @@ namespace VideoGamesBacklogBackend.Controllers
             var result = await _profileService.ChangePasswordAsync(User, req.CurrentPassword, req.NewPassword);
             if (!result) return BadRequest("Password attuale errata o nuova password non valida.");
             return Ok();
+        }        [HttpGet("avatar/{username}")]
+        public async Task<IActionResult> GetUserAvatar(string username)
+        {
+            var user = await _context.Users
+                .Where(u => u.UserName == username)
+                .Select(u => new { u.Avatar })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound("Utente non trovato");
+            }
+
+            return Ok(new { avatar = user.Avatar });
         }
 
         public class ChangePasswordRequest

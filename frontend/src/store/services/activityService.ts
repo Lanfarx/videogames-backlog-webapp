@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Activity, ActivityFilters, ActivityType } from '../../types/activity';
+import { Activity, ActivityFilters, ActivityType, ActivityWithReactions } from '../../types/activity';
 import { getToken } from '../../utils/getToken';
 
 const API_URL = 'http://localhost:5097/api/activity';
@@ -207,4 +207,21 @@ export const getPublicActivities = async (
     totalPages: res.data.totalPages
   };
 };
+
+/**
+ * Mappatura da API response a ActivityWithReactions frontend
+ */
+function mapActivityWithReactionsFromApi(apiActivity: any): ActivityWithReactions {
+  return {
+    id: apiActivity.id,
+    type: mapActivityTypeFromApi(apiActivity.type),
+    gameId: apiActivity.gameId,
+    gameTitle: apiActivity.gameTitle,
+    timestamp: apiActivity.timestamp,
+    additionalInfo: apiActivity.additionalInfo,
+    gameImageUrl: apiActivity.gameImageUrl,
+    reactions: apiActivity.reactions || [],
+    reactionSummary: apiActivity.reactionSummary || []
+  };
+}
 

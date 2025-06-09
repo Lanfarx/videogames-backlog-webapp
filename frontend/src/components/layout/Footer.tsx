@@ -16,15 +16,23 @@ const Footer: React.FC = () => {
             Contatti
           </Link>
         </div>
-        
-        <div className="text-center">
-          <p className="text-xs text-text-disabled font-['Roboto']">
+          <div className="text-center">
+          <p className="text-xs text-text-disabled font-['Roboto'] mb-1">
             © {new Date().getFullYear()} GameBacklog. Tutti i diritti riservati.
           </p>
+          <p className="text-xs text-text-disabled font-['Roboto']">
+            <a 
+              href="https://rawg.io/apidocs" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-accent-primary transition-colors"
+            >
+              Powered by RAWG
+            </a>
+          </p>
         </div>
-        
-        <div className="text-xs text-text-disabled font-['Roboto']">
-          Versione 0.6.0
+          <div className="text-xs text-text-disabled font-['Roboto']">
+          Versione 0.8.0
         </div>
       </div>
     </footer>

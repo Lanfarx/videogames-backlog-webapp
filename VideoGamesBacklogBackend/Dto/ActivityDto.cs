@@ -1,8 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Dto
-{
-    public class ActivityDto
+{    public class ActivityDto
     {
         public int Id { get; set; }
         public ActivityType Type { get; set; }
@@ -10,7 +10,19 @@ namespace VideoGamesBacklogBackend.Dto
         public string GameTitle { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
         public string? AdditionalInfo { get; set; }
-        public object GameImageUrl { get; internal set; }
+        public object? GameImageUrl { get; internal set; }
+        
+        // Lista delle reazioni raggruppate per emoji
+        public List<ActivityReactionSummaryDto> ReactionsSummary { get; set; } = new List<ActivityReactionSummaryDto>();
+        
+        // Per sapere se l'utente corrente ha già reagito e con quale emoji
+        public string? UserReaction { get; set; }        // Proprietà aggiuntive per le reazioni (quando necessario)
+        public List<ActivityReactionDto>? Reactions { get; set; }
+        public Dictionary<string, int>? ReactionCounts { get; set; }
+
+        // Commenti all'attività (solo per attività di tipo "Rated")
+        public List<ActivityCommentDto> Comments { get; set; } = new List<ActivityCommentDto>();
+        public int CommentsCount { get; set; }
     }
 
     public class CreateActivityDto
@@ -44,5 +56,100 @@ namespace VideoGamesBacklogBackend.Dto
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int Page { get; internal set; }
+    }
+
+    // DTO per le reazioni emoji alle attività
+    public class ActivityReactionDto
+    {
+        public int Id { get; set; }
+        public string Emoji { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public int ActivityId { get; set; }
+        public int UserId { get; set; }
+        public string? UserName { get; set; }
+    }
+
+    public class CreateActivityReactionDto
+    {
+        [Required]
+        [MaxLength(10)]
+        public string Emoji { get; set; } = string.Empty;
+
+        [Required]
+        public int ActivityId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO per riassumere le reazioni di un'attività (emoji + conteggio)
+    /// </summary>
+    public class ActivityReactionSummaryDto
+    {
+        public string Emoji { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public List<string> UserNames { get; set; } = new List<string>(); // Per mostrare chi ha reagito
+    }
+
+    /// <summary>
+    /// DTO per aggiungere una reazione a un'attività
+    /// </summary>
+    public class AddActivityReactionDto
+    {
+        [Required]
+        public int ActivityId { get; set; }
+
+        [Required]
+        [MaxLength(10)]
+        public string Emoji { get; set; } = string.Empty;
+    }    /// <summary>
+    /// DTO per rimuovere una reazione da un'attività
+    /// </summary>
+    public class RemoveActivityReactionDto
+    {
+        [Required]
+        public int ActivityId { get; set; }
+
+        [Required]
+        [MaxLength(10)]
+        public string Emoji { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO per un commento a una attività
+    /// </summary>
+    public class ActivityCommentDto
+    {
+        public int Id { get; set; }
+        public string Text { get; set; } = string.Empty;
+        public string Date { get; set; } = string.Empty;
+        public int AuthorId { get; set; }
+        public string AuthorUsername { get; set; } = string.Empty;
+        public string? AuthorAvatar { get; set; }
+        public int ActivityId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO per creare un nuovo commento a una attività
+    /// </summary>
+    public class CreateActivityCommentDto
+    {
+        [Required]
+        public string Text { get; set; } = string.Empty;
+        
+        [Required]
+        public int ActivityId { get; set; }
+    }public class ActivityWithReactionsDto
+    {
+        public int Id { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public int GameId { get; set; }
+        public string GameTitle { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string? AdditionalInfo { get; set; }
+        public string? GameImageUrl { get; set; }
+        public List<ActivityReactionDto> Reactions { get; set; } = new List<ActivityReactionDto>();
+        public Dictionary<string, int> ReactionCounts { get; set; } = new Dictionary<string, int>();        public string? UserReaction { get; set; } // L'emoji della reazione dell'utente corrente, se presente
+        // Commenti all'attività (solo per attività di tipo "Rated")
+        public List<ActivityCommentDto> Comments { get; set; } = new List<ActivityCommentDto>();
+        public int CommentsCount { get; set; }
     }
 }

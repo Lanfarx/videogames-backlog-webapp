@@ -16,9 +16,7 @@ namespace VideoGamesBacklogBackend.Controllers
         public ActivityController(IActivityService activityService)
         {
             _activityService = activityService;
-        }
-
-        private int GetUserId()
+        }        private int GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int userId))
@@ -26,7 +24,17 @@ namespace VideoGamesBacklogBackend.Controllers
                 return userId;
             }
             throw new UnauthorizedAccessException("User ID non valido");
-        }        /// <summary>
+        }
+
+        private int? GetUserIdOrNull()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+            return null;
+        }/// <summary>
         /// Ottiene le attività dell'utente con filtri e paginazione
         /// </summary>
         [HttpGet]
@@ -48,8 +56,7 @@ namespace VideoGamesBacklogBackend.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
-            }
-        }
+            }        }
 
         /// <summary>
         /// Ottiene una specifica attività per ID
@@ -189,9 +196,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Ottiene le attività pubbliche di un utente per il suo profilo pubblico
         /// </summary>
         [HttpGet("public/{userIdOrUsername}")]
@@ -217,8 +222,7 @@ namespace VideoGamesBacklogBackend.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
-            }
+                return BadRequest(new { message = ex.Message });            }
         }
     }
 }

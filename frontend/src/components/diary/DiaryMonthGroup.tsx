@@ -1,11 +1,11 @@
 import React from 'react';
-import { Activity } from '../../types/activity';
+import { Activity, ActivityWithReactions } from '../../types/activity';
 import DiaryEntry from './DiaryEntry';
 
 interface DiaryMonthGroupProps {
   month: number;
   year: number;
-  activities: Activity[];
+  activities: (Activity | ActivityWithReactions)[];
   activeFilters: string[];
   // Aggiungiamo il contesto del profilo pubblico
   publicProfile?: {

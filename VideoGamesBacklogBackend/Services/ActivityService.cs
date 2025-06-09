@@ -13,12 +13,14 @@ namespace VideoGamesBacklogBackend.Services
         public ActivityService(AppDbContext context)
         {
             _context = context;
-        }
-
-        public async Task<PaginatedActivitiesDto> GetActivitiesAsync(int userId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
+        }        public async Task<PaginatedActivitiesDto> GetActivitiesAsync(int userId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
         {
             var query = _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .Where(a => a.Game!.UserId == userId);
 
             // Applicazione filtri
@@ -53,48 +55,35 @@ namespace VideoGamesBacklogBackend.Services
             }
 
             var totalCount = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);            var activities = await query
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var activities = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(a => new ActivityDto
-                {
-                    Id = a.Id,
-                    Type = a.Type,
-                    GameId = a.GameId,
-                    GameTitle = a.GameTitle,
-                    Timestamp = a.Timestamp,
-                    AdditionalInfo = a.AdditionalInfo
-                })
                 .ToListAsync();
 
             return new PaginatedActivitiesDto
             {
-                Activities = activities,
+                Activities = activities.Select(activity => MapActivityToDto(activity, userId)).ToList(),
                 TotalCount = totalCount,
                 PageSize = pageSize,
                 CurrentPage = page,
                 TotalPages = totalPages
             };
-        }
-
-        public async Task<ActivityDto?> GetActivityByIdAsync(int activityId, int userId)
+        }        public async Task<ActivityDto?> GetActivityByIdAsync(int activityId, int userId)
         {
             var activity = await _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .FirstOrDefaultAsync(a => a.Id == activityId && a.Game!.UserId == userId);
 
             if (activity == null)
                 return null;
 
-            return new ActivityDto
-            {
-                Id = activity.Id,
-                Type = activity.Type,
-                GameId = activity.GameId,
-                GameTitle = activity.GameTitle,
-                Timestamp = activity.Timestamp,
-                AdditionalInfo = activity.AdditionalInfo
-            };
+            return MapActivityToDto(activity, userId);
         }
 
         public async Task<ActivityDto> CreateActivityAsync(int userId, CreateActivityDto createActivityDto)
@@ -113,26 +102,25 @@ namespace VideoGamesBacklogBackend.Services
                 GameTitle = game.Title,
                 AdditionalInfo = createActivityDto.AdditionalInfo,
                 Timestamp = DateTime.UtcNow
-            };
+            };            _context.Activities.Add(activity);
+            await _context.SaveChangesAsync();            // Ricarica l'attività con le reazioni (anche se vuote inizialmente)
+            var createdActivity = await _context.Activities
+                .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
+                .FirstAsync(a => a.Id == activity.Id);
 
-            _context.Activities.Add(activity);
-            await _context.SaveChangesAsync();
-
-            return new ActivityDto
-            {
-                Id = activity.Id,
-                Type = activity.Type,
-                GameId = activity.GameId,
-                GameTitle = activity.GameTitle,
-                Timestamp = activity.Timestamp,
-                AdditionalInfo = activity.AdditionalInfo
-            };
-        }
-
-        public async Task<ActivityDto?> UpdateActivityAsync(int activityId, int userId, UpdateActivityDto updateActivityDto)
+            return MapActivityToDto(createdActivity, userId);
+        }        public async Task<ActivityDto?> UpdateActivityAsync(int activityId, int userId, UpdateActivityDto updateActivityDto)
         {
             var activity = await _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .FirstOrDefaultAsync(a => a.Id == activityId && a.Game!.UserId == userId);
 
             if (activity == null)
@@ -146,15 +134,7 @@ namespace VideoGamesBacklogBackend.Services
 
             await _context.SaveChangesAsync();
 
-            return new ActivityDto
-            {
-                Id = activity.Id,
-                Type = activity.Type,
-                GameId = activity.GameId,
-                GameTitle = activity.GameTitle,
-                Timestamp = activity.Timestamp,
-                AdditionalInfo = activity.AdditionalInfo
-            };
+            return MapActivityToDto(activity, userId);
         }
 
         public async Task<bool> DeleteActivityAsync(int activityId, int userId)
@@ -169,47 +149,33 @@ namespace VideoGamesBacklogBackend.Services
             _context.Activities.Remove(activity);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<List<ActivityDto>> GetRecentActivitiesAsync(int userId, int count = 10)
+        }        public async Task<List<ActivityDto>> GetRecentActivitiesAsync(int userId, int count = 10)
         {
             var activities = await _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .Where(a => a.Game!.UserId == userId)
                 .OrderByDescending(a => a.Timestamp)
                 .Take(count)
-                .Select(a => new ActivityDto
-                {
-                    Id = a.Id,
-                    Type = a.Type,
-                    GameId = a.GameId,
-                    GameTitle = a.GameTitle,
-                    Timestamp = a.Timestamp,
-                    AdditionalInfo = a.AdditionalInfo
-                })
                 .ToListAsync();
 
-            return activities;
-        }
-
-        public async Task<List<ActivityDto>> GetActivitiesByGameAsync(int gameId, int userId)
+            return activities.Select(a => MapActivityToDto(a, userId)).ToList();
+        }        public async Task<List<ActivityDto>> GetActivitiesByGameAsync(int gameId, int userId)
         {
             var activities = await _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .Where(a => a.GameId == gameId && a.Game!.UserId == userId)
                 .OrderByDescending(a => a.Timestamp)
-                .Select(a => new ActivityDto
-                {
-                    Id = a.Id,
-                    Type = a.Type,
-                    GameId = a.GameId,
-                    GameTitle = a.GameTitle,
-                    Timestamp = a.Timestamp,
-                    AdditionalInfo = a.AdditionalInfo
-                })
                 .ToListAsync();
 
-            return activities;
+            return activities.Select(a => MapActivityToDto(a, userId)).ToList();
         }
 
         public async Task<Dictionary<string, int>> GetActivityStatsByTypeAsync(int userId, int? year = null)
@@ -449,8 +415,9 @@ namespace VideoGamesBacklogBackend.Services
             {                // Log l'errore ma non fermare l'operazione principale
                 Console.WriteLine($"Errore durante la creazione dell'attività per aggiunta gioco: {ex.Message}");
             }
-        }
-
+        }        /// <summary>
+        /// Ottiene le attività pubbliche di un utente SENZA reazioni (per uso generale)
+        /// </summary>
         public async Task<PaginatedActivitiesDto> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
         {
             // Prima determina l'ID dell'utente target
@@ -483,14 +450,16 @@ namespace VideoGamesBacklogBackend.Services
             if (!canViewDiary)
             {
                 throw new UnauthorizedAccessException("Non hai i permessi per visualizzare il diario di questo utente");
-            }
-
-            // Ottieni le attività usando la stessa logica del metodo principale
+            }            // Ottieni le attività CON le reazioni
             var query = _context.Activities
                 .Include(a => a.Game)
+                .Include(a => a.Reactions)
+                    .ThenInclude(r => r.User)
+                .Include(a => a.ActivityComments)
+                    .ThenInclude(c => c.Author)
                 .Where(a => a.Game!.UserId == targetUserId);
 
-            // Applicazione filtri (stessa logica di GetActivitiesAsync)
+            // Applicazione filtri
             if (filters.Types?.Any() == true)
             {
                 query = query.Where(a => filters.Types.Contains(a.Type));
@@ -522,32 +491,20 @@ namespace VideoGamesBacklogBackend.Services
             }
 
             // Conta il totale prima della paginazione
-            var totalCount = await query.CountAsync();
-
-            // Applica paginazione
+            var totalCount = await query.CountAsync();            // Applica paginazione
             var activities = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(a => new ActivityDto
-                {
-                    Id = a.Id,
-                    Type = a.Type,
-                    GameId = a.GameId,
-                    GameTitle = a.Game!.Title,
-                    GameImageUrl = a.Game!.CoverImage,
-                    Timestamp = a.Timestamp,
-                    AdditionalInfo = a.AdditionalInfo
-                })
                 .ToListAsync();
 
             return new PaginatedActivitiesDto
             {
-                Activities = activities,
+                Activities = activities.Select(a => MapActivityToDto(a, currentUserId)).ToList(),
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize,
                 TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
-            };        }
+            };}
 
         private async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
         {
@@ -561,15 +518,209 @@ namespace VideoGamesBacklogBackend.Services
             if (targetUser == null)
             {
                 return false;
-            }            // Se il profilo è privato, controlla se sono amici
+            }
+
+            // Se il profilo è privato, controlla se sono amici
             if (targetUser.PrivacySettings.IsPrivate)
-            {                var friendship = await _context.Friendships
+            {
+                var friendship = await _context.Friendships
                     .FirstOrDefaultAsync(f =>
                         ((f.SenderId == currentUserId && f.ReceiverId == targetUserId) ||
                          (f.SenderId == targetUserId && f.ReceiverId == currentUserId)) &&
-                        f.Status == FriendshipStatus.Accepted);return friendship != null;
-            }            // Altrimenti, il diario e pubblico
+                        f.Status == FriendshipStatus.Accepted);
+
+                return friendship != null;
+            }
+
+            // Altrimenti, il diario è pubblico
             return true;
+        }
+
+        // Metodi per le reazioni emoji alle attività
+
+        /// <summary>
+        /// Aggiunge una reazione emoji a un'attività (toggle - se esiste già la rimuove)
+        /// </summary>
+        public async Task<ActivityReactionDto?> AddReactionAsync(CreateActivityReactionDto createReactionDto, int userId)
+        {
+            try
+            {
+                // Verifica che l'attività esista
+                var activity = await _context.Activities.FindAsync(createReactionDto.ActivityId);
+                if (activity == null) return null;
+
+                // Verifica se l'utente ha già reagito con la stessa emoji a questa attività
+                var existingReaction = await _context.ActivityReactions
+                    .FirstOrDefaultAsync(r => r.ActivityId == createReactionDto.ActivityId 
+                                            && r.UserId == userId 
+                                            && r.Emoji == createReactionDto.Emoji);
+
+                if (existingReaction != null)
+                {
+                    // Se esiste già, rimuovila (toggle)
+                    _context.ActivityReactions.Remove(existingReaction);
+                    await _context.SaveChangesAsync();
+                    return null; // Indica che la reazione è stata rimossa
+                }
+
+                // Crea una nuova reazione
+                var reaction = new ActivityReaction
+                {
+                    Emoji = createReactionDto.Emoji,
+                    ActivityId = createReactionDto.ActivityId,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.ActivityReactions.Add(reaction);
+                await _context.SaveChangesAsync();
+
+                // Carica i dati dell'utente per il DTO
+                var user = await _context.Users.FindAsync(userId);
+
+                return new ActivityReactionDto
+                {
+                    Id = reaction.Id,
+                    Emoji = reaction.Emoji,
+                    CreatedAt = reaction.CreatedAt,
+                    ActivityId = reaction.ActivityId,
+                    UserId = reaction.UserId,
+                    UserName = user?.UserName
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Errore nell'aggiunta della reazione: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Rimuove una reazione emoji da un'attività
+        /// </summary>
+        public async Task<bool> RemoveReactionAsync(int reactionId, int userId)
+        {
+            try
+            {
+                var reaction = await _context.ActivityReactions
+                    .FirstOrDefaultAsync(r => r.Id == reactionId && r.UserId == userId);
+
+                if (reaction == null) return false;
+
+                _context.ActivityReactions.Remove(reaction);
+                await _context.SaveChangesAsync();
+                return true;
+            }            catch (Exception ex)
+            {
+                Console.WriteLine($"Errore nella rimozione della reazione: {ex.Message}");
+                return false;
+            }        }
+
+        /// <summary>
+        /// Ottiene tutte le reazioni per una specifica attività
+        /// </summary>
+        public async Task<List<ActivityReactionDto>> GetActivityReactionsAsync(int activityId, int userId)
+        {
+            try
+            {
+                // Verifica che l'attività esista
+                var activity = await _context.Activities
+                    .Include(a => a.Game)
+                    .FirstOrDefaultAsync(a => a.Id == activityId);
+
+                if (activity == null)
+                {
+                    throw new ArgumentException("Attività non trovata");
+                }
+
+                // Verifica i permessi di visibilità dell'attività
+                // Se l'attività appartiene a un altro utente, controlla se il diary è pubblico
+                if (activity.Game!.UserId != userId)
+                {
+                    bool canViewDiary = await CanViewUserDiary(activity.Game.UserId, userId);
+                    if (!canViewDiary)
+                    {
+                        throw new UnauthorizedAccessException("Non hai i permessi per visualizzare le reazioni di questa attività");
+                    }
+                }
+
+                // Ottieni tutte le reazioni per l'attività con i dati degli utenti
+                var reactions = await _context.ActivityReactions
+                    .Include(r => r.User)
+                    .Where(r => r.ActivityId == activityId)
+                    .OrderBy(r => r.CreatedAt)
+                    .ToListAsync();
+
+                return reactions.Select(r => new ActivityReactionDto
+                {
+                    Id = r.Id,
+                    Emoji = r.Emoji,
+                    CreatedAt = r.CreatedAt,
+                    ActivityId = r.ActivityId,
+                    UserId = r.UserId,
+                    UserName = r.User?.UserName
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Errore nel recupero delle reazioni per l'attività {activityId}: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Mapper helper per convertire un'Activity in ActivityDto con reazioni
+        /// </summary>
+        private ActivityDto MapActivityToDto(Activity activity, int currentUserId)
+        {
+            // Calcola il sommario delle reazioni raggruppate per emoji
+            var reactionsSummary = activity.Reactions
+                .GroupBy(r => r.Emoji)
+                .Select(g => new ActivityReactionSummaryDto
+                {
+                    Emoji = g.Key,
+                    Count = g.Count(),
+                    UserNames = g.Select(r => r.User?.UserName ?? "").Where(u => !string.IsNullOrEmpty(u)).ToList()
+                })
+                .ToList();
+
+            // Trova la reazione dell'utente corrente (se presente)
+            var userReaction = activity.Reactions
+                .FirstOrDefault(r => r.UserId == currentUserId)?.Emoji;            return new ActivityDto
+            {
+                Id = activity.Id,
+                Type = activity.Type,
+                GameId = activity.GameId,
+                GameTitle = activity.GameTitle,
+                Timestamp = activity.Timestamp,
+                AdditionalInfo = activity.AdditionalInfo,
+                GameImageUrl = activity.Game?.CoverImage,
+                ReactionsSummary = reactionsSummary,
+                UserReaction = userReaction,
+                Reactions = activity.Reactions.Select(r => new ActivityReactionDto
+                {
+                    Id = r.Id,
+                    Emoji = r.Emoji,
+                    CreatedAt = r.CreatedAt,
+                    ActivityId = r.ActivityId,
+                    UserId = r.UserId,
+                    UserName = r.User?.UserName
+                }).ToList(),
+                ReactionCounts = activity.Reactions
+                    .GroupBy(r => r.Emoji)
+                    .ToDictionary(g => g.Key, g => g.Count()),
+                Comments = activity.ActivityComments.Select(c => new ActivityCommentDto
+                {
+                    Id = c.Id,
+                    Text = c.Text,
+                    Date = c.Date,
+                    ActivityId = c.ActivityId,
+                    AuthorId = c.AuthorId,
+                    AuthorUsername = c.Author?.UserName ?? "Utente sconosciuto",
+                    AuthorAvatar = c.Author?.Avatar
+                }).ToList(),
+                CommentsCount = activity.ActivityComments.Count
+            };
         }
     }
 }

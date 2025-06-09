@@ -1,39 +1,88 @@
 import React, { useState } from 'react';
 import { Star, Calendar, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import RatingStars from '../../ui/atoms/RatingStars';
-import { CommunityReview } from '../../../store/slice/communitySlice';
-import { useCommunityReviewsByGame } from '../../../store/hooks/communityHooks';
+import ReviewCommentsSection from './ReviewCommentsSection';
+import { CommunityReviewDto } from '../../../types/community';
+import { usePublicCommunityReviews, useReviewStats } from '../../../store/hooks/communityHooks';
 
 const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle }) => {
-  const [sortBy, setSortBy] = useState<'newest' | 'Rating'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const Reviews = useCommunityReviewsByGame(GameTitle) || [];
-  const totalReviews = Reviews.length; // conteggio TOTALE recensioni
-  const validReviews = Reviews.filter(r => typeof r.Rating === 'number' && !isNaN(r.Rating));
-  const averageRating = validReviews.length > 0 ? validReviews.reduce((sum, r) => sum + r.Rating, 0) / validReviews.length : 0;
-
+  const navigate = useNavigate();
+  
+  // Usa il nuovo hook di React Query per le recensioni visualizzate (senza quella dell'utente corrente)
+  const { data: reviewsData, isLoading: reviewsLoading, error: reviewsError } = usePublicCommunityReviews(GameTitle, 1, 50);
+  const reviews = reviewsData?.reviews || [];
+  
+  // Usa il hook per le statistiche complete (inclusa la recensione dell'utente corrente)
+  const { data: reviewStats, isLoading: statsLoading, error: statsError } = useReviewStats(GameTitle);
+  
+  // Usa le statistiche dal backend per i dati aggregati corretti
+  const totalReviews = reviewStats?.totalReviews || 0;
+  const averageRating = reviewStats?.overallAverageRating || 0;
+  
+  // Per le recensioni visualizzate, usa i dati filtrati dal backend
+  const validReviews = reviews.filter((r: CommunityReviewDto) => typeof r.overallRating === 'number' && !isNaN(r.overallRating));
   const sortedReviews = [...validReviews].sort((a, b) => {
     switch (sortBy) {
-      case 'Rating':
-        return b.Rating - a.Rating;
+      case 'rating':
+        return b.overallRating - a.overallRating;
       case 'newest':
       default:
         return new Date(b.date).getTime() - new Date(a.date).getTime();
     }
   });
 
-  const disPlayedReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
-
-  const getRatingDistribution = () => {
+  const displayedReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);  const getRatingDistribution = () => {
+    // Se abbiamo le statistiche dal backend, usa quelle per la distribuzione
+    if (reviewStats?.ratingDistribution) {
+      // Converte il Dictionary dal backend nel formato atteso dal frontend
+      const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      Object.entries(reviewStats.ratingDistribution).forEach(([rating, count]) => {
+        const ratingNum = parseInt(rating);
+        if (ratingNum >= 1 && ratingNum <= 5) {
+          distribution[ratingNum as keyof typeof distribution] = count;
+        }
+      });
+      return distribution;
+    }
+    
+    // Fallback: calcola dalla lista di recensioni visualizzate
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    validReviews.forEach(Review => {
-      const rounded = Math.round(Review.Rating);
-      distribution[rounded as keyof typeof distribution]++;
+    validReviews.forEach((review: CommunityReviewDto) => {
+      const rounded = Math.round(review.overallRating);
+      if (rounded >= 1 && rounded <= 5) {
+        distribution[rounded as keyof typeof distribution]++;
+      }
     });
     return distribution;
   };
 
-  const RatingDistribution = getRatingDistribution();
+  const ratingDistribution = getRatingDistribution();
+  
+  const isLoading = reviewsLoading || statsLoading;
+  const error = reviewsError || statsError;
+
+  if (isLoading) {
+    return (
+      <div className="bg-primary-bg border border-border-color rounded-xl p-6">
+        <div className="text-center text-text-secondary py-8">
+          Caricamento recensioni...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-primary-bg border border-border-color rounded-xl p-6">
+        <div className="text-center text-red-500 py-8">
+          Errore nel caricamento delle recensioni
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl p-6">
@@ -45,11 +94,11 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
           <Filter className="h-4 w-4 text-text-secondary" />
           <select 
             value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'newest' | 'rating')}
             className="bg-secondary-bg border border-border-color rounded-lg px-3 py-1 text-sm text-text-primary focus:outline-none focus:border-accent-primary"
           >
             <option value="newest">Più recenti</option>
-            <option value="Rating">Valutazione</option>
+            <option value="rating">Valutazione</option>
           </select>
         </div>
       </div>
@@ -68,11 +117,10 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
                 <RatingStars Rating={averageRating} showValue={false} size="md" readOnly />
                 <div className="text-sm text-text-secondary mt-1">{totalReviews} recensioni</div>
               </div>
-              
-              <div className="flex-1">
+                <div className="flex-1">
                 {[5, 4, 3, 2, 1].map(stars => {
-                  const count = RatingDistribution[stars as keyof typeof RatingDistribution];
-                  const percentage = validReviews.length > 0 ? (count / validReviews.length) * 100 : 0;
+                  const count = ratingDistribution[stars as keyof typeof ratingDistribution];
+                  const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                   
                   return (
                     <div key={stars} className="flex items-center gap-2 mb-1">
@@ -94,43 +142,62 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
 
           {/* Reviews List */}
           <div className="space-y-4">
-            {disPlayedReviews.map(Review => (
-              <div key={Review.id} className="border border-border-color rounded-lg p-4">
+            {displayedReviews.map(review => (              <div key={review.id} className="border border-border-color rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent-primary text-white rounded-full flex items-center justify-center font-medium">
-                      {Review.UserName.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 bg-accent-primary text-white rounded-full flex items-center justify-center font-medium overflow-hidden">
+                      {review.avatar ? (
+                        <img 
+                          src={review.avatar} 
+                          alt={`Avatar di ${review.username}`}
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        review.username.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div>
-                      <div className="font-medium text-text-primary">{Review.UserName}</div>
-                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <div 
+                        className="font-medium text-text-primary cursor-pointer hover:underline hover:text-accent-primary transition-colors"
+                        onClick={() => navigate(`/profile/${review.username}`)}
+                        title={`Vai al profilo di ${review.username}`}
+                      >
+                        {review.username}
+                      </div><div className="flex items-center gap-2 text-sm text-text-secondary">
                         <Calendar className="h-3 w-3" />
-                        {new Date(Review.date).toLocaleDateString('it-IT')}
-                        <span>•</span>
-                        <span>{Review.Platform}</span>
+                        {new Date(review.date).toLocaleDateString('it-IT')}
                       </div>
                     </div>
                   </div>
-                  <RatingStars Rating={Review.Rating} showValue={false} size="sm" readOnly />
+                  <RatingStars Rating={review.overallRating} showValue={false} size="sm" readOnly />
+                </div>                {review.text && (
+                  <p className="text-text-secondary mb-3 leading-relaxed">{review.text}</p>
+                )}
+                
+                {/* Detailed Ratings */}
+                <div className="flex flex-wrap gap-4 text-sm text-text-secondary mb-3">
+                  <span>Gameplay: <strong className="text-text-primary">{review.gameplay}</strong></span>
+                  <span>Grafica: <strong className="text-text-primary">{review.graphics}</strong></span>
+                  <span>Storia: <strong className="text-text-primary">{review.story}</strong></span>
+                  <span>Audio: <strong className="text-text-primary">{review.sound}</strong></span>
                 </div>
 
-                <h4 className="font-medium text-text-primary mb-2">{Review.UserName}</h4>
-                <p className="text-text-secondary mb-3 leading-relaxed">{Review.text}</p>            {/* Detailed Ratings */}
-                <div className="flex flex-wrap gap-4 text-sm text-text-secondary mb-3">
-                  <span>Gameplay: <strong className="text-text-primary">{Review.Gameplay}</strong></span>
-                  <span>Grafica: <strong className="text-text-primary">{Review.Graphics}</strong></span>
-                  <span>Storia: <strong className="text-text-primary">{Review.Story}</strong></span>
-                  <span>Audio: <strong className="text-text-primary">{Review.Sound}</strong></span>
-                </div>
+                {/* Comments Section */}
+                <ReviewCommentsSection 
+                  reviewGameId={review.id} 
+                  commentsCount={review.commentsCount || 0} 
+                />
               </div>
             ))}
-          </div>      {/* Show More Button */}
-          {Reviews.length > 3 && (
+          </div>
+
+          {/* Show More Button */}
+          {reviews.length > 3 && (
             <button 
               onClick={() => setShowAllReviews(!showAllReviews)}
               className="w-full mt-4 py-2 border border-border-color rounded-lg text-accent-primary hover:bg-secondary-bg transition-colors"
             >
-              {showAllReviews ? 'Mostra meno' : `Mostra tutte le ${Reviews.length} recensioni`}
+              {showAllReviews ? 'Mostra meno' : `Mostra tutte le ${reviews.length} recensioni`}
             </button>
           )}
         </>

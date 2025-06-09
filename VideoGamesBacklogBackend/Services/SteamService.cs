@@ -1,5 +1,6 @@
 using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Data;
+using VideoGamesBacklogBackend.Helpers;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using VideoGamesBacklogBackend.Interfaces;
@@ -274,134 +275,9 @@ namespace VideoGamesBacklogBackend.Services
                 Count = updatedCount,
                 DebugInfo = string.Join("; ", debugInfo)
             };
-        }
-
-        private Game? FindMatchingGame(List<Game> existingGames, string steamGameName)
+        }        private Game? FindMatchingGame(List<Game> existingGames, string steamGameName)
         {
-            // 1. Exact match (case-insensitive)
-           var exactMatch = existingGames
-                .FirstOrDefault(g => string.Equals(g.Title, steamGameName, StringComparison.OrdinalIgnoreCase));
-            
-            if (exactMatch != null)
-                return exactMatch;
-
-            // 2. Normalize and try again
-            var normalizedSteamName = NormalizeGameTitle(steamGameName);
-            
-            var normalizedMatch = existingGames
-                .FirstOrDefault(g => string.Equals(NormalizeGameTitle(g.Title), normalizedSteamName, StringComparison.OrdinalIgnoreCase));
-            
-            if (normalizedMatch != null)
-                return normalizedMatch;
-
-            // 3. Try without edition suffixes
-            var steamNameWithoutEdition = RemoveEditionSuffixes(normalizedSteamName);
-            
-            var editionMatch = existingGames
-                .FirstOrDefault(g => 
-                {
-                    var dbNameWithoutEdition = RemoveEditionSuffixes(NormalizeGameTitle(g.Title));
-                    return string.Equals(dbNameWithoutEdition, steamNameWithoutEdition, StringComparison.OrdinalIgnoreCase);
-                });
-
-            return editionMatch;
-        }
-
-        private string NormalizeGameTitle(string title)
-        {
-            if (string.IsNullOrEmpty(title))
-                return string.Empty;
-
-            var normalized = title.Trim();
-
-            // Convert Roman numerals to Arabic numbers
-            var romanToArabic = new Dictionary<string, string>
-            {
-                { " III", " 3" },
-                { " II", " 2" },
-                { " IV", " 4" },
-                { " V", " 5" },
-                { " VI", " 6" },
-                { " VII", " 7" },
-                { " VIII", " 8" },
-                { " IX", " 9" },
-                { " X", " 10" }
-            };
-
-            foreach (var pair in romanToArabic)
-            {
-                normalized = normalized.Replace(pair.Key, pair.Value);
-            }
-
-            // Convert Arabic numbers to Roman numerals for reverse matching
-            var arabicToRoman = new Dictionary<string, string>
-            {
-                { " 3", " III" },
-                { " 2", " II" },
-                { " 4", " IV" },
-                { " 5", " V" },
-                { " 6", " VI" },
-                { " 7", " VII" },
-                { " 8", " VIII" },
-                { " 9", " IX" },
-                { " 10", " X" }
-            };
-
-            var romanVersion = normalized;
-            foreach (var pair in arabicToRoman)
-            {
-                romanVersion = romanVersion.Replace(pair.Key, pair.Value);
-            }
-
-            // Try both versions during matching
-            return normalized;
-        }        private string RemoveEditionSuffixes(string title)
-        {
-            if (string.IsNullOrEmpty(title))
-                return string.Empty;
-
-            var suffixesToRemove = new[]
-            {
-                " Special Edition",
-                " Game of the Year Edition",
-                " GOTY Edition",
-                " Deluxe Edition",
-                " Ultimate Edition",
-                " Complete Edition",
-                " Enhanced Edition",
-                " Definitive Edition",
-                " Director's Cut",
-                " Remastered",
-                " HD",
-                " (2009)",
-                " (2010)",
-                " (2011)",
-                " (2012)",
-                " (2013)",
-                " (2014)",
-                " (2015)",
-                " (2016)",
-                " (2017)",
-                " (2018)",
-                " (2019)",
-                " (2020)",
-                " (2021)",
-                " (2022)",
-                " (2023)",
-                " (2024)"
-            };
-
-            var result = title;
-            foreach (var suffix in suffixesToRemove)
-            {
-                if (result.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                {
-                    result = result.Substring(0, result.Length - suffix.Length).Trim();
-                    break; // Remove only the first matching suffix
-                }
-            }
-
-            return result;
+            return GameTitleMatcher.FindMatchingGame(existingGames, g => g.Title, steamGameName);
         }
     }
 }

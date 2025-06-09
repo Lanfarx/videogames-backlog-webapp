@@ -3,12 +3,12 @@ import { CalendarRange, Clock, Eye, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DiaryFilters from '../diary/DiaryFilters';
 import DiaryMonthGroup from '../diary/DiaryMonthGroup';
-import { Activity } from '../../types/activity';
+import { Activity, ActivityWithReactions } from '../../types/activity';
 import { formatLastUpdate } from '../../utils/dateUtils';
 import { calculateActivityStats, getUniqueMonthsForYear } from '../../utils/activityUtils';
 
 interface ProfileDiaryProps {
-  activities: Activity[];
+  activities: (Activity | ActivityWithReactions)[];
   selectedYear: number;
   activeFilters: string[];
   diaryStats: {
@@ -22,6 +22,7 @@ interface ProfileDiaryProps {
   onYearChange: (year: number) => void;
   onFilterChange: (filter: string) => void;
   isOwnProfile?: boolean;
+  isFriend?: boolean; // Aggiunto per gestire le reazioni
 }
 
 const ProfileDiary: React.FC<ProfileDiaryProps> = ({
@@ -34,8 +35,9 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
   showPrivacyIndicator = false,
   onYearChange,
   onFilterChange,
-  isOwnProfile = false
-}) => {  // Calcola le statistiche dinamicamente in base all'anno selezionato
+  isOwnProfile = false,
+  isFriend = false
+}) => {// Calcola le statistiche dinamicamente in base all'anno selezionato
   const yearFilteredActivities = useMemo(() => {
     return activities.filter(activity => {
       const activityYear = new Date(activity.timestamp).getFullYear();
@@ -151,7 +153,7 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
                   activeFilters={activeFilters}
                   publicProfile={isOwnProfile ? undefined : { 
                     canViewDiary: !isPrivate, 
-                    isFriend: false, // Qui dovremmo aggiungere l'informazione se è amico
+                    isFriend: isFriend,
                     isOwnProfile: isOwnProfile 
                   }}
                 />

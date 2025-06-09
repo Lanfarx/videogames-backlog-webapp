@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { CalendarRange, Pencil, Clock } from 'lucide-react';
 import DiaryFilters from '../../components/diary/DiaryFilters';
 import DiaryMonthGroup from '../../components/diary/DiaryMonthGroup';
-import { Activity } from '../../types/activity';
-import { useAllActivities } from '../../store/hooks/activitiesHooks';
+import { Activity, ActivityWithReactions } from '../../types/activity';
+import { useActivitiesWithReactions } from '../../store/hooks/activitiesWithReactionsHooks';
 import { formatLastUpdate } from '../../utils/dateUtils';
 import { 
   calculateActivityStats, 
@@ -16,13 +16,24 @@ const DiarioPage = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
   const [activeFilters, setActiveFilters] = useState<string[]>(['all']);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  
-  const { activities: allActivities, loading } = useAllActivities();
+  const [activities, setActivities] = useState<(Activity | ActivityWithReactions)[]>([]);
+    // Recupera le attività con reazioni per il proprio diario
+  const { activities: activitiesWithReactions, loading: reactionsLoading } = useActivitiesWithReactions();
 
+  const loading = reactionsLoading;useEffect(() => {
+    // Per il diario personale, usa sempre le attività con reazioni
+    // Solo se il caricamento delle reazioni è completato (anche se array vuoto)
+    if (!reactionsLoading) {
+      setActivities(activitiesWithReactions);
+    }
+  }, [activitiesWithReactions, reactionsLoading]);
+
+  // Forza aggiornamento quando cambiano le reazioni nello store
   useEffect(() => {
-    setActivities(allActivities);
-  }, [allActivities]);
+    if (!reactionsLoading) {
+      setActivities([...activitiesWithReactions]);
+    }
+  }, [activitiesWithReactions, reactionsLoading]);
 
   // Calcola statistiche generali utilizzando le funzioni di utilità
   const stats = calculateActivityStats(activities);

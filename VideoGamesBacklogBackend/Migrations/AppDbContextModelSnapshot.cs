@@ -185,6 +185,69 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ActivityComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("ActivityComments");
+                });
+
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ActivityReaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ActivityId", "UserId", "Emoji")
+                        .IsUnique();
+
+                    b.ToTable("ActivityReactions");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.Friendship", b =>
                 {
                     b.Property<int>("Id")
@@ -355,6 +418,37 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ReviewComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReviewGameId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ReviewGameId");
+
+                    b.ToTable("ReviewComments");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -502,6 +596,44 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Navigation("Game");
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ActivityComment", b =>
+                {
+                    b.HasOne("VideoGamesBacklogBackend.Models.Activity", "Activity")
+                        .WithMany("ActivityComments")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoGamesBacklogBackend.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ActivityReaction", b =>
+                {
+                    b.HasOne("VideoGamesBacklogBackend.Models.Activity", "Activity")
+                        .WithMany("Reactions")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoGamesBacklogBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.Friendship", b =>
                 {
                     b.HasOne("VideoGamesBacklogBackend.Models.User", "Receiver")
@@ -592,6 +724,25 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.ReviewComment", b =>
+                {
+                    b.HasOne("VideoGamesBacklogBackend.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VideoGamesBacklogBackend.Models.Game", "ReviewGame")
+                        .WithMany("ReviewComments")
+                        .HasForeignKey("ReviewGameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("ReviewGame");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.User", b =>
                 {
                     b.OwnsOne("VideoGamesBacklogBackend.Models.AppPreferences", "AppPreferences", b1 =>
@@ -658,11 +809,20 @@ namespace VideoGamesBacklogBackend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.Activity", b =>
+                {
+                    b.Navigation("ActivityComments");
+
+                    b.Navigation("Reactions");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.Game", b =>
                 {
                     b.Navigation("Activities");
 
                     b.Navigation("Comments");
+
+                    b.Navigation("ReviewComments");
                 });
 
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.User", b =>

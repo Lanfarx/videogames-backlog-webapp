@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 // import { catalogGames } from "../../data/gamesData";
 import CatalogGameCard from "../../components/catalog/CatalogGameCard";
 import { useAllGames } from "../../store/hooks/gamesHooks";
+import { usePublicCommunityRatingsWithCount } from "../../store/hooks/communityHooks";
 import AddGameModal from "../../components/game/AddGameModal";
 import CatalogSortControls from "../../components/catalog/CatalogSortControls";
 import CatalogSearchBar from "../../components/catalog/CatalogSearchBar";
-import { useAllCommunityRatings } from "../../store/hooks/communityHooks";
 import Pagination from "../../components/ui/Pagination";
 import { getPaginatedGames, getGameDetails } from '../../store/services/rawgService';
 import { useNavigate } from "react-router-dom";
@@ -32,9 +32,7 @@ const CatalogPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  const userGames = useAllGames();
+  const navigate = useNavigate();  const userGames = useAllGames();
 
   // Calcola colonne dinamicamente come in LibraryPage
   useEffect(() => {
@@ -79,7 +77,6 @@ const CatalogPage: React.FC = () => {
       })
       .finally(() => setIsLoading(false));
   }, [currentPage, gamesPerPage, search, sortBy, sortOrder, columns]);
-
   // Mappa solo i dati necessari per CatalogGameCard
   const mappedGames = apiGames.map((rawgGame: any) => ({
     id: String(rawgGame.id), // id RAWG come stringa
@@ -89,6 +86,9 @@ const CatalogPage: React.FC = () => {
     Genres: rawgGame.genres?.map((g: any) => g.name) || [],
     Metacritic: rawgGame.metacritic,
   }));
+  // Ottieni i rating della community per tutti i giochi in una volta
+  const gameTitles = mappedGames.map(game => game.Title);
+  const { data: communityRatings = {} } = usePublicCommunityRatingsWithCount(gameTitles);
 
   // Stato per gestire la navigazione con titolo
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
@@ -117,11 +117,12 @@ const CatalogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Applica filtro giochi posseduti se richiesto
+  };  // Applica filtro giochi posseduti se richiesto
   const filteredGames = hideOwned
-    ? mappedGames.filter(game => !findMatchingGame(userGames, game.Title))
+    ? mappedGames.filter(game => {
+        const isOwned = !!findMatchingGame(userGames, game.Title);
+        return !isOwned;
+      })
     : mappedGames;
 
   return (
@@ -153,10 +154,12 @@ const CatalogPage: React.FC = () => {
           ) : error ? (
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : (
-            <>
-              <div className={gridClass}>
+            <>              <div className={gridClass}>
                 {filteredGames.map(game => {
-                  const isInLibrary = !!findMatchingGame(userGames, game.Title);
+                  const matchingGame = findMatchingGame(userGames, game.Title);
+                  const isInLibrary = !!matchingGame;
+                  
+                  const communityRating = communityRatings[game.Title];
                   return (
                     <CatalogGameCard
                       key={game.id}
@@ -164,6 +167,7 @@ const CatalogPage: React.FC = () => {
                       isInLibrary={isInLibrary}
                       onAddToLibrary={() => handleAddToLibrary(game)}
                       onInfoClick={setSelectedGameId}
+                      communityRating={communityRating}
                     />
                   );
                 })}
