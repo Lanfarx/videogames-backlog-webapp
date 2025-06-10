@@ -15,7 +15,8 @@ const SimilarGamesCard: React.FC<SimilarGamesCardProps> = ({ currentGame, horizo
   
   // Ottieni i rating di tutti i giochi simili in una volta
   const gameTitles = recommendedGames.map(game => game.title);
-  const { data: communityRatings = {} } = usePublicCommunityRatingsWithCount(gameTitles);
+  const { data: communityRatings } = usePublicCommunityRatingsWithCount(gameTitles);
+  const safeCommunityRatings = communityRatings ?? {};
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl p-6">
@@ -27,8 +28,8 @@ const SimilarGamesCard: React.FC<SimilarGamesCardProps> = ({ currentGame, horizo
           recommendedGames.map((game) => (
             <SimilarGameItem 
               key={game.id || game.title} 
-              game={game} 
-              communityRating={communityRatings[game.title]}
+              communityRating={safeCommunityRatings[game.title]}
+              game={game}
               horizontal={horizontal}
             />
           ))

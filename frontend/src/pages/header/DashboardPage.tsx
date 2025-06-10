@@ -4,7 +4,7 @@ import StatusDistributionChart from '../../components/dashboard/StatusDistributi
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
-import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock } from 'lucide-react';
+import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy } from 'lucide-react';
 import { generatePlatformDistributionData, generateGenreDistributionData } from '../../utils/gamesUtils';
 import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
@@ -32,34 +32,44 @@ const DashboardPage: React.FC = () => {
             {/* Intestazione pagina con animazione */}
             <div className="bg-primary-bg p-6 rounded-lg shadow-sm mb-6 animate-fade-in-up">
                 <h1 className="text-3xl font-bold text-text-primary font-['Montserrat']">Dashboard</h1>
-            </div>
-
-            {/* Statistiche Rapide con animazioni staggered */}
-            <div className="grid grid-cols-3 gap-5 mb-6">
+            </div>            {/* Statistiche Rapide con animazioni staggered */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="animate-fade-in-up delay-100">
                     <StatsCard 
                         label="Giochi Totali" 
                         value={loading ? "..." : stats.total.toString()} 
-                        icon={<LayoutGrid className="h-6 w-6 text-blue-500 drop-shadow-lg" />} 
+                        icon={<LayoutGrid className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
                     />
                 </div>
                 <div className="animate-fade-in-up delay-200">
                     <StatsCard 
                         label="Ore Totali di Gioco" 
                         value={loading ? "..." : stats.totalHours.toString()} 
-                        icon={<Clock className="h-6 w-6 text-green-500 drop-shadow-lg" />} 
+                        icon={<Clock className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
                     />
                 </div>
                 <div className="animate-fade-in-up delay-300">
                     <StatsCard 
                         label="Giochi Completati" 
                         value={stats.completed.toString()} 
-                        icon={<BarChart3 className="h-6 w-6 text-yellow-500 drop-shadow-lg" />} 
+                        icon={<Trophy className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
                     />
                 </div>
-            </div>
-
-            {/* Grafici Principali con animazioni */}
+                <div className="animate-fade-in-up delay-400">
+                    <StatsCard 
+                        label="Ore Medie per Gioco" 
+                        value={loading ? "..." : (stats.total > 0 ? Math.round(stats.totalHours / stats.total).toString() : "0")} 
+                        icon={<Clock className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                    />
+                </div>
+                <div className="animate-fade-in-up delay-500">
+                    <StatsCard 
+                        label="Tasso di Completamento" 
+                        value={loading ? "..." : (stats.total > 0 ? `${Math.round((stats.completed / stats.total) * 100)}%` : "0%")} 
+                        icon={<Trophy className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                    />
+                </div>
+            </div>{/* Grafici Principali con animazioni */}
             <div className="grid grid-cols-2 gap-5 mb-6">
                 <div className="animate-fade-in-up delay-400">
                     <StatusDistributionChart 
@@ -69,23 +79,6 @@ const DashboardPage: React.FC = () => {
                     />
                 </div>
                 <div className="animate-fade-in-up delay-500">
-                    <PlatformBarChart 
-                        data={PlatformData} 
-                        icon={<BarChartIcon className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
-                        title="Piattaforme più utilizzate" 
-                    />
-                </div>
-            </div>
-
-            {/* Grafici Secondari con animazioni */}
-            <div className="grid grid-cols-2 gap-5 mb-6">
-                <div className="animate-fade-in-up delay-600">
-                    <GenreBarChart 
-                        data={genreData} 
-                        icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
-                        title="Generi più giocati" 
-                    />
-                </div>                <div className="animate-fade-in-up delay-700">
                     <div className="bg-primary-bg p-6 shadow-sm rounded-lg border border-border-color hover:shadow-lg hover:border-accent-primary/30">
                         <div className="flex items-baseline justify-between mb-6">
                           <h2 className="text-xl font-bold text-text-primary font-['Montserrat'] flex items-center">
@@ -108,6 +101,22 @@ const DashboardPage: React.FC = () => {
                           title={''}
                         />
                     </div>
+                </div>
+            </div>            {/* Grafici Secondari con animazioni */}
+            <div className="grid grid-cols-2 gap-5 mb-6">
+                <div className="animate-fade-in-up delay-600">
+                    <GenreBarChart 
+                        data={genreData} 
+                        icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                        title="Generi più giocati" 
+                    />
+                </div>
+                <div className="animate-fade-in-up delay-700">
+                    <PlatformBarChart 
+                        data={PlatformData} 
+                        icon={<BarChartIcon className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                        title="Piattaforme più utilizzate" 
+                    />
                 </div>
             </div>
         </div>

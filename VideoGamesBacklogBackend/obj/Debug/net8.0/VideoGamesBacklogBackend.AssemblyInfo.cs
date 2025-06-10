@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VideoGamesBacklogBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3e90e5ef06c192cff8494e03a963147cbbe7443c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a520dba4c517f82ec7bf233ad8396b8be7778743")]
 [assembly: System.Reflection.AssemblyProductAttribute("VideoGamesBacklogBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VideoGamesBacklogBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

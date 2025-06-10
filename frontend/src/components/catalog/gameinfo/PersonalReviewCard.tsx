@@ -29,10 +29,10 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
   // Forza la privacy a privata se il diario è privato
   const effectiveIsPublic = isDiaryPrivate ? false : IsPublic;
     // Ottieni il conteggio dei commenti solo se la recensione è pubblica
-  const { data: comments = [] } = useReviewComments(
+  const { data: comments } = useReviewComments(
     game && effectiveIsPublic ? game.id : 0
   );
-  const commentsCount = comments.length;// Calcola la valutazione media
+  const commentsCount = (comments ?? []).length;// Calcola la valutazione media
   const averageRating = (personalReview.Gameplay + personalReview.Graphics + personalReview.Story + personalReview.Sound) / 4;
   
   // Funzione per ottenere il colore in base al punteggio

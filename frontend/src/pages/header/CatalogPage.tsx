@@ -159,7 +159,7 @@ const CatalogPage: React.FC = () => {
                   const matchingGame = findMatchingGame(userGames, game.Title);
                   const isInLibrary = !!matchingGame;
                   
-                  const communityRating = communityRatings[game.Title];
+                  const communityRating = (communityRatings ?? {})[game.Title];
                   return (
                     <CatalogGameCard
                       key={game.id}

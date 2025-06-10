@@ -50,8 +50,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
                 value={stats.stats.total.toString()}
                 icon={<Gamepad2 className="h-6 w-6 text-blue-500 drop-shadow-lg filter" />}
                 variant="hero"
-              />
-              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-accent-primary/70">
+              />              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-text-secondary">
                 <TrendingUp className="h-3 w-3" />
                 <span>La tua collezione</span>
               </div>
@@ -65,7 +64,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
                 icon={<Clock className="h-6 w-6 text-green-500 drop-shadow-lg filter" />}
                 variant="hero"
               />
-              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-accent-primary/70">
+              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-text-secondary">
                 <span>~{averageHoursPerGame}h per gioco</span>
               </div>
             </div>
@@ -78,7 +77,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
                 icon={<Trophy className="h-6 w-6 text-yellow-500 drop-shadow-lg filter" />}
                 variant="hero"
               />
-              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-accent-primary/70">
+              <div className="mt-2 flex items-center justify-center gap-1 text-xs text-text-secondary">
                 <span>{completionRate}% completamento</span>
               </div>
             </div>

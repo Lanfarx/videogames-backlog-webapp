@@ -116,22 +116,23 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
             <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
                 {icon}
                 {title}
-            </h2>
-            <div className="flex">
-                <div className="w-1/2 relative">
-                    <canvas ref={canvasRef} width={200} height={200} className="drop-shadow-lg" />                    {/* Indicatore centrale con il totale */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="text-2xl font-bold font-['Montserrat'] bg-gradient-to-br text-accent-primary">
-                                {Math.round(total * animationProgress)}
-                            </div>
-                            <div className="text-xs text-text-secondary font-['Roboto']">
-                                Totali
-                            </div>
+            </h2>            <div className="flex">
+                <div className="w-1/2 relative flex items-center justify-center">
+                    <canvas ref={canvasRef} width={200} height={200} className="drop-shadow-lg" />
+                </div>
+                
+                {/* Indicatore totale fuori dal grafico, a destra */}
+                <div className="w-1/2 pl-4 flex flex-col">
+                    <div className="text-center mb-4 p-3 bg-secondary-bg rounded-lg border border-border-color">
+                        <div className="text-2xl font-bold font-['Montserrat'] text-accent-primary">
+                            {Math.round(total * animationProgress)}
+                        </div>
+                        <div className="text-xs text-text-secondary font-['Roboto']">
+                            Totali
                         </div>
                     </div>
-                </div>
-                <div className="w-1/2 pl-4">
+                    
+                    <div className="flex-1">
                     {dataWithPercentage.map((item, index) => {
                         const delay = index * 100;
                         return (
@@ -164,9 +165,9 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
                                         {Math.round(item.count * animationProgress)}
                                     </div>
                                 </div>
-                            </div>
-                        );
+                            </div>                        );
                     })}
+                    </div>
                 </div>
             </div>
         </div>
