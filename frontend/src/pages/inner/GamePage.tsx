@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {useGameComments, useGameActions, useGameByTitle, useLoadSingleGameByTitle } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesByGameId } from '../../store/hooks/activitiesHooks';
+import { useGameNavigation } from '../../store/hooks/useGameNavigation';
 
 import { Game, GameComment, GameStatus, GameReview } from '../../types/game';
 import GameBanner from '../../components/game/GameBanner';
@@ -15,9 +16,29 @@ import GamePageLayout from '../../components/game/layout/GamePageLayout';
 export default function GamePage() {  
   const { title } = useParams<{ title: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const decodedTitle = title ? decodeURIComponent(title.replace(/_/g, ' ')) : '';
-    // Aggiungiamo l'hook per caricare il gioco
+  
+  // Aggiungiamo l'hook per caricare il gioco
   const { game, loading: gameLoading } = useLoadSingleGameByTitle(decodedTitle);
+  
+  // Estraiamo i parametri di navigazione dallo state della location (se disponibili)
+  // Questi verranno passati dalla LibraryPage quando si naviga verso la GamePage
+  const navigationParams = location.state?.navigationParams || {
+    filters: {},
+    sortBy: 'title',
+    sortOrder: 'asc',
+    search: ''
+  };
+  
+  // Hook per la navigazione tra giochi
+  const gameNavigation = useGameNavigation({
+    currentGame: game!,
+    filters: navigationParams.filters,
+    sortBy: navigationParams.sortBy,
+    sortOrder: navigationParams.sortOrder,
+    search: navigationParams.search
+  });
   
   // TEMPORANEAMENTE DISABILITATO - Previene spam di chiamate API per le attività
   // const { activities, loading: activitiesLoading } = useAllActivitiesByGameId(game?.id ?? -1);
@@ -74,11 +95,8 @@ export default function GamePage() {
     
     // Aggiorna lo stato nel Redux store - il backend creerà automaticamente l'attività
     update(game.id, { Status: newStatus });
-  };
-  const handleEditGame = (updatedGameDetails: Partial<Game>) => {
+  };  const handleEditGame = (updatedGameDetails: Partial<Game>) => {
     update(game.id, updatedGameDetails);
-
-    console.log('Dettagli del gioco aggiornati:', updatedGameDetails);
   };
 
   const handleDeleteGame = () => {
@@ -112,8 +130,7 @@ export default function GamePage() {
       title={game.Title} 
       parentPath="/library"
       parentLabel="Libreria"
-    >
-      {/* Banner section con sfondo secondario - larghezza piena */}
+    >      {/* Banner section con sfondo secondario - larghezza piena */}
       <div className="bg-secondary-bg">
         <GameBanner 
           game={game}
@@ -122,6 +139,13 @@ export default function GamePage() {
           onDelete={handleDeleteGame}
           onBack={() => navigate('/library')}
           showBackButton={true}
+          // Props per la navigazione
+          canGoToPrevious={gameNavigation.canGoToPrevious}
+          canGoToNext={gameNavigation.canGoToNext}
+          onGoToPrevious={gameNavigation.goToPrevious}
+          onGoToNext={gameNavigation.goToNext}
+          currentIndex={gameNavigation.currentIndex}
+          totalGames={gameNavigation.totalGames}
         />
       </div>
 
@@ -139,8 +163,8 @@ export default function GamePage() {
                 activities={activities} 
                 game={game} 
               />
-              */}
-              <div className="bg-primaryBg border border-border-color rounded-xl p-6 mt-6">
+              */}             
+               <div className="bg-primary-bg border border-border-color rounded-xl p-6 mt-6">
                 <div className="text-center py-8">
                   <h3 className="font-primary font-semibold text-xl text-text-primary mb-2">
                     Timeline di Gioco

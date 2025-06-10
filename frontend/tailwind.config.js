@@ -5,12 +5,11 @@ module.exports = {
     './src/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
-    extend: {
-      colors: {
+    extend: {      colors: {
         // Base colors
-        'primaryBg': 'rgb(var(--primary-bg))',
-        'secondaryBg': 'rgb(var(--secondary-bg))',
-        'tertiaryBg': 'rgb(var(--tertiary-bg))',
+        'primary-bg': 'rgb(var(--primary-bg))',
+        'secondary-bg': 'rgb(var(--secondary-bg))',
+        'tertiary-bg': 'rgb(var(--tertiary-bg))',
         
         // Accent colors
         'accent-primary': 'rgb(var(--accent-primary))',

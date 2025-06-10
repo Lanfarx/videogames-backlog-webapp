@@ -72,17 +72,20 @@ const ContinuePlayingSection: React.FC = () => {
       </section>
     );
   }
-
   return (
     <section className="mb-12">
       <div className='container mx-auto px-6 py-8'> 
-        <SectionHeader 
-          title="Continua a giocare" 
-          subtitle="Riprendi da dove avevi lasciato" 
-          seeAllLink="/library?filter=InProgress" 
-        />
+        {/* Header con animazione fadeInUp */}
+        <div className="animate-fade-in-up">
+          <SectionHeader 
+            title="Continua a giocare" 
+            subtitle="Riprendi da dove avevi lasciato" 
+            seeAllLink="/library?filter=InProgress" 
+          />
+        </div>
         
-        <div className="relative flex items-center py-4">
+        {/* Container giochi con animazione e delay */}
+        <div className="relative flex items-center py-4 animate-fade-in-up delay-200">
           {/* Freccia sinistra */}
           <button 
             onClick={goToPreviousPage}
@@ -96,19 +99,20 @@ const ContinuePlayingSection: React.FC = () => {
             <ChevronLeft className="h-6 w-6 text-white" />
           </button>
           
-          {/* Griglia giochi */}
+          {/* Griglia giochi con animazioni scaglionate */}
           <div className="flex space-x-6 overflow-hidden py-4 px-2 w-full">
-            {paginationData.games.map((game: any) => (
-              <InProgressGameCard 
-                key={game.id}
-                id={game.id.toString()}
-                title={game.title}
-                CoverImage={game.coverImage}
-                Platform={game.platform}
-                HoursPlayed={game.hoursPlayed} 
-                Rating={game.rating}
-                Genres={game.genres}
-              />
+            {(Array.isArray(paginationData.games) ? paginationData.games : []).map((game: any, index: number) => (
+              <div key={game.id} className={`animate-fade-in-up delay-${300 + index * 100}`}>
+                <InProgressGameCard 
+                  id={game.id.toString()}
+                  title={game.title}
+                  CoverImage={game.coverImage}
+                  Platform={game.platform}
+                  HoursPlayed={game.hoursPlayed} 
+                  Rating={game.rating}
+                  Genres={game.genres}
+                />
+              </div>
             ))}
           </div>
           
@@ -126,9 +130,9 @@ const ContinuePlayingSection: React.FC = () => {
           </button>
         </div>
 
-        {/* Indicatore pagina */}
+        {/* Indicatore pagina con animazione */}
         {paginationData.totalPages > 1 && (
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-4 animate-fade-in-up delay-900">
             <span className="text-sm text-text-secondary">
               Pagina {currentPage} di {paginationData.totalPages}
             </span>

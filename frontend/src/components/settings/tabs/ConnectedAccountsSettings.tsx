@@ -4,12 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
-import { getToken } from "../../../utils/getToken";
 
 const ConnectedAccountsSettings: React.FC = () => {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
-  const token = getToken()
 
   const [steamIdInput, setSteamIdInput] = useState("");
   const [steamIdError, setSteamIdError] = useState("");
@@ -23,14 +21,13 @@ const ConnectedAccountsSettings: React.FC = () => {
       setSteamIdError("");
     }
   };
-
   const handleConnectSteam = async () => {
-    if (steamIdInput.length === 17 && userProfile && token) {
+    if (steamIdInput.length === 17 && userProfile) {
       const newProfile = {
         ...userProfile,
         steamId: steamIdInput
       };
-      const updated = await updateProfile(newProfile, token);
+      const updated = await updateProfile(newProfile);
       dispatch(setUserProfile(updated));
       setSteamIdInput("");
       setSteamIdError("");
@@ -40,12 +37,12 @@ const ConnectedAccountsSettings: React.FC = () => {
   };
 
   const handleDisconnectSteam = async () => {
-    if (userProfile && token) {
+    if (userProfile) {
       const newProfile = {
         ...userProfile,
         steamId: undefined
       };
-      const updated = await updateProfile(newProfile, token);
+      const updated = await updateProfile(newProfile);
       dispatch(setUserProfile(updated));
     }
   };
@@ -124,7 +121,7 @@ const ConnectedAccountsSettings: React.FC = () => {
                         maxLength={17}
                         className={`px-3 py-1 text-sm border ${
                           steamIdError ? "border-red-500" : "border-border-color"
-                        } rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
+                        } rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary`}
                       />
                       {steamIdError && (
                         <p className="text-xs text-red-500 mb-1 absolute top-0 transform -translate-y-5">

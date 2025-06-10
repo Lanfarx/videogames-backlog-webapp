@@ -22,13 +22,15 @@ namespace VideoGamesBacklogBackend.Services
             var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.Id.ToString() == userId);
-        }
-
-        public async Task<User?> UpdateProfileAsync(ClaimsPrincipal userClaims, User updated)
+        }        public async Task<User?> UpdateProfileAsync(ClaimsPrincipal userClaims, User updated)
         {
             var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+            var user = await _dbContext.Users.Include(u => u.Library).FirstOrDefaultAsync(u => u.Id.ToString() == userId);
             if (user == null) return null;
+
+            // Aggiorna le proprietà dell'utente
+            user.UserName = updated.UserName;
+            user.Email = updated.Email;
             user.FullName = updated.FullName;
             user.Bio = updated.Bio;
             user.Avatar = updated.Avatar;
@@ -36,11 +38,10 @@ namespace VideoGamesBacklogBackend.Services
             user.PrivacySettings = updated.PrivacySettings;
             user.steamId = updated.steamId;
             user.AppPreferences = updated.AppPreferences;
+
             await _dbContext.SaveChangesAsync();
             return user;
-        }
-
-        public async Task<bool> ChangePasswordAsync(ClaimsPrincipal userClaims, string currentPassword, string newPassword)
+        }        public async Task<bool> ChangePasswordAsync(ClaimsPrincipal userClaims, string currentPassword, string newPassword)
         {
             var userId = userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);

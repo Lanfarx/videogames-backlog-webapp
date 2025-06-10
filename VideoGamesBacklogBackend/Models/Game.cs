@@ -45,18 +45,21 @@ namespace VideoGamesBacklogBackend.Models
         public string? Publisher { get; set; }
         public string? CompletionDate { get; set; }
         public string? PlatinumDate { get; set; }
+   
         public int HoursPlayed { get; set; }
         public int Metacritic { get; set; }        // Inizializza il Rating a 0
         public decimal Rating { get; set; } = 0;
 
         public string? Notes { get; set; }
-        public GameReview? Review { get; set; }
+        public GameReview? Review { get; set; }        public List<GameComment> Comments { get; set; } = new List<GameComment>();
 
-        public List<GameComment> Comments { get; set; } = new List<GameComment>();
+        // Relazione uno-a-molti: un gioco può ricevere molti commenti sulla sua recensione
+        public List<ReviewComment> ReviewComments { get; set; } = new List<ReviewComment>();
 
         // Foreign key per l'utente proprietario
         [ForeignKey("User")]
         public int UserId { get; set; }
+        [JsonIgnore] // Evita il loop di serializzazione
         public User? User { get; set; }
 
         // Relazione uno-a-molti: un gioco ha molte attivit�
@@ -87,5 +90,30 @@ namespace VideoGamesBacklogBackend.Models
         public int GameId { get; set; }
         [JsonIgnore]
         public Game? Game { get; set; }
+    }
+
+    // Modello per i commenti alle recensioni
+    public class ReviewComment
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string Text { get; set; } = string.Empty;
+
+        [Required]
+        public string Date { get; set; } = string.Empty;
+
+        // Foreign key verso la recensione del gioco (identificata da GameId dell'autore della recensione)
+        [ForeignKey("ReviewGame")]
+        public int ReviewGameId { get; set; }
+        [JsonIgnore]
+        public Game? ReviewGame { get; set; }
+
+        // Foreign key verso l'utente che ha scritto il commento
+        [ForeignKey("Author")]
+        public int AuthorId { get; set; }
+        [JsonIgnore]
+        public User? Author { get; set; }
     }
 }

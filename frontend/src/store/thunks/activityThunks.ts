@@ -10,7 +10,7 @@ export const fetchActivities = createAsyncThunk(
     page?: number;
     pageSize?: number;
   } = {}) => {
-    const { filters = {}, page = 1, pageSize = 20 } = params;
+    const { filters = {}, page = 1, pageSize = 100 } = params;
     return await activityService.getActivities(filters, page, pageSize);
   }
 );

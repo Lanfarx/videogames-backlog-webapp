@@ -36,11 +36,19 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
   };
   
   return (
-    <div className="w-[280px] h-[280px] bg-primaryBg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">
-      {/* Immagine di copertina con link */}
-      <Link to={`/library/${title}`} className="block h-[140px] w-full relative">
-        <div className="absolute inset-0 bg-accent-secondary bg-opacity-20 rounded-t-lg"></div>
-        <img src={CoverImage || "/placeholder.svg"} alt={title} className="w-full h-full object-cover rounded-t-lg" /> 
+    <div className="w-[280px] h-[280px] bg-primary-bg border border-border-color rounded-lg shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent-primary transition-all flex flex-col">      {/* Immagine di copertina con link */}
+      <Link to={`/library/${title}`} className="block h-[140px] w-full relative overflow-hidden rounded-t-lg">
+        <img 
+          src={CoverImage || "/placeholder.svg"} 
+          alt={title} 
+          className="w-full h-full object-cover transition-transform hover:scale-105" 
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "/placeholder.svg";
+          }}
+        /> 
+        {/* Overlay sottile per l'effetto hover */}
+        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200"></div>
       </Link>
       
       {/* Contenuto */}

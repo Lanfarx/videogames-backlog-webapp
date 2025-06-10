@@ -207,8 +207,22 @@ export function formatHours(hours: number): string {
  */
 export function calculateActivityDays(memberSince: Date | string): number {
   const memberSinceDate = typeof memberSince === 'string' ? new Date(memberSince) : memberSince;
+  
+  // Normalizza entrambe le date alla mezzanotte UTC per un calcolo preciso dei giorni
+  const memberSinceUTC = new Date(Date.UTC(
+    memberSinceDate.getUTCFullYear(),
+    memberSinceDate.getUTCMonth(),
+    memberSinceDate.getUTCDate()
+  ));
+  
   const now = new Date();
-  const diffInMs = now.getTime() - memberSinceDate.getTime();
+  const nowUTC = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  ));
+  
+  const diffInMs = nowUTC.getTime() - memberSinceUTC.getTime();
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
   return Math.max(0, diffInDays); // Assicura che non sia negativo
 }

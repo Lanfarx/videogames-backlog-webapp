@@ -21,6 +21,9 @@ import { getToken } from './utils/getToken';
 import { getProfile } from './store/services/profileService';
 import { setUserProfile, setProfileLoading, setProfileLoadError } from './store/slice/userSlice';
 import LoadingSpinner from './components/loading/LoadingSpinner';
+import FriendsPage from './pages/header/FriendsPage';
+import PublicProfileView from './components/friends/PublicProfileView';
+import LandingPage from './pages/landing/LandingPage';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -30,14 +33,22 @@ function App() {
   
   // Ref per tenere traccia se il profilo è già stato richiesto
   const profileRequestedRef = React.useRef(false);
-
+  
+  // Controllo per reindirizzare utenti non autenticati alla landing page
+  React.useEffect(() => {
+    const token = getToken();
+    if (!token && location.pathname === '/') {
+      window.location.replace('/landing');
+    }
+  }, [location.pathname]);
+  
   // Carica il profilo utente all'avvio se c'è un token ma il profilo non è nello stato globale
   React.useEffect(() => {
     const token = getToken();
     if (token && !userProfile && !profileRequestedRef.current) {
       profileRequestedRef.current = true;
       dispatch(setProfileLoading(true));
-      getProfile(token)
+      getProfile()
         .then((profile) => {
           dispatch(setUserProfile(profile));
         })
@@ -61,16 +72,15 @@ function App() {
       profileRequestedRef.current = false;
     }
   }, [location.pathname]); // Controlla ad ogni cambio di route
-
   const ProtectedRoute = () => {
     const token = getToken();
     const profile = useAppSelector((state) => state.user.profile);
     const isLoading = useAppSelector((state) => state.user.isProfileLoading);
     const loadError = useAppSelector((state) => state.user.profileLoadError);
 
-    // Se non c'è token, reindirizza al login
+    // Se non c'è token, reindirizza alla landing page
     if (!token) {
-      return <Navigate to="/login" />;
+      return <Navigate to="/landing" />;
     }
 
     // Se c'è un errore nel caricamento del profilo, reindirizza al login
@@ -86,10 +96,12 @@ function App() {
     // Se tutto è ok (token presente e profilo caricato), consenti l'accesso
     return <Outlet />;
   };
-
   return (
     <div className="App">
       <Routes>
+        {/* Landing page */}
+        <Route path="/landing" element={<LandingPage />} />
+        
         {/* Route pubbliche */}
         <Route element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />
@@ -98,6 +110,7 @@ function App() {
           <Route path="terms" element={<TermsPage />} />
           <Route path="contact" element={<ContactPage />} />
         </Route>
+        
         {/* Route protette */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
@@ -106,6 +119,8 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="catalog" element={<CatalogPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="friends" element={<FriendsPage />} />
+            <Route path="profile/:userName" element={<PublicProfileView />} />
             <Route path="diario" element={<DiarioPage />} />
             <Route path="settings" element={<SettingsPage />} />
           
@@ -116,6 +131,9 @@ function App() {
             <Route path="library/:title" element={<GamePage />} />
             <Route path="catalog/:id" element={<GameInfoPage />} />
         </Route>
+        
+        {/* Redirect alla landing page per utenti non autenticati */}
+        <Route path="*" element={<Navigate to="/landing" />} />
       </Routes>
     </div>
   );

@@ -2,23 +2,32 @@
 import React from "react";
 import { CheckCircle, PlusCircle, Award} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useCommunityCommunityRating } from '../../store/hooks/communityHooks';
 import RatingStars from '../ui/atoms/RatingStars';
 import { SampleGame } from "../../types/game";
+import { formatMetacriticScore } from '../../utils/gameDisplayUtils';
+import { CommunityRatingDto } from '../../types/community';
 
 interface CatalogGameCardProps {
   game: SampleGame;
   isInLibrary: boolean;
   onAddToLibrary: () => void;
   onInfoClick: (id: string) => void;
+  communityRating?: CommunityRatingDto;
 }
 
-const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, onAddToLibrary, onInfoClick }) => {
-  const communityRating = useCommunityCommunityRating(game.Title);
-
+const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ 
+  game, 
+  isInLibrary, 
+  onAddToLibrary, 
+  onInfoClick, 
+  communityRating 
+}) => {
   const handleInfoClick = () => {
     onInfoClick(game.id);
   };
+
+  const rating = communityRating?.rating || 0;
+  const reviewCount = communityRating?.reviewCount || 0;
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md transition-all h-full flex flex-col relative p-3 xl:p-2">
@@ -39,18 +48,17 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ game, isInLibrary, on
           ))}
           {game.Genres.length > 3 && (
             <span className="px-2 py-0.5 bg-tertiary-bg text-xs rounded-full text-text-secondary">+{game.Genres.length - 3}</span>
-          )}
-        </div>
+          )}        </div>       
         <div className="flex items-center gap-2 mb-1">
           <Award className="h-4 w-4 text-yellow-400" />
-          <span className="font-semibold text-xs text-text-primary">{game.Metacritic}</span>
+          <span className="font-semibold text-xs text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
           <span className="text-xs text-text-secondary">Metacritic</span>
-        </div>
-        {/* Recensioni utenti aggregate */}
+        </div>        {/* Recensioni utenti aggregate */}
         <div className="flex items-center gap-2 mb-1">
-          <RatingStars Rating={communityRating} showValue={false} size="sm" readOnly />
+          <RatingStars Rating={rating} showValue={false} size="sm" readOnly />
           <span className="text-xs text-text-secondary">
-            {communityRating > 0 ? `${communityRating.toFixed(1)} / 5` : 'Nessuna recensione utente'}
+            {rating > 0 ? `${rating.toFixed(1)} / 5` : 'Nessuna recensione utente'}
+            {reviewCount > 0 && ` (${reviewCount} recensioni)`}
           </span>
         </div>
         <div className="flex-1" />

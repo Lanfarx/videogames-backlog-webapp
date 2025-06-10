@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import RatingStars from '../ui/atoms/RatingStars';
 import { Save, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Game, GameReview } from '../../types/game';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch } from '../../store/hooks';
 import { useGameById, useGameActions } from '../../store/hooks/gamesHooks';
 import { calculateRatingFromReview } from '../../utils/gamesUtils';
 
@@ -24,14 +24,9 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
   const [localGameplayRating, setLocalGameplayRating] = useState(currentGame.Review?.Gameplay || 0);
   const [localGraphicsRating, setLocalGraphicsRating] = useState(currentGame.Review?.Graphics || 0);
   const [localStoryRating, setLocalStoryRating] = useState(currentGame.Review?.Story || 0);
-  const [localSoundRating, setLocalSoundRating] = useState(currentGame.Review?.Sound || 0);  // Usa Redux per la privacy
-  const userProfile = useAppSelector(state => state.user.profile);
-  const isProfilePrivate = userProfile?.privacySettings?.isPrivate ?? false;
-  const isDiaryPrivate = userProfile?.privacySettings?.showDiary === false;
-  
-  // Valori dal backend per confronto e display della data
+  const [localSoundRating, setLocalSoundRating] = useState(currentGame.Review?.Sound || 0);  // Valori dal backend per confronto e display della data
   const ReviewDate = currentGame.Review?.Date || '';
-  const IsPublic = currentGame.Review?.IsPublic ?? (isDiaryPrivate ? false : true);
+  const IsPublic = currentGame.Review?.IsPublic ?? true;
   
   // Controlla se ci sono modifiche non salvate nella recensione (esclusa la privacy che è gestita separatamente)
   const hasUnsavedReviewChanges = 
@@ -144,9 +139,8 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
       setActiveTab('Review');
     }
   };
-
   return (
-    <div className="bg-primaryBg border border-border-color rounded-xl overflow-hidden mb-8">
+    <div className="bg-primary-bg border border-border-color rounded-xl overflow-hidden mb-8">
       {/* Tab header */}
       <div className="flex text-center border-b border-border-color">
         <button
@@ -175,9 +169,8 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
       {/* Tab content */}
       <div className="p-6">
         {activeTab === 'Notes' ? (
-          <div>
-            <textarea
-              className="w-full p-4 min-h-[180px] border border-border-color rounded-lg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
+          <div>            <textarea
+              className="w-full p-4 min-h-[180px] border border-border-color rounded-lg bg-secondary-bg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
               placeholder="Aggiungi le tue note private per questo gioco..."
               value={NotesValue}
               onChange={handleNotesChange}
@@ -211,28 +204,23 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
             {/* Review content */}
             <div className="border border-border-color rounded-lg mb-4 overflow-hidden">
               {/* Review text */}              <textarea
-                className="w-full p-4 min-h-[120px] border-b border-border-color focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
+                className="w-full p-4 min-h-[120px] border-b border-border-color bg-secondary-bg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
                 value={localReviewText}
                 onChange={handleReviewTextChange}
                 placeholder="Scrivi qui la tua recensione..."
                 disabled={isNotStarted}
-              ></textarea>{/* Toggle privacy */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-tertiary-bg border-t border-border-color">
+              ></textarea>              {/* Toggle privacy */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-secondary-bg border-t border-border-color">
                 <button
-                  type="button"                  className={`flex items-center gap-2 text-sm ${
-                    isDiaryPrivate
-                      ? 'text-text-disabled opacity-60 cursor-not-allowed'
-                      : IsPublic 
-                        ? 'text-accent-success hover:text-accent-success/80'
-                        : 'text-text-secondary hover:text-accent-primary'
+                  type="button"
+                  className={`flex items-center gap-2 text-sm ${
+                    IsPublic 
+                      ? 'text-accent-success hover:text-accent-success/80'
+                      : 'text-text-secondary hover:text-accent-primary'
                   } focus:outline-none transition-colors`}
-                  title={
-                    isDiaryPrivate
-                      ? 'Per modificare la privacy delle recensioni, rendi pubblico il tuo diario nelle impostazioni.'
-                      : (IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione')
-                  }
+                  title={IsPublic ? 'Rendi privata la recensione' : 'Rendi pubblica la recensione'}
                   onClick={() => {
-                    if (!isNotStarted && !isDiaryPrivate) {
+                    if (!isNotStarted) {
                       const newIsPublic = !IsPublic;
                       
                       // Aggiorna solo il campo privacy con chiamata API immediata
@@ -241,27 +229,23 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
                       });
                     }
                   }}
-                  disabled={isNotStarted || isDiaryPrivate}
-                >                  {IsPublic ? (
+                  disabled={isNotStarted}
+                >{IsPublic ? (
                     <Eye className="w-5 h-5" />
                   ) : (
                     <EyeOff className="w-5 h-5" />
-                  )}
-                  <span>{IsPublic ? 'Pubblica' : 'Privata'}</span>
-                </button>                <span className="text-xs text-text-disabled">
-                  {isDiaryPrivate
-                    ? 'Privacy limitata dal diario privato'
-                    : (IsPublic ? 'Visibile nella community' : 'Solo per te')
-                  }
+                  )}                  <span>{IsPublic ? 'Pubblica' : 'Privata'}</span>
+                </button>
+                <span className="text-xs text-text-disabled">
+                  {IsPublic ? 'Visibile nella community' : 'Solo per te'}
                 </span>
-              </div>
-              
+              </div>              
               {/* Rating categories */}
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4 p-4 bg-secondaryBg">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4 p-4 bg-secondary-bg">
                 <div>
                   <label className="block mb-1 font-secondary font-medium text-sm text-text-secondary">
                     Gameplay
-                  </label>                  <div className="cursor-pointer">
+                  </label><div className="cursor-pointer">
                     <RatingStars 
                       Rating={localGameplayRating} 
                       size="md"

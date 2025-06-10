@@ -120,7 +120,7 @@ export function useActivityError(): string | null {
 // Hook per filtri specifici
 export function useActivitiesByType(type: ActivityType): Activity[] {
   return useSelector((state: RootState) => 
-    state.activities.activities.filter(activity => activity.Type === type)
+    state.activities.activities.filter(activity => activity.type === type)
   );
 }
 
@@ -131,7 +131,7 @@ export function useActivitiesThisMonth(): Activity[] {
     const currentYear = now.getFullYear();
     
     return state.activities.activities.filter(activity => {
-      const activityDate = new Date(activity.Timestamp);
+      const activityDate = new Date(activity.timestamp);
       return activityDate.getMonth() === currentMonth && 
              activityDate.getFullYear() === currentYear;
     });
@@ -143,7 +143,7 @@ export function useActivitiesThisYear(): Activity[] {
     const currentYear = new Date().getFullYear();
     
     return state.activities.activities.filter(activity => {
-      const activityDate = new Date(activity.Timestamp);
+      const activityDate = new Date(activity.timestamp);
       return activityDate.getFullYear() === currentYear;
     });
   });
@@ -153,7 +153,7 @@ export function useActivitiesThisYear(): Activity[] {
 export function useCompletedActivities(): Activity[] {
   return useSelector((state: RootState) => 
     state.activities.activities.filter(activity => 
-      activity.Type === 'Completed' || activity.Type === 'Platinum'
+      activity.type === 'Completed' || activity.type === 'Platinum'
     )
   );
 }

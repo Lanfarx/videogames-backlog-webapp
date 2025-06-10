@@ -16,8 +16,10 @@ import {
   addCommentThunk,
   deleteCommentThunk,
   updateCommentThunk,
-  fetchGameStats
+  fetchGameStats,
+  fetchGamesPaginated
 } from '../thunks/gamesThunks';
+import { updatePaginatedGame, removePaginatedGame } from '../slice/gamesSlice';
 import { useEffect, useCallback, useState, useRef } from 'react';
 import { useAppDispatch } from '../hooks';
 
@@ -241,8 +243,55 @@ export function useGameActions() {
     const result = await dispatch(deleteAllGamesThunk());
     return result;
   }, [dispatch]);
-
   return { add, update, updateStatus, updatePlaytime, remove, removeAll };
+}
+
+// Hook combinato per azioni CRUD con aggiornamento paginazione
+export function useGameActionsWithPagination() {
+  const gameActions = useGameActions();
+  const { updateGameInPagination, removeGameFromPagination } = usePaginatedGames();
+  
+  const updateWithPagination = useCallback(async (id: number, data: GameUpdateInput) => {
+    const result = await gameActions.update(id, data);
+    // Se l'aggiornamento ha successo, aggiorna anche la paginazione locale
+    if (result.type.endsWith('/fulfilled')) {
+      updateGameInPagination(result.payload as Game);
+    }
+    return result;
+  }, [gameActions, updateGameInPagination]);
+
+  const updateStatusWithPagination = useCallback(async (id: number, status: string) => {
+    const result = await gameActions.updateStatus(id, status);
+    if (result.type.endsWith('/fulfilled')) {
+      updateGameInPagination(result.payload as Game);
+    }
+    return result;
+  }, [gameActions, updateGameInPagination]);
+
+  const updatePlaytimeWithPagination = useCallback(async (id: number, hoursPlayed: number) => {
+    const result = await gameActions.updatePlaytime(id, hoursPlayed);
+    if (result.type.endsWith('/fulfilled')) {
+      updateGameInPagination(result.payload as Game);
+    }
+    return result;
+  }, [gameActions, updateGameInPagination]);
+
+  const removeWithPagination = useCallback(async (id: number) => {
+    const result = await gameActions.remove(id);
+    if (result.type.endsWith('/fulfilled')) {
+      removeGameFromPagination(id);
+    }
+    return result;
+  }, [gameActions, removeGameFromPagination]);
+
+  return { 
+    add: gameActions.add,
+    update: updateWithPagination,
+    updateStatus: updateStatusWithPagination,
+    updatePlaytime: updatePlaytimeWithPagination,
+    remove: removeWithPagination,
+    removeAll: gameActions.removeAll
+  };
 }
 
 // Hook specifico per azioni di aggiornamento dello status
@@ -267,5 +316,55 @@ export function useGamePlaytimeActions() {
   }, [dispatch]);
 
   return { updatePlaytime };
+}
+
+// Hook per la paginazione lato server
+export function usePaginatedGames() {  const dispatch = useAppDispatch();
+  const paginatedGames = useSelector((state: RootState) => state.games.paginatedGames);
+  const paginationData = useSelector((state: RootState) => state.games.paginationData);
+  const paginationLoading = useSelector((state: RootState) => state.games.paginationLoading);
+  const error = useSelector((state: RootState) => state.games.error);
+  
+  // Funzione per ottenere la pagina corrente da localStorage
+  const getSavedCurrentPage = useCallback(() => {
+    const savedPage = localStorage.getItem('libraryCurrentPage');
+    return savedPage ? parseInt(savedPage, 10) : 1;
+  }, []);
+  
+  const fetchPaginatedGames = useCallback(async (params: {
+    page: number;
+    pageSize: number;
+    filters?: any;
+    sortBy?: string;
+    sortOrder?: string;
+    search?: string;
+  }) => {
+    const result = await dispatch(fetchGamesPaginated(params));
+    return result;
+  }, [dispatch]);
+  const setSavedPage = useCallback((page: number) => {
+    localStorage.setItem('libraryCurrentPage', page.toString());
+  }, []);
+  
+  const resetSavedPage = useCallback(() => {
+    localStorage.setItem('libraryCurrentPage', '1');
+  }, []);  const updateGameInPagination = useCallback((game: Game) => {
+    dispatch(updatePaginatedGame(game));
+  }, [dispatch]);
+
+  const removeGameFromPagination = useCallback((gameId: number) => {
+    dispatch(removePaginatedGame(gameId));
+  }, [dispatch]);  return {
+    paginatedGames,
+    paginationData,
+    paginationLoading,
+    getSavedCurrentPage,
+    error,
+    fetchPaginatedGames,
+    setSavedPage,
+    resetSavedPage,
+    updateGameInPagination,
+    removeGameFromPagination
+  };
 }
 

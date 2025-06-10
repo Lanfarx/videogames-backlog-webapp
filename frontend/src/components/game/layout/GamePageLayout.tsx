@@ -16,7 +16,7 @@ const GamePageLayout: React.FC<GamePageLayoutProps> = ({
   parentLabel = 'Libreria'
 }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-primaryBg">
+    <div className="flex flex-col min-h-screen bg-primary-bg">
       <GamePageHeader 
         title={title} 
         parentPath={parentPath}

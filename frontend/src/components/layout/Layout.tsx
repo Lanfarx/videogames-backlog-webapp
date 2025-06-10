@@ -14,7 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   useLoadGames();
 
   return (
-    <div className="flex flex-col min-h-screen bg-secondaryBg">
+    <div className="flex flex-col min-h-screen bg-secondary-bg">
       <Header />
       <main className="flex-grow w-full">
         <div className="w-full mx-auto ">

@@ -10,7 +10,7 @@ export default function ToggleSwitch({ checked, onChange }: ToggleSwitchProps) {
       role="switch"
       aria-checked={checked}
       className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary/30 ${
-        checked ? "bg-accent-success" : "bg-tertiaryBg"
+        checked ? "bg-accent-success" : "bg-tertiary-bg"
       }`}
       onClick={() => onChange(!checked)}
     >

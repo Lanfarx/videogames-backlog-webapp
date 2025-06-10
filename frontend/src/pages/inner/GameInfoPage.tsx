@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGameById, useGameByTitle } from '../../store/hooks/gamesHooks';
-import { useCommunityReviewsByGame, useCommunityCommunityRating } from '../../store/hooks/communityHooks';
+import { useGameById, useGameByTitle, useAllGames, useLoadGames } from '../../store/hooks/gamesHooks';
 import { Award, Plus, Users, Star, Clock, Trophy, Gamepad2, ArrowLeft } from "lucide-react";
 import CommunityReviewsSection from "../../components/catalog/gameinfo/CommunityReviewsSection";
 import SimilarGamesCard from "../../components/catalog/gameinfo/SimilarGamesCard";
@@ -12,13 +11,17 @@ import { BookOpen } from "lucide-react";
 import { getGameDetails } from '../../store/services/rawgService';
 import type { PublicCatalogGame } from '../../types/game';
 import CommunityStats from "../../components/catalog/gameinfo/CommunityStats";
+import { formatMetacriticScore } from '../../utils/gameDisplayUtils';
+import { findMatchingGame } from '../../utils/gameMatchingUtils';
 
-const GameInfoPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+const GameInfoPage: React.FC = () => {  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [rawgGame, setRawgGame] = React.useState<PublicCatalogGame | null>(null);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);  React.useEffect(() => {
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Carica automaticamente i giochi dell'utente se non sono già stati caricati
+  const { loading: gamesLoading } = useLoadGames();React.useEffect(() => {
     if (!id) return;
     setLoading(true);
     getGameDetails(id)
@@ -40,13 +43,14 @@ const GameInfoPage: React.FC = () => {
       })
       .catch(() => setError('Errore nel caricamento dei dettagli dal catalogo RAWG.'))
       .finally(() => setLoading(false));  }, [id]);
-  // Per la libreria utente, cerca tramite titolo semplice
-  // Hook sempre in cima, non condizionale
-  const userGameByTitle = useGameByTitle(rawgGame?.title || "");
+  // Per la libreria utente, usa il matching avanzato
+  // Solo dopo che i giochi sono stati caricati
+  const allGames = useAllGames();
+  const matchingGame = rawgGame?.title && !gamesLoading ? findMatchingGame(allGames, rawgGame.title) : undefined;
 
-  const isInLibrary = !!userGameByTitle;
-  const personalReview = userGameByTitle && userGameByTitle.Review
-    ? { ...userGameByTitle.Review, title: userGameByTitle.Title }
+  const isInLibrary = !!matchingGame;
+  const personalReview = matchingGame && matchingGame.Review
+    ? { ...matchingGame.Review, title: matchingGame.Title }
     : undefined;
 
   // Usa rawgGame come game solo se presente
@@ -123,16 +127,14 @@ const GameInfoPage: React.FC = () => {
                 >
                   {showFullDescription ? 'Mostra meno' : 'Mostra altro'}
                 </button>
-              )}
-            </div>
-
+              )}            </div>          
             <div className="flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-400" />
-                <span className="font-semibold text-lg text-text-primary">{game.Metacritic}</span>
+                <span className="font-semibold text-lg text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
                 <span className="text-sm text-text-secondary">Metacritic</span>
               </div>
-            </div>            <div className="text-sm text-text-secondary">
+            </div><div className="text-sm text-text-secondary">
               <span className="font-medium">Piattaforme:</span> {game.Platforms.join(', ')}
             </div>
           </div>
@@ -141,9 +143,8 @@ const GameInfoPage: React.FC = () => {
           <div className="flex flex-col gap-4 justify-end items-end relative">
             {isInLibrary && (
               <span
-                className="absolute left-0 top-0 bg-accent-primary text-white px-4 py-2 rounded-full flex items-center gap-2 text-base font-semibold whitespace-nowrap truncate hover:bg-accent-secondary transition-colors cursor-pointer z-10"
-                onClick={() => {
-                  if (userGameByTitle) navigate(`/library/${encodeURIComponent(userGameByTitle.Title.replace(/ /g, '_'))}`);
+                className="absolute left-0 top-0 bg-accent-primary text-white px-4 py-2 rounded-full flex items-center gap-2 text-base font-semibold whitespace-nowrap truncate hover:bg-accent-secondary transition-colors cursor-pointer z-10"                onClick={() => {
+                  if (matchingGame) navigate(`/library/${encodeURIComponent(matchingGame.Title.replace(/ /g, '_'))}`);
                 }}
                 title="Vai alla tua copia in libreria"
               >
@@ -157,25 +158,28 @@ const GameInfoPage: React.FC = () => {
               </button>
             )}
           </div>
-        </div>
-        {/* Community Stats subito sotto le info generali */}
+        </div>        {/* Community Stats sempre orizzontale */}
         <CommunityStats GameTitle={game.title} />
-        {/* Content Grid - 60%/40% come da wireframe */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 mt-8">
-          {/* Main Content - 60% (3/5 columns) */}
-          <div className="xl:col-span-3 space-y-8">
-            {/* Recensione personale se presente */}
+        
+        {/* Similar Games Card orizzontale */}
+        <div className="mt-8">
+          <SimilarGamesCard currentGame={game} horizontal={true} />
+        </div>
+        
+        {/* Content Grid - Due colonne: La tua recensione | Recensioni community */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
+          {/* Colonna Sinistra: La tua recensione */}
+          <div className="space-y-6">
             {personalReview && (
               <PersonalReviewCard personalReview={personalReview} />
             )}
-            {/* Community Reviews reali */}
+          </div>
+          
+          {/* Colonna Destra: Recensioni della community */}
+          <div className="space-y-6">
             <CommunityReviewsSection 
               GameTitle={game.title}
             />
-          </div>
-          {/* Sidebar - 40% (2/5 columns) */}
-          <div className="xl:col-span-2 space-y-6">
-            <SimilarGamesCard currentGame={game} />
           </div>
         </div>
       </div>

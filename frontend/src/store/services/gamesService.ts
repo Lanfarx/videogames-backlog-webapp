@@ -68,6 +68,32 @@ export const getGameById = async (id: number): Promise<Game> => {
   return mapGameFromApi(res.data);
 };
 
+// Ottieni informazioni pubbliche di un gioco (per visualizzare giochi di altri utenti)
+export const getGamePublicInfo = async (id: number): Promise<{
+  id: number;
+  title: string;
+  platform: string;
+  releaseYear: number;
+  coverImage: string;
+  developer: string;
+  publisher: string;
+  userId?: number;
+  review?: {
+    text: string;
+    gameplay: number;
+    graphics: number;
+    story: number;
+    sound: number;
+    date: string;
+    isPublic?: boolean;
+  };
+}> => {
+  // Utilizza apiClient che include automaticamente il token JWT se l'utente è autenticato
+  // Questo permette al backend di identificare l'utente corrente e applicare i controlli di privacy
+  const res = await apiClient.get(`${API_URL}/public/${id}`);
+  return res.data;
+};
+
 export const getGameByTitle = async (title: string): Promise<Game> => {
   // Codifica il titolo per gestire caratteri speciali negli URL
   const encodedTitle = encodeURIComponent(title);
@@ -160,6 +186,45 @@ export const getInProgressGamesPaginated = async (page: number = 1, pageSize: nu
   const res = await apiClient.get(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
   return {
     games: res.data.games,
+    currentPage: res.data.currentPage,
+    totalPages: res.data.totalPages,
+    totalItems: res.data.totalItems,
+    pageSize: res.data.pageSize,
+    hasNextPage: res.data.hasNextPage,
+    hasPreviousPage: res.data.hasPreviousPage
+  };
+};
+
+// Tutti i giochi paginati
+export const getGamesPaginated = async (
+  page: number = 1, 
+  pageSize: number = 12, 
+  filters?: string, 
+  sortBy?: string, 
+  sortOrder?: string, 
+  search?: string
+): Promise<{
+  games: Game[];
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString(),
+  });
+  
+  if (filters) params.append('filters', filters);
+  if (sortBy) params.append('sortBy', sortBy);
+  if (sortOrder) params.append('sortOrder', sortOrder);
+  if (search) params.append('search', search);
+
+  const res = await apiClient.get(`${API_URL}/paginated?${params.toString()}`);
+  return {
+    games: res.data.games.map(mapGameFromApi),
     currentPage: res.data.currentPage,
     totalPages: res.data.totalPages,
     totalItems: res.data.totalItems,

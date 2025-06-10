@@ -46,6 +46,7 @@ export interface GameBasicInfo {
   Genres: string[];
   Status: GameStatus;
   CoverImage?: string;
+  UserId?: number; // ID dell'utente proprietario del gioco
 }
 
 /**

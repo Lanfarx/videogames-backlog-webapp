@@ -7,7 +7,6 @@ import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
 import { changePassword } from '../../../store/services/passwordService';
 import type { UserProfile } from '../../../types/profile';
-import { getToken } from '../../../utils/getToken';
 import Input from '../../auth/Input';
 import PasswordStrengthBar from '../../auth/PasswordStrengthBar';
 
@@ -37,24 +36,19 @@ const ProfileSettings: React.FC = () => {
   useEffect(() => {
     setProfile(userProfile);
   }, [userProfile]);
-
   // Gestisce i cambiamenti nei campi del form
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (!profile) return;
     const updatedProfile = { ...profile, [name]: value };
     setProfile(updatedProfile);
-    const token = getToken()
-    if (token) {
-      try {
-        const updated = await updateProfile(updatedProfile, token);
-        dispatch(setUserProfile(updated));
-      } catch (err) {
-        alert('Errore durante il salvataggio del profilo.');
-      }
+    try {
+      const updated = await updateProfile(updatedProfile);
+      dispatch(setUserProfile(updated));
+    } catch (err) {
+      alert('Errore durante il salvataggio del profilo.');
     }
   };
-
   // Gestisce il caricamento dell'avatar
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && profile) {
@@ -64,14 +58,11 @@ const ProfileSettings: React.FC = () => {
         if (target && target.result) {
           const updatedProfile = { ...profile, avatar: target.result as string };
           setProfile(updatedProfile);
-          const token = getToken()
-          if (token) {
-            try {
-              const updated = await updateProfile(updatedProfile, token);
-              dispatch(setUserProfile(updated));
-            } catch (err) {
-              alert('Errore durante il salvataggio del profilo.');
-            }
+          try {
+            const updated = await updateProfile(updatedProfile);
+            dispatch(setUserProfile(updated));
+          } catch (err) {
+            alert('Errore durante il salvataggio del profilo.');
           }
         }
       };
@@ -124,17 +115,11 @@ const ProfileSettings: React.FC = () => {
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
-  // Gestisce il salvataggio della password
+    // Gestisce il salvataggio della password
   const handleSavePassword = async () => {
     if (validatePassword()) {
-      const token = getToken()
-      if (!token) {
-        setPasswordErrors({ general: 'Sessione scaduta. Effettua di nuovo il login.' });
-        return;
-      }
       try {
-        await changePassword(passwordData.currentPassword, passwordData.newPassword, token);
+        await changePassword(passwordData.currentPassword, passwordData.newPassword);
         setPasswordData({
           currentPassword: '',
           newPassword: '',
@@ -161,7 +146,7 @@ const ProfileSettings: React.FC = () => {
       {/* Sezione Avatar */}
       <div className="flex flex-col items-center md:flex-row gap-6 mb-8">
         <div className="relative">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-tertiaryBg border border-border-color flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-tertiary-bg border border-border-color flex items-center justify-center">
             {profile.avatar ? (
               <img 
                 src={profile.avatar} 
@@ -203,7 +188,7 @@ const ProfileSettings: React.FC = () => {
               value={profile.userName}
               readOnly
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
              <p className="text-xs text-text-secondary">Il nome utente non può essere modificato</p>
           </div>
@@ -218,7 +203,7 @@ const ProfileSettings: React.FC = () => {
               name="email"
               value={profile.email}
               readOnly
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiaryBg text-text-secondary focus:outline-none cursor-not-allowed"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-tertiary-bg text-text-secondary focus:outline-none cursor-not-allowed"
             />
             <p className="text-xs text-text-secondary">L'email non può essere modificata</p>
           </div>
@@ -233,7 +218,7 @@ const ProfileSettings: React.FC = () => {
               name="fullName"
               value={profile.fullName || ''}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
             />
           </div>
           
@@ -247,7 +232,7 @@ const ProfileSettings: React.FC = () => {
               value={profile.bio || ''}
               onChange={handleChange}
               rows={4}
-              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+              className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
               placeholder="Scrivi qualcosa su di te..."
             />
             <p className="text-xs text-text-secondary">

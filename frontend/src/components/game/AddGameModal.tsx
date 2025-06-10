@@ -7,6 +7,7 @@ import { useGameActions } from '../../store/hooks/gamesHooks';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import FormErrorInline from '../ui/atoms/FormErrorInline';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
+import { formatPrice, formatMetacriticScore } from '../../utils/gameDisplayUtils';
 
 import { getGameDetails, searchGames } from '../../store/services/rawgService';
 
@@ -45,25 +46,25 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const [activeTab, setActiveTab] = useState<"search" | "manual">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [gameData, setGameData] = useState<GameFormData>(initialGameData);
+  const [isSearching, setIsSearching] = useState(false);  const [gameData, setGameData] = useState<GameFormData>(initialGameData);
   const [formError, setFormError] = useState<string | null>(null);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
-
+  const [originalMetacritic, setOriginalMetacritic] = useState<number>(0);
   // Sempre nuovo gioco, resetta il form all'apertura
   useEffect(() => {
     setGameData(initialGameData);
     setIsAutoFilled(false);
     setFormError(null); // reset errore su chiusura modal
+    setOriginalMetacritic(0); // reset valore originale Metacritic
   }, [isOpen]);
 
   useEffect(() => {
     setFormError(null); // reset errore su cambio tab
   }, [activeTab]);
-
   // Prefill da catalogo (o altro) se fornito
   useEffect(() => {
     if (isOpen && prefillGame) {
+      const metacriticValue = prefillGame.Metacritic || 0;
       setGameData(prev => ({
         ...prev,
         Title: prefillGame.Title || "",
@@ -72,8 +73,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         Publisher: prefillGame.Publisher || "",
         ReleaseYear: prefillGame.ReleaseYear || new Date().getFullYear(),
         Genres: prefillGame.Genres || [],
-        Metacritic: prefillGame.Metacritic || 0,
+        Metacritic: metacriticValue,
       }));
+      setOriginalMetacritic(metacriticValue); // Salva il valore originale
       setActiveTab("manual");
       setIsAutoFilled(true);
     }
@@ -86,10 +88,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     }
     
     setIsSearching(true);
-    
-    try {
+      try {
       const data = await searchGames(query);
-      console.log('Dati ricevuti dalla ricerca:', data);
       
       // I dati sono già mappati dal servizio, li usiamo direttamente
       setSearchResults(data.results);
@@ -98,11 +98,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     } finally {
       setIsSearching(false);
     }
-  };
-  // Gestisce la selezione di un gioco dalla ricerca
+  };  // Gestisce la selezione di un gioco dalla ricerca
   const handleGameSelect = async (game: any) => {
     try {
       const fullData = await getGameDetails(game.id);
+      const metacriticValue = fullData.Metacritic || 0;
       
       setGameData({
         ...gameData,
@@ -112,8 +112,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         Publisher: fullData.Publisher || "Sconosciuto",
         ReleaseYear: fullData.ReleaseYear || new Date().getFullYear(),
         Genres: fullData.Genres || [],
-        Metacritic: fullData.Metacritic || 0,
+        Metacritic: metacriticValue,
       });
+      setOriginalMetacritic(metacriticValue); // Salva il valore originale
       setActiveTab("manual");
       setIsAutoFilled(true);
       setSearchQuery("");
@@ -213,11 +214,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     setFormError(null);    
     const gameToSave = {
       ...gameData
-    } as Game;
-      try {
+    } as Game;      try {
       await add(gameToSave);
-      
-      // Le attività sono ora create automaticamente dal backend
+        // Le attività sono ora create automaticamente dal backend
       // quando il gioco viene aggiunto tramite GameService.AddGameAsync
       
       // Chiudi il modal dopo il salvataggio
@@ -329,12 +328,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                             />
                           </div>
                           <div>
-                            <h3 className="font-montserrat font-medium text-base text-text-primary">{game.Title}</h3>
-                            <p className="font-roboto text-sm text-text-secondary">
+                            <h3 className="font-montserrat font-medium text-base text-text-primary">{game.Title}</h3>                            <p className="font-roboto text-sm text-text-secondary">
                               {game.ReleaseYear} • 
-                              {game.Metacritic && (
-                                <span className="ml-2 text-yellow-500 font-medium">{game.Metacritic}</span>
-                              )}
+                              <span className="ml-2 text-yellow-500 font-medium">{formatMetacriticScore(game.Metacritic)}</span>
                             </p>
                           </div>
                         </div>
@@ -447,9 +443,12 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                           }
                         }}
                         min="0"
-                        max="100"
-                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${isAutoFilled ? 'bg-tertiary-bg cursor-not-allowed opacity-80' : ''}`}
-                        disabled={isAutoFilled}
+                        max="100"                        className={`w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base ${
+                          isAutoFilled && originalMetacritic != null && originalMetacritic > 0 
+                            ? 'bg-tertiary-bg cursor-not-allowed opacity-80' 
+                            : ''
+                        }`}
+                        disabled={isAutoFilled && originalMetacritic != null && originalMetacritic > 0}
                       />
                     </div>
 
@@ -671,22 +670,17 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       </h3>
 
                       <div className="flex items-center mt-2 text-text-secondary">
-                        <span className="font-roboto text-xs">{gameData.Platform || "Piattaforma"}</span>
-                        <span className="mx-2">|</span>
+                        <span className="font-roboto text-xs">{gameData.Platform || "Piattaforma"}</span>                        <span className="mx-2">|</span>
                         <span className="font-roboto text-xs">{gameData.HoursPlayed} ore</span>
-                        {gameData.Metacritic > 0 && (
-                          <>
-                            <span className="mx-2">|</span>
-                            <Award className="h-4 w-4 mr-1 text-yellow-500" />
-                            <span className="font-roboto text-xs">{gameData.Metacritic}</span>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Prezzo */}
-                      {gameData.Price > 0 && (
+                        <>
+                          <span className="mx-2">|</span>
+                          <Award className="h-4 w-4 mr-1 text-yellow-500" />
+                          <span className="font-roboto text-xs">{formatMetacriticScore(gameData.Metacritic)}</span>
+                        </>
+                      </div>{/* Prezzo */}
+                      {gameData.Price !== undefined && (
                         <div className="mt-2 text-text-secondary">
-                          <span className="font-roboto text-xs">{gameData.Price.toFixed(2)} €</span>
+                          <span className="font-roboto text-xs">{formatPrice(gameData.Price)}</span>
                         </div>
                       )}
 

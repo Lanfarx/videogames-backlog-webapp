@@ -1,13 +1,27 @@
 import React from "react";
 import { Users, Clock, Trophy, Gamepad2 } from "lucide-react";
-import { useCommunityStatsByGameAggregated } from "../../../store/hooks/communityHooks";
+import { usePublicCommunityStats } from "../../../store/hooks/communityHooks";
 
 interface CommunityStatsProps {
   GameTitle: string;
 }
 
 const CommunityStats: React.FC<CommunityStatsProps> = ({ GameTitle }) => {
-  const stats = useCommunityStatsByGameAggregated(GameTitle);
+  const { data: stats, isLoading } = usePublicCommunityStats(GameTitle);
+
+  if (isLoading) {
+    return (
+      <div className="bg-primary-bg border border-border-color rounded-xl px-8 py-6 mb-8">
+        <div className="text-center text-text-secondary">
+          Caricamento statistiche...
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
 
   return (
     <div className="bg-primary-bg border border-border-color rounded-xl px-8 py-6 mb-8">

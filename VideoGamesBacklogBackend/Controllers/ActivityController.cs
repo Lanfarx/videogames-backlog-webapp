@@ -16,9 +16,7 @@ namespace VideoGamesBacklogBackend.Controllers
         public ActivityController(IActivityService activityService)
         {
             _activityService = activityService;
-        }
-
-        private int GetUserId()
+        }        private int GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int userId))
@@ -26,7 +24,17 @@ namespace VideoGamesBacklogBackend.Controllers
                 return userId;
             }
             throw new UnauthorizedAccessException("User ID non valido");
-        }        /// <summary>
+        }
+
+        private int? GetUserIdOrNull()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                return userId;
+            }
+            return null;
+        }/// <summary>
         /// Ottiene le attività dell'utente con filtri e paginazione
         /// </summary>
         [HttpGet]
@@ -48,8 +56,7 @@ namespace VideoGamesBacklogBackend.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
-            }
-        }
+            }        }
 
         /// <summary>
         /// Ottiene una specifica attività per ID
@@ -173,9 +180,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Ottiene statistiche delle attività per tipo
         /// </summary>
         [HttpGet("stats")]
@@ -191,6 +196,33 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }        /// <summary>
+        /// Ottiene le attività pubbliche di un utente per il suo profilo pubblico
+        /// </summary>
+        [HttpGet("public/{userIdOrUsername}")]
+        public async Task<ActionResult<PaginatedActivitiesDto>> GetPublicActivities(
+            string userIdOrUsername,
+            [FromQuery] ActivityFiltersDto filters,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                var currentUserId = GetUserId();
+                
+                // Assicurati che filters non sia null
+                filters ??= new ActivityFiltersDto();
+                
+                var result = await _activityService.GetPublicActivitiesAsync(userIdOrUsername, currentUserId, filters, page, pageSize);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });            }
         }
     }
 }

@@ -40,11 +40,10 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
     if (onStatusChange) onStatusChange(Status);
     onCancel();
   };
-
   return (
     <div 
       ref={popoverRef}
-      className="absolute z-10 top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-primaryBg border border-border-color"
+      className="absolute z-10 top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-primary-bg border border-border-color"
     >
       <div className="rounded-md shadow-xs py-1">
         <div className="px-3 py-2 border-b border-border-color">
@@ -66,12 +65,10 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
               return null;
             }
             
-            return (
-              <button
+            return (              <button
                 key={Status}
-                onClick={() => handleStatusChange(Status)}
-                className={`w-full text-left px-4 py-2 text-sm leading-5 flex items-center ${
-                  Status === currentStatus ? 'bg-secondaryBg' : 'hover:bg-secondaryBg'
+                onClick={() => handleStatusChange(Status)}                className={`w-full text-left px-4 py-2 text-sm leading-5 flex items-center text-text-primary ${
+                  Status === currentStatus ? 'bg-secondary-bg' : 'hover:bg-secondary-bg'
                 }`}
               >
                 <span 

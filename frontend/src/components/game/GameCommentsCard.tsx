@@ -47,14 +47,13 @@ const GameCommentsCard = ({
       setEditingId(null);
       setEditingtext('');
     }
-  };
-  return (
-    <div className="bg-primaryBg border border-border-color rounded-xl p-6">
+  };  return (
+    <div className="bg-primary-bg border border-border-color rounded-xl p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-primary font-semibold text-xl text-text-primary">
           Appunti di gioco <span className="text-sm text-text-secondary">({Comments.length})</span>
         </h2>
-      </div>      {/* Input per nuovo commento */}
+      </div>{/* Input per nuovo commento */}
       <div className="mb-4">
         {isCommentLimitReached && (
           <FormErrorInline message={`Hai raggiunto il limite massimo di ${maxComments} appunti.`} />

@@ -45,14 +45,14 @@ export function useAllActivitiesByGameId(GameId: number | string): { activities:
   }, [dispatch, GameId, activitiesByGame, loading]);
 
   // Filtra le attività locali se non abbiamo dati specifici per il gioco
-  const activities = activitiesByGame || allActivities.filter((a: Activity) => a.GameId === Number(GameId));
+  const activities = activitiesByGame || allActivities.filter((a: Activity) => a.gameId === Number(GameId));
 
   return { activities, loading };
 }
  
 export function useAllActivitiesByType(type: string): Activity[] {
   const { activities } = useAllActivities();
-  return activities.filter((a: Activity) => a.Type === type);
+  return activities.filter((a: Activity) => a.type === type);
 }
 
 // Hook per attività recenti
@@ -77,14 +77,14 @@ export function useRecentActivities(count: number = 10): { activities: Activity[
 // Hook per attività filtrate per anno
 export function useAllActivitiesByYear(year: number): Activity[] {
   const { activities } = useAllActivities();
-  return activities.filter((a: Activity) => new Date(a.Timestamp).getFullYear() === year);
+  return activities.filter((a: Activity) => new Date(a.timestamp).getFullYear() === year);
 }
 
 // Hook per attività filtrate per mese e anno
 export function useAllActivitiesByMonth(year: number, month: number): Activity[] {
   const { activities } = useAllActivities();
   return activities.filter((a: Activity) => {
-    const d = new Date(a.Timestamp);
+    const d = new Date(a.timestamp);
     return d.getFullYear() === year && d.getMonth() === month;
   });
 }

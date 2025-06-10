@@ -16,7 +16,7 @@ export default function SettingsTabs({ activeTab, onTabChange }: SettingsTabsPro
   ]
 
   return (
-    <div className="bg-primaryBg rounded-lg border border-border-color shadow-sm overflow-x-auto mb-6">
+    <div className="bg-primary-bg rounded-lg border border-border-color shadow-sm overflow-x-auto mb-6">
       <div className="flex min-w-max">
         {tabs.map((tab) => (
           <button
@@ -25,7 +25,7 @@ export default function SettingsTabs({ activeTab, onTabChange }: SettingsTabsPro
             className={`px-6 py-4 font-secondary font-medium text-base transition-colors ${
               activeTab === tab.id
                 ? "text-white bg-accent-primary"
-                : "text-text-secondary hover:text-text-primary hover:bg-tertiaryBg"
+                : "text-text-secondary hover:text-text-primary hover:bg-tertiary-bg"
             }`}
           >
             {tab.label}

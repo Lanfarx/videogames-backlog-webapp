@@ -5,9 +5,7 @@ import AddGameButton from '../ui/AddGameButton';
 import { SortOption } from '../../types/game';
 import { useAppDispatch } from '../../store/hooks';
 import { useGameActions } from '../../store/hooks/gamesHooks';
-import { mapSteamGamesToLocal } from '../../utils/mapSteamGamesToLocal';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { SteamSyncPopup } from '../catalog/SteamSyncPopup';
 
 interface LibraryToolbarProps {
   viewMode: "grid" | "list";
@@ -19,6 +17,7 @@ interface LibraryToolbarProps {
   onSearchChange?: (query: string) => void;
   columns?: number;
   onColumnsChange?: (columns: number) => void;
+  onRefreshGames?: () => void; // Callback per aggiornare la lista giochi dopo la sincronizzazione
 }
 
 const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
@@ -29,16 +28,14 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   sortOrder,
   onSortChange,
   onSearchChange,
+  onRefreshGames,
 }) => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [search, setSearch] = useState("");
-  const [isImporting, setIsImporting] = useState(false);
-  const [importError, setImportError] = useState<string | null>(null);
+  const [showSteamSync, setShowSteamSync] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const { add } = useGameActions();
-  // Usa lo stato globale per steamId
-  const steamId = useSelector((state: RootState) => state.user.profile?.steamId || null);
 
   // Chiudi il dropdown quando si clicca fuori
   useEffect(() => {
@@ -78,51 +75,20 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
           placeholder="Cerca nella libreria..."
           className="ml-2 px-3 py-1.5 rounded-md border border-border-color bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm w-96"
         />
-      </div>
-
-      <div className="flex items-center space-x-6">
-        {/* Icona import Steam, solo se steamId presente */}
-        {steamId && (
-          <div className="relative group flex items-center space-x-2">
-            <button
-              type="button"
-              className="p-1.5 rounded-md hover:bg-accent-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              style={{ background: 'var(--color-primary-bg)' }}
-              onClick={async () => {
-                setIsImporting(true);
-                setImportError(null);
-                try {
-                  const mappedGames = await mapSteamGamesToLocal(steamId);
-                  for (const game of mappedGames) {
-                    await add(game);
-                  }
-                  alert(`Importazione completata! Giochi aggiunti: ${mappedGames.length}`);
-                } catch (err: any) {
-                  setImportError('Errore durante l\'importazione da Steam.');
-                } finally {
-                  setIsImporting(false);
-                }
-              }}
-              aria-label="Importa giochi da Steam"
-              disabled={isImporting}
-            >
-              {isImporting ? (
-                <span className="loader mr-2" />
-              ) : null}
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                <path fill="var(--color-accent-primary, #60a5fa)" d="M12 16.5a1 1 0 0 1-1-1V9.91l-2.29 2.3a1 1 0 1 1-1.42-1.42l4-4a1 1 0 0 1 1.42 0l4 4a1 1 0 1 1-1.42 1.42L13 9.91v5.59a1 1 0 0 1-1 1Z"/>
-                <path fill="var(--color-accent-primary, #60a5fa)" d="M6 18a1 1 0 1 1 0-2h12a1 1 0 1 1 0 2H6Z"/>
-              </svg>
-            </button>
-            <span className="text-xs font-medium select-none" style={{ color: 'var(--color-text-primary)' }}>Importa da Steam</span>
-            <div className="absolute hidden group-hover:block w-56 p-2 bg-slate-700 text-white text-xs rounded-lg top-8 left-1/2 -translate-x-1/2 shadow-lg z-20">
-              <p className="mb-0">Importa i tuoi giochi da Steam nella libreria</p>
-            </div>
-            {importError && (
-              <span className="text-xs text-accent-danger ml-2">{importError}</span>
-            )}
-          </div>
-        )}
+      </div>      <div className="flex items-center space-x-6">
+        {/* Pulsante Steam Sync */}
+        <button
+          type="button"
+          className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm"
+          onClick={() => setShowSteamSync(true)}
+          aria-label="Sincronizza con Steam"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+            <path fill="var(--color-accent-primary, #60a5fa)" d="M12 16.5a1 1 0 0 1-1-1V9.91l-2.29 2.3a1 1 0 1 1-1.42-1.42l4-4a1 1 0 0 1 1.42 0l4 4a1 1 0 1 1-1.42 1.42L13 9.91v5.59a1 1 0 0 1-1 1Z"/>
+            <path fill="var(--color-accent-primary, #60a5fa)" d="M6 18a1 1 0 1 1 0-2h12a1 1 0 1 1 0 2H6Z"/>
+          </svg>
+          <span className="text-text-primary font-medium">Steam</span>
+        </button>
 
         <div className="flex items-center space-x-2">
           {/* Visualizzazione griglia/lista */}
@@ -178,10 +144,18 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
+            </div>          )}
         </div>
       </div>
+        {/* Steam Sync Popup */}
+      <SteamSyncPopup
+        show={showSteamSync}
+        onHide={() => setShowSteamSync(false)}
+        onSyncComplete={() => {
+          setShowSteamSync(false);
+          onRefreshGames && onRefreshGames();
+        }}
+      />
     </div>
   );
 };

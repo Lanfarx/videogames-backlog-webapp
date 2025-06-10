@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
-import { getToken } from '../../../utils/getToken';
 
 const languageOptions = ['It', 'En'];
 const dateFormatOptions = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
@@ -15,7 +14,6 @@ const dateFormatOptions = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
 const GeneralSettings: React.FC = () => {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
-  const token = getToken()
 
   if (!userProfile) return <div>Caricamento...</div>;
 
@@ -27,7 +25,6 @@ const GeneralSettings: React.FC = () => {
 
   // Helper per update e dispatch
   const handleProfileUpdate = async (newPrefs: Partial<typeof preferences>) => {
-    if (!token) return;
     const newProfile = {
       ...userProfile,
       appPreferences: {
@@ -35,7 +32,7 @@ const GeneralSettings: React.FC = () => {
         ...newPrefs
       }
     };
-    const updated = await updateProfile(newProfile, token);
+    const updated = await updateProfile(newProfile);
     dispatch(setUserProfile(updated));
   };
 
@@ -114,7 +111,7 @@ const GeneralSettings: React.FC = () => {
               </div>
             </div>
             <select 
-              className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={language}
               onChange={(e) => handleProfileUpdate({ language: e.target.value })}
             >
@@ -135,7 +132,7 @@ const GeneralSettings: React.FC = () => {
               </div>
             </div>
             <select 
-              className="px-3 py-2 border border-border-color rounded-lg bg-primaryBg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
               value={dateFormat}
               onChange={(e) => handleProfileUpdate({ dateFormat: e.target.value })}
             >

@@ -1,15 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, Users } from 'lucide-react';
 import AppLogo from '../ui/atoms/AppLogo';
 import ProfileAvatar from '../ui/ProfileAvatar';
+import NotificationBell from '../notifications/NotificationBell';
 
-const Header: React.FC = () => {
-  const navItems = [
+const Header: React.FC = () => {  const navItems = [
     { name: 'Home', path: '/' },
     { name: 'I miei giochi', path: '/library' },
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Catalogo', path: '/catalog' },
+    { name: 'Amici', path: '/friends' },
   ];
 
   return (
@@ -38,10 +39,11 @@ const Header: React.FC = () => {
                   </li>
                 ))}
             </ul>
-          </nav>
-
-          {/* Profilo utente - allineato a destra */}
+          </nav>          {/* Profilo utente - allineato a destra */}
           <div className="flex items-center space-x-5">
+            {/* Icona notifiche */}
+            <NotificationBell />
+            
             {/* Icona impostazioni */}
             <NavLink to="/settings">
               {({ isActive }) => (
