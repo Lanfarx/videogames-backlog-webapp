@@ -15,6 +15,22 @@ using VideoGamesBacklogBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Carica le variabili ambiente dal file .env nella root del progetto
+var rootEnvFile = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+if (File.Exists(rootEnvFile))
+{
+    foreach (var line in File.ReadAllLines(rootEnvFile))
+    {
+        if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+        
+        var parts = line.Split('=', 2);
+        if (parts.Length == 2)
+        {
+            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+        }
+    }
+}
+
 // Carica le variabili ambiente dal file .env.local se esiste
 var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env.local");
 if (File.Exists(envFile))
@@ -162,5 +178,9 @@ app.UseAuthorization();
 app.UseCors("AllowFrontend");
 
 app.MapControllers();
+
+// Configura la porta dalle variabili d'ambiente
+var port = Environment.GetEnvironmentVariable("BACKEND_PORT") ?? "5000";
+app.Urls.Add($"http://localhost:{port}");
 
 app.Run();

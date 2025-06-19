@@ -1,7 +1,15 @@
 # 🎮 Backlog Videoludico 
 
 **Backlog Videoludico** è un'applicazione web completa che permette agli utenti di gestire il proprio backlog di videogiochi con funzionalità social integrate.  
-Il progetto è composto da un **frontend** sviluppato in **React TypeScript** e un **backend** realizzato in **.NET 8**, offrendo un'esperienza utente moderna e completa per la gestione della propria libreria videoludica.
+
+Il progetto è composto da:
+- **Frontend**: React 19 + TypeScript + Tailwind CSS
+- **Backend**: .NET 8 + PostgreSQL + JWT Authentication  
+- **Deployment**: Docker containerizzato per facile distribuzione
+
+## 🚀 Quick Start
+
+Vuoi iniziare subito? Leggi il file [QUICK-START.md](./QUICK-START.md) per istruzioni dettagliate.
 
 ## ✨ Funzionalità implementate
 
@@ -67,34 +75,38 @@ videogames-backlog-webapp/
 ├── frontend/                          # React TypeScript Frontend
 │   ├── src/
 │   │   ├── components/               # Componenti riutilizzabili
-│   │   │   ├── auth/                # Componenti autenticazione
-│   │   │   ├── dashboard/           # Grafici e statistiche
-│   │   │   ├── friends/             # Sistema social
-│   │   │   ├── game/                # Gestione giochi
-│   │   │   ├── library/             # Vista libreria
-│   │   │   ├── layout/              # Layout e navigazione
-│   │   │   └── ui/                  # Componenti UI base
-│   │   ├── pages/                   # Pagine principali
-│   │   ├── store/                   # Redux store e slices
-│   │   ├── services/                # API services
-│   │   ├── types/                   # TypeScript definitions
-│   │   ├── utils/                   # Utility functions
-│   │   └── styles/                  # Stili globali
-│   ├── package.json
-│   └── tailwind.config.js
-├── VideoGamesBacklogBackend/         # .NET 8 Backend
+│   │   ├── pages/                    # Pagine principali
+│   │   ├── store/                    # Redux store e services
+│   │   ├── types/                    # TypeScript definitions
+│   │   └── config/                   # Configurazioni
+│   └── package.json
+├── VideoGamesBacklogBackend/         # .NET 8 Backend API
 │   ├── Controllers/                 # API Controllers
 │   ├── Models/                      # Entity Models
 │   ├── Services/                    # Business Logic
-│   ├── Data/                        # DbContext e configurazioni
-│   ├── Dto/                         # Data Transfer Objects
-│   ├── Interfaces/                  # Service interfaces
-│   ├── Helpers/                     # Utility classes
-│   ├── Migrations/                  # Database migrations
-│   └── Program.cs                   # Entry point
+│   ├── Data/                        # DbContext
+│   └── Program.cs
+├── deployment/                       # Script e configurazioni deployment
+│   ├── windows/                      # Script per Windows
+│   │   ├── start.bat
+│   │   ├── stop.bat
+│   │   ├── logs.bat
+│   │   └── crea-scorciatoie-desktop.bat
+│   ├── unix/                         # Script per Mac/Linux
+│   │   ├── start.sh
+│   │   ├── stop.sh
+│   │   ├── check.sh
+│   │   └── crea-scorciatoie-desktop.sh
+│   └── docker/                       # File Docker
+│       ├── docker-compose.yml       # Sviluppo locale
+│       ├── docker-compose.prod.yml  # Produzione
+│       ├── Dockerfile.backend
+│       ├── Dockerfile.frontend
+│       └── nginx.conf
+├── .env.example                     # Template variabili d'ambiente
+├── QUICK-START.md                   # Guida avvio rapido
 └── README.md
 ```
-
 
 ## 🗃️ Modelli di Dati Principali
 
@@ -111,200 +123,176 @@ videogames-backlog-webapp/
 - **Review**: Sistema di recensioni personali con voti dettagliati
 - **Media**: Cover image e informazioni visive
 
-### Activity (Attività)
-- **Timeline**: Cronologia automatica delle azioni utente
-- **Tipi**: Added, Started, Completed, Platnum, Rated
-- **Social**: Reazioni emoji e commenti degli amici
-- **Privacy**: Controllo visibilità per profili pubblici/privati
+### 📊 Activity (Attività)
+- Timeline automatica azioni utente
+- Sistema reazioni e commenti
+- Controlli privacy granulari
 
-### Sistema Social
-- **Friendship**: Gestione completa amicizie con stati
-- **Notifications**: Sistema notifiche real-time
-- **Community**: Recensioni pubbliche e interazioni
+## 🚀 Deployment e Distribuzione
 
-## ⚙️ Configurazione e Setup
+### Containerizzazione
+L'applicazione è completamente containerizzata con Docker per garantire:
+- **Consistenza** tra ambienti di sviluppo e produzione
+- **Facilità di distribuzione** ai tuoi amici
+- **Isolamento** delle dipendenze
+- **Scalabilità** futura
 
-### Prerequisiti
-- **Node.js** 18.x o superiore
-- **.NET 8 SDK**
-- **PostgreSQL** 13+ 
-- **Account Steam** (opzionale, per integrazione)
-- **API Key RAWG** (per ricerca giochi automatica)
+### Architettura Deployment
+```
+Frontend (React + Nginx) ←→ Backend (.NET 8) ←→ Database (PostgreSQL Cloud)
+     Container :3000           Container :5000        Supabase/Neon/Railway
+```
 
-### Setup Frontend
+### Database Cloud
+Per la distribuzione si raccomanda un database PostgreSQL cloud:
+- **Supabase** (raccomandato, free tier generoso)
+- **Neon** (ottimo per sviluppo, veloce setup)  
+- **Railway** (semplice deploy e gestione)
+
+Questo permette a tutti i tuoi amici di condividere lo stesso database senza configurazioni complesse.
+
+## ⚙️ Setup Rapido
+
+**Per iniziare subito:**
+```bash
+# 1. Clona il repository
+git clone <repo-url>
+cd videogames-backlog-webapp
+
+# 2. Configura le variabili d'ambiente
+
+**Backend:**
+```bash
+cp .env.example .env
+# Modifica .env con le tue API keys (Steam opzionale)
+```
+
+**Frontend (OBBLIGATORIO):**
 ```bash
 cd frontend
-npm install
-npm start  # Avvia development server su http://localhost:3000
+cp .env.example .env  
+# Modifica frontend/.env con REACT_APP_RAWG_API_KEY
 ```
 
-### Setup Backend
-```bash
-cd VideoGamesBacklogBackend
-dotnet restore
-dotnet ef database update  # Applica migrations al database
-dotnet run  # Avvia API server su https://localhost:5001
-```
+## 📁 File di Configurazione
 
-### Configurazione Database
-1. Installa PostgreSQL
-2. Crea database `GameBacklogDb`
-3. Aggiorna `appsettings.json` con le tue credenziali:
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=GameBacklogDb;UserName=tuo_username;Password=tua_password"
-  }
-}
-```
+### Configurazione Backend (`.env`)
+Il file `.env` nella root del progetto contiene configurazioni del backend:
 
-### Variabili d'Ambiente
-Crea file `.env.local` nella root del backend:
 ```env
-STEAM_API_KEY=tua_steam_api_key
-RAWG_API_KEY=tua_rawg_api_key
-JWT_SECRET_KEY=tua_chiave_segreta_jwt
+# API Keys personali (opzionali)
+STEAM_API_KEY=la_tua_chiave_steam
+
+# Configurazione porta
+BACKEND_PORT=5000
 ```
 
-## 📱 Caratteristiche dell'Interfaccia
+> 📝 **Database e JWT**: Sono preconfigurati nel file `appsettings.json` del backend.
 
-### Design System
-- **Color Scheme**: Palette personalizzata con supporto dark/light mode
-- **Typography**: Font system con Montserrat e Roboto
-- **Responsive**: Mobile-first design con breakpoints ottimizzati
-- **Animations**: Transizioni fluide e micro-interazioni
+### Configurazione Frontend (`frontend/.env`) - OBBLIGATORIA
+Il frontend **deve** avere il proprio file di configurazione:
 
-### Componenti Principali
-- **GameCard**: Visualizzazione giochi con hover effects e quick actions
-- **Dashboard Charts**: Grafici interattivi per statistiche
-- **Activity Timeline**: Feed sociale con reazioni e commenti
-- **Search & Filter**: Sistema di ricerca avanzata con filtri multipli
-- **Profile Management**: Gestione completa profilo e privacy
+```env
+# URL API backend (obbligatorio)
+REACT_APP_API_URL=http://localhost:5000
 
-### Pagine Implementate
-- **🏠 Home**: Dashboard personale con statistiche e attività recenti
-- **📚 Library**: Gestione completa libreria con filtri e ricerca
-- **📊 Dashboard**: Analisi dettagliate e grafici interattivi
-- **🗂️ Catalog**: Esplorazione e ricerca nuovi giochi
-- **👤 Profile**: Gestione profilo personale e impostazioni
-- **👥 Friends**: Sistema sociale con gestione amicizie
-- **⚙️ Settings**: Configurazioni app e privacy
+# API Keys per servizi esterni (opzionali)
+REACT_APP_RAWG_API_KEY=la_tua_chiave_rawg
+```
 
-## 🔒 Sicurezza e Privacy
+> ⚠️ **IMPORTANTE**: Il file `frontend/.env` è **necessario** per il funzionamento dell'applicazione!
 
-### Autenticazione
-- **JWT Tokens** con refresh automatico
-- **Password hashing** con ASP.NET Identity
-- **Rate limiting** su endpoint sensibili
-- **HTTPS enforcement** in produzione
+# 3. Avvia l'applicazione
 
-### Privacy Controls
-- **Profilo privato/pubblico** con controlli granulari
-- **Visibilità attività** configurabile per amici/pubblico
-- **Gestione amicizie** con richieste e blocchi
-- **Dati GDPR-compliant** con possibilità di export/cancellazione
-
-## 🚀 Performance e Scalabilità
-
-### Frontend Optimizations
-- **Code splitting** automatico con React Router
-- **Lazy loading** per componenti e immagini
-- **Memoization** strategica per componenti complessi
-- **Bundle optimization** con Webpack
-
-### Backend Architecture
-- **Repository Pattern** per data access layer
-- **Service Layer** per business logic separation
-- **Dependency Injection** nativo .NET
-- **Entity Framework** con query optimization
-- **Caching** strategico per dati statici
-
-## 🧪 Testing e Quality Assurance
-
-### Frontend Testing
-- **Jest** per unit testing
-- **React Testing Library** per component testing
-- **TypeScript** per type safety
-- **ESLint** per code quality
-
-### Backend Testing
-- **xUnit** per unit e integration tests
-- **Entity Framework InMemory** per test database
-- **Swagger** per API documentation e testing
-
-## 📈 Roadmap e Sviluppi Futuri
-
-### v2.0 Pianificato
-- **🎮 Gaming Hub**: Integrazione con più piattaforme (Epic, Origin, GOG)
-- **🏆 Achievement System**: Sistema trofei e obiettivi personalizzati
-- **📱 Mobile App**: App nativa iOS/Android
-- **🤖 AI Recommendations**: Suggerimenti personalizzati con ML
-- **🎯 Wishlist Advanced**: Tracking prezzi e notifiche offerte
-- **📊 Advanced Analytics**: Insights dettagliati su abitudini di gioco
-
-### Funzionalità Community
-- **👥 Gaming Groups**: Creazione gruppi tematici
-- **🏅 Leaderboards**: Classifiche globali e tra amici
-- **🎪 Events**: Organizzazione eventi gaming
-- **💬 Chat Integration**: Messaggistica real-time
-
-## ▶️ Avvio Rapido
-
-### Quick Start con Docker (Coming Soon)
+**SUPER FACILE (Windows - Raccomandato):**
 ```bash
-git clone https://github.com/Lanfarx/videogames-backlog-webapp.git
-cd videogames-backlog-webapp
-docker-compose up  # Avvia frontend + backend + database
+cd deployment/windows
+crea-scorciatoie-desktop.bat   # Prima volta
+# Poi doppio click su "Avvia Backlog Videoludico" sul desktop
 ```
 
-### Avvio Manuale
+**SUPER FACILE (Mac/Linux - Raccomandato):**
 ```bash
-# Frontend
-cd frontend && npm install && npm start
-
-# Backend (terminale separato)
-cd VideoGamesBacklogBackend && dotnet restore && dotnet run
+cd deployment/unix
+chmod +x crea-scorciatoie-desktop.sh
+./crea-scorciatoie-desktop.sh  # Prima volta
+# Poi doppio click su "Avvia Backlog Videoludico" sul desktop
 ```
 
-L'applicazione sarà disponibile su:
-- **Frontend**: http://localhost:3000
-- **Backend API**: https://localhost:5001
-- **Swagger UI**: https://localhost:5001/swagger
+**METODO MANUALE:**
+```bash
+cd deployment/windows
+start.bat        # Windows
 
-## 🤝 Contributi
+cd deployment/unix
+./start.sh       # Mac/Linux
+```
 
-Il progetto è in sviluppo attivo. Per contribuire:
+# 4. Accedi all'app
+# Frontend: http://localhost:3000
+# Backend: http://localhost:5000
+```
 
-1. **Fork** del repository
-2. **Crea branch** per la feature (`git checkout -b feature/amazing-feature`)
-3. **Commit** delle modifiche (`git commit -m 'Add amazing feature'`)
-4. **Push** del branch (`git push origin feature/amazing-feature`)
-5. **Apri Pull Request**
+**Per istruzioni dettagliate:** leggi [QUICK-START.md](./QUICK-START.md)
+## 🛠️ Stack Tecnologico
 
-### Linee Guida
-- Segui le convenzioni di naming esistenti
-- Aggiungi test per nuove funzionalità
-- Aggiorna la documentazione se necessario
-- Mantieni la compatibilità con l'API esistente
+### Frontend
+- **React 19** + TypeScript per UI reattiva
+- **Tailwind CSS** per styling moderno e responsive
+- **Redux Toolkit** per gestione stato globale
+- **React Router** per navigazione SPA
 
-## 📄 Licenza
+### Backend  
+- **.NET 8** + ASP.NET Core per API REST
+- **Entity Framework Core** per ORM e database
+- **PostgreSQL** come database principale
+- **JWT Bearer** per autenticazione sicura
 
-Questo progetto è distribuito sotto licenza **MIT**.  
-Consulta il file [LICENSE](LICENSE) per maggiori informazioni.
+### Integrazioni
+- **Steam Web API** per importazione libreria
+- **RAWG API** per database videogiochi
+- **Docker** per containerizzazione
 
-## 📞 Supporto e Contatti
+## 📊 Funzionalità Implementate
 
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/Lanfarx/videogames-backlog-webapp/issues)
-- **💡 Feature Requests**: [GitHub Discussions](https://github.com/Lanfarx/videogames-backlog-webapp/discussions)
-- **📧 Contatto Diretto**: [Crea un Issue](https://github.com/Lanfarx/videogames-backlog-webapp/issues/new)
+### 🎯 **Gestione Libreria**
+- CRUD completo per gestione giochi personali
+- Stati personalizzabili (Backlog, In Corso, Completato, etc.)
+- Filtri avanzati e ricerca intelligente  
+- Tracking ore di gioco e progressi
+- Sistema recensioni e valutazioni
+
+### 👥 **Sistema Social**
+- Gestione amicizie con richieste/accettazioni
+- Timeline attività con reazioni emoji
+- Profili pubblici con controlli privacy
+- Commenti e interazioni sociali
+
+### 📈 **Dashboard e Analytics**
+- Statistiche dettagliate libreria personale
+- Grafici interattivi per distribuzioni
+- Cronologia attività e progressi
+- Insights su abitudini di gioco
+
+### 🔐 **Autenticazione e Privacy**
+- Sistema completo JWT + ASP.NET Identity
+- Controlli privacy granulari
+- Gestione profilo e preferenze
+- Sicurezza HTTPS e protezione dati
+
+## 📱 Design e UX
+
+- **Design moderno** con dark/light mode
+- **Mobile-first** completamente responsive  
+- **Performance ottimizzate** con lazy loading
+- **Animazioni fluide** e micro-interazioni
+- **Accessibilità** WCAG compliant
 
 ---
 
-<div align="center">
+## 🎮 Happy Gaming!
 
-**🎮 Happy Gaming! 🎮**
-
-*Organizza, traccia e condividi la tua passione per i videogiochi con questo Backlog Videoludico*
+*Organizza, traccia e condividi la tua passione per i videogiochi*
 
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/Lanfarx/videogames-backlog-webapp)
 [![React](https://img.shields.io/badge/React-19.1.0-blue.svg)](https://react.dev/)

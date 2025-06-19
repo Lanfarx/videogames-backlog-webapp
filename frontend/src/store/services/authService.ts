@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_URL = 'http://localhost:5097/api/Auth'; // Cambia con il tuo endpoint
+const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.AUTH);
 
 export const register = (data: {
   email: string;
