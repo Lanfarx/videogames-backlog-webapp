@@ -24,7 +24,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=videogames_backlog;Username=postgres;Password=your_password_here
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=videogames_backlog;Username=postgres;Password=local_dev_password
     ports:
       - "5000:80"
     depends_on:
