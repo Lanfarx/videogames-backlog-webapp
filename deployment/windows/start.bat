@@ -23,12 +23,19 @@ if not exist "..\\..\.env" (
 )
 
 echo [INFO] Avvio container...
+REM Ottieni il percorso assoluto della root del progetto
+set "SCRIPT_DIR=%~dp0"
+set "ROOT_DIR=%SCRIPT_DIR%..\.."
+pushd "%ROOT_DIR%"
+set "ENV_FILE=%CD%\.env"
+popd
+
 REM Ferma eventuali container esistenti
 cd ..\..\
-docker-compose -f deployment/docker/docker-compose.prod.yml down --remove-orphans >nul 2>&1
+docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml down --remove-orphans >nul 2>&1
 
 REM Avvia i nuovi container con le variabili d'ambiente
-docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d --build
+docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml up -d --build
 cd deployment\windows
 
 if errorlevel 1 (

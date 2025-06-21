@@ -9,8 +9,7 @@ const AppLogo = ({ className = '', asLink = true }: { className?: string; asLink
     <span className={`text-3xl font-bold text-text-primary font-primary ${className}`}>
       Game<span className="text-accent-primary">Backlog</span>
     </span>
-  );
-  return asLink ? (
+  );  return asLink ? (
     <NavLink to="/" aria-label="Homepage">
       {logo}
     </NavLink>

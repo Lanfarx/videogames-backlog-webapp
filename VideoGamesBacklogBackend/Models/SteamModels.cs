@@ -18,16 +18,28 @@ namespace VideoGamesBacklogBackend.Models
     {
         public int game_count { get; set; }
         public List<SteamGame> games { get; set; } = new();
-    }
-
-    public class SteamSyncRequest
+    }    public class SteamSyncRequest
     {
         public string SteamId { get; set; } = string.Empty;
         public string SyncType { get; set; } = string.Empty; // "initial_load" o "update_hours"
-    }    public class SteamSyncResponse
+    }
+
+    public class UpdatedGameInfo
+    {
+        public string GameTitle { get; set; } = string.Empty;
+        public int PreviousHours { get; set; }
+        public int NewHours { get; set; }
+        public int HoursAdded { get; set; }
+        public bool StatusChanged { get; set; }
+        public string? PreviousStatus { get; set; }
+        public string? NewStatus { get; set; }
+    }
+
+    public class SteamSyncResponse
     {
         public string Message { get; set; } = string.Empty;
         public int Count { get; set; }
+        public List<UpdatedGameInfo> UpdatedGames { get; set; } = new();
         public object? DebugInfo { get; set; } // Per informazioni di debug
     }
 

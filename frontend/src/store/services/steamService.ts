@@ -23,9 +23,20 @@ export interface SteamGame {
   img_logo_url?: string;
 }
 
+export interface UpdatedGameInfo {
+  gameTitle: string;
+  previousHours: number;
+  newHours: number;
+  hoursAdded: number;
+  statusChanged: boolean;
+  previousStatus?: string;
+  newStatus?: string;
+}
+
 export interface SteamSyncResponse {
   message: string;
   count: number;
+  updatedGames: UpdatedGameInfo[];
   debugInfo?: any; // Per informazioni di debug
 }
 

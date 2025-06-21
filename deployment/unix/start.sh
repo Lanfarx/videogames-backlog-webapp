@@ -17,8 +17,15 @@ if [ ! -f "../../.env" ]; then
 fi
 
 echo "[BUILD] Avvio container..."
+
+# Ottieni il percorso assoluto del file .env
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENV_FILE="$ROOT_DIR/.env"
+
 cd ../..
-docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d --build
+docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml down --remove-orphans > /dev/null 2>&1
+docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml up -d --build
 cd deployment/unix
 
 if [ $? -eq 0 ]; then

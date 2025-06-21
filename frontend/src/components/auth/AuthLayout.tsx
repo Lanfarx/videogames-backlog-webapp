@@ -8,9 +8,8 @@ const widePages = ['/privacy', '/terms', '/contact'];
 const AuthLayout: React.FC = () => {
   const location = useLocation();
   const isWide = widePages.includes(location.pathname);
-
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-gray-50">
+    <div className="min-h-screen flex flex-col justify-between bg-primary-bg">
       <AuthHeader />
       <main className="flex-1 w-full flex flex-col items-center justify-center p-12">
         {isWide ? (
@@ -27,7 +26,7 @@ const AuthLayout: React.FC = () => {
             <Outlet />
           </div>
         ) : (
-          <div className="w-full max-w-md bg-white border border-gray-300 rounded-xl shadow-lg p-12 mx-2">
+          <div className="w-full max-w-md bg-secondary-bg border border-border-color rounded-xl shadow-lg p-12 mx-2">
             <Outlet />
           </div>
         )}

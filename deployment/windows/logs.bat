@@ -16,8 +16,15 @@ echo [INFO] Visualizzazione logs in tempo reale...
 echo         Premi Ctrl+C per uscire
 echo.
 
+REM Ottieni il percorso assoluto della root del progetto
+set "SCRIPT_DIR=%~dp0"
+set "ROOT_DIR=%SCRIPT_DIR%..\.."
+pushd "%ROOT_DIR%"
+set "ENV_FILE=%CD%\.env"
+popd
+
 cd ..\..\
-docker-compose -f deployment/docker/docker-compose.prod.yml logs -f
+docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml logs -f
 cd deployment\windows
 
 pause

@@ -6,15 +6,16 @@ import { useDispatch } from 'react-redux';
 import { setUserProfile } from '../../store/slice/userSlice';
 import { getProfile } from '../../store/services/profileService';
 import { getToken } from '../../utils/getToken';
+import { useToast } from '../../contexts/ToastContext';
 
 const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,21 +33,25 @@ const LoginPage: React.FC = () => {
       if (token) {
         const profile = await getProfile();
         dispatch(setUserProfile(profile));
+          // Mostra toast di successo
+        showToast('success', 'Login effettuato!', `Benvenuto/a ${profile.userName}!`);
       }
-      navigate('/');
-    } catch (err: any) {
+      navigate('/');    } catch (err: any) {
       if (err.response && err.response.Status === 401) {
-        setError('Credenziali non corrette.');
+        const errorMessage = 'Credenziali non corrette.';
+        setError(errorMessage);
+        showToast('error', 'Errore di login', errorMessage);
       } else {
-        setError('Errore durante il login.');
+        const errorMessage = 'Errore durante il login.';
+        setError(errorMessage);
+        showToast('error', 'Errore di login', errorMessage);
       }
     }
   };
-
   return (
       <>
-        <h2 className="font-montserrat font-semibold text-2xl text-gray-900 mb-1">Accedi al tuo account</h2>
-        <p className="text-base text-gray-500 font-roboto mb-8">Bentornato nella tua libreria</p>
+        <h2 className="font-montserrat font-semibold text-2xl text-text-primary mb-1">Accedi al tuo account</h2>
+        <p className="text-base text-text-secondary font-roboto mb-8">Bentornato nella tua libreria</p>
         {error && (
           <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
             {error}
@@ -99,8 +104,7 @@ const LoginPage: React.FC = () => {
             </button>
           </div>
           <Divider text="O" />
-        </form>
-        <div className="text-center mt-8 text-sm text-gray-500">
+        </form>        <div className="text-center mt-8 text-sm text-text-secondary">
           Non hai un account?{' '}
           <a href="/register" className="text-accent font-medium hover:underline">Registrati qui</a>
         </div>

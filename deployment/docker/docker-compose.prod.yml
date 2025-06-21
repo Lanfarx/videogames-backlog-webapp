@@ -7,17 +7,16 @@ services:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.backend
     container_name: videogames-backend-prod
-    env_file:
-      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      # Database connection string dal .env
-      - ConnectionStrings__DefaultConnection=${DATABASE_URL}
-      # Steam API Key dal .env della root (opzionale)
+      - DATABASE_URL=${DATABASE_URL}
       - SteamApiKey=${STEAM_API_KEY}
     ports:
       - "5000:80"
+    dns:
+      - "8.8.8.8"
+      - "1.1.1.1"
     networks:
       - videogames-network
 
@@ -29,9 +28,8 @@ services:
       args:
         - REACT_APP_API_URL=http://localhost:5000
         - REACT_APP_VERSION=1.0.0
-        - REACT_APP_ENV=production    container_name: videogames-frontend-prod
-    env_file:
-      - frontend/.env
+        - REACT_APP_ENV=production
+    container_name: videogames-frontend-prod
     ports:
       - "3000:80"
     depends_on:
@@ -42,3 +40,8 @@ services:
 networks:
   videogames-network:
     driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

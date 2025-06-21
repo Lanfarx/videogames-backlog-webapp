@@ -18,12 +18,14 @@ try {
     exit 1
 }
 
-# Controlla se esiste il file .env
+# Controlla se esiste il file .env (relativo alla directory dello script)
 Write-Host "[INFO] Controllo configurazione..." -ForegroundColor Cyan
-if (-not (Test-Path "../../.env")) {
-    Write-Host "[ERROR] File .env non trovato!" -ForegroundColor Red
+$projectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$envPath = Join-Path $projectRoot ".env"
+if (-not (Test-Path $envPath)) {
+    Write-Host "[ERROR] File .env non trovato in: $envPath" -ForegroundColor Red
     Write-Host "[TIP] Copia .env.example in .env e configuralo:" -ForegroundColor Yellow
-    Write-Host "   Copy-Item '../../.env.example' '../../.env'" -ForegroundColor Gray
+    Write-Host "   Copy-Item '$projectRoot\.env.example' '$projectRoot\.env'" -ForegroundColor Gray
     Read-Host "Premi Enter per chiudere"
     exit 1
 } else {
@@ -39,15 +41,19 @@ Write-Host ""
 Write-Host "[BUILD] AVVIO CONTAINER DOCKER" -ForegroundColor Yellow
 Write-Host "===============================" -ForegroundColor Yellow
 
+# Ottieni il percorso assoluto del file .env
+$ScriptDir = $PSScriptRoot
+$RootDir = Resolve-Path "$ScriptDir\..\.."
+$EnvFile = Join-Path $RootDir ".env"
+
 # Ferma eventuali container esistenti
 Write-Host "[CLEAN] Pulizia container precedenti..." -ForegroundColor Gray
-Set-Location "../.."
-docker-compose -f deployment/docker/docker-compose.prod.yml down --remove-orphans 2>$null
+Set-Location $RootDir
+docker-compose --env-file "$EnvFile" -f deployment/docker/docker-compose.prod.yml down --remove-orphans 2>$null
 
 # Avvia i nuovi container con le variabili d'ambiente
 Write-Host "[BUILD] Avvio nuovi container..." -ForegroundColor Cyan
-docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d --build
-Set-Location "deployment/windows"
+docker-compose --env-file "$EnvFile" -f deployment/docker/docker-compose.prod.yml up -d --build
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""

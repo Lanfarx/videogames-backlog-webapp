@@ -5,8 +5,15 @@ echo ========================================
 echo.
 
 echo [INFO] Fermata dei container in corso...
+REM Ottieni il percorso assoluto della root del progetto
+set "SCRIPT_DIR=%~dp0"
+set "ROOT_DIR=%SCRIPT_DIR%..\.."
+pushd "%ROOT_DIR%"
+set "ENV_FILE=%CD%\.env"
+popd
+
 cd ..\..\
-docker-compose -f deployment/docker/docker-compose.prod.yml down --remove-orphans
+docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml down --remove-orphans
 cd deployment\windows
 
 if errorlevel 1 (

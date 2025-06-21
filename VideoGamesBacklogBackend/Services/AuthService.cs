@@ -7,33 +7,45 @@ using VideoGamesBacklogBackend.Interfaces;
 using VideoGamesBacklogBackend.Models.auth;
 using VideoGamesBacklogBackend.Helpers;
 using VideoGamesBacklogBackend.Models;
+using VideoGamesBacklogBackend.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace VideoGamesBacklogBackend.Services
-{
-    public class AuthService : IAuthService
+{    public class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly AppDbContext _dbContext;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AppDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
-        }
-
-        public async Task<IdentityResult> RegisterAsync(RegisterModel model)
+            _dbContext = dbContext;
+        }        public async Task<IdentityResult> RegisterAsync(RegisterModel model)
         {
-            var user = new User
+            try
             {
-                UserName = model.UserName,
-                Email = model.Email,
-                Tags = model.Tags,
-                MemberSince = DateTime.UtcNow
-                // Qui puoi aggiungere altri campi se li aggiungi a RegisterModel (es: FullName, Bio, Avatar, ecc.)
-            };
-            return await _userManager.CreateAsync(user, model.Password);
+                var user = new User
+                {
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    Tags = model.Tags,
+                    MemberSince = DateTime.UtcNow
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return IdentityResult.Failed(new IdentityError 
+                { 
+                    Description = $"Registration failed: {ex.Message}" 
+                });
+            }
         }
 
         public async Task<string?> LoginAsync(LoginModel model)
@@ -66,15 +78,14 @@ namespace VideoGamesBacklogBackend.Services
 
         private string GenerateJwtToken(User user)
         {
-            var jwtSettings = _configuration.GetSection("JwtSettings").Get<JwtSettings>();
-            var claims = new[]
+            var jwtSettings = _configuration.GetSection("JwtSettings").Get<JwtSettings>();            var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.SecretKey ?? throw new InvalidOperationException("JWT SecretKey not configured")));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(

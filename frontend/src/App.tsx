@@ -24,6 +24,7 @@ import LoadingSpinner from './components/loading/LoadingSpinner';
 import FriendsPage from './pages/header/FriendsPage';
 import PublicProfileView from './components/friends/PublicProfileView';
 import LandingPage from './pages/landing/LandingPage';
+import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -87,13 +88,9 @@ function App() {
     // Se tutto è ok (token presente e profilo caricato), consenti l'accesso
     return <Outlet />;
   };  return (
-    <div className="App">
-      <Routes>
-        {/* Route root con logica condizionale */}
-        <Route path="/" element={
-          getToken() ? <Navigate to="/" /> : <Navigate to="/landing" />
-        } />
-        
+    <ToastProvider>
+      <div className="App">
+        <Routes>
         {/* Landing page */}
         <Route path="/landing" element={<LandingPage />} />
         
@@ -107,28 +104,30 @@ function App() {
         </Route>        {/* Route protette */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
+            {/* Homepage principale su / */}
             <Route path="/" element={<HomePage />} />
-            <Route path="library" element={<LibraryPage />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="catalog" element={<CatalogPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="friends" element={<FriendsPage />} />
-            <Route path="profile/:userName" element={<PublicProfileView />} />
-            <Route path="diario" element={<DiarioPage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/friends" element={<FriendsPage />} />
+            <Route path="/profile/:userName" element={<PublicProfileView />} />
+            <Route path="/diario" element={<DiarioPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           
-            <Route path="privacy" element={<PrivacyPage />} />
-            <Route path="terms" element={<TermsPage />} />
-            <Route path="contact" element={<ContactPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/contact" element={<ContactPage />} />
           </Route>
-            <Route path="library/:title" element={<GamePage />} />
-            <Route path="catalog/:id" element={<GameInfoPage />} />
-        </Route>
-        
-        {/* Redirect predefinito: se non autenticato va alla landing, altrimenti al login */}
-        <Route path="*" element={<Navigate to="/landing" />} />
+            <Route path="/library/:title" element={<GamePage />} />
+            <Route path="/catalog/:id" element={<GameInfoPage />} />
+        </Route>          {/* Redirect predefinito: se non autenticato va alla landing, altrimenti alla homepage */}        <Route path="*" element={
+          getToken() ? <Navigate to="/" /> : <Navigate to="/landing" />
+        } />
       </Routes>
     </div>
+    </ToastProvider>
   );
 }
 

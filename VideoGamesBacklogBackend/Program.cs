@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // Aggiunto per risolvere l'errore
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -15,34 +15,21 @@ using VideoGamesBacklogBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Carica le variabili ambiente dal file .env nella root del progetto
-var rootEnvFile = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
-if (File.Exists(rootEnvFile))
+// Carica variabili d'ambiente dal file .env solo se non siamo in Docker
+if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
 {
-    foreach (var line in File.ReadAllLines(rootEnvFile))
+    var envFile = Path.Combine(Directory.GetCurrentDirectory(), "..", ".env");
+    if (File.Exists(envFile))
     {
-        if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-        
-        var parts = line.Split('=', 2);
-        if (parts.Length == 2)
+        foreach (var line in File.ReadAllLines(envFile))
         {
-            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
-        }
-    }
-}
-
-// Carica le variabili ambiente dal file .env.local se esiste
-var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env.local");
-if (File.Exists(envFile))
-{
-    foreach (var line in File.ReadAllLines(envFile))
-    {
-        if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
-        
-        var parts = line.Split('=', 2);
-        if (parts.Length == 2)
-        {
-            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+            
+            var parts = line.Split('=', 2);
+            if (parts.Length == 2)
+            {
+                Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+            }
         }
     }
 }
@@ -51,24 +38,28 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy => policy
-            .WithOrigins("http://localhost:3000") 
+            .WithOrigins("http://localhost:3000", "http://localhost:5097")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+    );
+    
+    options.AddPolicy("AllowAll",
+        policy => policy
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod()
     );
 });
-
-// Add services to the container.
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Definizione versione OpenAPI
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
@@ -101,8 +92,35 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// CONFIGURAZIONE DATABASE 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("DATABASE_URL environment variable is required but not set.");
+    }
+    
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.CommandTimeout(120);
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorCodesToAdd: null
+        );
+    });
+    
+    // Logging solo in development
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.LogTo(Console.WriteLine, LogLevel.Information);
+    }
+    
+    options.EnableServiceProviderCaching(false);
+});
 
 builder.Services.AddIdentity<User, IdentityRole<int>>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -110,7 +128,6 @@ builder.Services.AddIdentity<User, IdentityRole<int>>()
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    // Configura le regole delle password, lockout, ecc.
     options.Password.RequireDigit = false;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
@@ -119,7 +136,14 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() 
+                   ?? new JwtSettings 
+                   { 
+                       SecretKey = "hKJ8gQ2vP6nR9xM4L7wE1tY5uI8oP3qA6sD9fG2hJ5kN8mQ1wE4rT7yU0iO6pS3dF",
+                       Issuer = "VideoGamesBacklogAPI",
+                       Audience = "VideoGamesBacklogUsers",
+                       ExpiryMinutes = 60
+                   };
 
 builder.Services.AddAuthentication(options =>
 {
@@ -142,6 +166,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IGameService, GameService>();
@@ -151,36 +176,56 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISteamService, SteamService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddHttpClient();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
-// Se usi MVC/API Controllers, aggiungi anche questo:
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
 var app = builder.Build();
 
+// TEST CONNESSIONE DATABASE ALL'AVVIO (solo un test basico)
+try
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    var canConnect = await context.Database.CanConnectAsync(cts.Token);
+    
+    if (canConnect)
+    {
+        Console.WriteLine("✅ Database connection successful!");
+    }
+    else
+    {
+        Console.WriteLine("❌ Database connection failed");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ Database connection error: {ex.Message}");
+    Console.WriteLine("⚠️ Continuing startup - connection will be retried on first request");
+}
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseCors("AllowFrontend");
-
 app.MapControllers();
 
-// Configura la porta dalle variabili d'ambiente
-var port = Environment.GetEnvironmentVariable("BACKEND_PORT") ?? "5000";
-app.Urls.Add($"http://localhost:{port}");
+Console.WriteLine("🚀 Application started successfully!");
+Console.WriteLine($"🌍 Environment: {app.Environment.EnvironmentName}");
 
 app.Run();
