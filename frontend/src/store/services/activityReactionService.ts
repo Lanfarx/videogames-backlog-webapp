@@ -7,9 +7,10 @@ import {
   CreateActivityReactionDto,
   ActivityType 
 } from '../../types/activity';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_URL = 'http://localhost:5097/api/activity-reactions';
-const ACTIVITY_API_URL = 'http://localhost:5097/api/activity';
+const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_REACTIONS);
+const ACTIVITY_API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY);
 
 // Istanza axios che aggiunge il token JWT se presente
 const apiClient = axios.create();

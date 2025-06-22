@@ -11,9 +11,9 @@ import {
 } from '../../types/community';
 import { ActivityComment, CreateActivityCommentDto } from '../../types/activity';
 import { getToken } from '../../utils/getToken';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_BASE_URL = 'http://localhost:5097/api/community';
-
+const API_BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.COMMUNITY);
 
 // Crea istanza axios per le notifiche
 const communityApi = axios.create({

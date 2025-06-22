@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { Game, GameInput, GameUpdateInput, GameComment } from '../../types/game';
 import { getToken } from '../../utils/getToken';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_URL = 'http://localhost:5097/api/games';
+const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.GAMES);
 
 // Istanza axios che aggiunge il token JWT se presente
 const apiClient = axios.create();

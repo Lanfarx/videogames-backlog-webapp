@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { Notification } from '../../types/notification';
 import { getToken } from '../../utils/getToken';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_BASE_URL = 'http://localhost:5097/api/notification'; // corretto: senza la 's'
+const API_BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATION);
 
 // Crea istanza axios per le notifiche
 const notificationApi = axios.create({

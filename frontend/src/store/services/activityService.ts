@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { Activity, ActivityFilters, ActivityType, ActivityWithReactions } from '../../types/activity';
 import { getToken } from '../../utils/getToken';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_URL = 'http://localhost:5097/api/activity';
+const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY);
 
 // Istanza axios che aggiunge il token JWT se presente
 const apiClient = axios.create();

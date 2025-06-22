@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { getToken } from '../../utils/getToken';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
 
-const API_BASE_URL = "http://localhost:5097/api/steam";
+const API_BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.STEAM);
 
 // Istanza axios che aggiunge il token JWT se presente
 const apiClient = axios.create();
@@ -22,9 +23,20 @@ export interface SteamGame {
   img_logo_url?: string;
 }
 
+export interface UpdatedGameInfo {
+  gameTitle: string;
+  previousHours: number;
+  newHours: number;
+  hoursAdded: number;
+  statusChanged: boolean;
+  previousStatus?: string;
+  newStatus?: string;
+}
+
 export interface SteamSyncResponse {
   message: string;
   count: number;
+  updatedGames: UpdatedGameInfo[];
   debugInfo?: any; // Per informazioni di debug
 }
 

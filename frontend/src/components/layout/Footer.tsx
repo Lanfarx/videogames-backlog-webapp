@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
           
           {/* Sezione destra - Versione */}
           <div className="text-xs text-text-disabled font-['Roboto'] text-right">
-            Versione 0.8.0
+            Versione 0.9.0
           </div>
         </div>
       </div>

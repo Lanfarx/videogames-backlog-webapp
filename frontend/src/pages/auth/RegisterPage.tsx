@@ -5,6 +5,7 @@ import AuthLayout from '../../components/auth/AuthLayout';
 import { GAME_PlatformS, Genres } from '../../constants/gameConstants';
 import { useNavigate } from 'react-router-dom';
 import { register } from '../../store/services/authService';
+import { useToast } from '../../contexts/ToastContext';
 
 const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,7 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Dummy validazione e forza password
   const UserNameValid = UserName.length >= 3 && /^[a-zA-Z0-9]+$/.test(UserName);
@@ -49,24 +51,30 @@ const RegisterPage: React.FC = () => {
         setTimeout(() => confirmInput.setCustomValidity(''), 2000); // resetta dopo 2s
       }
       return;
-    }
-    try {
+    }    try {
       const tags = [Platform, genre].filter(Boolean).join(',');
       await register({ email, password, UserName, tags });
+      
+      // Mostra toast di successo
+      showToast('success', 'Registrazione completata!', `Account ${UserName} creato con successo. Ora puoi effettuare il login.`);
+      
       navigate('/login');
     } catch (err: any) {
       if (err.response && err.response.Status === 409) {
-        setError('Questa email è già registrata.');
+        const errorMessage = 'Questa email è già registrata.';
+        setError(errorMessage);
+        showToast('error', 'Errore di registrazione', errorMessage);
       } else {
-        setError('Errore durante la registrazione.');
+        const errorMessage = 'Errore durante la registrazione.';
+        setError(errorMessage);
+        showToast('error', 'Errore di registrazione', errorMessage);
       }
     }
   };
 
   return (
-      <>
-        <h2 className="font-montserrat font-semibold text-2xl text-gray-900 mb-1">Crea il tuo account</h2>
-        <p className="text-base text-gray-500 font-roboto mb-8">Inizia a organizzare la tua libreria di giochi</p>
+      <>        <h2 className="font-montserrat font-semibold text-2xl text-text-primary mb-1">Crea il tuo account</h2>
+        <p className="text-base text-text-secondary font-roboto mb-8">Inizia a organizzare la tua libreria di giochi</p>
         {error && (
           <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
             {error}
@@ -117,7 +125,7 @@ const RegisterPage: React.FC = () => {
               }
             />
             <PasswordStrengthBar strength={passwordStrength as any} />
-            <p className="text-xs text-gray-500 mt-1">Minimo 8 caratteri, una maiuscola, un numero</p>
+            <p className="text-xs text-text-secondary mt-1">Minimo 8 caratteri, una maiuscola, un numero</p>
           </div>
           {confirmPassword.length > 0 && !passwordMatch && (
             <p className="text-xs text-red-600">Le password non coincidono</p>
@@ -136,9 +144,8 @@ const RegisterPage: React.FC = () => {
             ) : null}
           />
           {/* Preferenze Gaming */}
-          <div className="mb-6">
-            <div className="font-roboto font-medium text-base text-gray-900 mb-1">Dimmi qualcosa di te</div>
-            <div className="text-sm text-gray-500 mb-2">Ci aiuta a personalizzare la tua esperienza</div>
+          <div className="mb-6">            <div className="font-roboto font-medium text-base text-text-primary mb-1">Dimmi qualcosa di te</div>
+            <div className="text-sm text-text-secondary mb-2">Ci aiuta a personalizzare la tua esperienza</div>
             <select
               className="w-full h-12 px-4 rounded-lg border border-gray-300 text-base font-normal focus:border-accent focus:shadow-[0_0_0_2px_rgba(251,126,0,0.2)] mb-2"
               value={Platform}
@@ -180,7 +187,7 @@ const RegisterPage: React.FC = () => {
           </div>
           <Divider text="O" />
         </form>
-        <div className="text-center mt-8 text-sm text-gray-500">
+        <div className="text-center mt-8 text-sm text-text-secondary">
           Hai già un account?{' '}
           <a href="/login" className="text-accent font-medium hover:underline">Accedi qui</a>
         </div>
