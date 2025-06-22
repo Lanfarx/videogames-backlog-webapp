@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Database PostgreSQL (per sviluppo locale)
+  postgres:
+    image: postgres:15
+    container_name: videogames-postgres
+    environment:
+      POSTGRES_DB: videogames_backlog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_password_here
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - videogames-network
+  # Backend .NET
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.backend
+    container_name: videogames-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=videogames_backlog;Username=postgres;Password=local_dev_password
+    ports:
+      - "5000:80"
+    depends_on:
+      - postgres
+    networks:
+      - videogames-network
+  # Frontend React
+  frontend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.frontend
+    container_name: videogames-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - videogames-network
+
+volumes:
+  postgres_data:
+
+networks:
+  videogames-network:
+    driver: bridge

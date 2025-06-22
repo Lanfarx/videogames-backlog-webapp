@@ -1,0 +1,55 @@
+# Versione per produzione con database cloud
+
+services:
+  # Backend .NET
+  backend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.backend
+      cache_from:
+        - videogames-backend-prod:latest
+    image: videogames-backend-prod:latest
+    container_name: videogames-backend-prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - DATABASE_URL=${DATABASE_URL}
+      - SteamApiKey=${STEAM_API_KEY}
+    ports:
+      - "5000:80"
+    dns:
+      - "8.8.8.8"
+      - "1.1.1.1"
+    networks:
+      - videogames-network
+    restart: unless-stopped
+  # Frontend React
+  frontend:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.frontend
+      args:
+        - REACT_APP_API_URL=http://localhost:5000
+        - REACT_APP_VERSION=1.0.0
+        - REACT_APP_ENV=production
+        - REACT_APP_RAWG_API_KEY=${REACT_APP_RAWG_API_KEY}
+      cache_from:
+        - videogames-frontend-prod:latest
+    image: videogames-frontend-prod:latest
+    container_name: videogames-frontend-prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - videogames-network
+    restart: unless-stopped
+
+networks:
+  videogames-network:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
