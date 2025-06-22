@@ -44,10 +44,16 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
           onSyncComplete();
           onHide();
         }, 2000);
-      }
-    } catch (error: any) {
+      }    } catch (error: any) {
       console.error('Errore sincronizzazione Steam:', error);
-      setError(error.response?.data?.error || error.message || 'Errore durante la sincronizzazione');
+      const errorMessage = error.response?.data?.error || error.message || 'Errore durante la sincronizzazione';
+      
+      // Gestione specifica per rate limiting
+      if (errorMessage.includes('429') || errorMessage.includes('Too Many Requests') || errorMessage.includes('Limite di richieste') || errorMessage.includes('troppe richieste')) {
+        setError('⚠️ Steam API: Limite di richieste raggiunto. Riprova tra 5-10 minuti. Questo è un limite di Steam per proteggere i loro server.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

@@ -9,7 +9,7 @@ import { generatePlatformDistributionData, generateGenreDistributionData } from 
 import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
-import { useStatusData } from '../../utils/statusUtils';
+import { useStatusData } from '../../store/hooks/gamesHooks';
 import AllActivitiesHistoryPopover from '../../components/ui/AllActivitiesHistoryPopover';
 import { History } from 'lucide-react';
 

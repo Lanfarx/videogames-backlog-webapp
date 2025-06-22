@@ -16,14 +16,24 @@ namespace VideoGamesBacklogBackend.Services
         {
             _context = context;
             _logger = logger;
-        }        public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)        {
+        }
+
+        public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)
+        {
             try
-            {                var games = await _context.Games
-                    .Include(g => g.User)
+            {
+                var normalizedGameTitle = gameTitle.ToLower().Trim();
+                var games = await _context.Games
+                    .Where(g => g.Title.ToLower().Contains(normalizedGameTitle) ||
+                               normalizedGameTitle.Contains(g.Title.ToLower()))
+                    .Select(g => new {
+                        g.Id,
+                        g.HoursPlayed,
+                        g.Status,
+                        g.Rating,
+                        HasPublicReview = g.Review != null && g.Review.IsPublic == true
+                    })
                     .ToListAsync();
-                
-                // Filter using normalized title matching
-                games = games.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
 
                 if (!games.Any())
                 {
@@ -31,20 +41,20 @@ namespace VideoGamesBacklogBackend.Services
                 }
 
                 var totalPlayers = games.Count;
-                var gamesWithReviews = games.Where(g => g.Review != null && g.Review.IsPublic == true).ToList();
+                var gamesWithReviews = games.Where(g => g.HasPublicReview).ToList();
                 var totalReviews = gamesWithReviews.Count;
 
-                var averageRating = totalReviews > 0 
-                    ? gamesWithReviews.Average(g => g.Rating) 
+                var averageRating = totalReviews > 0
+                    ? gamesWithReviews.Average(g => g.Rating)
                     : 0;
 
-                var averagePlaytime = games.Any() 
-                    ? (int)Math.Round(games.Average(g => g.HoursPlayed)) 
+                var averagePlaytime = games.Any()
+                    ? (int)Math.Round(games.Average(g => g.HoursPlayed))
                     : 0;
 
                 var completedGames = games.Where(g => g.Status == GameStatus.Completed || g.Status == GameStatus.Platinum).Count();
-                var completionRate = totalPlayers > 0 
-                    ? Math.Round((decimal)completedGames / totalPlayers * 100, 2) 
+                var completionRate = totalPlayers > 0
+                    ? Math.Round((decimal)completedGames / totalPlayers * 100, 2)
                     : 0;
 
                 var currentlyPlaying = games.Where(g => g.Status == GameStatus.InProgress).Count();
@@ -64,7 +74,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel calcolo delle statistiche community per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<decimal> GetCommunityRatingAsync(string gameTitle)
+        }
+
+        public async Task<decimal> GetCommunityRatingAsync(string gameTitle)
         {
             try
             {
@@ -72,7 +84,6 @@ namespace VideoGamesBacklogBackend.Services
                     .Where(g => g.Rating > 0)
                     .ToListAsync();
 
-                // Filter using normalized title matching
                 games = games.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
 
                 return games.Any() ? Math.Round(games.Average(g => g.Rating), 2) : 0;
@@ -82,7 +93,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel calcolo del rating community per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<CommunityRatingDto> GetCommunityRatingWithCountAsync(string gameTitle)
+        }
+
+        public async Task<CommunityRatingDto> GetCommunityRatingWithCountAsync(string gameTitle)
         {
             try
             {
@@ -90,7 +103,6 @@ namespace VideoGamesBacklogBackend.Services
                     .Where(g => g.Rating > 0)
                     .ToListAsync();
 
-                // Filter using normalized title matching
                 games = games.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
 
                 var rating = games.Any() ? Math.Round(games.Average(g => g.Rating), 2) : 0;
@@ -107,7 +119,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel calcolo del rating community con conteggio per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<Dictionary<string, decimal>> GetCommunityRatingsAsync(List<string> gameTitles)
+        }
+
+        public async Task<Dictionary<string, decimal>> GetCommunityRatingsAsync(List<string> gameTitles)
         {
             try
             {
@@ -147,28 +161,30 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel calcolo dei rating community con conteggio per {GameTitles}", string.Join(", ", gameTitles));
                 throw;
             }
-        }        public async Task<PaginatedReviewsDto> GetReviewsAsync(string gameTitle, int page, int pageSize, int? currentUserId = null)
+        }
+
+        public async Task<PaginatedReviewsDto> GetReviewsAsync(string gameTitle, int page, int pageSize, int? currentUserId = null)
         {
             try
-            {                // Per gli utenti autenticati, mostra tutte le recensioni pubbliche
-                // In futuro, può essere esteso per mostrare anche recensioni di amici se private
+            {
                 var allGames = await _context.Games
                     .Include(g => g.User)
                     .Include(g => g.ReviewComments)
                     .Where(g => g.Review != null && g.Review.IsPublic == true)
                     .ToListAsync();
 
-                // Filter using normalized title matching and exclude current user's review
                 var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
                     .Where(g => !currentUserId.HasValue || g.UserId != currentUserId.Value)
                     .OrderByDescending(g => g.Review!.Date)
                     .ToList();
 
                 var totalCount = games.Count;
-                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);                var paginatedGames = games
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedGames = games
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .ToList();                var reviews = paginatedGames.Select(g => new CommunityReviewDto
+                    .ToList();
+                var reviews = paginatedGames.Select(g => new CommunityReviewDto
                 {
                     Id = g.Id,
                     GameTitle = g.Title,
@@ -183,7 +199,7 @@ namespace VideoGamesBacklogBackend.Services
                     OverallRating = g.Rating,
                     Date = g.Review?.Date ?? "",
                     CommentsCount = g.ReviewComments?.Count ?? 0,
-                    Comments = new List<ReviewCommentDto>() // Inizialmente vuota, i commenti vengono caricati su richiesta
+                    Comments = new List<ReviewCommentDto>()
                 }).ToList();
 
                 return new PaginatedReviewsDto
@@ -200,7 +216,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel recupero delle recensioni per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<PaginatedReviewsDto> GetPublicReviewsAsync(string gameTitle, int page, int pageSize)
+        }
+
+        public async Task<PaginatedReviewsDto> GetPublicReviewsAsync(string gameTitle, int page, int pageSize)
         {
             try
             {
@@ -210,16 +228,17 @@ namespace VideoGamesBacklogBackend.Services
                     .Where(g => g.Review != null && g.Review.IsPublic == true)
                     .ToListAsync();
 
-                // Filter using normalized title matching
                 var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
                     .OrderByDescending(g => g.Review!.Date)
                     .ToList();
 
                 var totalCount = games.Count;
-                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);                var paginatedGames = games
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedGames = games
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .ToList();                var reviews = paginatedGames.Select(g => new CommunityReviewDto
+                    .ToList();
+                var reviews = paginatedGames.Select(g => new CommunityReviewDto
                 {
                     Id = g.Id,
                     GameTitle = g.Title,
@@ -233,9 +252,9 @@ namespace VideoGamesBacklogBackend.Services
                     Sound = g.Review?.Sound ?? 0,
                     OverallRating = g.Rating,
                     Date = g.Review?.Date ?? "",
-                    HelpfulVotes = 0, // Per future implementazioni
+                    HelpfulVotes = 0,
                     CommentsCount = g.ReviewComments?.Count ?? 0,
-                    Comments = new List<ReviewCommentDto>() // Inizialmente vuota, i commenti vengono caricati su richiesta
+                    Comments = new List<ReviewCommentDto>()
                 }).ToList();
 
                 return new PaginatedReviewsDto
@@ -252,7 +271,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel recupero delle recensioni pubbliche per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<ReviewStatsDto> GetReviewStatsAsync(string gameTitle)
+        }
+
+        public async Task<ReviewStatsDto> GetReviewStatsAsync(string gameTitle)
         {
             try
             {
@@ -260,7 +281,6 @@ namespace VideoGamesBacklogBackend.Services
                     .Where(g => g.Review != null && g.Review.IsPublic == true)
                     .ToListAsync();
 
-                // Filter using normalized title matching
                 var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
 
                 if (!games.Any())
@@ -280,13 +300,12 @@ namespace VideoGamesBacklogBackend.Services
                     AverageStory = Math.Round(reviews.Average(r => r.Story), 2),
                     AverageSound = Math.Round(reviews.Average(r => r.Sound), 2),
                     OverallAverageRating = Math.Round(games.Average(g => g.Rating), 2)
-                };                // Calcola la distribuzione dei rating (arrotondati a numeri interi)
-                // Usa MidpointRounding.AwayFromZero per assicurarsi che 0.5 venga arrotondato a 1
+                };
+
                 stats.RatingDistribution = games
                     .GroupBy(g => (int)Math.Round(g.Rating, MidpointRounding.AwayFromZero))
                     .ToDictionary(g => g.Key, g => g.Count());
 
-                // Calcola le statistiche per aspetto
                 stats.GameplayStats = CalculateAspectStats(reviews.Select(r => r.Gameplay));
                 stats.GraphicsStats = CalculateAspectStats(reviews.Select(r => r.Graphics));
                 stats.StoryStats = CalculateAspectStats(reviews.Select(r => r.Story));
@@ -299,22 +318,25 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel calcolo delle statistiche recensioni per {GameTitle}", gameTitle);
                 throw;
             }
-        }        public async Task<List<CommunityReviewDto>> GetTopReviewsAsync(string gameTitle, int limit, int? currentUserId = null)
+        }
+
+        public async Task<List<CommunityReviewDto>> GetTopReviewsAsync(string gameTitle, int limit, int? currentUserId = null)
         {
             try
-            {                var allGames = await _context.Games
+            {
+                var allGames = await _context.Games
                     .Include(g => g.User)
                     .Include(g => g.ReviewComments)
                     .Where(g => g.Review != null && g.Review.IsPublic == true)
                     .ToListAsync();
 
-                // Filter using normalized title matching and exclude current user's review
                 var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
                     .Where(g => !currentUserId.HasValue || g.UserId != currentUserId.Value)
-                    .OrderByDescending(g => g.Rating) // Ordina per rating più alto
-                    .ThenByDescending(g => g.Review!.Date) // Poi per data più recente
+                    .OrderByDescending(g => g.Rating)
+                    .ThenByDescending(g => g.Review!.Date)
                     .Take(limit)
-                    .ToList();                return games.Select(g => new CommunityReviewDto
+                    .ToList();
+                return games.Select(g => new CommunityReviewDto
                 {
                     Id = g.Id,
                     GameTitle = g.Title,
@@ -328,9 +350,9 @@ namespace VideoGamesBacklogBackend.Services
                     Sound = g.Review?.Sound ?? 0,
                     OverallRating = g.Rating,
                     Date = g.Review?.Date ?? "",
-                    HelpfulVotes = 0, // Per future implementazioni
+                    HelpfulVotes = 0,
                     CommentsCount = g.ReviewComments?.Count ?? 0,
-                    Comments = new List<ReviewCommentDto>() // Inizialmente vuota, i commenti vengono caricati su richiesta
+                    Comments = new List<ReviewCommentDto>()
                 }).ToList();
             }
             catch (Exception ex)
@@ -338,7 +360,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel recupero delle top recensioni per {GameTitle}", gameTitle);
                 throw;
             }
-        }        /// <summary>
+        }
+
+        /// <summary>
         /// Ottiene i commenti per una specifica recensione
         /// </summary>
         public async Task<List<ReviewCommentDto>> GetReviewCommentsAsync(int reviewGameId)
@@ -376,16 +400,15 @@ namespace VideoGamesBacklogBackend.Services
         {
             try
             {
-                // Verifica che il gioco esista e abbia una recensione pubblica
                 var reviewGame = await _context.Games
                     .Include(g => g.User)
-                    .FirstOrDefaultAsync(g => g.Id == createCommentDto.ReviewGameId 
-                                               && g.Review != null 
+                    .FirstOrDefaultAsync(g => g.Id == createCommentDto.ReviewGameId
+                                               && g.Review != null
                                                && g.Review.IsPublic == true);
 
                 if (reviewGame == null)
                 {
-                    return null; // Recensione non trovata o non pubblica
+                    return null;
                 }
 
                 var newComment = new ReviewComment
@@ -399,7 +422,6 @@ namespace VideoGamesBacklogBackend.Services
                 _context.ReviewComments.Add(newComment);
                 await _context.SaveChangesAsync();
 
-                // Ricarica il commento con l'autore
                 var savedComment = await _context.ReviewComments
                     .Include(rc => rc.Author)
                     .FirstOrDefaultAsync(rc => rc.Id == newComment.Id);
@@ -434,13 +456,12 @@ namespace VideoGamesBacklogBackend.Services
 
                 if (comment == null)
                 {
-                    return false; // Commento non trovato
+                    return false;
                 }
 
-                // Solo l'autore del commento può eliminarlo
                 if (comment.AuthorId != userId)
                 {
-                    return false; // Non autorizzato
+                    return false;
                 }
 
                 _context.ReviewComments.Remove(comment);
@@ -453,7 +474,9 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nell'eliminazione del commento {CommentId}", commentId);
                 throw;
             }
-        }        /// <summary>
+        }
+
+        /// <summary>
         /// Ottiene tutti i commenti per un'attività
         /// </summary>
         public async Task<List<ActivityCommentDto>> GetActivityCommentsAsync(int activityId)
@@ -491,14 +514,14 @@ namespace VideoGamesBacklogBackend.Services
         {
             try
             {
-                // Verifica che l'attività esista
                 var activity = await _context.Activities
                     .FirstOrDefaultAsync(a => a.Id == createCommentDto.ActivityId);
 
                 if (activity == null)
                 {
-                    return null; // Attività non trovata
-                }                var newComment = new ActivityComment
+                    return null;
+                }
+                var newComment = new ActivityComment
                 {
                     Text = createCommentDto.Text,
                     Date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
@@ -509,7 +532,6 @@ namespace VideoGamesBacklogBackend.Services
                 _context.ActivityComments.Add(newComment);
                 await _context.SaveChangesAsync();
 
-                // Ricarica il commento con l'autore
                 var savedComment = await _context.ActivityComments
                     .Include(ac => ac.Author)
                     .FirstOrDefaultAsync(ac => ac.Id == newComment.Id);
@@ -544,13 +566,12 @@ namespace VideoGamesBacklogBackend.Services
 
                 if (comment == null)
                 {
-                    return false; // Commento non trovato
+                    return false;
                 }
 
-                // Solo l'autore del commento può eliminarlo
                 if (comment.AuthorId != userId)
                 {
-                    return false; // Non autorizzato
+                    return false;
                 }
 
                 _context.ActivityComments.Remove(comment);
@@ -573,12 +594,13 @@ namespace VideoGamesBacklogBackend.Services
             }
 
             var valuesList = values.ToList();
-            
+
             return new AspectStatsDto
             {
                 Average = Math.Round(valuesList.Average(), 2),
                 Min = valuesList.Min(),
-                Max = valuesList.Max(),                Distribution = valuesList
+                Max = valuesList.Max(),
+                Distribution = valuesList
                     .GroupBy(v => (int)Math.Round(v))
                     .ToDictionary(g => g.Key, g => g.Count())
             };

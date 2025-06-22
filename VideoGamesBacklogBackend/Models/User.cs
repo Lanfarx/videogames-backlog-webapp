@@ -4,8 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VideoGamesBacklogBackend.Models
-{
-    public class User : IdentityUser<int> // Usa int come PK
+{    public class User : IdentityUser<int> // Usa int come PK
     {
         // Proprietà IdentityUser: Id, UserName, Email, PasswordHash, ecc.
         public string? FullName { get; set; } // Nome completo

@@ -1,33 +1,29 @@
 @echo off
-echo ========================================
-echo   FERMATA BACKLOG VIDEOLUDICO
-echo ========================================
-echo.
+echo ==========================================
+echo   FERMATA WEBAPP BACKLOG VIDEOLUDICO
+echo ==========================================
 
-echo [INFO] Fermata dei container in corso...
-REM Ottieni il percorso assoluto della root del progetto
-set "SCRIPT_DIR=%~dp0"
-set "ROOT_DIR=%SCRIPT_DIR%..\.."
-pushd "%ROOT_DIR%"
-set "ENV_FILE=%CD%\.env"
-popd
+cd /d "%~dp0"
 
+echo Fermata container in corso...
 cd ..\..\
-docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml down --remove-orphans
-cd deployment\windows
+docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml down --remove-orphans
 
 if errorlevel 1 (
-    echo [ERROR] Errore durante la fermata.
+    echo [ERRORE] Errore durante la fermata.
+    cd deployment\windows
     pause
     exit /b 1
 )
 
 echo.
-echo ========================================
-echo   APPLICAZIONE FERMATA CON SUCCESSO!
-echo ========================================
-echo.
-echo L'applicazione e' stata fermata completamente.
+echo ==========================================
+echo   WEBAPP FERMATA CORRETTAMENTE!
+echo ==========================================
+
+cd deployment\windows
+echo Premi un tasto per continuare...
+pause
 echo Puoi ora chiudere questa finestra.
 echo.
 timeout /t 3 >nul

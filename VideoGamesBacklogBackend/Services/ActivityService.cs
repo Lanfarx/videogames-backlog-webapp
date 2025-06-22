@@ -195,9 +195,6 @@ namespace VideoGamesBacklogBackend.Services
                 .ToDictionaryAsync(x => x.Type, x => x.Count);            return stats;
         }
 
-        /// <summary>
-        /// Crea un'attività per il cambio di stato di un gioco
-        /// </summary>
         public async Task CreateStatusChangeActivityAsync(Game game, GameStatus newStatus, string previousStatus, int userId)
         {
             try
@@ -252,9 +249,7 @@ namespace VideoGamesBacklogBackend.Services
             }
         }
 
-        /// <summary>
-        /// Crea un'attività per l'aggiornamento delle ore di gioco
-        /// </summary>
+    
         public async Task CreatePlaytimeActivityAsync(Game game, int newHours, int previousHours, bool wasNotStarted, int userId)
         {
             try
@@ -298,9 +293,6 @@ namespace VideoGamesBacklogBackend.Services
             }
         }
 
-        /// <summary>
-        /// Crea un'attività per la valutazione di un gioco
-        /// </summary>
         public async Task CreateRatingActivityAsync(Game game, decimal newRating, decimal previousRating, int userId)
         {
             try
@@ -326,9 +318,7 @@ namespace VideoGamesBacklogBackend.Services
                 // Log l'errore ma non fermare l'operazione principale
                 Console.WriteLine($"Errore durante la creazione dell'attività per rating: {ex.Message}");
             }
-        }        /// <summary>
-        /// Crea un'attività "Added" quando viene aggiunto un nuovo gioco alla libreria
-        /// </summary>
+        }       
         public async Task CreateAddGameActivityAsync(Game game, int userId)
         {
             try
@@ -415,9 +405,7 @@ namespace VideoGamesBacklogBackend.Services
             {                // Log l'errore ma non fermare l'operazione principale
                 Console.WriteLine($"Errore durante la creazione dell'attività per aggiunta gioco: {ex.Message}");
             }
-        }        /// <summary>
-        /// Ottiene le attività pubbliche di un utente SENZA reazioni (per uso generale)
-        /// </summary>
+        }       
         public async Task<PaginatedActivitiesDto> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
         {
             // Prima determina l'ID dell'utente target
@@ -538,9 +526,6 @@ namespace VideoGamesBacklogBackend.Services
 
         // Metodi per le reazioni emoji alle attività
 
-        /// <summary>
-        /// Aggiunge una reazione emoji a un'attività (toggle - se esiste già la rimuove)
-        /// </summary>
         public async Task<ActivityReactionDto?> AddReactionAsync(CreateActivityReactionDto createReactionDto, int userId)
         {
             try
@@ -594,10 +579,7 @@ namespace VideoGamesBacklogBackend.Services
                 return null;
             }
         }
-
-        /// <summary>
-        /// Rimuove una reazione emoji da un'attività
-        /// </summary>
+        
         public async Task<bool> RemoveReactionAsync(int reactionId, int userId)
         {
             try
@@ -610,15 +592,14 @@ namespace VideoGamesBacklogBackend.Services
                 _context.ActivityReactions.Remove(reaction);
                 await _context.SaveChangesAsync();
                 return true;
-            }            catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine($"Errore nella rimozione della reazione: {ex.Message}");
                 return false;
-            }        }
+            }
+        }
 
-        /// <summary>
-        /// Ottiene tutte le reazioni per una specifica attività
-        /// </summary>
         public async Task<List<ActivityReactionDto>> GetActivityReactionsAsync(int activityId, int userId)
         {
             try
@@ -668,9 +649,6 @@ namespace VideoGamesBacklogBackend.Services
             }
         }
 
-        /// <summary>
-        /// Mapper helper per convertire un'Activity in ActivityDto con reazioni
-        /// </summary>
         private ActivityDto MapActivityToDto(Activity activity, int currentUserId)
         {
             // Calcola il sommario delle reazioni raggruppate per emoji

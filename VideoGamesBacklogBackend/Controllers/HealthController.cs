@@ -22,14 +22,12 @@ namespace VideoGamesBacklogBackend.Controllers
         {
             try
             {
-                // Test connessione database con timeout breve
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 var canConnect = await _context.Database.CanConnectAsync(cts.Token);
-                
                 if (canConnect)
                 {
-                    return Ok(new { 
-                        status = "healthy", 
+                    return Ok(new {
+                        status = "healthy",
                         timestamp = DateTime.UtcNow,
                         database = "connected",
                         environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "unknown"
@@ -37,8 +35,8 @@ namespace VideoGamesBacklogBackend.Controllers
                 }
                 else
                 {
-                    return StatusCode(503, new { 
-                        status = "unhealthy", 
+                    return StatusCode(503, new {
+                        status = "unhealthy",
                         timestamp = DateTime.UtcNow,
                         database = "disconnected",
                         error = "Cannot connect to database"
@@ -48,8 +46,8 @@ namespace VideoGamesBacklogBackend.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Health check failed");
-                return StatusCode(503, new { 
-                    status = "unhealthy", 
+                return StatusCode(503, new {
+                    status = "unhealthy",
                     timestamp = DateTime.UtcNow,
                     database = "error",
                     error = ex.Message

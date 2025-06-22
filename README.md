@@ -9,7 +9,31 @@ Il progetto è composto da:
 
 ## 🚀 Quick Start
 
-Vuoi iniziare subito? Leggi il file [QUICK-START.md](./QUICK-START.md) per istruzioni dettagliate.
+### Avvio Rapido con Script
+
+**Windows (Raccomandato):**
+1. **Avvia l'applicazione**: Esegui `deployment/windows/start.bat`
+   - Avvio rapido se le immagini esistono
+   - Build automatica se necessario
+2. **Crea scorciatoie desktop**: Esegui `deployment/windows/crea-scorciatoie-desktop.bat`
+   - Crea 2 scorciatoie: "GameBacklog - Avvia" e "GameBacklog - Ferma"
+
+**Mac/Linux:**
+1. **Avvia l'applicazione**: Esegui `deployment/unix/start.sh`
+2. **Crea scorciatoie desktop**: Esegui `deployment/unix/crea-scorciatoie-desktop.sh`
+
+### Script Disponibili
+
+| Script | Windows | Mac/Linux | Descrizione |
+|--------|---------|-----------|-------------|
+| **Avvio** | `start.bat` | `start.sh` | Avvio intelligente (rapido se già costruito) |
+| **Stop** | `stop.bat` | `stop.sh` | Ferma tutti i container |
+| **Rebuild** | `rebuild.bat` | `rebuild.sh` | Ricostruisce tutto da zero |
+| **Scorciatoie** | `crea-scorciatoie-desktop.bat` | `crea-scorciatoie-desktop.sh` | Crea scorciatoie desktop |
+
+### Setup Manuale
+
+Per istruzioni dettagliate di setup manuale, leggi il file [QUICK-START.md](./QUICK-START.md).
 
 ## ✨ Funzionalità implementate
 
@@ -159,81 +183,77 @@ Questo permette a tutti i tuoi amici di condividere lo stesso database senza con
 git clone <repo-url>
 cd videogames-backlog-webapp
 
-# 2. Configura le variabili d'ambiente
-
-**Backend:**
-```bash
+# 2. Configura le variabili d'ambiente (OPZIONALE)
 cp .env.example .env
-# Modifica .env con le tue API keys (Steam opzionale)
-```
+# Modifica .env con le tue API keys (Steam e RAWG opzionali)
 
-**Frontend (OBBLIGATORIO):**
-```bash
-cd frontend
-cp .env.example .env  
-# Modifica frontend/.env con REACT_APP_RAWG_API_KEY
+# 3. Avvia l'applicazione
+# Windows: deployment/windows/start.bat
+# Mac/Linux: deployment/unix/start.sh
 ```
 
 ## 📁 File di Configurazione
 
-### Configurazione Backend (`.env`)
-Il file `.env` nella root del progetto contiene configurazioni del backend:
+### Configurazione Unica (`.env`)
+Il file `.env` nella root del progetto contiene **tutte** le configurazioni:
+### Configurazione Unica (`.env`)
+Il file `.env` nella root del progetto contiene **tutte** le configurazioni:
 
 ```env
+# Database (obbligatorio per produzione)
+DATABASE_URL=your_database_connection_string_here
+
 # API Keys personali (opzionali)
 STEAM_API_KEY=la_tua_chiave_steam
+REACT_APP_RAWG_API_KEY=la_tua_chiave_rawg
 
 # Configurazione porta
 BACKEND_PORT=5000
 ```
 
-> 📝 **Database e JWT**: Sono preconfigurati nel file `appsettings.json` del backend.
+> 📝 **Nota**: Il database locale PostgreSQL è preconfigurato nei container Docker. La `DATABASE_URL` è necessaria solo per deployment in produzione.
 
-### Configurazione Frontend (`frontend/.env`) - OBBLIGATORIA
-Il frontend **deve** avere il proprio file di configurazione:
+### Cosa Succede Senza API Keys?
 
-```env
-# URL API backend (obbligatorio)
-REACT_APP_API_URL=http://localhost:5000
+**✅ Funziona sempre**:
+- Gestione completa libreria giochi
+- Sistema sociale e recensioni  
+- Dashboard e statistiche
+- Tutte le funzionalità core
 
-# API Keys per servizi esterni (opzionali)
-REACT_APP_RAWG_API_KEY=la_tua_chiave_rawg
-```
+**🔑 Con RAWG API Key**:
+- Ricerca automatica giochi con copertine
+- Informazioni dettagliate (generi, sviluppatori, etc.)
+- Esperienza utente migliorata
 
-> ⚠️ **IMPORTANTE**: Il file `frontend/.env` è **necessario** per il funzionamento dell'applicazione!
+**🎮 Con Steam API Key**:
+- Importazione automatica libreria Steam
+- Sincronizzazione achievement (futuro)
 
-# 3. Avvia l'applicazione
+## 🚀 Avvio Applicazione
 
-**SUPER FACILE (Windows - Raccomandato):**
+### Metodo Semplice (Raccomandato)
+
+**Windows:**
 ```bash
 cd deployment/windows
-crea-scorciatoie-desktop.bat   # Prima volta
-# Poi doppio click su "Avvia Backlog Videoludico" sul desktop
+start.bat                           # Avvio diretto
+crea-scorciatoie-desktop.bat       # Crea scorciatoie (una volta)
 ```
 
-**SUPER FACILE (Mac/Linux - Raccomandato):**
+**Mac/Linux:**
 ```bash
 cd deployment/unix
-chmod +x crea-scorciatoie-desktop.sh
-./crea-scorciatoie-desktop.sh  # Prima volta
-# Poi doppio click su "Avvia Backlog Videoludico" sul desktop
+./start.sh                          # Avvio diretto  
+./crea-scorciatoie-desktop.sh      # Crea scorciatoie (una volta)
 ```
 
-**METODO MANUALE:**
-```bash
-cd deployment/windows
-start.bat        # Windows
-
-cd deployment/unix
-./start.sh       # Mac/Linux
-```
-
-# 4. Accedi all'app
-# Frontend: http://localhost:3000
-# Backend: http://localhost:5000
-```
+### Accesso all'App
+- **Frontend**: http://localhost:3000/landing
+- **Backend API**: http://localhost:5000
 
 **Per istruzioni dettagliate:** leggi [QUICK-START.md](./QUICK-START.md)
+
 ## 🛠️ Stack Tecnologico
 
 ### Frontend

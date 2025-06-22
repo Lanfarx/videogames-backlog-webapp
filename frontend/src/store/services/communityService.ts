@@ -128,7 +128,6 @@ export class CommunityService {
       };
     }
   }
-
   /**
    * Ottiene le recensioni pubbliche per un gioco con paginazione (senza la recensione dell'utente corrente)
    */
@@ -139,7 +138,10 @@ export class CommunityService {
   ): Promise<PaginatedReviewsDto> {
     try {
       const response = await communityApi.get<PaginatedReviewsDto>(
-        `/public-reviews/${encodeURIComponent(gameTitle)}?page=${page}&pageSize=${pageSize}`
+        `/reviews/${encodeURIComponent(gameTitle)}`,
+        {
+          params: { page, pageSize }
+        }
       );
       return response.data;
     } catch (error) {

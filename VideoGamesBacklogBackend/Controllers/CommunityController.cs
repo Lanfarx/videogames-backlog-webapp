@@ -19,10 +19,6 @@ namespace VideoGamesBacklogBackend.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Ottiene l'ID dell'utente corrente dal token JWT
-        /// </summary>
-        /// <returns>ID dell'utente corrente o null se non autenticato</returns>
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -33,11 +29,6 @@ namespace VideoGamesBacklogBackend.Controllers
             return null;
         }
 
-        /// <summary>
-        /// Ottiene le statistiche aggregate della community per un gioco specifico
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco</param>
-        /// <returns>Statistiche aggregate della community</returns>
         [HttpGet("stats/{gameTitle}")]
         public async Task<ActionResult<CommunityStatsDto>> GetCommunityStats(string gameTitle)
         {
@@ -53,11 +44,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene il rating medio della community per un gioco specifico
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco</param>
-        /// <returns>Rating medio della community</returns>
         [HttpGet("rating/{gameTitle}")]
         public async Task<ActionResult<decimal>> GetCommunityRating(string gameTitle)
         {
@@ -71,11 +57,7 @@ namespace VideoGamesBacklogBackend.Controllers
                 _logger.LogError(ex, "Errore nel recupero del rating community per {GameTitle}", gameTitle);
                 return StatusCode(500, "Errore interno del server");
             }
-        }        /// <summary>
-        /// Ottiene i rating della community per una lista di giochi
-        /// </summary>
-        /// <param name="gameTitles">Lista dei titoli dei giochi</param>
-        /// <returns>Dizionario con i rating per ogni gioco</returns>
+        }
         [HttpPost("ratings")]
         public async Task<ActionResult<Dictionary<string, decimal>>> GetCommunityRatings([FromBody] List<string> gameTitles)
         {
@@ -91,11 +73,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene i rating della community con numero di recensioni per una lista di giochi
-        /// </summary>
-        /// <param name="gameTitles">Lista dei titoli dei giochi</param>
-        /// <returns>Dizionario con i rating e numero di recensioni per ogni gioco</returns>
         [HttpPost("ratings-with-count")]
         public async Task<ActionResult<Dictionary<string, CommunityRatingDto>>> GetCommunityRatingsWithCount([FromBody] List<string> gameTitles)
         {
@@ -109,14 +86,7 @@ namespace VideoGamesBacklogBackend.Controllers
                 _logger.LogError(ex, "Errore nel recupero dei rating community con conteggio per {GameTitles}", string.Join(", ", gameTitles));
                 return StatusCode(500, "Errore interno del server");
             }
-        }        /// <summary>
-        /// Ottiene le recensioni per un gioco con paginazione
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco</param>
-        /// <param name="page">Numero di pagina (default: 1)</param>
-        /// <param name="pageSize">Dimensione della pagina (default: 10)</param>
-        /// <returns>Recensioni paginate</returns>
-        [HttpGet("reviews/{gameTitle}")]
+        }        [HttpGet("reviews/{gameTitle}")]
         public async Task<ActionResult<PaginatedReviewsDto>> GetReviews(
             string gameTitle,
             [FromQuery] int page = 1,
@@ -135,11 +105,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene le statistiche dettagliate delle recensioni per un gioco
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco</param>
-        /// <returns>Statistiche dettagliate delle recensioni</returns>
         [HttpGet("review-stats/{gameTitle}")]
         public async Task<ActionResult<ReviewStatsDto>> GetReviewStats(string gameTitle)
         {
@@ -153,13 +118,7 @@ namespace VideoGamesBacklogBackend.Controllers
                 _logger.LogError(ex, "Errore nel recupero delle statistiche recensioni per {GameTitle}", gameTitle);
                 return StatusCode(500, "Errore interno del server");
             }
-        }        /// <summary>
-        /// Ottiene le top recensioni della community (con più rating positivi)
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco</param>
-        /// <param name="limit">Numero massimo di recensioni da restituire (default: 5)</param>
-        /// <returns>Lista delle top recensioni</returns>
-        [HttpGet("top-reviews/{gameTitle}")]
+        }        [HttpGet("top-reviews/{gameTitle}")]
         public async Task<ActionResult<List<CommunityReviewDto>>> GetTopReviews(
             string gameTitle, 
             [FromQuery] int limit = 5)
@@ -177,11 +136,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene i commenti per una specifica recensione
-        /// </summary>
-        /// <param name="reviewGameId">ID del gioco della recensione</param>
-        /// <returns>Lista dei commenti alla recensione</returns>
         [HttpGet("review-comments/{reviewGameId}")]
         public async Task<ActionResult<List<ReviewCommentDto>>> GetReviewComments(int reviewGameId)
         {
@@ -195,12 +149,7 @@ namespace VideoGamesBacklogBackend.Controllers
                 _logger.LogError(ex, "Errore nel recupero dei commenti per la recensione {ReviewGameId}", reviewGameId);
                 return StatusCode(500, "Errore interno del server");
             }
-        }        /// <summary>
-        /// Aggiunge un commento a una recensione
-        /// </summary>
-        /// <param name="createCommentDto">Dati del commento da creare</param>
-        /// <returns>Il commento creato</returns>
-        [HttpPost("review-comments")]
+        }        [HttpPost("review-comments")]
         public async Task<ActionResult<ReviewCommentDto>> AddReviewComment([FromBody] CreateReviewCommentDto createCommentDto)
         {
             try
@@ -225,12 +174,7 @@ namespace VideoGamesBacklogBackend.Controllers
                 _logger.LogError(ex, "Errore nell'aggiunta del commento alla recensione {ReviewGameId}", createCommentDto.ReviewGameId);
                 return StatusCode(500, "Errore interno del server");
             }
-        }        /// <summary>
-        /// Elimina un commento a una recensione
-        /// </summary>
-        /// <param name="commentId">ID del commento da eliminare</param>
-        /// <returns>Conferma dell'eliminazione</returns>
-        [HttpDelete("review-comments/{commentId}")]
+        }        [HttpDelete("review-comments/{commentId}")]
         public async Task<ActionResult> DeleteReviewComment(int commentId)
         {
             try
@@ -256,11 +200,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene i commenti per una specifica attività
-        /// </summary>
-        /// <param name="activityId">ID dell'attività</param>
-        /// <returns>Lista dei commenti all'attività</returns>
         [HttpGet("activity-comments/{activityId}")]
         public async Task<ActionResult<List<ActivityCommentDto>>> GetActivityComments(int activityId)
         {
@@ -276,11 +215,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Aggiunge un commento a una attività
-        /// </summary>
-        /// <param name="createCommentDto">Dati del commento da creare</param>
-        /// <returns>Il commento creato</returns>
         [HttpPost("activity-comments")]
         public async Task<ActionResult<ActivityCommentDto>> AddActivityComment([FromBody] CreateActivityCommentDto createCommentDto)
         {
@@ -308,11 +242,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Elimina un commento a una attività
-        /// </summary>
-        /// <param name="commentId">ID del commento da eliminare</param>
-        /// <returns>Conferma dell'eliminazione</returns>
         [HttpDelete("activity-comments/{commentId}")]
         public async Task<ActionResult> DeleteActivityComment(int commentId)
         {

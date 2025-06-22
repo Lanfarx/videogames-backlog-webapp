@@ -19,11 +19,16 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   const hasActivities = activities && activities.length > 0;
   
   // Verifica se il gioco è da iniziare
-  const isNotStarted = game.Status === "NotStarted";
+  const isNotStarted = game?.Status === "NotStarted";
   
-  // Prepara i dati ottimizzati per il grafico, raggruppando in circa 10 punti
+  // Funzione helper per estrarre ore dalla stringa
+  const extractHours = (additionalInfo: string): number => {
+    if (!additionalInfo) return 0;
+    const hoursMatch = additionalInfo.match(/(\d+(?:\.\d+)?)\s*ore?/);
+    return hoursMatch ? parseFloat(hoursMatch[1]) : 0;
+  };  // Prepara i dati ottimizzati per il grafico, raggruppando in circa 10 punti
   const getOptimizedGraphData = (activities: Activity[]) => {
-    const PlayedActivities = activities
+    const playedActivities = activities
       .filter(activity => 
         activity.timestamp && 
         activity.type === 'Played' && 
@@ -31,56 +36,88 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       )
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
-    if (PlayedActivities.length === 0) return [];
+    // Calcola le ore iniziali (ore totali meno la somma delle attività)
+    const totalActivityHours = playedActivities.reduce((sum, activity) => 
+      sum + extractHours(activity.additionalInfo || ''), 0
+    );
+    const initialHours = Math.max(0, (game?.HoursPlayed || 0) - totalActivityHours);
     
-    if (PlayedActivities.length <= 10) {
-      let cumulativeHours = 0;
-      return PlayedActivities.map(activity => {
-        let hoursToAdd = 0;
-        if (activity.additionalInfo) {
-          const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
-          if (hoursMatch) {
-            hoursToAdd = parseInt(hoursMatch[1], 10);
-          }
-        }
+    if (playedActivities.length === 0) {
+      // Se non ci sono attività ma il gioco ha ore giocate, significa che sono state inserite manualmente
+      if (game && game.HoursPlayed > 0) {
+        const gameAddedDate = game.PurchaseDate ? new Date(game.PurchaseDate) : new Date();
+        return [{
+          date: gameAddedDate,
+          hours: game.HoursPlayed,
+          type: 'Played' as const,
+          additionalInfo: `${game.HoursPlayed} ore (inserite manualmente)`
+        }];
+      }
+      return [];
+    }
+    
+    if (playedActivities.length <= 10) {
+      let cumulativeHours = initialHours; // Partiamo dalle ore iniziali
+      const result = [];
+      
+      // Se ci sono ore iniziali, aggiungiamo un punto di partenza
+      if (initialHours > 0) {
+        const startDate = game?.PurchaseDate ? new Date(game.PurchaseDate) : 
+                         new Date(Math.min(...playedActivities.map(a => new Date(a.timestamp).getTime())));
+        result.push({
+          date: startDate,
+          hours: initialHours,
+          type: 'Played' as const,
+          additionalInfo: `${initialHours} ore iniziali`
+        });
+      }
+      
+      // Aggiungiamo le attività successive
+      playedActivities.forEach(activity => {
+        const hoursToAdd = extractHours(activity.additionalInfo || '');
         cumulativeHours += hoursToAdd;
         
-        return {
+        result.push({
           date: new Date(activity.timestamp),
           hours: cumulativeHours,
           type: activity.type,
-          AdditionalInfo: activity.additionalInfo
-        };
+          additionalInfo: activity.additionalInfo
+        });
       });
-    }
-    
-    const firstDate = new Date(PlayedActivities[0].timestamp);
-    const lastDate = new Date(PlayedActivities[PlayedActivities.length - 1].timestamp);
+      
+      return result;
+    }    
+    // Caso con più di 10 attività - raggruppamento in chunks
+    const firstDate = new Date(playedActivities[0].timestamp);
+    const lastDate = new Date(playedActivities[playedActivities.length - 1].timestamp);
     const totalTimeSpan = lastDate.getTime() - firstDate.getTime();
     const timeChunkSize = totalTimeSpan / 9;
     
     const graphPoints = [];
     let currentChunkEnd = firstDate.getTime() + timeChunkSize;
     let currentChunkHours = 0;
-    let totalHours = 0;
+    let totalHours = initialHours; // Partiamo dalle ore iniziali
+    
+    // Punto di partenza con ore iniziali
+    const startDate = game?.PurchaseDate ? new Date(game.PurchaseDate) : firstDate;
+    if (initialHours > 0 && startDate < firstDate) {
+      graphPoints.push({
+        date: startDate,
+        hours: initialHours,
+        type: 'Played' as const,
+        additionalInfo: `${initialHours} ore iniziali`
+      });
+    }
     
     graphPoints.push({
       date: firstDate,
-      hours: 0,
-      type: 'Played',
-      AdditionalInfo: ''
+      hours: totalHours,
+      type: 'Played' as const,
+      additionalInfo: initialHours > 0 ? `${totalHours} ore totali` : ''
     });
-    
-    for (const activity of PlayedActivities) {
+      for (const activity of playedActivities) {
       const activityTime = new Date(activity.timestamp).getTime();
-      
-      let hours = 0;
-      if (activity.additionalInfo) {
-        const hoursMatch = activity.additionalInfo.match(/(\d+) ore/);
-        if (hoursMatch) {
-          hours = parseInt(hoursMatch[1], 10);
-        }
-      }
+      const hours = extractHours(activity.additionalInfo || '');
       
       if (activityTime > currentChunkEnd) {
         totalHours += currentChunkHours;
@@ -89,7 +126,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
           date: new Date(currentChunkEnd),
           hours: totalHours,
           type: 'Played',
-          AdditionalInfo: `${totalHours} ore totali`
+          additionalInfo: `${totalHours} ore totali`
         });
         
         currentChunkEnd += timeChunkSize;
@@ -100,7 +137,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
             date: new Date(currentChunkEnd),
             hours: totalHours,
             type: 'Played',
-            AdditionalInfo: `${totalHours} ore totali`
+            additionalInfo: `${totalHours} ore totali`
           });
           currentChunkEnd += timeChunkSize;
         }
@@ -114,42 +151,38 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       date: lastDate,
       hours: totalHours,
       type: 'Played',
-      AdditionalInfo: `${totalHours} ore totali`
+      additionalInfo: `${totalHours} ore totali`
     });
     
     return graphPoints;
   };
-  
-  const getKeyEvents = (activities: Activity[]) => {
+    const getKeyEvents = (activities: Activity[]) => {
     const sortedActivities = [...activities].sort((a, b) => 
       new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
-    const AddedEvent = sortedActivities.find(a => a.type === 'Added');
-    const CompletedEvent = sortedActivities.find(a => a.type === 'Completed');
-    const PlatinumEvent = sortedActivities.find(a => a.type === 'Platinum');
-    const AbandonedEvent = sortedActivities.find(a => a.type === 'Abandoned');
-    
-    const PlayedActivities2 = sortedActivities
+    const addedEvent = sortedActivities.find(a => a.type === 'Added');
+    const completedEvent = sortedActivities.find(a => a.type === 'Completed');
+    const platinumEvent = sortedActivities.find(a => a.type === 'Platinum');
+    const abandonedEvent = sortedActivities.find(a => a.type === 'Abandoned');
+      const playedActivities = sortedActivities
       .filter(a => a.type === 'Played' && a.additionalInfo?.includes('ore'))
       .sort((a, b) => {
-        const hoursA = a.additionalInfo?.match(/(\d+) ore/);
-        const hoursB = b.additionalInfo?.match(/(\d+) ore/);
-        const numA = hoursA ? parseInt(hoursA[1], 10) : 0;
-        const numB = hoursB ? parseInt(hoursB[1], 10) : 0;
+        const numA = extractHours(a.additionalInfo || '');
+        const numB = extractHours(b.additionalInfo || '');
         return numB - numA;
       });
     
     const keyEvents = [];
     
-    if (AddedEvent) keyEvents.push(AddedEvent);
-    if (CompletedEvent) keyEvents.push(CompletedEvent);
-    if (PlatinumEvent) keyEvents.push(PlatinumEvent);
-    if (AbandonedEvent) keyEvents.push(AbandonedEvent);
+    if (addedEvent) keyEvents.push(addedEvent);
+    if (completedEvent) keyEvents.push(completedEvent);
+    if (platinumEvent) keyEvents.push(platinumEvent);
+    if (abandonedEvent) keyEvents.push(abandonedEvent);
     
     const remainingSlots = 6 - keyEvents.length;
-    if (remainingSlots > 0 && PlayedActivities2.length > 0) {
-      keyEvents.push(...PlayedActivities2.slice(0, remainingSlots));
+    if (remainingSlots > 0 && playedActivities.length > 0) {
+      keyEvents.push(...playedActivities.slice(0, remainingSlots));
     }
     
     return keyEvents.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -159,14 +192,12 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     const style = getComputedStyle(document.documentElement);
     const accentPrimary = style.getPropertyValue('--accent-primary').trim();
     return `rgb(${accentPrimary})`;
-  };
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
+  };  useEffect(() => {
+    if (!canvasRef.current || !game) return;
     
     const isEmptyGraph = isNotStarted || !hasActivities;
     
-    const GameplayActivities = activities.filter(activity => 
+    const gameplayActivities = activities.filter(activity => 
       activity.timestamp && 
       activity.type === 'Played' && 
       activity.additionalInfo?.includes('ore')
@@ -199,7 +230,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       maxHoursFromData = Math.max(...graphData.map(point => point.hours));
     }
     
-    const currentHours = game.HoursPlayed;
+    // Usa il valore più alto tra le ore del gioco e quelle dalle attività
+    const currentHours = game.HoursPlayed || 0;
     const maxHours = Math.max(currentHours, maxHoursFromData, 10);
 
     const getHourScale = (max: number) => {
@@ -248,13 +280,12 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     ctx.moveTo(margin.left, margin.top + height);
     ctx.lineTo(margin.left + width, margin.top + height);
     ctx.stroke();
-    
-    if (!isEmptyGraph && graphData.length > 0) {
+      if (!isEmptyGraph && graphData.length > 0) {
       ctx.strokeStyle = getAccentPrimaryColor();
       ctx.lineWidth = 1.5;
       ctx.beginPath();
 
-      const xScale = width / (graphData.length - 1);
+      const xScale = width / Math.max(graphData.length - 1, 1);
 
       graphData.forEach((point, i) => {
         const x = margin.left + i * xScale;
@@ -268,30 +299,34 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       });
       ctx.stroke();
 
-      graphData.forEach((point, i) => {
-        const x = margin.left + i * xScale;
-        const y = height + margin.top + 15;
-        
-        const previousPoint = i > 0 ? graphData[i-1] : undefined;
-        const previousDate = previousPoint ? previousPoint.date : undefined;
-        const isLastPoint = i === graphData.length - 1;
-        
-        ctx.fillStyle = "rgb(var(--text-secondary))";
-        ctx.font = "11px var(--font-secondary)";
-        ctx.textAlign = "center";
-        
-        const formattedDate = formatShortDate(point.date, previousDate, isLastPoint);
-        
-        if (formattedDate.includes('\n')) {
-          const [datePart, yearPart] = formattedDate.split('\n');
+      // Etichette delle date solo se ci sono dati
+      if (graphData.length > 1) {
+        graphData.forEach((point, i) => {
+          const x = margin.left + i * xScale;
+          const y = height + margin.top + 15;
           
-          ctx.fillText(datePart, x, y);
-          ctx.fillText(yearPart, x, y + 15);
-        } else {
-          ctx.fillText(formattedDate, x, y);
-        }
-      });
+          const previousPoint = i > 0 ? graphData[i-1] : undefined;
+          const previousDate = previousPoint ? previousPoint.date : undefined;
+          const isLastPoint = i === graphData.length - 1;
+          
+          ctx.fillStyle = "rgb(var(--text-secondary))";
+          ctx.font = "11px var(--font-secondary)";
+          ctx.textAlign = "center";
+          
+          const formattedDate = formatShortDate(point.date, previousDate, isLastPoint);
+          
+          if (formattedDate.includes('\n')) {
+            const [datePart, yearPart] = formattedDate.split('\n');
+            
+            ctx.fillText(datePart, x, y);
+            ctx.fillText(yearPart, x, y + 15);
+          } else {
+            ctx.fillText(formattedDate, x, y);
+          }
+        });
+      }
 
+      // Punti del grafico
       graphData.forEach((point, i) => {
         const x = margin.left + i * xScale;
         const y = margin.top + height - (point.hours / actualMaxHours * height);
@@ -301,11 +336,36 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         ctx.fillStyle = getAccentPrimaryColor();
         ctx.fill();
       });
+    } else if (isEmptyGraph) {
+      // Mostra un messaggio per i giochi non iniziati
+      ctx.fillStyle = "rgb(var(--text-secondary))";
+      ctx.font = "14px var(--font-secondary)";
+      ctx.textAlign = "center";
+      
+      const centerX = margin.left + width / 2;
+      const centerY = margin.top + height / 2;
+      
+      if (isNotStarted) {
+        ctx.fillText("Gioco non ancora iniziato", centerX, centerY);
+      } else {
+        ctx.fillText("Nessun dato di gioco disponibile", centerX, centerY);
+      }
     }
-  }, [hasActivities, activities, game.HoursPlayed, game.PurchaseDate, isNotStarted]);
-  
+  }, [hasActivities, activities, game, isNotStarted]);
   const keyEvents = hasActivities ? getKeyEvents(activities) : [];
+  
+  // Validazione dei dati di input - gestita nel render
+  if (!game) {
     return (
+      <div className="bg-primary-bg border border-border-color rounded-xl p-6">
+        <p className="font-secondary text-sm text-text-secondary">
+          Errore: Dati del gioco non disponibili
+        </p>
+      </div>
+    );
+  }
+  
+  return (
     <div className="bg-primary-bg border border-border-color rounded-xl p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="font-primary font-semibold text-xl text-text-primary">
@@ -326,8 +386,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         <div className="h-64 relative mb-8">
           <canvas ref={canvasRef} className="w-full h-full"></canvas>
         </div>
-        
-        {keyEvents.length > 0 && (
+          {keyEvents.length > 0 && (
           <div>
             <h3 className="font-primary font-medium text-base text-text-primary mb-3">
               Eventi chiave
@@ -339,7 +398,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
                 const isLastEvent = i === keyEvents.length - 1;
                 return (
                   <ActivityTimelineItem 
-                    key={i}
+                    key={`${activity.id}-${i}`}
                     activity={activity}
                     previousActivity={prevActivity}
                     isLastActivity={isLastEvent}
@@ -349,14 +408,36 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
             </div>
           </div>
         )}
-        
-        {!hasActivities && !isNotStarted && (
-          <p className="font-secondary text-sm text-text-secondary">
-            Nessuna attività registrata per questo gioco.
-          </p>
+          {!hasActivities && isNotStarted && (
+          <div className="text-center py-8">
+            <p className="font-secondary text-sm text-text-secondary mb-2">
+              Questo gioco non è ancora stato iniziato
+            </p>
+            <p className="font-secondary text-xs text-text-secondary">
+              Le attività di gioco appariranno qui una volta che inizierai a giocare
+            </p>
+          </div>
         )}
-      </div>
-        {showHistoryPopover && (
+        
+        {!hasActivities && !isNotStarted && game && game.HoursPlayed > 0 && (
+          <div className="text-center py-8">
+            <p className="font-secondary text-sm text-text-secondary mb-2">
+              Ore di gioco registrate: {game.HoursPlayed}h
+            </p>
+            <p className="font-secondary text-xs text-text-secondary">
+              Le nuove attività di gioco appariranno qui quando giocherai di più
+            </p>
+          </div>
+        )}
+        
+        {!hasActivities && !isNotStarted && (!game || game.HoursPlayed === 0) && (
+          <div className="text-center py-8">
+            <p className="font-secondary text-sm text-text-secondary">
+              Nessuna attività registrata per questo gioco.
+            </p>
+          </div>
+        )}
+      </div>        {showHistoryPopover && game && (
         <ActivityHistoryPopover 
           gameId={game.id}
           onClose={() => setShowHistoryPopover(false)}

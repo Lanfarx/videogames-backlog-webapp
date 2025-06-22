@@ -79,9 +79,6 @@ namespace VideoGamesBacklogBackend.Dto
         public int ActivityId { get; set; }
     }
 
-    /// <summary>
-    /// DTO per riassumere le reazioni di un'attività (emoji + conteggio)
-    /// </summary>
     public class ActivityReactionSummaryDto
     {
         public string Emoji { get; set; } = string.Empty;
@@ -89,9 +86,6 @@ namespace VideoGamesBacklogBackend.Dto
         public List<string> UserNames { get; set; } = new List<string>(); // Per mostrare chi ha reagito
     }
 
-    /// <summary>
-    /// DTO per aggiungere una reazione a un'attività
-    /// </summary>
     public class AddActivityReactionDto
     {
         [Required]
@@ -100,10 +94,8 @@ namespace VideoGamesBacklogBackend.Dto
         [Required]
         [MaxLength(10)]
         public string Emoji { get; set; } = string.Empty;
-    }    /// <summary>
-    /// DTO per rimuovere una reazione da un'attività
-    /// </summary>
-    public class RemoveActivityReactionDto
+    }
+        public class RemoveActivityReactionDto
     {
         [Required]
         public int ActivityId { get; set; }
@@ -113,9 +105,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string Emoji { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// DTO per un commento a una attività
-    /// </summary>
+
     public class ActivityCommentDto
     {
         public int Id { get; set; }
@@ -127,9 +117,6 @@ namespace VideoGamesBacklogBackend.Dto
         public int ActivityId { get; set; }
     }
 
-    /// <summary>
-    /// DTO per creare un nuovo commento a una attività
-    /// </summary>
     public class CreateActivityCommentDto
     {
         [Required]

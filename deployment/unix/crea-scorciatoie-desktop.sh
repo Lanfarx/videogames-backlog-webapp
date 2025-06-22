@@ -1,127 +1,110 @@
 #!/bin/bash
+# Script per creare scorciatoie desktop per GameBacklog - Mac/Linux
 
 echo "=============================================="
-echo "  CREAZIONE SCORCIATOIE DESKTOP"
+echo "  GAMEBACKLOG - CREAZIONE SCORCIATOIE"
 echo "=============================================="
 echo
 
-# Ottieni il percorso della cartella deployment (parent della cartella unix)
-DEPLOYMENT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DESKTOP_PATH="$HOME/Desktop"
+# Ottieni il percorso assoluto degli script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Verifica che la cartella desktop esista
-if [ ! -d "$DESKTOP_PATH" ]; then
-    echo "Errore: Cartella Desktop non trovata in $DESKTOP_PATH"
-    read -p "Premi Invio per continuare..."
+# Determina la directory del desktop in base al sistema operativo
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    DESKTOP_DIR="$HOME/Desktop"
+    SHORTCUT_EXT=""
+    echo "[INFO] Sistema rilevato: macOS"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    DESKTOP_DIR="$HOME/Desktop"
+    SHORTCUT_EXT=".desktop"
+    echo "[INFO] Sistema rilevato: Linux"
+else
+    echo "[ERROR] Sistema operativo non supportato"
     exit 1
 fi
 
-echo "Desktop trovato: $DESKTOP_PATH"
-echo "Deployment path: $DEPLOYMENT_PATH"
+# Controlla se la directory Desktop esiste
+if [ ! -d "$DESKTOP_DIR" ]; then
+    echo "[ERROR] Directory Desktop non trovata: $DESKTOP_DIR"
+    exit 1
+fi
 
-# Rileva il sistema operativo
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS - Crea file .command
-    echo
-    echo "Sistema operativo rilevato: macOS"
-    echo "Creando file .command..."
+echo "[INFO] Creazione scorciatoie in: $DESKTOP_DIR"
+echo
+
+# Funzione per creare scorciatoia macOS
+create_macos_shortcut() {
+    local name="$1"
+    local script_path="$2"
+    local shortcut_path="$DESKTOP_DIR/$name"
     
-    # Crea scorciatoia per avviare l'app
-    echo "Creando scorciatoia 'GameBacklog - Avvia'..."
-    cat > "$DESKTOP_PATH/GameBacklog - Avvia.command" << EOF
+    cat > "$shortcut_path" << EOF
 #!/bin/bash
-cd "$DEPLOYMENT_PATH/unix"
-./start.sh
+cd "$SCRIPT_DIR"
+./$script_path
 EOF
-
-    # Crea scorciatoia per fermare l'app
-    echo "Creando scorciatoia 'GameBacklog - Ferma'..."
-    cat > "$DESKTOP_PATH/GameBacklog - Ferma.command" << EOF
-#!/bin/bash
-cd "$DEPLOYMENT_PATH/unix"
-./stop.sh
-EOF
-
-    # Rendi eseguibili i file
-    chmod +x "$DESKTOP_PATH/GameBacklog - Avvia.command"
-    chmod +x "$DESKTOP_PATH/GameBacklog - Ferma.command"
-
-    echo "File .command creati e resi eseguibili"
-
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux - Crea file .desktop
-    echo
-    echo "Sistema operativo rilevato: Linux"
-    echo "Creando file .desktop..."
     
-    # Crea file .desktop per avviare l'app
-    echo "Creando scorciatoia 'GameBacklog - Avvia'..."
-    cat > "$DESKTOP_PATH/gamebacklog-avvia.desktop" << EOF
+    chmod +x "$shortcut_path"
+    echo "[CREATE] $name"
+}
+
+# Funzione per creare scorciatoia Linux (.desktop)
+create_linux_shortcut() {
+    local name="$1"
+    local script_path="$2"
+    local description="$3"
+    local shortcut_path="$DESKTOP_DIR/$name$SHORTCUT_EXT"
+    
+    cat > "$shortcut_path" << EOF
 [Desktop Entry]
-Version=1.0
-Type=Application
-Name=GameBacklog - Avvia
-Comment=Avvia l'applicazione GameBacklog
-Exec=gnome-terminal -- bash -c "cd '$DEPLOYMENT_PATH/unix' && ./start.sh"
+Name=$name
+Comment=$description
+Exec=bash -c "cd '$SCRIPT_DIR' && './$script_path'; read -p 'Premi Invio per chiudere...'"
 Icon=applications-games
-Terminal=false
+Terminal=true
+Type=Application
 Categories=Game;
 EOF
+    
+    chmod +x "$shortcut_path"
+    echo "[CREATE] $name$SHORTCUT_EXT"
+}
 
-    # Crea file .desktop per fermare l'app
-    echo "Creando scorciatoia 'GameBacklog - Ferma'..."
-    cat > "$DESKTOP_PATH/gamebacklog-ferma.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=GameBacklog - Ferma
-Comment=Ferma l'applicazione GameBacklog
-Exec=gnome-terminal -- bash -c "cd '$DEPLOYMENT_PATH/unix' && ./stop.sh"
-Icon=process-stop
-Terminal=false
-Categories=System;
-EOF
-
-    # Rendi eseguibili i file .desktop
-    chmod +x "$DESKTOP_PATH/gamebacklog-avvia.desktop"
-    chmod +x "$DESKTOP_PATH/gamebacklog-ferma.desktop"
-
-    # Rendi i file .desktop trusted (per alcune distribuzioni)
-    if command -v gio &> /dev/null; then
-        gio set "$DESKTOP_PATH/gamebacklog-avvia.desktop" metadata::trusted true 2>/dev/null || true
-        gio set "$DESKTOP_PATH/gamebacklog-ferma.desktop" metadata::trusted true 2>/dev/null || true
-    fi
-
-    echo "File .desktop creati e resi eseguibili"
-
-else
-    echo "Sistema operativo non supportato: $OSTYPE"
-    echo "Questo script supporta solo macOS e Linux"
-    read -p "Premi Invio per continuare..."
-    exit 1
+# Crea le scorciatoie in base al sistema operativo
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS - crea script eseguibili
+    create_macos_shortcut "GameBacklog - Avvia" "start.sh"
+    create_macos_shortcut "GameBacklog - Ferma" "stop.sh"
+    
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux - crea file .desktop
+    create_linux_shortcut "GameBacklog - Avvia" "start.sh" "Avvia l'applicazione GameBacklog"
+    create_linux_shortcut "GameBacklog - Ferma" "stop.sh" "Ferma l'applicazione GameBacklog"
 fi
 
-echo
+echo ""
 echo "=============================================="
 echo "  SCORCIATOIE CREATE CON SUCCESSO!"
 echo "=============================================="
-echo
-echo "Le seguenti scorciatoie sono state create sul desktop:"
-echo "  * GameBacklog - Avvia"
-echo "  * GameBacklog - Ferma"
-echo
-echo "ISTRUZIONI:"
-echo "1. Fai doppio click su 'GameBacklog - Avvia' per avviare l'app"
-echo "2. Attendi che si apra il browser automaticamente"
-echo "3. Per fermare l'app, fai doppio click su 'GameBacklog - Ferma'"
-echo
-
+echo ""
+echo "Le seguenti scorciatoie sono state create sul Desktop:"
+echo ""
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "NOTA macOS: Al primo utilizzo, macOS potrebbe chiedere conferma per eseguire i file."
+    echo "- GameBacklog - Avvia (avvia l'applicazione)"
+    echo "- GameBacklog - Ferma (ferma l'applicazione)"
+    echo ""
+    echo "Su macOS, fai doppio clic per eseguire."
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "NOTA Linux: Su alcune distribuzioni potrebbe essere necessario confermare"
-    echo "            l'esecuzione dei file .desktop al primo utilizzo."
+    echo "- GameBacklog - Avvia.desktop (avvia l'applicazione)"
+    echo "- GameBacklog - Ferma.desktop (ferma l'applicazione)"
+    echo ""
+    echo "Su Linux, fai doppio clic e seleziona 'Esegui' se richiesto."
 fi
 
-echo
-read -p "Premi Invio per continuare..."
+echo ""
+echo "NOTA: Le scorciatoie funzionano solo se Docker è installato"
+echo "      e in esecuzione sul sistema."
+echo ""
+read -p "Premi Invio per uscire..."

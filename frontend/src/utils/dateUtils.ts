@@ -9,16 +9,6 @@ interface TimeInterval {
 }
 
 /**
- * Opzioni per la formattazione delle date
- */
-interface DateFormatOptions {
-  format?: string;
-  relative?: boolean;
-  showYear?: boolean;
-  locale?: string;
-}
-
-/**
  * Formatta la data in formato compatto con l'anno sotto quando necessario
  */
 export function formatShortDate(date: Date | string, previousDate?: Date | string, isLastPoint: boolean = false): string {
@@ -39,65 +29,6 @@ export function formatShortDate(date: Date | string, previousDate?: Date | strin
   }
   
   return `${day} ${month}`;
-}
-
-/**
- * Formatta la data in base alle opzioni specificate
- */
-export function formatDateWithOptions(date: Date | string, options: DateFormatOptions = {}): string {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const { 
-    format = 'default', 
-    relative = false, 
-    showYear = true,
-    locale = 'it-IT' 
-  } = options;
-  
-  if (relative) {
-    return formatRelativeTime(dateObj);
-  }
-  
-  switch (format) {
-    case 'short':
-      return dateObj.toLocaleDateString(locale, { 
-        day: 'numeric', 
-        month: 'short',
-        year: showYear ? '2-digit' : undefined
-      });
-    case 'medium':
-      return dateObj.toLocaleDateString(locale, {
-        day: 'numeric',
-        month: 'short',
-        year: showYear ? 'numeric' : undefined
-      });
-    case 'long':
-      return dateObj.toLocaleDateString(locale, {
-        day: 'numeric',
-        month: 'long',
-        year: showYear ? 'numeric' : undefined
-      });
-    case 'full':
-      return dateObj.toLocaleDateString(locale, {
-        day: 'numeric',
-        month: 'long',
-        year: showYear ? 'numeric' : undefined,
-        weekday: 'long'
-      });
-    case 'time':
-      return dateObj.toLocaleTimeString(locale, {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    case 'datetime':
-      return `${dateObj.toLocaleDateString(locale)} ${dateObj.toLocaleTimeString(locale, {
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`;
-    default:
-      return dateObj.toLocaleDateString(locale);
-  }
 }
 
 /**

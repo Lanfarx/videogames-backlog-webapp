@@ -18,9 +18,6 @@ namespace VideoGamesBacklogBackend.Controllers
             _notificationService = notificationService;
         }
 
-        /// <summary>
-        /// Ottiene tutte le notifiche dell'utente corrente
-        /// </summary>
         [HttpGet]
         public async Task<ActionResult<List<NotificationDto>>> GetNotifications()
         {
@@ -36,9 +33,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene il conteggio delle notifiche non lette dell'utente corrente
-        /// </summary>
         [HttpGet("unread-count")]
         public async Task<ActionResult<int>> GetUnreadCount()
         {
@@ -54,23 +48,18 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Marca una notifica come letta
-        /// </summary>
         [HttpPut("{id}/mark-read")]
-        public async Task<ActionResult> MarkAsRead(int id)
+        public async Task<IActionResult> MarkAsRead(int id)
         {
             try
             {
                 var userId = GetCurrentUserId();
-                var result = await _notificationService.MarkAsReadAsync(id, userId);
-                
+                var result = await _notificationService.MarkAsReadAsync(userId, id);
                 if (!result)
                 {
-                    return NotFound(new { message = "Notifica non trovata o non autorizzato" });
+                    return NotFound(new { message = "Notifica non trovata" });
                 }
-
-                return Ok(new { message = "Notifica marcata come letta" });
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -78,41 +67,18 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Marca tutte le notifiche dell'utente come lette
-        /// </summary>
-        [HttpPut("mark-all-read")]
-        public async Task<ActionResult> MarkAllAsRead()
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                await _notificationService.MarkAllAsReadAsync(userId);
-                return Ok(new { message = "Tutte le notifiche sono state marcate come lette" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore durante l'aggiornamento delle notifiche", error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Elimina una notifica
-        /// </summary>
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteNotification(int id)
+        public async Task<IActionResult> DeleteNotification(int id)
         {
             try
             {
                 var userId = GetCurrentUserId();
-                var result = await _notificationService.DeleteNotificationAsync(id, userId);
-                
+                var result = await _notificationService.DeleteNotificationAsync(userId, id);
                 if (!result)
                 {
-                    return NotFound(new { message = "Notifica non trovata o non autorizzato" });
+                    return NotFound(new { message = "Notifica non trovata" });
                 }
-
-                return Ok(new { message = "Notifica eliminata con successo" });
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -120,35 +86,14 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Elimina tutte le notifiche lette dell'utente
-        /// </summary>
-        [HttpDelete("read")]
-        public async Task<ActionResult> DeleteReadNotifications()
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-                await _notificationService.DeleteReadNotificationsAsync(userId);
-                return Ok(new { message = "Notifiche lette eliminate con successo" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore durante l'eliminazione delle notifiche", error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Ottiene l'ID dell'utente corrente dal token JWT
-        /// </summary>
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
+            if (int.TryParse(userIdClaim, out int userId))
             {
-                throw new UnauthorizedAccessException("Token non valido");
+                return userId;
             }
-            return userId;
+            throw new UnauthorizedAccessException("User ID non valido");
         }
     }
 }

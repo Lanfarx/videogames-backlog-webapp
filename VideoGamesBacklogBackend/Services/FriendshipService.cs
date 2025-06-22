@@ -286,8 +286,7 @@ namespace VideoGamesBacklogBackend.Services
                         (f.SenderId == user.Id && f.ReceiverId == userId));                var profile = new PublicProfileDto
                 {
                     UserId = user.Id,
-                    UserName = user.UserName ?? "",
-                    FullName = user.FullName,
+                    UserName = user.UserName ?? "",                    FullName = user.FullName,
                     Avatar = user.Avatar,
                     Bio = user.Bio,
                     MemberSince = user.MemberSince,
@@ -334,8 +333,7 @@ namespace VideoGamesBacklogBackend.Services
                 UserId = user.Id,
                 UserName = user.UserName ?? "",
                 FullName = user.FullName,
-                Avatar = user.Avatar,
-                Bio = user.Bio,
+                Avatar = user.Avatar,                Bio = user.Bio,
                 MemberSince = user.MemberSince,
                 Tags = user.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries),
                 IsProfilePrivate = user.PrivacySettings.IsPrivate,

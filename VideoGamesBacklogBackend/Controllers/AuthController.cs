@@ -17,28 +17,19 @@ public class AuthController : ControllerBase
     }    [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        Console.WriteLine($"🔄 [Register] Starting registration for: {model.Email}");
-        
         try
         {
-            Console.WriteLine($"🔄 [Register] Calling AuthService.RegisterAsync...");
             var result = await _authService.RegisterAsync(model);
-            
-            Console.WriteLine($"🔄 [Register] AuthService returned. Succeeded: {result.Succeeded}");
             
             if (result.Succeeded) 
             {
-                Console.WriteLine($"✅ [Register] Registration successful for: {model.Email}");
                 return Ok();
             }
             
-            Console.WriteLine($"❌ [Register] Registration failed for: {model.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             return BadRequest(result.Errors);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ [Register] Exception occurred: {ex.Message}");
-            Console.WriteLine($"❌ [Register] Stack trace: {ex.StackTrace}");
             throw;
         }
     }

@@ -29,8 +29,8 @@ namespace VideoGamesBacklogBackend.Dto
         public string? Avatar { get; set; }
         public string? Bio { get; set; }
         public DateTime MemberSince { get; set; }
-        public bool IsOnline { get; set; } = false; // Per implementazioni future
-        public DateTime? LastSeen { get; set; } // Per implementazioni future
+        public bool IsOnline { get; set; } = false;
+        public DateTime? LastSeen { get; set; }
     }
     
     public class PublicProfileDto

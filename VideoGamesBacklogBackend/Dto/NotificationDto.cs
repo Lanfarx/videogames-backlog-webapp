@@ -10,7 +10,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string Message { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsRead { get; set; }
-        public object? Data { get; set; } // JSON parsed as object
+        public object? Data { get; set; }
     }
 
     public class CreateNotificationDto

@@ -65,7 +65,7 @@ const ConnectedAccountsSettings: React.FC = () => {
           <div className="border border-border-color rounded-lg overflow-hidden">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-3">
-                <div className="bg-Platform-steam p-1.5 rounded">
+                <div className="bg-platform-steam p-1.5 rounded">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"

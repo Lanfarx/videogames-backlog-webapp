@@ -1,68 +1,80 @@
 @echo off
-echo ========================================
-echo   AVVIO BACKLOG VIDEOLUDICO
-echo ========================================
-echo.
+echo ==========================================
+echo   AVVIO WEBAPP BACKLOG VIDEOLUDICO
+echo ==========================================
 
-REM Controlla che Docker sia in esecuzione
+cd /d "%~dp0"
+
+:: Controlli preliminari
 docker info >nul 2>&1
 if errorlevel 1 (
-    echo [ERROR] Docker non e' in esecuzione.
-    echo         Avvia Docker Desktop e riprova.
+    echo [ERRORE] Docker non e' in esecuzione.
+    echo          Avvia Docker Desktop e riprova.
     pause
     exit /b 1
 )
 
-REM Controlla che esista il file .env
 if not exist "..\\..\.env" (
-    echo [WARNING] File .env non trovato.
-    echo           Copia .env.example in .env e configuralo.
-    echo           Comando: copy "..\\..\.env.example" "..\\..\.env"
+    echo [ERRORE] File .env non trovato.
+    echo          Copia .env.example in .env e configuralo.
     pause
     exit /b 1
 )
 
-echo [INFO] Avvio container...
-REM Ottieni il percorso assoluto della root del progetto
-set "SCRIPT_DIR=%~dp0"
-set "ROOT_DIR=%SCRIPT_DIR%..\.."
-pushd "%ROOT_DIR%"
-set "ENV_FILE=%CD%\.env"
-popd
+:: Controlla se le immagini Docker esistono
+echo Controllo immagini Docker...
+docker image inspect videogames-backend-prod:latest >nul 2>&1
+set backend_exists=%errorlevel%
 
-REM Ferma eventuali container esistenti
+docker image inspect videogames-frontend-prod:latest >nul 2>&1
+set frontend_exists=%errorlevel%
+
+:: Vai alla root del progetto
 cd ..\..\
-docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml down --remove-orphans >nul 2>&1
 
-REM Avvia i nuovi container con le variabili d'ambiente
-docker-compose --env-file "%ENV_FILE%" -f deployment/docker/docker-compose.prod.yml up -d --build
-cd deployment\windows
+:: Se almeno una immagine non esiste, forza il build
+if %backend_exists% neq 0 (
+    echo [INFO] Backend non trovato, build necessario...
+    goto build
+)
+if %frontend_exists% neq 0 (
+    echo [INFO] Frontend non trovato, build necessario...
+    goto build
+)
 
+:: Se entrambe esistono, avvio rapido
+echo [INFO] Immagini trovate, avvio rapido...
+docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d
+goto success
+
+:build
+echo [INFO] Costruzione immagini in corso...
+docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d --build
+
+:success
 if errorlevel 1 (
-    echo [ERROR] Errore durante l'avvio.
-    echo         Controlla i log: docker-compose -f deployment/docker/docker-compose.prod.yml logs
+    echo [ERRORE] Errore durante l'avvio.
     pause
     exit /b 1
 )
 
 echo.
-echo ========================================
-echo   APPLICAZIONE AVVIATA CON SUCCESSO!
-echo ========================================
-echo.
-echo Frontend: http://localhost:3000
-echo Backend:  http://localhost:5000
-echo.
-echo Attendi 5 secondi per l'avvio completo...
-timeout /t 5 /nobreak >nul
+echo ==========================================
+echo   WEBAPP AVVIATA CORRETTAMENTE!
+echo ==========================================
+echo   Frontend: http://localhost:3000
+echo   Backend:  http://localhost:5000
+echo ==========================================
 
-echo Apertura del browser...
+:: Attendi che i servizi siano pronti
+echo Attesa avvio servizi...
+timeout /t 8 /nobreak >nul
+
+:: Apri il browser
+echo Apertura browser...
 start http://localhost:3000/landing
 
-echo.
-echo Comandi utili:
-echo   Logs:     docker-compose -f deployment/docker/docker-compose.prod.yml logs -f
-echo   Stop:     stop.bat
+cd deployment\windows
 echo.
 echo Premi un tasto per continuare...
 pause

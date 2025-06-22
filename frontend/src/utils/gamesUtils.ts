@@ -1,7 +1,7 @@
 import { Game, GameStatus, GamePlatform, GameReview } from '../types/game';
 import { GameSearchParams, SortOption, SortOrder, NumericRange, GameBasicInfo } from '../types/game';
 import { ChartItem } from '../types/stats';
-import { getStatusColor, getStatusLabel, getPlatformColor } from '../constants/gameConstants';
+import { getPlatformColor } from '../constants/gameConstants';
 
 // Tutte le use* relative ai giochi sono ora in store/hooks/gamesHooks.ts
 // Tutte le use* relative alle attività sono ora in store/hooks/activitiesHooks.ts
@@ -79,22 +79,6 @@ export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrde
       default: return 0;
     }
   });
-}
-
-export function generateStatusDistributionData(games: Game[]): ChartItem[] {
-  const StatusCounts: Record<GameStatus, number> = {
-    'NotStarted': 0,
-    'InProgress': 0,
-    'Completed': 0,
-    'Abandoned': 0,
-    'Platinum': 0
-  };
-  games.forEach(game => { StatusCounts[game.Status]++; });
-  return Object.entries(StatusCounts).map(([Status, count]) => ({
-    label: getStatusLabel(Status as GameStatus),
-    value: count,
-    color: getStatusColor(Status as GameStatus)
-  }));
 }
 
 export function generatePlatformDistributionData(games: Game[]): ChartItem[] {
