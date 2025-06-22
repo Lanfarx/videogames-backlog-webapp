@@ -44,14 +44,10 @@ namespace VideoGamesBacklogBackend.Controllers
             var game = await _gameService.GetGameByTitleAsync(User, decodedTitle);
             if (game == null) return NotFound();
             return Ok(game);
-        }        /// <summary>
-        /// Recupera informazioni pubbliche di base su un gioco per ID
-        /// Utilizzato per visualizzare dati sui giochi nelle attività di altri utenti
-        /// Rispetta le impostazioni di privacy per la visualizzazione delle recensioni
-        /// </summary>
+        }
         [HttpGet("public/{id}")]
         public async Task<IActionResult> GetPublicGameInfo(int id)
-        {            // Ottieni l'ID dell'utente corrente (se autenticato)
+        {
             int? currentUserId = null;
             if (User.Identity?.IsAuthenticated == true)
             {

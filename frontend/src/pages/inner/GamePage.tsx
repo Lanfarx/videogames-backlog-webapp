@@ -39,11 +39,8 @@ export default function GamePage() {
     sortOrder: navigationParams.sortOrder,
     search: navigationParams.search
   });
-  
-  // TEMPORANEAMENTE DISABILITATO - Previene spam di chiamate API per le attività
-  // const { activities, loading: activitiesLoading } = useAllActivitiesByGameId(game?.id ?? -1);
-  const activities: any[] = []; // Array vuoto temporaneo
-  const activitiesLoading = false;
+    // Riattivo le attività per il componente GameTimelineCard
+  const { activities, loading: activitiesLoading } = useAllActivitiesByGameId(game?.id ?? -1);
   // Nuova logica commenti asincrona con prevenzione flooding
   const { Comments, addComment, deleteComment, updateComment } = useGameComments(game?.id ?? -1);
   // Nuova logica CRUD giochi
@@ -157,23 +154,11 @@ export default function GamePage() {
             <div className="w-full lg:w-[60%] px-4 mb-8">              {/* Note e Recensione */}
               <NotesReviewCard 
                 game={game}            
-              />              {/* Timeline di Gioco - TEMPORANEAMENTE DISABILITATA */}
-              {/* 
+              />              {/* Timeline di Gioco */}
               <GameTimelineCard 
                 activities={activities} 
                 game={game} 
               />
-              */}             
-               <div className="bg-primary-bg border border-border-color rounded-xl p-6 mt-6">
-                <div className="text-center py-8">
-                  <h3 className="font-primary font-semibold text-xl text-text-primary mb-2">
-                    Timeline di Gioco
-                  </h3>
-                  <p className="text-text-secondary font-secondary">
-                    Funzionalità temporaneamente disabilitata per ottimizzazioni.
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Colonna destra (40%) */}

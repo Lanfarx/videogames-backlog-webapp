@@ -18,29 +18,27 @@ namespace VideoGamesBacklogBackend.Data
         public DbSet<ActivityReaction> ActivityReactions { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        // DbSet<User> non serve, gestito da IdentityDbContext<User,...>
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Per supportare array di stringhe (Genres) con Npgsql
             builder.Entity<Game>()
                 .Property(g => g.Genres)
-                .HasColumnType("text[]");
-
-            builder.Entity<User>(user =>
+                .HasColumnType("text[]");            builder.Entity<User>(user =>
             {
                 user.OwnsOne(u => u.PrivacySettings);
-                user.OwnsOne(u => u.AppPreferences);            });
-            // GameReview come owned type
-            builder.Entity<Game>().OwnsOne(g => g.Review);            // Configurazione relazione Activity -> Game
+                user.OwnsOne(u => u.AppPreferences);
+                // Tags rimane come stringa normale, non array
+            });
+
+            builder.Entity<Game>().OwnsOne(g => g.Review);
             builder.Entity<Activity>()
                 .HasOne(a => a.Game)
                 .WithMany(g => g.Activities)
                 .HasForeignKey(a => a.GameId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configurazione delle relazioni per Friendship
             builder.Entity<Friendship>()
                 .HasOne(f => f.Sender)
                 .WithMany()
@@ -56,7 +54,6 @@ namespace VideoGamesBacklogBackend.Data
                 .HasIndex(f => new { f.SenderId, f.ReceiverId })
                 .IsUnique();
 
-            // Configurazione delle relazioni per Notification
             builder.Entity<Notification>()
                 .HasOne(n => n.User)
                 .WithMany()
@@ -91,7 +88,6 @@ namespace VideoGamesBacklogBackend.Data
                 .HasIndex(ar => new { ar.ActivityId, ar.UserId, ar.Emoji })
                 .IsUnique();
 
-            // Configurazione delle relazioni per ActivityComment
             builder.Entity<ActivityComment>()
                 .HasOne(ac => ac.Activity)
                 .WithMany(a => a.ActivityComments)

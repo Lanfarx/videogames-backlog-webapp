@@ -34,9 +34,8 @@ namespace VideoGamesBacklogBackend.Controllers
                 return userId;
             }
             return null;
-        }/// <summary>
-        /// Ottiene le attività dell'utente con filtri e paginazione
-        /// </summary>
+        }
+        
         [HttpGet]
         public async Task<ActionResult<PaginatedActivitiesDto>> GetActivities(
             [FromQuery] ActivityFiltersDto filters,
@@ -47,7 +46,6 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 var userId = GetUserId();
                 
-                // Assicurati che filters non sia null
                 filters ??= new ActivityFiltersDto();
                 
                 var result = await _activityService.GetActivitiesAsync(userId, filters, page, pageSize);
@@ -58,9 +56,6 @@ namespace VideoGamesBacklogBackend.Controllers
                 return BadRequest(new { message = ex.Message });
             }        }
 
-        /// <summary>
-        /// Ottiene una specifica attività per ID
-        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<ActivityDto>> GetActivity(int id)
         {
@@ -80,9 +75,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Crea una nuova attività
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<ActivityDto>> CreateActivity([FromBody] CreateActivityDto createActivityDto)
         {
@@ -102,9 +94,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Aggiorna un'attività esistente
-        /// </summary>
         [HttpPut("{id}")]
         public async Task<ActionResult<ActivityDto>> UpdateActivity(int id, [FromBody] UpdateActivityDto updateActivityDto)
         {
@@ -124,9 +113,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Elimina un'attività
-        /// </summary>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteActivity(int id)
         {
@@ -146,9 +132,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene le attività recenti dell'utente
-        /// </summary>
         [HttpGet("recent")]
         public async Task<ActionResult<List<ActivityDto>>> GetRecentActivities([FromQuery] int count = 10)
         {
@@ -164,9 +147,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Ottiene le attività per un gioco specifico
-        /// </summary>
         [HttpGet("game/{gameId}")]
         public async Task<ActionResult<List<ActivityDto>>> GetActivitiesByGame(int gameId)
         {
@@ -180,9 +160,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }        /// <summary>
-        /// Ottiene statistiche delle attività per tipo
-        /// </summary>
+        }
         [HttpGet("stats")]
         public async Task<ActionResult<Dictionary<string, int>>> GetActivityStats([FromQuery] int? year = null)
         {
@@ -196,9 +174,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }        /// <summary>
-        /// Ottiene le attività pubbliche di un utente per il suo profilo pubblico
-        /// </summary>
+        }
         [HttpGet("public/{userIdOrUsername}")]
         public async Task<ActionResult<PaginatedActivitiesDto>> GetPublicActivities(
             string userIdOrUsername,
@@ -210,7 +186,6 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 var currentUserId = GetUserId();
                 
-                // Assicurati che filters non sia null
                 filters ??= new ActivityFiltersDto();
                 
                 var result = await _activityService.GetPublicActivitiesAsync(userIdOrUsername, currentUserId, filters, page, pageSize);

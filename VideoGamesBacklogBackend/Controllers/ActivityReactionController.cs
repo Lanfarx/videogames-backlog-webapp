@@ -18,9 +18,6 @@ namespace VideoGamesBacklogBackend.Controllers
             _activityService = activityService;
         }
 
-        /// <summary>
-        /// Aggiunge o rimuove una reazione emoji a un'attività (toggle)
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> ToggleReaction([FromBody] CreateActivityReactionDto createReactionDto)
         {
@@ -43,9 +40,7 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return StatusCode(500, new { message = "Errore nell'aggiunta della reazione", error = ex.Message });
             }
-        }        /// <summary>
-        /// Ottiene tutte le reazioni per una specifica attività
-        /// </summary>
+        }
         [HttpGet("activity/{activityId}")]
         public async Task<IActionResult> GetActivityReactions(int activityId)
         {
@@ -71,9 +66,6 @@ namespace VideoGamesBacklogBackend.Controllers
             }
         }
 
-        /// <summary>
-        /// Rimuove una reazione specifica
-        /// </summary>
         [HttpDelete("{reactionId}")]
         public async Task<IActionResult> RemoveReaction(int reactionId)
         {

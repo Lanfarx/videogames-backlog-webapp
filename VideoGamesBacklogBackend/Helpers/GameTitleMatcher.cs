@@ -4,17 +4,8 @@ using System.Linq;
 
 namespace VideoGamesBacklogBackend.Helpers
 {
-    /// <summary>
-    /// Utility class per la normalizzazione e il matching dei titoli dei giochi
-    /// Gestisce variazioni come numeri romani/arabi, edizioni speciali, etc.
-    /// </summary>
     public static class GameTitleMatcher
     {
-        /// <summary>
-        /// Normalizza un titolo convertendo numeri romani in arabi e viceversa
-        /// </summary>
-        /// <param name="title">Titolo da normalizzare</param>
-        /// <returns>Titolo normalizzato</returns>
         public static string NormalizeGameTitle(string title)
         {
             if (string.IsNullOrEmpty(title))
@@ -60,11 +51,6 @@ namespace VideoGamesBacklogBackend.Helpers
             return normalized;
         }
 
-        /// <summary>
-        /// Rimuove suffissi delle edizioni speciali dal titolo
-        /// </summary>
-        /// <param name="title">Titolo da cui rimuovere i suffissi</param>
-        /// <returns>Titolo senza suffissi di edizione</returns>
         public static string RemoveEditionSuffixes(string title)
         {
             if (string.IsNullOrEmpty(title))
@@ -100,14 +86,7 @@ namespace VideoGamesBacklogBackend.Helpers
 
             return result;
         }
-
-        /// <summary>
-        /// Verifica se due titoli di gioco si riferiscono allo stesso gioco
-        /// utilizzando varie strategie di matching
-        /// </summary>
-        /// <param name="gameTitle">Titolo del gioco nel database</param>
-        /// <param name="searchTitle">Titolo cercato</param>
-        /// <returns>True se i titoli si riferiscono allo stesso gioco</returns>
+        
         public static bool DoesGameTitleMatch(string gameTitle, string searchTitle)
         {
             if (string.IsNullOrEmpty(gameTitle) || string.IsNullOrEmpty(searchTitle))
@@ -120,21 +99,21 @@ namespace VideoGamesBacklogBackend.Helpers
             // 2. Normalized match (Roman/Arabic numerals)
             var normalizedGameTitle = NormalizeGameTitle(gameTitle);
             var normalizedSearchTitle = NormalizeGameTitle(searchTitle);
-            
+
             if (string.Equals(normalizedGameTitle, normalizedSearchTitle, StringComparison.OrdinalIgnoreCase))
                 return true;
 
             // 3. Match without edition suffixes
             var gameWithoutEdition = RemoveEditionSuffixes(normalizedGameTitle);
             var searchWithoutEdition = RemoveEditionSuffixes(normalizedSearchTitle);
-            
+
             if (string.Equals(gameWithoutEdition, searchWithoutEdition, StringComparison.OrdinalIgnoreCase))
                 return true;
 
             // 4. Try reverse normalization (Arabic to Roman)
             var gameRomanVersion = ConvertArabicToRoman(normalizedGameTitle);
             var searchRomanVersion = ConvertArabicToRoman(normalizedSearchTitle);
-            
+
             if (string.Equals(gameRomanVersion, normalizedSearchTitle, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(normalizedGameTitle, searchRomanVersion, StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -142,35 +121,16 @@ namespace VideoGamesBacklogBackend.Helpers
             return false;
         }
 
-        /// <summary>
-        /// Trova il gioco corrispondente in una lista utilizzando il matching normalizzato
-        /// </summary>
-        /// <typeparam name="T">Tipo dell'oggetto che contiene il titolo</typeparam>
-        /// <param name="games">Lista di giochi</param>
-        /// <param name="titleSelector">Funzione per estrarre il titolo dall'oggetto</param>
-        /// <param name="searchTitle">Titolo da cercare</param>
-        /// <returns>Il gioco corrispondente o null se non trovato</returns>
         public static T? FindMatchingGame<T>(IEnumerable<T> games, Func<T, string> titleSelector, string searchTitle) where T : class
         {
             return games.FirstOrDefault(game => DoesGameTitleMatch(titleSelector(game), searchTitle));
         }
 
-        /// <summary>
-        /// Filtra una lista di giochi che corrispondono al titolo cercato
-        /// </summary>
-        /// <typeparam name="T">Tipo dell'oggetto che contiene il titolo</typeparam>
-        /// <param name="games">Lista di giochi</param>
-        /// <param name="titleSelector">Funzione per estrarre il titolo dall'oggetto</param>
-        /// <param name="searchTitle">Titolo da cercare</param>
-        /// <returns>Lista di giochi che corrispondono</returns>
         public static IEnumerable<T> FilterMatchingGames<T>(IEnumerable<T> games, Func<T, string> titleSelector, string searchTitle)
         {
             return games.Where(game => DoesGameTitleMatch(titleSelector(game), searchTitle));
         }
-
-        /// <summary>
-        /// Converte numeri arabi in numeri romani nel titolo
-        /// </summary>
+        
         private static string ConvertArabicToRoman(string title)
         {
             if (string.IsNullOrEmpty(title))

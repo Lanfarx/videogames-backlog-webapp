@@ -160,11 +160,7 @@ namespace VideoGamesBacklogBackend.Services
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
             return await _dbContext.Games.Include(g => g.Comments).FirstOrDefaultAsync(g => g.Title == title && g.UserId == userId);
-        }        /// <summary>
-        /// Recupera informazioni pubbliche di base su un gioco per ID, senza filtro per utente
-        /// Utilizzato per visualizzare dati sui giochi nelle attività di altri utenti
-        /// Rispetta le impostazioni di privacy per la visualizzazione delle recensioni
-        /// </summary>        
+        }               
         public async Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null)
         {
             var game = await _dbContext.Games

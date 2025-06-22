@@ -1,8 +1,8 @@
 #!/bin/bash
-# Script di avvio rapido per Mac/Linux - Versione Migliorata
+# Script per rebuild completo dell'applicazione - Mac/Linux
 
 echo "=============================================="
-echo "  GAMEBACKLOG - AVVIO RAPIDO"
+echo "  GAMEBACKLOG - REBUILD COMPLETO"
 echo "=============================================="
 echo
 
@@ -27,30 +27,30 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-echo "[INFO] Controllo immagini Docker esistenti..."
+echo "[INFO] Rebuild completo con pulizia cache..."
+echo ""
 
 # Vai alla directory root
 cd "$ROOT_DIR"
 
-# Controlla se le immagini esistono già
-FRONTEND_IMAGE=$(docker images -q videogames-backlog-webapp_frontend 2>/dev/null)
-BACKEND_IMAGE=$(docker images -q videogames-backlog-webapp_backend 2>/dev/null)
+echo "[1/4] Fermata container esistenti..."
+docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml down --remove-orphans > /dev/null 2>&1
 
-if [ -n "$FRONTEND_IMAGE" ] && [ -n "$BACKEND_IMAGE" ]; then
-    echo "[INFO] Immagini Docker trovate. Avvio rapido..."
-    echo "[START] Avvio container esistenti..."
-    
-    # Avvio rapido senza build
-    docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml down --remove-orphans > /dev/null 2>&1
-    docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml up -d
+echo "[2/4] Rimozione immagini esistenti..."
+docker rmi videogames-backlog-webapp_frontend videogames-backlog-webapp_backend 2>/dev/null || true
+
+echo "[3/4] Pulizia cache Docker (opzionale)..."
+echo "Vuoi pulire anche la cache Docker? (y/N): "
+read -r response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    docker system prune -f
+    echo "Cache pulita!"
 else
-    echo "[INFO] Immagini Docker non trovate. Eseguo build completa..."
-    echo "[BUILD] Building e avvio container..."
-    
-    # Build completa
-    docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml down --remove-orphans > /dev/null 2>&1
-    docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml up -d --build
+    echo "Cache mantenuta."
 fi
+
+echo "[4/4] Build e avvio completo..."
+docker-compose --env-file "$ENV_FILE" -f deployment/docker/docker-compose.prod.yml up -d --build --force-recreate
 
 # Torna alla directory degli script
 cd "$SCRIPT_DIR"
@@ -58,16 +58,11 @@ cd "$SCRIPT_DIR"
 if [ $? -eq 0 ]; then
     echo ""
     echo "=============================================="
-    echo "  APPLICAZIONE AVVIATA CON SUCCESSO!"
+    echo "  REBUILD COMPLETATO CON SUCCESSO!"
     echo "=============================================="
     echo ""
     echo "Frontend: http://localhost:3000/landing"
     echo "Backend:  http://localhost:5000"
-    echo ""
-    echo "Comandi utili:"
-    echo "   Logs:     docker-compose -f deployment/docker/docker-compose.prod.yml logs -f"
-    echo "   Stop:     ./stop.sh"
-    echo "   Rebuild:  ./rebuild.sh"
     echo ""
     echo "[BROWSER] Apertura automatica del browser..."
     
@@ -85,13 +80,13 @@ if [ $? -eq 0 ]; then
 else
     echo ""
     echo "=============================================="
-    echo "  ERRORE DURANTE L'AVVIO"
+    echo "  ERRORE DURANTE IL REBUILD"
     echo "=============================================="
     echo ""
     echo "Suggerimenti:"
     echo "   - Verifica che Docker sia in esecuzione"
     echo "   - Controlla che il file .env sia configurato"
-    echo "   - Prova con ./rebuild.sh per una build completa"
+    echo "   - Controlla i log: docker-compose logs"
     echo ""
     read -p "Premi Invio per uscire..."
     exit 1

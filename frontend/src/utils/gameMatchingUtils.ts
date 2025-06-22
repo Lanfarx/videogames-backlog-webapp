@@ -118,15 +118,4 @@ export function findMatchingGame(existingGames: Game[], steamGameName: string): 
   return undefined;
 }
 
-// Funzione di debug per testare il matching
-export function debugGameMatching(title1: string, title2: string): void {
-  console.log('=== Debug Game Matching ===');
-  console.log('Title 1:', title1);
-  console.log('Title 2:', title2);
-  console.log('Normalized 1:', normalizeGameTitle(title1));
-  console.log('Normalized 2:', normalizeGameTitle(title2));
-  console.log('No Edition 1:', removeEditionSuffixes(normalizeGameTitle(title1)));
-  console.log('No Edition 2:', removeEditionSuffixes(normalizeGameTitle(title2)));
-  console.log('Should match:', removeEditionSuffixes(normalizeGameTitle(title1)) === removeEditionSuffixes(normalizeGameTitle(title2)));
-  console.log('===============================');
-}
+

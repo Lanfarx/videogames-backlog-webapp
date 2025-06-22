@@ -31,8 +31,7 @@ namespace VideoGamesBacklogBackend.Services
             _steamApiKey = _configuration["SteamApiKey"]
                           ?? Environment.GetEnvironmentVariable("STEAM_API_KEY")
                           ?? throw new ArgumentException("Steam API Key non configurata né in appsettings né in variabili ambiente");
-        }     
-           public async Task<List<SteamGame>> GetSteamGamesAsync(string steamId)
+        }        public async Task<List<SteamGame>> GetSteamGamesAsync(string steamId)
         {
             try
             {
@@ -48,13 +47,15 @@ namespace VideoGamesBacklogBackend.Services
 
                 return steamResponse?.response?.games ?? new List<SteamGame>();
             }
+            catch (HttpRequestException ex) when (ex.Message.Contains("429"))
+            {
+                throw new Exception("Limite di richieste Steam raggiunto. Riprova tra qualche minuto. Steam ha dei limiti rigidi sulle chiamate API per prevenire abusi.");
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Errore nel recupero dei giochi Steam: {ex.Message}");
             }
-        }
-
-        public async Task<List<RecentlyPlayedGame>> GetRecentlyPlayedGamesAsync(string steamId)
+        }        public async Task<List<RecentlyPlayedGame>> GetRecentlyPlayedGamesAsync(string steamId)
         {
             try
             {
@@ -68,28 +69,44 @@ namespace VideoGamesBacklogBackend.Services
 
                 return steamResponse?.response?.games ?? new List<RecentlyPlayedGame>();
             }
+            catch (HttpRequestException ex) when (ex.Message.Contains("429"))
+            {
+                throw new Exception("Limite di richieste Steam raggiunto. Riprova tra qualche minuto. Steam ha dei limiti rigidi sulle chiamate API per prevenire abusi.");
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Errore nel recupero dei giochi giocati di recente: {ex.Message}");
             }
-        }     
-        public async Task<SteamSyncResponse> SyncSteamGamesAsync(string steamId, string syncType, int userId)
+        }        public async Task<SteamSyncResponse> SyncSteamGamesAsync(string steamId, string syncType, int userId)
         {
-            var steamGames = await GetSteamGamesAsync(steamId);
+            try
+            {
+                var steamGames = await GetSteamGamesAsync(steamId);
 
-            if (syncType == "initial_load")
-            {
-                return await InitialLoadSteamGames(steamGames, userId);
+                if (syncType == "initial_load")
+                {
+                    return await InitialLoadSteamGames(steamGames, userId);
+                }
+                else if (syncType == "update_hours")
+                {
+                    return await UpdateGameHours(steamGames, userId, steamId);
+                }
+                else
+                {
+                    throw new ArgumentException("Tipo di sincronizzazione non valido");
+                }
             }
-            else if (syncType == "update_hours")
+            catch (Exception ex) when (ex.Message.Contains("Limite di richieste Steam raggiunto"))
             {
-                return await UpdateGameHours(steamGames, userId, steamId);
+                // Rilancia l'errore di rate limiting con un messaggio più chiaro
+                throw new Exception("Steam API: troppe richieste. Riprova tra 5-10 minuti. Questo limite protegge i server Steam da sovraccarico.");
             }
-            else
+            catch (Exception ex)
             {
-                throw new ArgumentException("Tipo di sincronizzazione non valido");
+                // Per altri errori, mantieni il messaggio originale
+                throw;
             }
-        }        private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId)
+        }private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId)
         {
             var existingGames = await _context.Games
                 .Where(g => g.UserId == userId)
@@ -141,15 +158,17 @@ namespace VideoGamesBacklogBackend.Services
                 Count = newGamesCount,
                 UpdatedGames = new List<UpdatedGameInfo>(), // Nessun gioco aggiornato nell'initial load
                 DebugInfo = string.Join("; ", debugInfo)
-            };
-        }private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId)
+            };        }private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId)
         {
             var existingGames = await _context.Games
                 .Where(g => g.UserId == userId && g.Platform == "Steam")
                 .ToListAsync();
 
+            // Aggiungi un delay per evitare rate limiting di Steam (max 100.000 richieste al giorno)
+            await Task.Delay(1500); // 1.5 secondi di delay
+
             // Ottieni anche i giochi giocati di recente per la validazione
-            var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId);            var updatedCount = 0;
+            var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId);var updatedCount = 0;
             var statusChangedCount = 0;
             var newGamesAdded = 0;
             var matchedGames = new List<string>();

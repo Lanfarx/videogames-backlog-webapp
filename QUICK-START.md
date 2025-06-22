@@ -9,45 +9,27 @@ Guida rapida per avviare l'applicazione sul tuo computer.
 - Installa e avvia Docker Desktop
 - Aspetta che sia completamente caricato (icona verde)
 
-## ⚙️ Configurazione
+## 🎯 Avvio Rapido (Raccomandato)
 
-### 1. Scarica il Progetto
-```bash
-git clone <url-repository>
-cd videogames-backlog-webapp
-```
+### Windows
+1. **Avvia**: Fai doppio clic su `deployment/windows/start.bat`
+2. **Scorciatoie**: Esegui `deployment/windows/crea-scorciatoie-desktop.bat` (opzionale)
 
-### 2. Configura le Tue API Keys
+### Mac/Linux
+1. **Avvia**: Esegui `./deployment/unix/start.sh` dal terminale
+2. **Scorciatoie**: Esegui `./deployment/unix/crea-scorciatoie-desktop.sh` (opzionale)
 
-**IMPORTANTE**: È necessario configurare sia il backend che il frontend:
+### Come Funzionano gli Script
+- **Primo avvio**: Build completa automatica (5-10 minuti)
+- **Avvii successivi**: Rapidi (30 secondi) se le immagini esistono
+- **Stop**: Usa `stop.bat`/`stop.sh` per fermare tutto
+- **Rebuild**: Usa `rebuild.bat`/`rebuild.sh` per ricostruire da zero
 
-#### A. Configurazione Backend
-```bash
-cp .env.example .env
-```
+🌐 **L'app si aprirà automaticamente su**: http://localhost:3000/landing
 
-Modifica il file `.env` nella **root del progetto** con le tue API keys:
-- **STEAM_API_KEY**: Per importare libreria Steam (opzionale)
+## ⚙️ Configurazione Avanzata
 
-#### B. Configurazione Frontend (OBBLIGATORIA)
-```bash
-cd frontend
-cp .env.example .env  
-```
-
-Modifica il file `frontend/.env` con:
-- **REACT_APP_API_URL**: URL del backend (default: http://localhost:5000)
-- **REACT_APP_RAWG_API_KEY**: Per ricerca giochi (opzionale ma raccomandato)
-
-> ⚠️ **NOTA IMPORTANTE**: Il file `frontend/.env` è **necessario** per il corretto funzionamento! Il frontend deve avere la sua configurazione separata.
-
-Il database e la sicurezza sono già **preconfigurati** nel backend.
-
-**🔑 Per ottenere le API keys**:
-
-1. **Steam API Key** (per importare libreria Steam):
-   - Vai su: https://steamcommunity.com/dev/apikey
-   - Inserisci la chiave nel file `.env` della root: `STEAM_API_KEY=tua_chiave_qui`
+Se vuoi personalizzare l'applicazione, configura le API keys:
 
 2. **RAWG API Key** (per ricerca giochi):
    - Vai su: https://rawg.io/apidocs
@@ -66,56 +48,80 @@ L'app funziona anche **senza** le API keys, ma con limitazioni:
 
 ### ❌ Senza RAWG API Key:
 - Ricerca giochi limitata al database locale
+### 1. Configura le API Keys (Opzionale)
+
+**Per funzionalità aggiuntive**, configura il file `.env` nella root del progetto:
+
+```bash
+cp .env.example .env
+```
+
+Modifica il file `.env` con le tue API keys:
+- **STEAM_API_KEY**: Per importare libreria Steam (opzionale)
+- **REACT_APP_RAWG_API_KEY**: Per ricerca giochi migliorata (opzionale)
+
+🔑 **Per ottenere le API keys**:
+
+1. **Steam API Key** (per importare libreria Steam):
+   - Vai su: https://steamcommunity.com/dev/apikey
+   - Inserisci: `STEAM_API_KEY=tua_chiave_qui`
+
+2. **RAWG API Key** (per database giochi migliorato):
+   - Vai su: https://rawg.io/apidocs
+   - Crea account gratuito
+   - Inserisci: `REACT_APP_RAWG_API_KEY=tua_chiave_qui`
+
+### 🚫 Cosa Succede Senza API Keys?
+
+**Senza RAWG API Key**:
+- Funziona comunque perfettamente!
 - Meno informazioni automatiche sui giochi (cover, descrizioni, etc.)
 - Dovrai inserire manualmente i dettagli dei giochi
+
+**Senza Steam API Key**:
+- Non puoi importare automaticamente la libreria Steam
+- Puoi comunque aggiungere giochi manualmente
 
 ### ✅ Funzionalità Sempre Disponibili:
 - Aggiunta manuale di giochi al backlog
 - Gestione stati (Completato, In corso, Da giocare, etc.)
 - Note personali sui giochi
 - Statistiche del backlog
+- Sistema sociale completo
 
-## 🚀 Avvio
+## 🚀 Metodi di Avvio
 
-### 🖥️ SUPER FACILE (Windows - Raccomandato)
+### 🎯 METODO SEMPLICE (Raccomandato)
 
-**Setup una volta sola:**
+**Windows:**
 ```bash
 cd deployment/windows
-crea-scorciatoie-desktop.bat
+start.bat                              # Avvio intelligente
+crea-scorciatoie-desktop.bat          # Crea scorciatoie (una volta)
 ```
 
-**Uso quotidiano:**
-1. **Doppio click** su "GameBacklog - Avvia" (desktop)
-2. **Attendi 10 secondi** - si apre automaticamente nel browser
-3. **Per fermare**: doppio click su "GameBacklog - Ferma" (desktop)
-
-### 🍎🐧 SUPER FACILE (Mac/Linux - Raccomandato)
-
-**Setup una volta sola:**
+**Mac/Linux:**
 ```bash
 cd deployment/unix
-chmod +x crea-scorciatoie-desktop.sh
-./crea-scorciatoie-desktop.sh
+./start.sh                             # Avvio intelligente
+./crea-scorciatoie-desktop.sh         # Crea scorciatoie (una volta)
 ```
 
-**Uso quotidiano:**
-1. **Doppio click** su "GameBacklog - Avvia" (desktop)
-2. **Attendi 10 secondi** - si apre automaticamente nel browser
-3. **Per fermare**: doppio click su "GameBacklog - Ferma" (desktop)
+### � SCRIPT DISPONIBILI
 
-### 📂 METODO MANUALE
+| Azione | Windows | Mac/Linux | Descrizione |
+|--------|---------|-----------|-------------|
+| **Avvio** | `start.bat` | `./start.sh` | Avvio rapido o build se necessario |
+| **Stop** | `stop.bat` | `./stop.sh` | Ferma tutti i container |
+| **Rebuild** | `rebuild.bat` | `./rebuild.sh` | Ricostruisce tutto da zero |
+| **Scorciatoie** | `crea-scorciatoie-desktop.bat` | `./crea-scorciatoie-desktop.sh` | Crea scorciatoie desktop |
 
-### Windows
-```bash
-cd deployment/windows
-start.bat          # File batch semplice (raccomandato)
-start.ps1          # PowerShell (più informazioni)
-```
+### ⚡ Come Funziona l'Avvio Intelligente
 
-### Mac/Linux
-```bash
-cd deployment/unix
+- **Prima volta**: Build completa (5-10 minuti)
+- **Avvii successivi**: Rapidi (30 secondi) 
+- **Detecta automaticamente** se serve ricostruire
+- **Apre automaticamente** il browser su http://localhost:3000/landing
 chmod +x *.sh     # Solo la prima volta
 ./start.sh
 ```
