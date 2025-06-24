@@ -57,6 +57,10 @@ export default function GamePage() {
       </div>
     );
   }
+  // Funzione per tornare alla libreria preservando lo stato
+  const handleBackToLibrary = () => {
+    navigate('/library');
+  };
 
   // Mostra il messaggio "gioco non trovato" solo se il caricamento è completato
   if (!game) {
@@ -64,9 +68,8 @@ export default function GamePage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-text-primary font-primary text-xl mb-4">Gioco non trovato</p>
-          <p className="text-text-secondary mb-4">Il gioco "{decodedTitle}" non è presente nella tua libreria.</p>
-          <button 
-            onClick={() => navigate('/library')} 
+          <p className="text-text-secondary mb-4">Il gioco "{decodedTitle}" non è presente nella tua libreria.</p>          <button 
+            onClick={handleBackToLibrary} 
             className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90"
           >
             Torna alla Libreria
@@ -94,12 +97,10 @@ export default function GamePage() {
     update(game.id, { Status: newStatus });
   };  const handleEditGame = (updatedGameDetails: Partial<Game>) => {
     update(game.id, updatedGameDetails);
-  };
-
-  const handleDeleteGame = () => {
+  };  const handleDeleteGame = () => {
     remove(game.id);
-    navigate('/library');
-  };  const handleUpdatePlaytime = async (newHours: number) => {
+    handleBackToLibrary();
+  };const handleUpdatePlaytime = async (newHours: number) => {
     // Aggiorna il playtime nel Redux store - il backend creerà automaticamente l'attività
     update(game.id, { HoursPlayed: newHours });
   };// Commenti asincroni
@@ -134,7 +135,7 @@ export default function GamePage() {
           onChangeStatus={handleChangeStatus}
           onEdit={handleEditGame}
           onDelete={handleDeleteGame}
-          onBack={() => navigate('/library')}
+          onBack={handleBackToLibrary}
           showBackButton={true}
           // Props per la navigazione
           canGoToPrevious={gameNavigation.canGoToPrevious}

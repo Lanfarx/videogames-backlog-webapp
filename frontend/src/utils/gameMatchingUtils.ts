@@ -5,9 +5,11 @@ import { Game } from '../types/game';
 export function normalizeGameTitle(title: string): string {
   if (!title) return '';
   let normalized = title.trim().toLowerCase();
-
   // Rimuovi punteggiatura comune e sostituisci con spazio
   normalized = normalized.replace(/[:\-–—_\.]/g, ' ');
+  
+  // Rimuovi simboli di trademark, copyright e registered
+  normalized = normalized.replace(/[™®©]/g, '');
   
   // Converti numeri romani in numeri arabi (con spazi intorno)
   const romanToArabic: Record<string, string> = {

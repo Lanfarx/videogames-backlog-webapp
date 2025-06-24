@@ -21,7 +21,7 @@ interface GridViewProps {
 
 const GridView: React.FC<GridViewProps> = ({ games, onEdit, onDelete, onStatusChange, columns = 4, navigationParams }) => {
   return (
-    <div className={`grid gap-6 grid-cols-1 ${columns >= 2 ? `sm:grid-cols-2` : ''} ${columns >= 3 ? `lg:grid-cols-3` : ''} ${columns >= 4 ? `xl:grid-cols-4` : ''} ${columns === 5 ? `2xl:grid-cols-5` : ''}`}>
+    <div className={`grid gap-4 md:gap-6 w-full min-w-0 grid-cols-1 ${columns >= 2 ? `sm:grid-cols-2` : ''} ${columns >= 3 ? `lg:grid-cols-3` : ''} ${columns >= 4 ? `xl:grid-cols-4` : ''} ${columns === 5 ? `2xl:grid-cols-5` : ''}`}>
       {games.map((game) => (
         <GameCard 
           key={game.id} 

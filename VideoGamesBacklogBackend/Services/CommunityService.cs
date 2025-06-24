@@ -6,28 +6,26 @@ using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Services
-{
-    public class CommunityService : ICommunityService
+{    public class CommunityService : ICommunityService
     {
         private readonly AppDbContext _context;
         private readonly ILogger<CommunityService> _logger;
+        private readonly INotificationService _notificationService;
 
-        public CommunityService(AppDbContext context, ILogger<CommunityService> logger)
+        public CommunityService(AppDbContext context, ILogger<CommunityService> logger, INotificationService notificationService)
         {
             _context = context;
             _logger = logger;
-        }
-
-        public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)
+            _notificationService = notificationService;
+        }        public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)
         {
             try
             {
-                var normalizedGameTitle = gameTitle.ToLower().Trim();
-                var games = await _context.Games
-                    .Where(g => g.Title.ToLower().Contains(normalizedGameTitle) ||
-                               normalizedGameTitle.Contains(g.Title.ToLower()))
+                // Recupera tutti i giochi dal database e poi applica il matching
+                var allGames = await _context.Games
                     .Select(g => new {
                         g.Id,
+                        g.Title,
                         g.HoursPlayed,
                         g.Status,
                         g.Rating,
@@ -35,17 +33,22 @@ namespace VideoGamesBacklogBackend.Services
                     })
                     .ToListAsync();
 
-                if (!games.Any())
+                // Usa GameTitleMatcher per un matching più preciso
+                var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();                if (!games.Any())
                 {
                     return new CommunityStatsDto();
                 }
 
                 var totalPlayers = games.Count;
-                var gamesWithReviews = games.Where(g => g.HasPublicReview).ToList();
-                var totalReviews = gamesWithReviews.Count;
-
-                var averageRating = totalReviews > 0
-                    ? gamesWithReviews.Average(g => g.Rating)
+                
+                // Giochi con recensioni testuali pubbliche
+                var gamesWithPublicReviews = games.Where(g => g.HasPublicReview).ToList();
+                var totalReviews = gamesWithPublicReviews.Count;
+                
+                // Giochi con rating (anche senza recensione testuale)
+                var gamesWithRating = games.Where(g => g.Rating > 0).ToList();
+                var averageRating = gamesWithRating.Any()
+                    ? gamesWithRating.Average(g => g.Rating)
                     : 0;
 
                 var averagePlaytime = games.Any()
@@ -391,9 +394,7 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel recupero dei commenti per la recensione {ReviewGameId}", reviewGameId);
                 throw;
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Aggiunge un commento a una recensione
         /// </summary>
         public async Task<ReviewCommentDto?> AddReviewCommentAsync(CreateReviewCommentDto createCommentDto, int authorId)
@@ -425,6 +426,26 @@ namespace VideoGamesBacklogBackend.Services
                 var savedComment = await _context.ReviewComments
                     .Include(rc => rc.Author)
                     .FirstOrDefaultAsync(rc => rc.Id == newComment.Id);
+
+                if (savedComment != null)
+                {
+                    // Crea notifica per il proprietario della recensione
+                    try
+                    {
+                        await _notificationService.CreateReviewCommentNotificationAsync(
+                            reviewGame.UserId,
+                            authorId,
+                            savedComment.Author?.UserName ?? "Utente sconosciuto",
+                            reviewGame.Title,
+                            createCommentDto.ReviewGameId
+                        );
+                    }
+                    catch (Exception notificationEx)
+                    {
+                        _logger.LogError(notificationEx, "Errore nella creazione della notifica per commento recensione");
+                        // Non bloccare l'operazione principale se la notifica fallisce
+                    }
+                }
 
                 return savedComment == null ? null : new ReviewCommentDto
                 {
@@ -505,9 +526,7 @@ namespace VideoGamesBacklogBackend.Services
                 _logger.LogError(ex, "Errore nel recupero dei commenti per l'attività {ActivityId}", activityId);
                 throw;
             }
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// Aggiunge un commento a un'attività
         /// </summary>
         public async Task<ActivityCommentDto?> AddActivityCommentAsync(CreateActivityCommentDto createCommentDto, int authorId)
@@ -515,12 +534,14 @@ namespace VideoGamesBacklogBackend.Services
             try
             {
                 var activity = await _context.Activities
+                    .Include(a => a.Game)
                     .FirstOrDefaultAsync(a => a.Id == createCommentDto.ActivityId);
 
                 if (activity == null)
                 {
                     return null;
                 }
+                
                 var newComment = new ActivityComment
                 {
                     Text = createCommentDto.Text,
@@ -535,6 +556,29 @@ namespace VideoGamesBacklogBackend.Services
                 var savedComment = await _context.ActivityComments
                     .Include(ac => ac.Author)
                     .FirstOrDefaultAsync(ac => ac.Id == newComment.Id);
+
+                if (savedComment != null)
+                {
+                    // Crea notifica per il proprietario dell'attività (solo per attività di tipo "Rated")
+                    if (activity.Game != null && activity.Type == ActivityType.Rated && activity.Game.UserId != authorId)
+                    {
+                        try
+                        {
+                            await _notificationService.CreateReviewCommentNotificationAsync(
+                                activity.Game.UserId,
+                                authorId,
+                                savedComment.Author?.UserName ?? "Utente sconosciuto",
+                                activity.GameTitle,
+                                createCommentDto.ActivityId // Usiamo l'activityId invece del reviewGameId
+                            );
+                        }
+                        catch (Exception notificationEx)
+                        {
+                            _logger.LogError(notificationEx, "Errore nella creazione della notifica per commento all'attività");
+                            // Non bloccare l'operazione principale se la notifica fallisce
+                        }
+                    }
+                }
 
                 return savedComment == null ? null : new ActivityCommentDto
                 {

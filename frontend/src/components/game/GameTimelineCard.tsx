@@ -245,12 +245,10 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     };
     
     const hourValues = getHourScale(maxHours);
-    const actualMaxHours = hourValues[hourValues.length - 1];
-    
-    hourValues.forEach((hours, i) => {
+    const actualMaxHours = hourValues[hourValues.length - 1];    hourValues.forEach((hours, i) => {
       const y = margin.top + height - (i * (height / (hourValues.length - 1)));
       
-      ctx.strokeStyle = "rgba(var(--border-color), 0.05)";
+      ctx.strokeStyle = "rgb(var(--text-secondary));";
       ctx.lineWidth = 0.5;
       
       ctx.beginPath();
@@ -266,7 +264,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
       }
     });
     
-    const axisColor = "rgba(var(--border-color), 0.3)";
+    const axisColor = "rgb(var(--text-secondary));";
     
     ctx.strokeStyle = axisColor;
     ctx.lineWidth = 1;
@@ -274,13 +272,25 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
     ctx.moveTo(margin.left, margin.top);
     ctx.lineTo(margin.left, margin.top + height);
     ctx.stroke();
-    
-    ctx.strokeStyle = axisColor;
+      ctx.strokeStyle = axisColor;
     ctx.beginPath();
     ctx.moveTo(margin.left, margin.top + height);
     ctx.lineTo(margin.left + width, margin.top + height);
     ctx.stroke();
-      if (!isEmptyGraph && graphData.length > 0) {
+    
+    // Bordo destro
+    ctx.strokeStyle = axisColor;
+    ctx.beginPath();
+    ctx.moveTo(margin.left + width, margin.top);
+    ctx.lineTo(margin.left + width, margin.top + height);
+    ctx.stroke();
+    
+    // Bordo superiore
+    ctx.strokeStyle = axisColor;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left + width, margin.top);
+    ctx.stroke();if (!isEmptyGraph && graphData.length > 0) {
       ctx.strokeStyle = getAccentPrimaryColor();
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -324,9 +334,7 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
             ctx.fillText(formattedDate, x, y);
           }
         });
-      }
-
-      // Punti del grafico
+      }      // Punti del grafico
       graphData.forEach((point, i) => {
         const x = margin.left + i * xScale;
         const y = margin.top + height - (point.hours / actualMaxHours * height);
@@ -355,8 +363,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
   const keyEvents = hasActivities ? getKeyEvents(activities) : [];
   
   // Validazione dei dati di input - gestita nel render
-  if (!game) {
-    return (
+  if (!game) {   
+     return (
       <div className="bg-primary-bg border border-border-color rounded-xl p-6">
         <p className="font-secondary text-sm text-text-secondary">
           Errore: Dati del gioco non disponibili
@@ -382,9 +390,8 @@ const GameTimelineCard = ({ activities = [], game }: GameTimelineCardProps) => {
         )}
       </div>
       
-      <div>
-        <div className="h-64 relative mb-8">
-          <canvas ref={canvasRef} className="w-full h-full"></canvas>
+      <div>        <div className="h-64 relative mb-8">
+          <canvas ref={canvasRef} className="w-full h-full timeline-canvas"></canvas>
         </div>
           {keyEvents.length > 0 && (
           <div>

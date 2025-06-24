@@ -196,8 +196,6 @@ cp .env.example .env
 
 ### Configurazione Unica (`.env`)
 Il file `.env` nella root del progetto contiene **tutte** le configurazioni:
-### Configurazione Unica (`.env`)
-Il file `.env` nella root del progetto contiene **tutte** le configurazioni:
 
 ```env
 # Database (obbligatorio per produzione)

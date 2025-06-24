@@ -256,10 +256,11 @@ namespace VideoGamesBacklogBackend.Services
                 game.CoverImage = updateDto.CoverImage;
             
             if (updateDto.Price.HasValue)
-                game.Price = updateDto.Price.Value;
-            
+                game.Price = updateDto.Price.Value;            // Aggiorna la data di acquisto anche se è null/vuota (per "Family Share")
             if (updateDto.PurchaseDate != null)
-                game.PurchaseDate = updateDto.PurchaseDate;
+            {
+                game.PurchaseDate = string.IsNullOrEmpty(updateDto.PurchaseDate) ? null : updateDto.PurchaseDate;
+            }
             
             if (updateDto.Developer != null)
                 game.Developer = updateDto.Developer;

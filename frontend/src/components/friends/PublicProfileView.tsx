@@ -130,14 +130,14 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
       switch (action) {
         case 'sendRequest':
           await sendFriendRequest(profile.userName);
-          // Naviga automaticamente alla sezione "Richieste inviate"
-          navigateToSentRequests();
-          break;
-        case 'accept':
+          // Non navigare automaticamente, lascia l'utente vedere il cambiamento
+          // navigateToSentRequests();
+          break;        case 'accept':
           if (profile.friendshipId) {
             await acceptFriendRequest(profile.friendshipId);
             // Naviga automaticamente alla sezione "I miei amici"
             navigateToFriends();
+            return; // Non ricaricare il profilo se navigiamo via
           }
           break;
         case 'reject':
@@ -160,7 +160,10 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
               await blockUser(profile.userId); // toggle: blocca
             }
           }
-          break;}
+          break;      }
+      
+      // Breve pausa per permettere al backend di processare la richiesta
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Dopo qualsiasi azione, ricarica il profilo per garantire 
       // che l'interfaccia rifletta lo stato più aggiornato dal backend

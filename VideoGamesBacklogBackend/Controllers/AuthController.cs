@@ -27,8 +27,7 @@ public class AuthController : ControllerBase
             }
             
             return BadRequest(result.Errors);
-        }
-        catch (Exception ex)
+        }        catch (Exception)
         {
             throw;
         }
@@ -40,6 +39,28 @@ public class AuthController : ControllerBase
         var token = await _authService.LoginAsync(model);
         if (token == null) return Unauthorized();
         return Ok(new { token });
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordModel model)
+    {
+        var result = await _authService.ForgotPasswordAsync(model);
+        if (result)
+        {
+            return Ok(new { message = "Se l'email è registrata, riceverai un link per il reset della password." });
+        }
+        return BadRequest(new { message = "Errore durante la richiesta di reset password." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
+    {
+        var result = await _authService.ResetPasswordAsync(model);
+        if (result)
+        {
+            return Ok(new { message = "Password resettata con successo." });
+        }
+        return BadRequest(new { message = "Token non valido o scaduto." });
     }
 
     [Authorize]

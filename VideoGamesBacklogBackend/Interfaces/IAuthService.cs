@@ -10,5 +10,7 @@ namespace VideoGamesBacklogBackend.Interfaces
         Task<IdentityResult> RegisterAsync(RegisterModel model);
         Task<string?> LoginAsync(LoginModel model);
         Task<User?> GetCurrentUserAsync(ClaimsPrincipal user);
+        Task<bool> ForgotPasswordAsync(ForgotPasswordModel model);
+        Task<bool> ResetPasswordAsync(ResetPasswordModel model);
     }
 }

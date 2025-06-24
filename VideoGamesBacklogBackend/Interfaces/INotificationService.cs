@@ -13,10 +13,13 @@ namespace VideoGamesBacklogBackend.Interfaces
         Task<bool> MarkAllAsReadAsync(int userId);
         Task<bool> DeleteNotificationAsync(int notificationId, int userId);
         Task<bool> DeleteReadNotificationsAsync(int userId);
-        
-        // Metodi helper per creare notifiche specifiche
+          // Metodi helper per creare notifiche specifiche
         Task CreateFriendRequestNotificationAsync(int receiverId, int senderId, string senderUserName, int friendshipId);
         Task CreateFriendAcceptedNotificationAsync(int receiverId, int senderId, string senderUserName);
         Task CreateFriendRejectedNotificationAsync(int receiverId, int senderId, string senderUserName);
+        
+        // Notifiche per commenti e reazioni
+        Task CreateReviewCommentNotificationAsync(int reviewOwnerId, int commentAuthorId, string commentAuthorName, string gameTitle, int reviewGameId);
+        Task CreateActivityReactionNotificationAsync(int activityOwnerId, int reactorId, string reactorName, string emoji, string gameTitle, int activityId);
     }
 }

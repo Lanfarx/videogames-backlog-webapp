@@ -160,11 +160,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   const Genres = Object.keys(genreCounts).sort();
   const visibleGenres = showAllGenres ? Genres : Genres.slice(0, 5);
 
-  return (
-    <aside
+  return (    <aside
       className={`transition-all duration-300 ${
-        isCollapsed ? 'w-10' : 'w-full md:w-[240px]'
-      } shrink-0 bg-secondary-bg border-r border-border-color relative`}
+        isCollapsed ? 'w-10' : 'w-full md:w-[240px] lg:w-[260px] max-w-[280px]'
+      } shrink-0 bg-secondary-bg border-r border-border-color relative min-w-0 overflow-hidden library-sidebar`}
     >
       {/* Pulsante per comprimere/espandere */}
       <button
@@ -321,14 +320,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
               {expandedSections.Price ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             <div className={`border-t border-border-color pt-4 ${expandedSections.Price ? "block" : "hidden"}`}>
-              <div className="px-1">
-                <input
+              <div className="px-1">                  <input
                   type="range"
                   min="0"
                   max={maxPrice}
                   value={filters.PriceRange[1]}
                   onChange={(e) => handlePriceRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-accent-primary"
+                  className="filter-range-slider w-full h-2"
                 />
                 <div className="flex justify-between mt-2">
                   <span className="font-roboto text-xs text-text-secondary">{filters.PriceRange[0]}€</span>
@@ -348,14 +346,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
               {expandedSections.hours ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             <div className={`border-t border-border-color pt-4 ${expandedSections.hours ? "block" : "hidden"}`}>
-              <div className="px-1">
-                <input
+              <div className="px-1">                  <input
                   type="range"
                   min="0" 
                   max={maxHours}
                   value={filters.hoursRange[1]}
                   onChange={(e) => handleHoursRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-accent-primary"
+                  className="filter-range-slider w-full h-2"
                 />
                 <div className="flex justify-between mt-2">
                   <span className="font-roboto text-xs text-text-secondary">{filters.hoursRange[0]}h</span>
@@ -378,14 +375,13 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
               {expandedSections.Metacritic ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             <div className={`border-t border-border-color pt-4 ${expandedSections.Metacritic ? "block" : "hidden"}`}>
-              <div className="px-1">
-                <input
+              <div className="px-1">                <input
                   type="range"
                   min="0" 
                   max={maxMetacritic}
                   value={filters.MetacriticRange[1]}
                   onChange={(e) => handleMetacriticRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="w-full h-2 bg-quaternary rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                  className="filter-range-slider metacritic-slider w-full h-2"
                 />
                 <div className="flex justify-between mt-2">
                   <span className="font-roboto text-xs text-text-secondary">{filters.MetacriticRange[0]}</span>
@@ -405,12 +401,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
               {expandedSections.date ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
             <div className={`border-t border-border-color pt-4 ${expandedSections.date ? "block" : "hidden"}`}>
-              <div className="relative">
+              <div className="relative">                
                 <input
                   type="date"
                   value={filters.PurchaseDate}
                   onChange={(e) => handlePurchaseDateChange(e.target.value)}
-                  className="w-full p-2 font-roboto text-sm text-text-primary border border-border-color rounded focus:outline-none focus:border-accent-primary"
+                  className="filter-date-input w-full p-2 font-roboto text-sm text-text-primary bg-primary-bg border border-border-color rounded focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 transition-colors"
                 />
               </div>
             </div>

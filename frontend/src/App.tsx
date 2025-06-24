@@ -16,6 +16,8 @@ import CatalogPage from './pages/header/CatalogPage';
 import GameInfoPage from './pages/inner/GameInfoPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import AuthLayout from './components/auth/AuthLayout';
 import { getToken } from './utils/getToken';
 import { getProfile } from './store/services/profileService';
@@ -93,15 +95,16 @@ function App() {
         <Routes>
         {/* Landing page */}
         <Route path="/landing" element={<LandingPage />} />
-        
-        {/* Route pubbliche */}
+          {/* Route pubbliche */}
         <Route element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="terms" element={<TermsPage />} />
           <Route path="contact" element={<ContactPage />} />
-        </Route>        {/* Route protette */}
+        </Route>{/* Route protette */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             {/* Homepage principale su / */}

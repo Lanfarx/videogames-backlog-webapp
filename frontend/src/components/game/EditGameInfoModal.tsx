@@ -68,10 +68,9 @@ const EditGameInfoModal = ({
     
     if (formData.Price && parseFloat(formData.Price) !== game.Price) {
       updateData.Price = parseFloat(formData.Price);
-    }
-    
-    if (formData.PurchaseDate && formData.PurchaseDate !== game.PurchaseDate) {
-      updateData.PurchaseDate = formData.PurchaseDate;
+    }    // Aggiorna la data di acquisto se modificata o se viene svuotata (per impostare "Family Share")
+    if (formData.PurchaseDate !== game.PurchaseDate) {
+      updateData.PurchaseDate = formData.PurchaseDate === "" ? "" : formData.PurchaseDate;
     }
     
     if (newHoursPlayed !== game.HoursPlayed) {

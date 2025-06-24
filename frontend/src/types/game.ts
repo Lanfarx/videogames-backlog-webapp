@@ -10,8 +10,7 @@ export type GamePlatform =
   'PlayStation 5' | 
   'PlayStation 4' | 
   'PlayStation 3' | 
-  'Xbox Series X/S' | 
-  'Xbox One' | 
+  'Xbox' |
   'Nintendo Switch' | 
   'Steam' | 
   'Epic Games Store' | 
