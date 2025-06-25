@@ -66,7 +66,7 @@ const PublicProfileView: React.FC<PublicProfileViewProps> = ({ className = '', u
           userName,
           {}, // Non filtriamo per anno qui, lasciamo che ProfileDiary gestisca il filtraggio
           1,
-          100 // Carichiamo più attività per il profilo
+          1000 // Carichiamo molte più attività per il profilo (stesso valore degli altri hook)
         );
         setActivities(result.activities);
       } catch (error) {
