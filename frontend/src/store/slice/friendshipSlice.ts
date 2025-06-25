@@ -165,8 +165,7 @@ const friendshipSlice = createSlice({
       // Send friend request
       .addCase(sendFriendRequestThunk.pending, (state) => {
         state.sendingRequest = true;
-      })
-      .addCase(sendFriendRequestThunk.fulfilled, (state, action) => {
+      })      .addCase(sendFriendRequestThunk.fulfilled, (state, action) => {
         state.sendingRequest = false;
         // Aggiorna i risultati di ricerca se presenti
         if (state.searchResults) {
@@ -174,11 +173,13 @@ const friendshipSlice = createSlice({
           const userIndex = state.searchResults.users.findIndex(u => u.userName === userName);
           if (userIndex !== -1) {
             state.searchResults.users[userIndex].friendshipStatus = 'Pending';
+            state.searchResults.users[userIndex].isRequestSender = true;
           }
         }
         // Aggiorna il profilo corrente se presente
         if (state.currentProfile && state.currentProfile.userName === action.payload) {
           state.currentProfile.friendshipStatus = 'Pending';
+          state.currentProfile.isRequestSender = true;
         }
       })
       .addCase(sendFriendRequestThunk.rejected, (state) => {

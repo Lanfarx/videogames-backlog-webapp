@@ -18,14 +18,17 @@ namespace VideoGamesBacklogBackend.Data
         public DbSet<ActivityReaction> ActivityReactions { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Wishlist> Wishlists { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
-
-            builder.Entity<Game>()
+            base.OnModelCreating(builder);            builder.Entity<Game>()
                 .Property(g => g.Genres)
-                .HasColumnType("text[]");            builder.Entity<User>(user =>
+                .HasColumnType("text[]");
+                
+            builder.Entity<Wishlist>()
+                .Property(w => w.Genres)
+                .HasColumnType("text[]");builder.Entity<User>(user =>
             {
                 user.OwnsOne(u => u.PrivacySettings);
                 user.OwnsOne(u => u.AppPreferences);

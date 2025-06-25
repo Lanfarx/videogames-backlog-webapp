@@ -53,24 +53,23 @@ const GameCommentsCard = ({
         <h2 className="font-primary font-semibold text-xl text-text-primary">
           Appunti di gioco <span className="text-sm text-text-secondary">({Comments.length})</span>
         </h2>
-      </div>{/* Input per nuovo commento */}
-      <div className="mb-4">
+      </div>      {/* Input per nuovo commento */}
+      <div className="mb-4 comment-input-group">
         {isCommentLimitReached && (
           <FormErrorInline message={`Hai raggiunto il limite massimo di ${maxComments} appunti.`} />
         )}
-        <div className="flex">
-          <textarea
-            className="flex-1 p-3 border border-border-color rounded-l-lg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-sm text-text-primary resize-none"
+        <div className="flex">          <textarea
+            className="flex-1 p-3 border border-border-color rounded-l-lg bg-secondary-bg focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 outline-none font-secondary text-sm text-text-primary resize-none transition-colors"
             placeholder={isCommentLimitReached ? "Hai raggiunto il limite massimo di appunti" : "Aggiungi un appunto..."}
             value={commenttext}
             onChange={(e) => setCommenttext(e.target.value)}
             rows={1}
             disabled={isCommentLimitReached}
-          ></textarea>
-          <button
-            className={`px-4 ${!commenttext.trim() || isCommentLimitReached ? 'bg-gray-400 cursor-not-allowed' : 'bg-accent-primary hover:bg-accent-primary/90'} text-white rounded-r-lg font-secondary font-medium text-sm transition-colors`}
+          ></textarea>          <button
+            className={`px-4 ${!commenttext.trim() || isCommentLimitReached ? 'bg-text-disabled text-text-disabled cursor-not-allowed' : 'bg-accent-primary hover:bg-accent-primary/90 text-white'} rounded-r-lg font-secondary font-medium text-sm transition-colors`}
             onClick={handleAddComment}
-            disabled={!commenttext.trim() || isCommentLimitReached}          >
+            disabled={!commenttext.trim() || isCommentLimitReached}
+          >
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -80,10 +79,8 @@ const GameCommentsCard = ({
             className="mt-2" 
           />
         )}
-      </div>
-
-      {/* Lista commenti con scrollbar */}
-      <div className="max-h-80 overflow-y-auto pr-1 custom-scrollbar" 
+      </div>      {/* Lista commenti con scrollbar */}
+      <div className="comments-container max-h-80 overflow-y-auto pr-1 custom-scrollbar" 
            style={{ 
              scrollbarWidth: 'thin',
              scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
@@ -96,9 +93,8 @@ const GameCommentsCard = ({
             <div key={comment.Id || `temp-${index}`}>
               {editingId === comment.Id ? (
                 // Modalità modifica
-                <div className="py-3 border-b border-border-color">
-                  <textarea
-                    className="w-full p-3 mb-2 border border-border-color rounded-lg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-sm text-text-primary resize-none"
+                <div className="py-3 border-b border-border-color">                  <textarea
+                    className="w-full p-3 mb-2 border border-border-color rounded-lg bg-secondary-bg focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 outline-none font-secondary text-sm text-text-primary resize-none transition-colors"
                     value={editingtext}
                     onChange={(e) => setEditingtext(e.target.value)}
                     rows={2}

@@ -156,9 +156,21 @@ export function useGamesStats() {
       loadStats();
     }
   }, [stats, loading, loadStats]);
-
   return { 
-    stats: stats || { total: 0, inProgress: 0, completed: 0, notStarted: 0, abandoned: 0, platinum: 0, totalHours: 0 }, 
+    stats: stats || { 
+      total: 0, 
+      inProgress: 0, 
+      completed: 0, 
+      notStarted: 0, 
+      abandoned: 0, 
+      platinum: 0, 
+      totalHours: 0,
+      totalSpent: 0,
+      averagePrice: 0,
+      freeGames: 0,
+      highestPrice: 0,
+      costPerHour: 0
+    }, 
     loading, 
     error, 
     loadStats 

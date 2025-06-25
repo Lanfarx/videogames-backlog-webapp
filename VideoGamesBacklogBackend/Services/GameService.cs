@@ -256,10 +256,11 @@ namespace VideoGamesBacklogBackend.Services
                 game.CoverImage = updateDto.CoverImage;
             
             if (updateDto.Price.HasValue)
-                game.Price = updateDto.Price.Value;
-            
+                game.Price = updateDto.Price.Value;            // Aggiorna la data di acquisto anche se è null/vuota (per "Family Share")
             if (updateDto.PurchaseDate != null)
-                game.PurchaseDate = updateDto.PurchaseDate;
+            {
+                game.PurchaseDate = string.IsNullOrEmpty(updateDto.PurchaseDate) ? null : updateDto.PurchaseDate;
+            }
             
             if (updateDto.Developer != null)
                 game.Developer = updateDto.Developer;
@@ -432,13 +433,11 @@ namespace VideoGamesBacklogBackend.Services
             _dbContext.Games.Remove(game);
             await _dbContext.SaveChangesAsync();
             return true;
-        }
-
-        // Statistiche
+        }        // Statistiche
         public async Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims)
         {
             var userId = int.Parse(userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-            var stats = GetUserStatsAsync(userId).Result;
+            var stats = await GetUserStatsAsync(userId);
 
             return stats;
         }
@@ -446,6 +445,12 @@ namespace VideoGamesBacklogBackend.Services
         public async Task<GameStatsDto> GetUserStatsAsync(int userId)
         {
             var games = await _dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
+
+            // Calcoli base
+            var totalSpent = games.Sum(g => g.Price);
+            var freeGames = games.Count(g => g.Price == 0);
+            var paidGames = games.Where(g => g.Price > 0).ToList();
+            var totalHours = games.Sum(g => g.HoursPlayed);
 
             var stats = new GameStatsDto
             {
@@ -455,7 +460,14 @@ namespace VideoGamesBacklogBackend.Services
                 NotStarted = games.Count(g => g.Status == GameStatus.NotStarted),
                 Abandoned = games.Count(g => g.Status == GameStatus.Abandoned),
                 Platinum = games.Count(g => g.Status == GameStatus.Platinum),
-                TotalHours = games.Sum(g => g.HoursPlayed)
+                TotalHours = totalHours,
+                
+                // Statistiche sui prezzi
+                TotalSpent = totalSpent,
+                AveragePrice = paidGames.Count > 0 ? paidGames.Average(g => g.Price) : 0,
+                FreeGames = freeGames,
+                HighestPrice = games.Count > 0 ? games.Max(g => g.Price) : 0,
+                CostPerHour = totalHours > 0 ? totalSpent / totalHours : 0
             };
 
             return stats;

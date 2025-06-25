@@ -123,11 +123,9 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
             ) : (
               <ChevronDown className="h-4 w-4 ml-1 text-text-secondary" />
             )}
-          </button>
-
-          {/* Dropdown menu */}
+          </button>          {/* Dropdown menu */}
           {showSortDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-border-color rounded-md shadow-lg z-30">
+            <div className="absolute right-0 mt-2 w-48 bg-primary-bg border border-border-color rounded-md dropdown-dark-shadow z-30">
               <ul className="py-1">
                 {SORT_OPTIONS.map((option) => (
                   <li key={option.value}>
@@ -139,12 +137,12 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
                       }}
                     >
                       {option.label}
-                      {sortBy === option.value && <Check className="h-4 w-4 text-white" />}
+                      {sortBy === option.value && <Check className="h-4 w-4 text-accent-primary" />}
                     </button>
                   </li>
                 ))}
               </ul>
-            </div>          )}
+            </div>)}
         </div>
       </div>
         {/* Steam Sync Popup */}

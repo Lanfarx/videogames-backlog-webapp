@@ -33,8 +33,7 @@ interface GamesState {
     totalItems: number;
     pageSize: number;
     hasNextPage: boolean;
-    hasPreviousPage: boolean;  } | null;  paginationLoading: boolean;
-  // Statistiche
+    hasPreviousPage: boolean;  } | null;  paginationLoading: boolean;  // Statistiche
   stats: {
     total: number;
     inProgress: number;
@@ -43,6 +42,12 @@ interface GamesState {
     abandoned: number;
     platinum: number;
     totalHours: number;
+    // Statistiche sui prezzi
+    totalSpent: number;
+    averagePrice: number;
+    freeGames: number;
+    highestPrice: number;
+    costPerHour: number;
   } | null;
   statsLoading: boolean;
   statsError: string | null;

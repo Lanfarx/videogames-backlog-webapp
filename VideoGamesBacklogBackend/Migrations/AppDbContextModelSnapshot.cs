@@ -534,6 +534,51 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.Wishlist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AddedDate")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoverImage")
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Genres")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("Metacritic")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RawgId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReleaseYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Wishlists");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
@@ -809,6 +854,17 @@ namespace VideoGamesBacklogBackend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("VideoGamesBacklogBackend.Models.Wishlist", b =>
+                {
+                    b.HasOne("VideoGamesBacklogBackend.Models.User", "User")
+                        .WithMany("Wishlist")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.Activity", b =>
                 {
                     b.Navigation("ActivityComments");
@@ -828,6 +884,8 @@ namespace VideoGamesBacklogBackend.Migrations
             modelBuilder.Entity("VideoGamesBacklogBackend.Models.User", b =>
                 {
                     b.Navigation("Library");
+
+                    b.Navigation("Wishlist");
                 });
 #pragma warning restore 612, 618
         }

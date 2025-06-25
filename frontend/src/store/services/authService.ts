@@ -12,3 +12,9 @@ export const register = (data: {
 
 export const login = (data: { identifier: string; password: string }) =>
   axios.post(`${API_URL}/login`, data);
+
+export const forgotPassword = (data: { email: string }) =>
+  axios.post(`${API_URL}/forgot-password`, data);
+
+export const resetPassword = (data: { email: string; token: string; newPassword: string }) =>
+  axios.post(`${API_URL}/reset-password`, data);

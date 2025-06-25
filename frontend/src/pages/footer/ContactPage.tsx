@@ -5,7 +5,7 @@ const ContactPage: React.FC = () => (
     <h1 className="text-3xl font-bold mb-6 text-text-primary">Contatti</h1>
     <p className="mb-4 text-text-secondary">Hai domande, suggerimenti o bisogno di assistenza? Contattaci!</p>
     <h2 className="text-xl font-semibold mt-8 mb-2">Email</h2>
-    <p className="mb-4 text-text-secondary">Scrivici a <a href="mailto:support@gamebacklog.com" className="text-accent-primary underline">support@gamebacklog.com</a></p>
+    <p className="mb-4 text-text-secondary">Scrivici a <a href="mailto:gamebacklogcontact@gmail.com" className="text-accent-primary underline">gamebacklogcontact@gmail.com</a></p>
     <h2 className="text-xl font-semibold mt-8 mb-2">Social</h2>
     <p className="mb-4 text-text-secondary">Seguici sui nostri canali social per aggiornamenti e novità.</p>
     <ul className="list-disc ml-6 text-text-secondary">

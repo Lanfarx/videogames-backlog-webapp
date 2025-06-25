@@ -233,7 +233,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
           Data di acquisto
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {formatPurchaseDate(currentGame.PurchaseDate)}
+          {formatPurchaseDate(currentGame.PurchaseDate, currentGame.Platform)}
         </span>
       </div>
 

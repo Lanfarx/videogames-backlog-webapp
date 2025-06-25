@@ -9,7 +9,13 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, variant = 'default' }) => {
     // Formatta il valore con separatori per le migliaia solo se è un numero puro
-    const formattedValue = value.includes('%') ? value : parseInt(value).toLocaleString('it-IT');    if (variant === 'hero') {
+    const formattedValue = (() => {
+        if (value.includes('%') || value.includes('€') || value.includes('...')) {
+            return value; // Ritorna il valore così com'è se contiene simboli speciali
+        }
+        const numValue = parseInt(value);
+        return isNaN(numValue) ? value : numValue.toLocaleString('it-IT');
+    })();    if (variant === 'hero') {
         return (
             <div className="flex flex-col items-center">
                 {icon && (

@@ -11,18 +11,21 @@ const ConnectedAccountsSettings: React.FC = () => {
 
   const [steamIdInput, setSteamIdInput] = useState("");
   const [steamIdError, setSteamIdError] = useState("");
-
   const handleSteamIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, ''); // Solo numeri
     setSteamIdInput(value);
-    if (value.length > 0 && value.length !== 17) {
+    
+    if (value.length === 0) {
+      setSteamIdError("");
+    } else if (value.length !== 17) {
       setSteamIdError("Lo Steam ID deve essere di 17 cifre");
+    } else if (!value.startsWith("765611")) {
+      setSteamIdError("Steam ID non valido (deve iniziare con 765611)");
     } else {
       setSteamIdError("");
     }
-  };
-  const handleConnectSteam = async () => {
-    if (steamIdInput.length === 17 && userProfile) {
+  };  const handleConnectSteam = async () => {
+    if (steamIdInput.length === 17 && steamIdInput.startsWith("765611") && userProfile) {
       const newProfile = {
         ...userProfile,
         steamId: steamIdInput
@@ -32,7 +35,11 @@ const ConnectedAccountsSettings: React.FC = () => {
       setSteamIdInput("");
       setSteamIdError("");
     } else {
-      setSteamIdError("Lo Steam ID deve essere di 17 cifre");
+      if (steamIdInput.length !== 17) {
+        setSteamIdError("Lo Steam ID deve essere di 17 cifre");
+      } else if (!steamIdInput.startsWith("765611")) {
+        setSteamIdError("Steam ID non valido (deve iniziare con 765611)");
+      }
     }
   };
 
@@ -127,11 +134,11 @@ const ConnectedAccountsSettings: React.FC = () => {
                         <p className="text-xs text-red-500 mb-1 absolute top-0 transform -translate-y-5">
                           {steamIdError}
                         </p>
-                      )}
-                      <div className="absolute hidden group-hover:block min-w-48 p-2 bg-slate-700 text-white text-xs rounded-lg top-8 right-0 shadow-lg z-10">
-                        <p className="mb-1 whitespace-nowrap">
-                          Il tuo identificativo Steam a 17 cifre
-                        </p>
+                      )}                      <div className="absolute hidden group-hover:block min-w-48 p-3 bg-slate-700 text-white text-xs rounded-lg top-8 right-0 shadow-lg z-10">
+                        <p className="font-medium mb-2">Steam ID64 richiesto</p>
+                        <p className="mb-1">• Deve essere di esattamente 17 cifre</p>
+                        <p className="mb-1">• Inizia sempre con 765611</p>
+                        <p className="text-yellow-200">• Il profilo Steam deve essere pubblico</p>
                       </div>
                     </div>
                     <button 
@@ -140,16 +147,30 @@ const ConnectedAccountsSettings: React.FC = () => {
                     >
                       Collega
                     </button>
-                  </div>
-                  <p className="text-xs text-text-secondary mt-1 text-right">
-                    <a
-                      href="https://steamid.xyz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline"
-                    >
-                      Come trovare il mio Steam ID?
-                    </a>
+                  </div>                  <p className="text-xs text-text-secondary mt-1 text-right">
+                    <details className="relative">
+                      <summary className="cursor-pointer hover:underline text-accent-primary">
+                        Come trovare il mio Steam ID?
+                      </summary>
+                      <div className="absolute right-0 top-6 w-80 p-4 bg-primary-bg border border-border-color rounded-lg shadow-lg z-20">
+                        <h4 className="font-medium text-text-primary mb-2">Come trovare il tuo Steam ID:</h4>
+                        <ol className="text-xs text-text-secondary space-y-2 list-decimal list-inside">
+                          <li>Apri Steam e vai al tuo profilo</li>
+                          <li>Copia l'URL del profilo dalla barra degli indirizzi</li>
+                          <li>Vai su <a href="https://steamid.xyz" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">steamid.xyz</a></li>
+                          <li>Incolla l'URL del profilo nel campo di ricerca</li>
+                          <li>Copia il numero "steamID64" (17 cifre)</li>
+                        </ol>
+                        <div className="mt-3 p-2 bg-secondary-bg rounded border">
+                          <p className="text-xs text-text-secondary">
+                            <strong>Esempio:</strong> 76561198000000000
+                          </p>
+                        </div>
+                        <p className="text-xs text-yellow-600 mt-2">
+                          ⚠️ Assicurati che il tuo profilo Steam sia pubblico per la sincronizzazione
+                        </p>
+                      </div>
+                    </details>
                   </p>
                 </div>
               )}

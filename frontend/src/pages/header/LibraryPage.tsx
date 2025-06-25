@@ -70,9 +70,15 @@ const LibraryPage: React.FC = () => {
         MetacriticRange: [0, 100],
         PurchaseDate: "",
     });    // Flag per evitare chiamate API prima che i massimali siano calcolati
-    const [filtersInitialized, setFiltersInitialized] = useState(false);
-    const [sortBy, setSortBy] = useState<SortOption>("title");
-    const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+    const [filtersInitialized, setFiltersInitialized] = useState(false);    // Stato per l'ordinamento con persistenza localStorage
+    const [sortBy, setSortBy] = useState<SortOption>(() => {
+        const savedSortBy = localStorage.getItem('librarySortBy');
+        return (savedSortBy as SortOption) || "title";
+    });
+    const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+        const savedSortOrder = localStorage.getItem('librarySortOrder');
+        return (savedSortOrder as SortOrder) || "asc";
+    });
     const [gamesPerPage, setGamesPerPage] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [columns, setColumns] = useState(4);
@@ -282,9 +288,13 @@ const LibraryPage: React.FC = () => {
     // Gestisce il cambio di stato di un gioco
     const handleStatusChange = (GameId: string, newStatus: GameStatus) => {
         update(parseInt(GameId), { Status: newStatus });
-    };    return (
-        <div className="flex flex-col bg-secondary-bg min-h-screen">
-            <main className="flex-grow flex flex-col md:flex-row">
+    };    // Effetto per salvare l'ordinamento nel localStorage quando cambia
+    useEffect(() => {
+        localStorage.setItem('librarySortBy', sortBy);
+        localStorage.setItem('librarySortOrder', sortOrder);
+    }, [sortBy, sortOrder]);    return (
+        <div className="flex flex-col bg-secondary-bg min-h-screen w-full overflow-x-hidden library-container">
+            <main className="flex-grow flex flex-col md:flex-row min-w-0 overflow-hidden library-main">
                 <SidebarFilter
                     filters={filters}
                     setFilters={handleFiltersChange}
@@ -292,7 +302,7 @@ const LibraryPage: React.FC = () => {
                     games={allGamesFromStore}
                 />
 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0 overflow-x-hidden flex flex-col library-content">
                     <LibraryToolbar
                         viewMode={viewMode}
                         setViewMode={setViewMode}
@@ -304,7 +314,7 @@ const LibraryPage: React.FC = () => {
                         onRefreshGames={handleRefreshGames}
                     />
 
-                    <div className="p-6" ref={gridContainerRef}>
+                    <div className="flex-1 p-4 md:p-6 min-w-0 overflow-hidden bg-secondary-bg" ref={gridContainerRef}>
                         {paginationLoading ? (
                             <div className="flex justify-center items-center py-12">
                                 <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>

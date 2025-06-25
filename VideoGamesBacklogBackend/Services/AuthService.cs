@@ -17,14 +17,16 @@ namespace VideoGamesBacklogBackend.Services
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
-
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AppDbContext dbContext)
+        private readonly IEmailService _emailService;       
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AppDbContext dbContext, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _dbContext = dbContext;
-        }        public async Task<IdentityResult> RegisterAsync(RegisterModel model)
+            _emailService = emailService;
+        }
+        public async Task<IdentityResult> RegisterAsync(RegisterModel model)
         {
             try
             {
@@ -72,9 +74,53 @@ namespace VideoGamesBacklogBackend.Services
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return null;
             return await _userManager.FindByIdAsync(userId);
+        }        public async Task<bool> ForgotPasswordAsync(ForgotPasswordModel model)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    // Non rivelare se l'email esiste o meno per motivi di sicurezza
+                    // Restituiamo sempre true per non far capire se l'email esiste
+                    return true;
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                
+                // Invia l'email di reset password
+                var emailSent = await _emailService.SendPasswordResetEmailAsync(user, token);
+                
+                if (!emailSent)
+                {
+                    Console.WriteLine($"Errore nell'invio dell'email per {user.Email}. Token di fallback: {token}");
+                }
+                
+                return true; // Restituiamo sempre true per sicurezza
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ForgotPasswordAsync: {ex.Message}");
+                return false;
+            }
         }
 
+        public async Task<bool> ResetPasswordAsync(ResetPasswordModel model)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null) return false;
 
+                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+                return result.Succeeded;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ResetPasswordAsync: {ex.Message}");
+                return false;
+            }
+        }
 
         private string GenerateJwtToken(User user)
         {

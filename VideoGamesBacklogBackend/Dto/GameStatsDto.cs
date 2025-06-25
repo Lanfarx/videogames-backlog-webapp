@@ -9,5 +9,12 @@ namespace VideoGamesBacklogBackend.Dto
         public int Abandoned { get; set; }
         public int Platinum { get; set; }
         public decimal TotalHours { get; set; }
+        
+        // Statistiche sui prezzi
+        public decimal TotalSpent { get; set; }
+        public decimal AveragePrice { get; set; }
+        public int FreeGames { get; set; }
+        public decimal HighestPrice { get; set; }
+        public decimal CostPerHour { get; set; }
     }
 }

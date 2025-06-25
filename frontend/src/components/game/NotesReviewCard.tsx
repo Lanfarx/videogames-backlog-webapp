@@ -170,7 +170,7 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
       <div className="p-6">
         {activeTab === 'Notes' ? (
           <div>            <textarea
-              className="w-full p-4 min-h-[180px] border border-border-color rounded-lg bg-secondary-bg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
+              className="w-full p-4 min-h-[180px] border border-border-color rounded-lg bg-secondary-bg focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none transition-colors"
               placeholder="Aggiungi le tue note private per questo gioco..."
               value={NotesValue}
               onChange={handleNotesChange}
@@ -204,12 +204,12 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
             {/* Review content */}
             <div className="border border-border-color rounded-lg mb-4 overflow-hidden">
               {/* Review text */}              <textarea
-                className="w-full p-4 min-h-[120px] border-b border-border-color bg-secondary-bg focus:border-accent-primary focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none"
+                className="w-full p-4 min-h-[120px] border-b border-border-color bg-secondary-bg focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 outline-none font-secondary text-base text-text-primary resize-none transition-colors"
                 value={localReviewText}
                 onChange={handleReviewTextChange}
                 placeholder="Scrivi qui la tua recensione..."
                 disabled={isNotStarted}
-              ></textarea>              {/* Toggle privacy */}
+              ></textarea>{/* Toggle privacy */}
               <div className="flex items-center gap-2 px-4 py-2 bg-secondary-bg border-t border-border-color">
                 <button
                   type="button"
@@ -309,11 +309,10 @@ const NotesReviewCard = ({ game }: NotesReviewCardProps) => {
                     Recensione aggiornata il: {new Date(ReviewDate).toLocaleDateString('it-IT')}
                   </span>
                 ) : null}
-              </div>
-              <button 
+              </div>              <button 
                 className={`px-6 py-2 rounded-lg font-secondary font-medium text-sm flex items-center transition-colors ${
                   isNotStarted 
-                    ? 'bg-gray-400 text-gray-300 cursor-not-allowed' 
+                    ? 'bg-text-disabled text-text-disabled cursor-not-allowed' 
                     : hasUnsavedReviewChanges
                       ? 'bg-accent-primary text-white hover:bg-accent-primary/90 shadow-lg'
                       : 'bg-accent-primary/70 text-white hover:bg-accent-primary/90'
