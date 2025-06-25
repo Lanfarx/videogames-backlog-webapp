@@ -24,11 +24,9 @@ interface ListViewProps {
 }
 
 const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange, navigationParams }) => {
-  const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+  const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);  return (
+    <div className="overflow-x-auto w-full min-w-0 library-list-view">
+      <table className="w-full min-w-[800px] border-collapse">
         <thead>
           <tr className="bg-secondary-bg">
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
@@ -125,7 +123,7 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
               </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
-                  {formatPurchaseDate(game.PurchaseDate)}
+                  {formatPurchaseDate(game.PurchaseDate, game.Platform)}
                 </div>
               </td>
               <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">

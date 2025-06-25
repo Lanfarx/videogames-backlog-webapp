@@ -46,15 +46,13 @@ namespace VideoGamesBacklogBackend.Controllers
             {
                 return StatusCode(500, new { message = "Errore durante il recupero del conteggio notifiche", error = ex.Message });
             }
-        }
-
-        [HttpPut("{id}/mark-read")]
+        }        [HttpPut("{id}/mark-read")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
             try
             {
                 var userId = GetCurrentUserId();
-                var result = await _notificationService.MarkAsReadAsync(userId, id);
+                var result = await _notificationService.MarkAsReadAsync(id, userId);
                 if (!result)
                 {
                     return NotFound(new { message = "Notifica non trovata" });
@@ -73,7 +71,7 @@ namespace VideoGamesBacklogBackend.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var result = await _notificationService.DeleteNotificationAsync(userId, id);
+                var result = await _notificationService.DeleteNotificationAsync(id, userId);
                 if (!result)
                 {
                     return NotFound(new { message = "Notifica non trovata" });
@@ -83,6 +81,44 @@ namespace VideoGamesBacklogBackend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Errore durante l'eliminazione della notifica", error = ex.Message });
+            }
+        }
+
+        [HttpPut("mark-all-read")]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var result = await _notificationService.MarkAllAsReadAsync(userId);
+                if (!result)
+                {
+                    return BadRequest(new { message = "Errore durante l'aggiornamento delle notifiche" });
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Errore durante l'aggiornamento delle notifiche", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("read")]
+        public async Task<IActionResult> DeleteReadNotifications()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var result = await _notificationService.DeleteReadNotificationsAsync(userId);
+                if (!result)
+                {
+                    return BadRequest(new { message = "Errore durante l'eliminazione delle notifiche" });
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Errore durante l'eliminazione delle notifiche", error = ex.Message });
             }
         }
 

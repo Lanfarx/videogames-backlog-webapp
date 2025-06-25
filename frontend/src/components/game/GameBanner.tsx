@@ -151,10 +151,9 @@ const GameBanner = ({
             </div>            <div className="flex items-center mb-2">
               <p className="font-secondary text-base text-text-secondary">
                 {game.Developer} / {game.Publisher}
-              </p>
-              <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
+              </p>              <div className="ml-4 flex items-center bg-yellow-500/10 px-2 py-1 rounded-md">
                 <Award className="w-4 h-4 text-yellow-500 mr-1" />
-                <span className="font-secondary text-base font-semibold">{formatMetacriticScore(game.Metacritic)}</span>
+                <span className="font-secondary text-base font-semibold text-text-secondary">{formatMetacriticScore(game.Metacritic)}</span>
               </div>
             </div>
             <p className="font-secondary text-sm text-text-secondary mb-4">

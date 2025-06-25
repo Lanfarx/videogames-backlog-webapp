@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import SectionHeader from '../ui/SectionHeader';
 import InProgressGameCard from '../ui/InProgressGameCard';
 import { getInProgressGamesPaginated } from '../../store/services/gamesService';
 
 const ContinuePlayingSection: React.FC = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationData, setPaginationData] = useState<{
     games: any[];
@@ -72,6 +74,39 @@ const ContinuePlayingSection: React.FC = () => {
       </section>
     );
   }
+
+  // Controlla se non ci sono giochi
+  if (!paginationData.games || paginationData.games.length === 0) {
+    return (
+      <section className="mb-12">
+        <div className='container mx-auto px-6 py-8'>
+          <div className="animate-fade-in-up">
+            <SectionHeader 
+              title="Continua a giocare" 
+              subtitle="Riprendi da dove avevi lasciato" 
+              seeAllLink="/library?filter=InProgress" 
+            />
+          </div>
+          <div className="animate-fade-in-up delay-200">
+            <div className="flex flex-col items-center justify-center py-16 px-6 text-center bg-surface-secondary rounded-xl border border-accent-secondary/20">
+              <div className="text-7xl mb-6 opacity-50">🎮</div>
+              <h3 className="text-2xl font-semibold text-text-primary mb-3 font-primary">Nessun gioco in corso</h3>
+              <p className="text-text-secondary mb-8 max-w-md leading-relaxed font-secondary">
+                Non hai ancora iniziato nessun gioco. Aggiungi un gioco al tuo backlog e inizia a giocare per vederlo apparire qui!
+              </p>
+              <button 
+                onClick={() => navigate('/library')}
+                className="bg-accent-primary hover:bg-accent-primary/90 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:scale-105"
+              >
+                Esplora la libreria
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="mb-12">
       <div className='container mx-auto px-6 py-8'> 

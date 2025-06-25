@@ -7,15 +7,46 @@ echo ==============================================
 set SCRIPT_PATH=%~dp0
 set DESKTOP_PATH=%USERPROFILE%\Desktop
 
-:: Verifica che la cartella desktop esista (prova anche OneDrive)
+echo Cercando il desktop...
+echo Testando: %DESKTOP_PATH%
+
+:: Verifica che la cartella desktop esista (prova anche OneDrive con varie strutture)
 if not exist "%DESKTOP_PATH%" (
+    echo Desktop standard non trovato, cercando OneDrive...
+    
+    :: Prova OneDrive standard
     set DESKTOP_PATH=%USERPROFILE%\OneDrive\Desktop
+    echo Testando: %DESKTOP_PATH%
     if not exist "%DESKTOP_PATH%" (
-        echo ERRORE: Impossibile trovare il desktop
-        pause
-        exit /b 1
+        echo Cercando OneDrive con nome utente...
+        
+        :: Prova OneDrive con nome utente (es: OneDrive - Filippo - Personale)
+        for /d %%i in ("%USERPROFILE%\OneDrive*") do (
+            echo Testando: %%i\Desktop
+            if exist "%%i\Desktop" (
+                set DESKTOP_PATH=%%i\Desktop
+                goto :desktop_found
+            )
+        )
+        
+        :: Se ancora non trovato, prova nella cartella OneDrive principale del sistema
+        echo Testando: %OneDrive%\Desktop
+        if exist "%OneDrive%\Desktop" (
+            set DESKTOP_PATH=%OneDrive%\Desktop
+        ) else (
+            echo ERRORE: Impossibile trovare il desktop
+            echo Percorsi testati:
+            echo   - %USERPROFILE%\Desktop
+            echo   - %USERPROFILE%\OneDrive\Desktop  
+            echo   - %USERPROFILE%\OneDrive*\Desktop
+            echo   - %OneDrive%\Desktop
+            pause
+            exit /b 1
+        )
     )
 )
+
+:desktop_found
 
 echo Desktop trovato: %DESKTOP_PATH%
 

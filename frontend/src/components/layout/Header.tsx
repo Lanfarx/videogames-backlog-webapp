@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Settings, Users } from 'lucide-react';
+import { Settings, Users, Heart } from 'lucide-react';
 import AppLogo from '../ui/atoms/AppLogo';
 import ProfileAvatar from '../ui/ProfileAvatar';
 import NotificationBell from '../notifications/NotificationBell';
@@ -41,6 +41,13 @@ const Header: React.FC = () => {  const navItems = [
             </ul>
           </nav>          {/* Profilo utente - allineato a destra */}
           <div className="flex items-center space-x-5">
+            {/* Icona wishlist */}
+            <NavLink to="/wishlist">
+              {({ isActive }) => (
+                <Heart className={`h-6 w-6 ${isActive ? 'text-cyan-500 fill-cyan-500' : 'text-text-secondary hover:text-cyan-500'} cursor-pointer transition-colors`} />
+              )}
+            </NavLink>
+            
             {/* Icona notifiche */}
             <NotificationBell />
             

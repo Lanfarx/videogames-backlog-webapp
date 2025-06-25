@@ -128,10 +128,10 @@ const GameInfoPage: React.FC = () => {  const { id } = useParams<{ id: string }>
                   {showFullDescription ? 'Mostra meno' : 'Mostra altro'}
                 </button>
               )}            </div>          
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-6">              
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-400" />
-                <span className="font-semibold text-lg text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
+                <span className="font-semibold text-lg text-text-secondary">{formatMetacriticScore(game.Metacritic)}</span>
                 <span className="text-sm text-text-secondary">Metacritic</span>
               </div>
             </div><div className="text-sm text-text-secondary">

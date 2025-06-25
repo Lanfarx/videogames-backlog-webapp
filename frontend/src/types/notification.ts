@@ -11,6 +11,10 @@ export interface Notification {
     requestId?: number;
     userName?: string;
     userAvatar?: string;
+    gameTitle?: string;
+    reviewGameId?: number;
+    activityId?: number;
+    emoji?: string;
   };
 }
 

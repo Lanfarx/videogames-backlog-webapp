@@ -1,6 +1,6 @@
 // Spostato da library/CatalogGame
 import React from "react";
-import { CheckCircle, PlusCircle, Award} from "lucide-react";
+import { CheckCircle, PlusCircle, Award, Heart} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import RatingStars from '../ui/atoms/RatingStars';
 import { SampleGame } from "../../types/game";
@@ -10,7 +10,10 @@ import { CommunityRatingDto } from '../../types/community';
 interface CatalogGameCardProps {
   game: SampleGame;
   isInLibrary: boolean;
+  isInWishlist: boolean;
   onAddToLibrary: () => void;
+  onAddToWishlist: () => void;
+  onRemoveFromWishlist?: () => void;
   onInfoClick: (id: string) => void;
   communityRating?: CommunityRatingDto;
 }
@@ -18,7 +21,10 @@ interface CatalogGameCardProps {
 const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ 
   game, 
   isInLibrary, 
+  isInWishlist,
   onAddToLibrary, 
+  onAddToWishlist,
+  onRemoveFromWishlist,
   onInfoClick, 
   communityRating 
 }) => {
@@ -61,33 +67,50 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
             {reviewCount > 0 && ` (${reviewCount} recensioni)`}
           </span>
         </div>
-        <div className="flex-1" />
-        {/* Pulsanti azione */}
+        <div className="flex-1" />        {/* Pulsanti azione */}
         <div className="flex gap-2 mt-2">
+          {/* Bottone Libreria */}
           {!isInLibrary ? (
             <button
-              className="flex-1 flex items-center justify-center gap-2 py-1.5 px-2 bg-accent-primary text-white rounded-md font-medium text-xs hover:bg-accent-primary/90 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center py-2 px-3 bg-accent-primary text-white rounded-md font-medium text-sm hover:bg-accent-primary/90 transition-colors shadow-sm"
               onClick={onAddToLibrary}
+              title="Aggiungi alla libreria"
             >
-              <PlusCircle className="h-4 w-4" />
-              Aggiungi
+              <PlusCircle className="h-5 w-5" />
             </button>
           ) : (
             <button
-              className="flex-1 flex items-center justify-center gap-2 py-1.5 px-2 bg-accent-success/20 text-accent-success rounded-md font-medium text-xs cursor-default shadow-sm border border-accent-success/40"
+              className="flex-1 flex items-center justify-center py-2 px-3 bg-accent-success/20 text-accent-success rounded-md font-medium text-sm cursor-default shadow-sm border border-accent-success/40"
               disabled
+              title="Già in libreria"
             >
-              <CheckCircle className="h-4 w-4" />
-              In libreria
+              <CheckCircle className="h-5 w-5" />
             </button>
           )}
+            {/* Bottone Wishlist - nascosto se già in libreria */}
+          {!isInLibrary && (
+            <button
+              className={`flex-1 flex items-center justify-center py-2 px-3 rounded-md text-sm transition-colors shadow-sm ${
+                isInWishlist 
+                  ? 'bg-cyan-500/20 text-cyan-500 border border-cyan-500/40 hover:bg-red-50 hover:text-red-500 hover:border-red-300' 
+                  : 'bg-primary-bg border border-border-color text-text-secondary hover:bg-cyan-50 hover:text-cyan-500 hover:border-cyan-300'
+              }`}
+              onClick={isInWishlist ? onRemoveFromWishlist : onAddToWishlist}
+              title={isInWishlist ? "Rimuovi dalla wishlist" : "Aggiungi alla wishlist"}
+            >
+              <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-cyan-500' : ''}`} />
+            </button>
+          )}
+          
+          {/* Bottone Info */}
           <button
-            className="flex items-center justify-center gap-1 py-1.5 px-2 bg-primary-bg border border-border-color rounded-md text-xs text-text-secondary hover:bg-tertiary-bg transition-colors shadow-sm"
+            className="flex-1 flex items-center justify-center py-2 px-3 bg-primary-bg border border-border-color rounded-md text-sm text-text-secondary hover:bg-tertiary-bg transition-colors shadow-sm"
             title="Vedi dettagli gioco"
             onClick={handleInfoClick}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" /></svg>
-            Info
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+            </svg>
           </button>
         </div>
       </div>

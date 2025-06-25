@@ -18,15 +18,15 @@ const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-900 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-text-primary mb-1">{label}</label>
       <div className="relative">
         <input
-          className={`w-full h-12 px-4 pr-10 rounded-lg border text-base font-normal transition focus:outline-none focus:border-accent focus:shadow-[0_0_0_2px_rgba(251,126,0,0.2)] ${
+          className={`w-full h-12 px-4 pr-10 rounded-lg border text-base font-normal transition focus:outline-none bg-primary-bg text-text-primary border-border-color focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 ${
             error
-              ? 'border-error focus:border-error'
+              ? 'border-accent-danger focus:border-accent-danger focus:ring-accent-danger/30'
               : valid
-              ? 'border-success focus:border-success'
-              : 'border-gray-300'
+              ? 'border-accent-success focus:border-accent-success focus:ring-accent-success/30'
+              : ''
           } ${props.type === 'password' ? 'pr-12' : ''}`}
           {...props}
         />
@@ -35,10 +35,10 @@ const Input: React.FC<InputProps> = ({
         )}
       </div>
       {helpertext && !error && (
-        <p className="text-xs text-gray-500 mt-1">{helpertext}</p>
+        <p className="text-xs text-text-secondary mt-1">{helpertext}</p>
       )}
       {error && (
-        <p className="text-xs text-error mt-1">{error}</p>
+        <p className="text-xs text-accent-danger mt-1">{error}</p>
       )}
     </div>
   );

@@ -150,3 +150,6 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.pdb
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\VideoGamesBacklogBackend.genruntimeconfig.cache
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\ref\VideoGamesBacklogBackend.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\MailKit.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\MimeKit.dll

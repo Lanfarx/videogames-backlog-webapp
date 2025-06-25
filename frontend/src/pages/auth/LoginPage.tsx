@@ -92,7 +92,7 @@ const LoginPage: React.FC = () => {
               onChange={() => setRemember((v) => !v)}
               id="remember"
             />
-            <a href="#" className="text-accent-primary text-sm font-medium hover:underline">Password dimenticata?</a>
+            <a href="/forgot-password" className="text-accent-primary text-sm font-medium hover:underline">Password dimenticata?</a>
           </div>
           <div className="flex justify-center">
             <button

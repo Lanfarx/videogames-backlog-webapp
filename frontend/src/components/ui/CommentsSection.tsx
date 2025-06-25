@@ -155,7 +155,7 @@ function CommentsSection<T extends BaseComment, C extends CreateCommentDto>({
         className="flex items-center justify-between w-full p-3 bg-gradient-to-r from-accent-primary/5 to-accent-secondary/5 hover:from-accent-primary/10 hover:to-accent-secondary/10 rounded-xl border border-accent-primary/20 hover:border-accent-primary/40 transition-all duration-300 group"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-accent-primary text-white rounded-lg group-hover:bg-accent-secondary transition-colors">
+          <div className="p-2 bg-accent-primary text-text-primary rounded-lg group-hover:bg-accent-secondary transition-colors">
             <MessageCircle className="h-4 w-4" />
           </div>          <div className="text-left">            <div className="text-sm font-semibold text-text-primary">
               {displayCommentsCount > 0 ? `${displayCommentsCount} commenti` : finalTexts.addComment}

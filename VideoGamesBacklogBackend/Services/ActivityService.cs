@@ -5,15 +5,16 @@ using VideoGamesBacklogBackend.Interfaces;
 using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Services
-{
-    public class ActivityService : IActivityService
+{    public class ActivityService : IActivityService
     {
         private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public ActivityService(AppDbContext context)
+        public ActivityService(AppDbContext context, INotificationService notificationService)
         {
             _context = context;
-        }        public async Task<PaginatedActivitiesDto> GetActivitiesAsync(int userId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
+            _notificationService = notificationService;
+        }public async Task<PaginatedActivitiesDto> GetActivitiesAsync(int userId, ActivityFiltersDto filters, int page = 1, int pageSize = 20)
         {
             var query = _context.Activities
                 .Include(a => a.Game)
@@ -255,12 +256,12 @@ namespace VideoGamesBacklogBackend.Services
             try
             {
                 var hoursDifference = newHours - previousHours;
-                string additionalInfo;
-
-                if (wasNotStarted && newHours > 0)
+                string additionalInfo;                if (wasNotStarted && newHours > 0)
                 {
                     // Prima sessione di gioco
-                    additionalInfo = $"iniziato:{Math.Abs(hoursDifference)} ore";
+                    additionalInfo = hoursDifference == 1 
+                        ? $"iniziato - {hoursDifference} ora giocata" 
+                        : $"iniziato - {hoursDifference} ore giocate";
                 }
                 else if (hoursDifference < 0)
                 {
@@ -395,7 +396,11 @@ namespace VideoGamesBacklogBackend.Services
                     {
                         Type = activityType,
                         GameId = game.Id,
-                        AdditionalInfo = game.HoursPlayed > 0 ? $"iniziato:{game.HoursPlayed} ore" : null
+                        AdditionalInfo = game.HoursPlayed > 0 
+                            ? (game.HoursPlayed == 1 
+                                ? $"iniziato - {game.HoursPlayed} ora giocata" 
+                                : $"iniziato - {game.HoursPlayed} ore giocate") 
+                            : null
                     };
 
                     await CreateActivityAsync(userId, playedActivityDto);
@@ -522,16 +527,16 @@ namespace VideoGamesBacklogBackend.Services
 
             // Altrimenti, il diario è pubblico
             return true;
-        }
-
-        // Metodi per le reazioni emoji alle attività
+        }        // Metodi per le reazioni emoji alle attività
 
         public async Task<ActivityReactionDto?> AddReactionAsync(CreateActivityReactionDto createReactionDto, int userId)
         {
             try
             {
-                // Verifica che l'attività esista
-                var activity = await _context.Activities.FindAsync(createReactionDto.ActivityId);
+                // Verifica che l'attività esista e carica i dati del gioco
+                var activity = await _context.Activities
+                    .Include(a => a.Game)
+                    .FirstOrDefaultAsync(a => a.Id == createReactionDto.ActivityId);
                 if (activity == null) return null;
 
                 // Verifica se l'utente ha già reagito con la stessa emoji a questa attività
@@ -562,6 +567,27 @@ namespace VideoGamesBacklogBackend.Services
 
                 // Carica i dati dell'utente per il DTO
                 var user = await _context.Users.FindAsync(userId);
+
+                // Crea notifica per il proprietario dell'attività (se non è lui stesso)
+                if (activity.Game != null && activity.Game.UserId != userId)
+                {
+                    try
+                    {
+                        await _notificationService.CreateActivityReactionNotificationAsync(
+                            activity.Game.UserId,
+                            userId,
+                            user?.UserName ?? "Utente sconosciuto",
+                            createReactionDto.Emoji,
+                            activity.GameTitle,
+                            createReactionDto.ActivityId
+                        );
+                    }
+                    catch (Exception notificationEx)
+                    {
+                        // Log dell'errore ma non bloccare l'operazione principale
+                        Console.WriteLine($"Errore nella creazione della notifica per reazione: {notificationEx.Message}");
+                    }
+                }
 
                 return new ActivityReactionDto
                 {

@@ -13,11 +13,14 @@ import PasswordStrengthBar from '../../auth/PasswordStrengthBar';
 const ProfileSettings: React.FC = () => {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
-
   // Stato locale per il form, inizializzato da Redux
   const [profile, setProfile] = useState<UserProfile | null>(userProfile);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  
+  // Stato per gestire il salvataggio ritardato
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Stato per la modifica della password
   const [passwordData, setPasswordData] = useState({
@@ -30,24 +33,48 @@ const ProfileSettings: React.FC = () => {
     newPassword?: string;
     confirmPassword?: string;
     general?: string;
-  }>({});
-
-  // Sincronizza il form con lo stato Redux quando cambia il profilo
+  }>({});  // Sincronizza il form con lo stato Redux quando cambia il profilo
   useEffect(() => {
     setProfile(userProfile);
   }, [userProfile]);
-  // Gestisce i cambiamenti nei campi del form
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  // Cleanup del timeout quando il componente viene smontato
+  useEffect(() => {
+    return () => {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+    };
+  }, [saveTimeout]);  // Gestisce i cambiamenti nei campi del form con debounce
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (!profile) return;
+    
+    // Aggiorna immediatamente lo stato locale per UI reattiva
     const updatedProfile = { ...profile, [name]: value };
     setProfile(updatedProfile);
-    try {
-      const updated = await updateProfile(updatedProfile);
-      dispatch(setUserProfile(updated));
-    } catch (err) {
-      alert('Errore durante il salvataggio del profilo.');
+    
+    // Cancella il timeout precedente se esiste
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
     }
+    
+    // Imposta un nuovo timeout per salvare dopo 1 secondo di inattività
+    const newTimeout = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        const updated = await updateProfile(updatedProfile);
+        dispatch(setUserProfile(updated));
+      } catch (err) {
+        alert('Errore durante il salvataggio del profilo.');
+        // Ripristina il valore precedente in caso di errore
+        setProfile(userProfile);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1000);
+    
+    setSaveTimeout(newTimeout);
   };
   // Gestisce il caricamento dell'avatar
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,9 +165,14 @@ const ProfileSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">      <div className="flex items-center justify-between mb-6">
         <h2 className="font-montserrat font-semibold text-xl text-text-primary">Il tuo profilo</h2>
+        {isSaving && (
+          <div className="flex items-center text-sm text-text-secondary">
+            <div className="animate-spin w-4 h-4 border-2 border-accent-primary border-t-transparent rounded-full mr-2"></div>
+            Salvataggio in corso...
+          </div>
+        )}
       </div>
       
       {/* Sezione Avatar */}
@@ -253,13 +285,12 @@ const ProfileSettings: React.FC = () => {
               label="Password attuale"
               value={passwordData.currentPassword}
               onChange={handlePasswordChange}
-              autoComplete="current-password"
-              iconRight={
+              autoComplete="current-password"              iconRight={
                 <span onClick={() => setShowPassword((v) => !v)} title="Mostra/Nascondi password" style={{ cursor: 'pointer' }}>
                   {showPassword ? (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-text-secondary"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   ) : (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-text-secondary"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
                   )}
                 </span>
               }
@@ -276,13 +307,12 @@ const ProfileSettings: React.FC = () => {
               label="Nuova password"
               value={passwordData.newPassword}
               onChange={handlePasswordChange}
-              autoComplete="new-password"
-              iconRight={
+              autoComplete="new-password"              iconRight={
                 <span onClick={() => setShowNewPassword((v) => !v)} title="Mostra/Nascondi password" style={{ cursor: 'pointer' }}>
                   {showNewPassword ? (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-text-secondary"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   ) : (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#666"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-text-secondary"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.956 9.956 0 012.293-3.95M6.7 6.7A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.97 9.97 0 01-4.293 5.13M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18"/></svg>
                   )}
                 </span>
               }

@@ -146,9 +146,7 @@ namespace VideoGamesBacklogBackend.Services
             };
 
             await CreateNotificationAsync(createDto);
-        }
-
-        public async Task CreateFriendRejectedNotificationAsync(int receiverId, int senderId, string senderUserName)
+        }        public async Task CreateFriendRejectedNotificationAsync(int receiverId, int senderId, string senderUserName)
         {
             var createDto = new CreateNotificationDto
             {
@@ -160,6 +158,53 @@ namespace VideoGamesBacklogBackend.Services
                 {
                     userId = senderId,
                     userName = senderUserName
+                }
+            };
+
+            await CreateNotificationAsync(createDto);
+        }
+
+        public async Task CreateReviewCommentNotificationAsync(int reviewOwnerId, int commentAuthorId, string commentAuthorName, string gameTitle, int reviewGameId)
+        {
+            // Non inviare notifica se l'autore del commento è il proprietario della recensione
+            if (reviewOwnerId == commentAuthorId) return;
+
+            var createDto = new CreateNotificationDto
+            {
+                UserId = reviewOwnerId,
+                Type = "review_comment",
+                Title = "Nuovo commento alla recensione",
+                Message = $"{commentAuthorName} ha commentato la tua recensione di {gameTitle}",
+                Data = new
+                {
+                    userId = commentAuthorId,
+                    userName = commentAuthorName,
+                    gameTitle = gameTitle,
+                    reviewGameId = reviewGameId
+                }
+            };
+
+            await CreateNotificationAsync(createDto);
+        }
+
+        public async Task CreateActivityReactionNotificationAsync(int activityOwnerId, int reactorId, string reactorName, string emoji, string gameTitle, int activityId)
+        {
+            // Non inviare notifica se l'utente reagisce alla propria attività
+            if (activityOwnerId == reactorId) return;
+
+            var createDto = new CreateNotificationDto
+            {
+                UserId = activityOwnerId,
+                Type = "activity_reaction",
+                Title = "Reazione all'attività",
+                Message = $"{reactorName} ha reagito {emoji} alla tua attività su {gameTitle}",
+                Data = new
+                {
+                    userId = reactorId,
+                    userName = reactorName,
+                    emoji = emoji,
+                    gameTitle = gameTitle,
+                    activityId = activityId
                 }
             };
 

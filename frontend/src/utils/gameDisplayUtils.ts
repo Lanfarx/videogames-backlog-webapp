@@ -15,18 +15,30 @@ export function formatPrice(price: number): string {
 
 /**
  * Formatta la data di acquisto per la visualizzazione
- * Se non c'è data di acquisto, mostra "Family Share", altrimenti la data formattata
+ * Se non c'è data di acquisto, mostra il testo appropriato in base alla piattaforma
  */
-export function formatPurchaseDate(purchaseDate: string | null | undefined, locale: string = 'it-IT'): string {
+export function formatPurchaseDate(purchaseDate: string | null | undefined, platform?: string, locale: string = 'it-IT'): string {
   if (!purchaseDate) {
-    return 'Family Share';
+    // Determina il testo da mostrare in base alla piattaforma
+    if (platform?.toLowerCase().includes('xbox')) {
+      return 'Xbox Game Pass';
+    } else if (platform?.toLowerCase().includes('steam')) {
+      return 'Family Share';
+    } else {
+      return 'Rubato'; // Default
+    }
   }
   
   try {
     return new Date(purchaseDate).toLocaleDateString(locale);
   } catch (error) {
     console.error('Errore nella formattazione della data:', error);
-    return 'Family Share';
+    // Fallback in caso di errore
+    if (platform?.toLowerCase().includes('xbox')) {
+      return 'Xbox Game Pass';
+    } else {
+      return 'Family Share';
+    }
   }
 }
 
@@ -34,9 +46,16 @@ export function formatPurchaseDate(purchaseDate: string | null | undefined, loca
  * Formatta la data di acquisto per la visualizzazione con testo personalizzato
  * Include il prefisso "Acquistato il:" per le GameCard
  */
-export function formatPurchaseDateWithLabel(purchaseDate: string | null | undefined, locale: string = 'it-IT'): string {
+export function formatPurchaseDateWithLabel(purchaseDate: string | null | undefined, platform?: string, locale: string = 'it-IT'): string {
   if (!purchaseDate) {
-    return 'Family Share';
+    // Determina il testo da mostrare in base alla piattaforma
+    if (platform?.toLowerCase().includes('xbox')) {
+      return 'Xbox Game Pass';
+    } else if (platform?.toLowerCase().includes('steam')) {
+      return 'Family Share';
+    } else {
+      return 'Family Share'; // Default
+    }
   }
   
   try {
@@ -44,7 +63,12 @@ export function formatPurchaseDateWithLabel(purchaseDate: string | null | undefi
     return `Acquistato il: ${formattedDate}`;
   } catch (error) {
     console.error('Errore nella formattazione della data:', error);
-    return 'Family Share';
+    // Fallback in caso di errore
+    if (platform?.toLowerCase().includes('xbox')) {
+      return 'Xbox Game Pass';
+    } else {
+      return 'Family Share';
+    }
   }
 }
 

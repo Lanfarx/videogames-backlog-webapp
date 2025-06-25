@@ -58,14 +58,15 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
       switch (action) {
         case 'sendRequest':
           await sendFriendRequest(user.userName);
-          // Naviga automaticamente alla sezione "Richieste inviate"
-          navigateToSentRequests();
+          // Non navigare automaticamente, lascia l'utente vedere il cambiamento
+          // navigateToSentRequests();
           break;
         case 'accept':
           if (user.friendshipId) {
             await acceptFriendRequest(user.friendshipId);
             // Naviga automaticamente alla sezione "I miei amici"
             navigateToFriends();
+            return; // Non ricaricare la ricerca se navigiamo via
           }
           break;
         case 'reject':
@@ -82,6 +83,9 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
           }
           break;
       }
+      
+      // Breve pausa per permettere al backend di processare la richiesta
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Dopo qualsiasi azione, ricarica i risultati di ricerca per garantire 
       // che l'interfaccia rifletta lo stato più aggiornato dal backend

@@ -112,12 +112,11 @@ const ActivityHistoryPopover = ({ gameId, onClose, GameTitle }: ActivityHistoryP
   const sortedActivities = [...activities].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center game-timeline-popover">
       <div 
         ref={popoverRef}
-        className="bg-primary-bg border border-border-color rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-lg flex flex-col"
+        className="bg-primary-bg border border-border-color rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden dropdown-dark-shadow flex flex-col"
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-4">

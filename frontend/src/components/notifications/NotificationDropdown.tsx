@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Check, X, UserPlus, UserCheck, UserX, Trash2, CheckCheck, Bell } from 'lucide-react';
+import { Check, X, UserPlus, UserCheck, UserX, Trash2, CheckCheck, Bell, MessageCircle, Heart } from 'lucide-react';
 import { RootState } from '../../store';
 import { 
   markNotificationAsReadThunk,
@@ -48,7 +48,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) 
       handleDeleteNotification(notificationId);
     });
   };
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'friend_request':
@@ -57,10 +56,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) 
         return <UserCheck className="h-5 w-5 text-accent-success" />;
       case 'friend_rejected':
         return <UserX className="h-5 w-5 text-accent-danger" />;
+      case 'review_comment':
+        return <MessageCircle className="h-5 w-5 text-blue-500" />;
+      case 'activity_reaction':
+        return <Heart className="h-5 w-5 text-pink-500" />;
       default:
         return <UserPlus className="h-5 w-5 text-text-secondary" />;
     }
-  };  const formatNotificationTime = (createdAt: string) => {
+  };const formatNotificationTime = (createdAt: string) => {
     const now = new Date();
     const notificationTime = new Date(createdAt);
     const diffInMinutes = Math.floor((now.getTime() - notificationTime.getTime()) / (1000 * 60));

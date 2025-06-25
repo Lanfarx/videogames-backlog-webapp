@@ -8,8 +8,10 @@ import CatalogSortControls from "../../components/catalog/CatalogSortControls";
 import CatalogSearchBar from "../../components/catalog/CatalogSearchBar";
 import Pagination from "../../components/ui/Pagination";
 import { getPaginatedGames, getGameDetails } from '../../store/services/rawgService';
+import { wishlistService, AddToWishlistDto } from '../../store/services/wishlistService';
 import { useNavigate } from "react-router-dom";
 import { findMatchingGame } from '../../utils/gameMatchingUtils';
+import { useToast } from '../../contexts/ToastContext';
 
 const SORT_OPTIONS = [
   { value: "title", label: "Titolo" },
@@ -30,9 +32,22 @@ const CatalogPage: React.FC = () => {
   const [columns, setColumns] = useState(6);
   const [apiGames, setApiGames] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();  const userGames = useAllGames();
+  const [isLoading, setIsLoading] = useState(false);  const [error, setError] = useState<string | null>(null);
+  const [wishlistItems, setWishlistItems] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const { showToast } = useToast();const userGames = useAllGames();
+  // Carica la wishlist dell'utente
+  useEffect(() => {
+    const loadWishlist = async () => {
+      try {
+        const response = await wishlistService.getWishlist();
+        setWishlistItems(response.data);
+      } catch (error) {
+        console.error('Errore nel caricamento della wishlist:', error);
+      }
+    };
+    loadWishlist();
+  }, []);
 
   // Calcola colonne dinamicamente come in LibraryPage
   useEffect(() => {
@@ -101,8 +116,7 @@ const CatalogPage: React.FC = () => {
   }, [selectedGameId, navigate]);
 
   // Responsive grid dinamica: 6 colonne su 2xl, 5 su xl, 4 su lg, 3 su md, 2 su sm, 1 su base
-  const gridClass = `grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`;
-  const handleAddToLibrary = async (game: any) => {
+  const gridClass = `grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`;  const handleAddToLibrary = async (game: any) => {
     try {
       setIsLoading(true);
       // Ottieni i dettagli completi del gioco dall'API RAWG
@@ -117,7 +131,50 @@ const CatalogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };  // Applica filtro giochi posseduti se richiesto
+  };  const handleAddToWishlist = async (game: any) => {
+    try {
+      const matchingWishlistItem = findMatchingGame(wishlistItems, game.Title);
+
+      if (matchingWishlistItem) {
+        showToast('info', 'Info', 'Questo gioco è già nella tua wishlist');
+        return;
+      }
+
+      const wishlistData: AddToWishlistDto = {
+        title: game.Title,
+        coverImage: game.CoverImage,
+        releaseYear: game.ReleaseYear,
+        genres: game.Genres,
+        metacritic: game.Metacritic || 0,
+        rawgId: parseInt(game.id),
+      };
+
+      const response = await wishlistService.addToWishlist(wishlistData);
+      setWishlistItems(prev => [...prev, response.data]);
+      showToast('success', 'Successo', 'Gioco aggiunto alla wishlist!');
+    } catch (error) {
+      console.error('Errore nell\'aggiunta alla wishlist:', error);
+      showToast('error', 'Errore', 'Errore nell\'aggiunta alla wishlist');
+    }
+  };
+
+  const handleRemoveFromWishlist = async (game: any) => {
+    try {
+      const matchingWishlistItem = findMatchingGame(wishlistItems, game.Title);
+
+      if (!matchingWishlistItem) {
+        showToast('info', 'Info', 'Questo gioco non è nella tua wishlist');
+        return;
+      }
+
+      await wishlistService.removeFromWishlist(matchingWishlistItem.id);
+      setWishlistItems(prev => prev.filter(item => item.id !== matchingWishlistItem.id));
+      showToast('success', 'Successo', 'Gioco rimosso dalla wishlist!');
+    } catch (error) {
+      console.error('Errore nella rimozione dalla wishlist:', error);
+      showToast('error', 'Errore', 'Errore nella rimozione dalla wishlist');
+    }
+  };// Applica filtro giochi posseduti se richiesto
   const filteredGames = hideOwned
     ? mappedGames.filter(game => {
         const isOwned = !!findMatchingGame(userGames, game.Title);
@@ -154,18 +211,21 @@ const CatalogPage: React.FC = () => {
           ) : error ? (
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : (
-            <>              <div className={gridClass}>
-                {filteredGames.map(game => {
+            <>              <div className={gridClass}>                {filteredGames.map(game => {
                   const matchingGame = findMatchingGame(userGames, game.Title);
                   const isInLibrary = !!matchingGame;
+                  const matchingWishlistItem = findMatchingGame(wishlistItems, game.Title);
+                  const isInWishlist = !!matchingWishlistItem;
                   
                   const communityRating = (communityRatings ?? {})[game.Title];
-                  return (
-                    <CatalogGameCard
+                  return (                    <CatalogGameCard
                       key={game.id}
                       game={game}
                       isInLibrary={isInLibrary}
+                      isInWishlist={isInWishlist}
                       onAddToLibrary={() => handleAddToLibrary(game)}
+                      onAddToWishlist={() => handleAddToWishlist(game)}
+                      onRemoveFromWishlist={() => handleRemoveFromWishlist(game)}
                       onInfoClick={setSelectedGameId}
                       communityRating={communityRating}
                     />

@@ -4,7 +4,7 @@ import StatusDistributionChart from '../../components/dashboard/StatusDistributi
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
-import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy } from 'lucide-react';
+import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy, Euro, TrendingUp, Gift, DollarSign } from 'lucide-react';
 import { generatePlatformDistributionData, generateGenreDistributionData } from '../../utils/gamesUtils';
 import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
@@ -32,7 +32,7 @@ const DashboardPage: React.FC = () => {
             {/* Intestazione pagina con animazione */}
             <div className="bg-primary-bg p-6 rounded-lg shadow-sm mb-6 animate-fade-in-up">
                 <h1 className="text-3xl font-bold text-text-primary font-['Montserrat']">Dashboard</h1>
-            </div>            {/* Statistiche Rapide con animazioni staggered */}
+            </div>            {/* Statistiche Rapide con animazioni */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="animate-fade-in-up delay-100">
                     <StatsCard 
@@ -117,6 +117,49 @@ const DashboardPage: React.FC = () => {
                         icon={<BarChartIcon className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
                         title="Piattaforme più utilizzate" 
                     />
+                </div>
+            </div>
+            {/* Statistiche sui Prezzi */}
+            <div className="bg-primary-bg p-6 rounded-lg shadow-sm mb-6 animate-fade-in-up delay-600">
+                <h2 className="text-2xl font-bold text-text-primary font-['Montserrat'] mb-4">
+                    <Euro className="inline h-6 w-6 text-accent-primary mr-2" />
+                    Statistiche Economiche
+                </h2>                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="animate-fade-in-up delay-700">
+                        <StatsCard 
+                            label="Spesa Totale" 
+                            value={loading ? "..." : ('€' + Number(stats.totalSpent).toFixed(2)).toString()} 
+                            icon={<Euro className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                        />
+                    </div>
+                    <div className="animate-fade-in-up delay-800">
+                        <StatsCard 
+                            label="Prezzo Medio" 
+                            value={loading ? "..." : ('€' + Number(stats.averagePrice).toFixed(2)).toString()} 
+                            icon={<TrendingUp className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                        />
+                    </div>
+                    <div className="animate-fade-in-up delay-1100">
+                        <StatsCard 
+                            label="Costo per Ora" 
+                            value={loading ? "..." : ('€' + Number(stats.costPerHour).toFixed(2)).toString()} 
+                            icon={<Clock className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                        />
+                    </div>
+                    <div className="animate-fade-in-up delay-900">
+                        <StatsCard 
+                            label="Giochi Gratuiti" 
+                            value={loading ? "..." : stats.freeGames.toString()} 
+                            icon={<Gift className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                        />
+                    </div>
+                    <div className="animate-fade-in-up delay-1000">
+                        <StatsCard 
+                            label="Prezzo Più Alto" 
+                            value={loading ? "..." : ('€' + Number(stats.highestPrice).toFixed(2)).toString()} 
+                            icon={<DollarSign className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
+                        />
+                    </div>
                 </div>
             </div>
         </div>

@@ -66,10 +66,9 @@ const EditGameDetailsModal = ({
         <div className="p-6">
           <h3 className="text-lg font-primary font-bold text-text-primary mb-4">Modifica dettagli gioco</h3>
           
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <form onSubmit={handleSubmit}>            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="space-y-2">
-                <label htmlFor="title" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="title" className="block text-text-secondary font-secondary text-sm">
                   Titolo
                 </label>
                 <input
@@ -84,7 +83,7 @@ const EditGameDetailsModal = ({
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="Developer" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Developer" className="block text-text-secondary font-secondary text-sm">
                   Sviluppatore
                 </label>
                 <input
@@ -98,7 +97,7 @@ const EditGameDetailsModal = ({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="Publisher" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Publisher" className="block text-text-secondary font-secondary text-sm">
                   Editore
                 </label>
                 <input
@@ -111,7 +110,7 @@ const EditGameDetailsModal = ({
                 />
               </div>            
                 <div className="space-y-2">
-                <label htmlFor="Metacritic" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Metacritic" className="block text-text-secondary font-secondary text-sm">
                   Metacritic
                 </label>
                 <input
@@ -144,10 +143,8 @@ const EditGameDetailsModal = ({
                   max="100"
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="ReleaseYear" className="block text-text-primary font-secondary text-sm">
+              </div>              <div className="space-y-2">
+                <label htmlFor="ReleaseYear" className="block text-text-secondary font-secondary text-sm">
                   Anno di rilascio
                 </label>
                 <input
@@ -161,7 +158,7 @@ const EditGameDetailsModal = ({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="Genres" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="Genres" className="block text-text-secondary font-secondary text-sm">
                   Generi (separati da virgola)
                 </label>
                 <input
@@ -176,7 +173,7 @@ const EditGameDetailsModal = ({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="CoverImage" className="block text-text-primary font-secondary text-sm">
+                <label htmlFor="CoverImage" className="block text-text-secondary font-secondary text-sm">
                   URL immagine di copertina
                 </label>
                 <input

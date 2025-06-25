@@ -5,9 +5,11 @@ import { Game } from '../types/game';
 export function normalizeGameTitle(title: string): string {
   if (!title) return '';
   let normalized = title.trim().toLowerCase();
-
   // Rimuovi punteggiatura comune e sostituisci con spazio
   normalized = normalized.replace(/[:\-–—_\.]/g, ' ');
+  
+  // Rimuovi simboli di trademark, copyright e registered
+  normalized = normalized.replace(/[™®©]/g, '');
   
   // Converti numeri romani in numeri arabi (con spazi intorno)
   const romanToArabic: Record<string, string> = {
@@ -86,32 +88,37 @@ export function removeEditionSuffixes(title: string): string {
 }
 
 // Trova il gioco corrispondente nel catalogo
-export function findMatchingGame(existingGames: Game[], steamGameName: string): Game | undefined {
-  if (!steamGameName || existingGames.length === 0) return undefined;
+export function findMatchingGame(existingGames: Game[] | any[], gameNameToFind: string): Game | any | undefined {
+  if (!gameNameToFind || existingGames.length === 0) return undefined;
+
+  // Funzione helper per ottenere il titolo dell'oggetto (supporta sia Game.Title che WishlistItem.title)
+  const getTitle = (item: any): string => {
+    return item.Title || item.title || '';
+  };
 
   // 1. Match esatto (case-insensitive)
-  const exactMatch = existingGames.find(g => g.Title.toLowerCase() === steamGameName.toLowerCase());
+  const exactMatch = existingGames.find(g => getTitle(g).toLowerCase() === gameNameToFind.toLowerCase());
   if (exactMatch) return exactMatch;
 
   // 2. Match normalizzato (senza punteggiatura, numeri romani convertiti)
-  const normalizedSteamName = normalizeGameTitle(steamGameName);
-  const normalizedMatch = existingGames.find(g => normalizeGameTitle(g.Title) === normalizedSteamName);
+  const normalizedGameName = normalizeGameTitle(gameNameToFind);
+  const normalizedMatch = existingGames.find(g => normalizeGameTitle(getTitle(g)) === normalizedGameName);
   if (normalizedMatch) return normalizedMatch;
 
   // 3. Match senza suffissi di edizione (più importante per Skyrim vs Skyrim Special Edition)
-  const steamNameNoEdition = removeEditionSuffixes(normalizedSteamName);
+  const gameNameNoEdition = removeEditionSuffixes(normalizedGameName);
   const editionMatch = existingGames.find(g => {
-    const dbNameNoEdition = removeEditionSuffixes(normalizeGameTitle(g.Title));
-    return dbNameNoEdition === steamNameNoEdition && steamNameNoEdition.length > 3; // Evita match troppo corti
+    const dbNameNoEdition = removeEditionSuffixes(normalizeGameTitle(getTitle(g)));
+    return dbNameNoEdition === gameNameNoEdition && gameNameNoEdition.length > 3; // Evita match troppo corti
   });
   if (editionMatch) return editionMatch;
 
   // 4. Match ancora più aggressivo: rimuovi tutti gli spazi
-  const noSpaceSteam = steamNameNoEdition.replace(/\s+/g, '');
-  if (noSpaceSteam.length > 5) { // Evita match troppo corti senza spazi
+  const noSpaceGame = gameNameNoEdition.replace(/\s+/g, '');
+  if (noSpaceGame.length > 5) { // Evita match troppo corti senza spazi
     const aggressiveMatch = existingGames.find(g => {
-      const dbNameProcessed = removeEditionSuffixes(normalizeGameTitle(g.Title)).replace(/\s+/g, '');
-      return dbNameProcessed === noSpaceSteam;
+      const dbNameProcessed = removeEditionSuffixes(normalizeGameTitle(getTitle(g))).replace(/\s+/g, '');
+      return dbNameProcessed === noSpaceGame;
     });
     if (aggressiveMatch) return aggressiveMatch;
   }
