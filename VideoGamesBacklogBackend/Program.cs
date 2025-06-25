@@ -179,6 +179,7 @@ builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISteamService, SteamService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddHttpClient();
 
 builder.Services.ConfigureHttpJsonOptions(options =>

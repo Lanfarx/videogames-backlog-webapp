@@ -26,6 +26,7 @@ import LoadingSpinner from './components/loading/LoadingSpinner';
 import FriendsPage from './pages/header/FriendsPage';
 import PublicProfileView from './components/friends/PublicProfileView';
 import LandingPage from './pages/landing/LandingPage';
+import WishlistPage from './pages/wishlist/WishlistPage';
 import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
@@ -111,8 +112,9 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="/library" element={<LibraryPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />           
             <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/friends" element={<FriendsPage />} />
             <Route path="/profile/:userName" element={<PublicProfileView />} />

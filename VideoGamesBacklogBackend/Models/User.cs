@@ -14,10 +14,11 @@ namespace VideoGamesBacklogBackend.Models
         public string? Tags { get; set; } // Tag preferenze (serializzate come stringa separata da virgole)
         public PrivacySettings PrivacySettings { get; set; } = new PrivacySettings();
         public string? steamId { get; set; } // ID Steam per integrazione
-        public AppPreferences AppPreferences { get; set; } = new AppPreferences();
-
-        // Relazione uno-a-molti: un utente ha molti giochi nella sua libreria
+        public AppPreferences AppPreferences { get; set; } = new AppPreferences();        // Relazione uno-a-molti: un utente ha molti giochi nella sua libreria
         public List<Game> Library { get; set; } = new List<Game>();
+        
+        // Relazione uno-a-molti: un utente ha molti giochi nella sua wishlist
+        public List<Wishlist> Wishlist { get; set; } = new List<Wishlist>();
     }
 
     [Owned]

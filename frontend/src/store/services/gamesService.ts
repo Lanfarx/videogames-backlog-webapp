@@ -161,6 +161,11 @@ export const getGameStats = async (): Promise<{
   abandoned: number;
   platinum: number;
   totalHours: number;
+  totalSpent: number;
+  averagePrice: number;
+  freeGames: number;
+  highestPrice: number;
+  costPerHour: number;
 }> => {
   const res = await apiClient.get(`${API_URL}/stats`);
   return {
@@ -170,7 +175,12 @@ export const getGameStats = async (): Promise<{
     notStarted: res.data.notStarted,
     abandoned: res.data.abandoned,
     platinum: res.data.platinum,
-    totalHours: res.data.totalHours
+    totalHours: res.data.totalHours,
+    totalSpent: res.data.totalSpent,
+    averagePrice: res.data.averagePrice,
+    freeGames: res.data.freeGames,
+    highestPrice: res.data.highestPrice,
+    costPerHour: res.data.costPerHour
   };
 };
 
