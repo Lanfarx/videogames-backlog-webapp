@@ -157,6 +157,7 @@ const DashboardPage: React.FC = () => {
                         <StatsCard 
                             label="Prezzo Più Alto" 
                             value={loading ? "..." : ('€' + Number(stats.highestPrice).toFixed(2)).toString()} 
+                            subtitle={loading ? undefined : stats.highestPriceGameTitle ? stats.highestPriceGameTitle : undefined}
                             icon={<DollarSign className="h-6 w-6 text-accent-primary drop-shadow-lg" />} 
                         />
                     </div>

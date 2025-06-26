@@ -452,6 +452,9 @@ namespace VideoGamesBacklogBackend.Services
             var paidGames = games.Where(g => g.Price > 0).ToList();
             var totalHours = games.Sum(g => g.HoursPlayed);
 
+            // Trova il gioco con il prezzo più alto
+            var highestPriceGame = games.Count > 0 ? games.OrderByDescending(g => g.Price).First() : null;
+
             var stats = new GameStatsDto
             {
                 Total = games.Count,
@@ -466,7 +469,8 @@ namespace VideoGamesBacklogBackend.Services
                 TotalSpent = totalSpent,
                 AveragePrice = paidGames.Count > 0 ? paidGames.Average(g => g.Price) : 0,
                 FreeGames = freeGames,
-                HighestPrice = games.Count > 0 ? games.Max(g => g.Price) : 0,
+                HighestPrice = highestPriceGame?.Price ?? 0,
+                HighestPriceGameTitle = highestPriceGame?.Title,
                 CostPerHour = totalHours > 0 ? totalSpent / totalHours : 0
             };
 

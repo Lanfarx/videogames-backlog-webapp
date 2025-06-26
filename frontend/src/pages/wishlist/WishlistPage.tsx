@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Search, Filter } from 'lucide-react';
+import { Heart, Search, Filter, Plus } from 'lucide-react';
 import WishlistItemCard from '../../components/wishlist/WishlistItemCard';
+import GameSearchBar from '../../components/ui/GameSearchBar';
 import AddGameModal from '../../components/game/AddGameModal';
 import { wishlistService, WishlistItem } from '../../store/services/wishlistService';
 import { getGameDetails } from '../../store/services/rawgService';
@@ -17,11 +18,7 @@ const WishlistPage: React.FC = () => {
   const [prefillGame, setPrefillGame] = useState<any>(null);
 
   // Carica la wishlist
-  useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  const loadWishlist = async () => {
+  const loadWishlist = useCallback(async () => {
     try {
       setLoading(true);
       const response = await wishlistService.getWishlist();
@@ -31,7 +28,58 @@ const WishlistPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, [showToast]);
+
+  // Aggiunge un gioco alla wishlist (callback per GameSearchBar)
+  const handleGameAdd = async (game: any) => {
+    try {
+      // Controlla se il gioco è già nella wishlist
+      const isAlreadyInWishlist = wishlistItems.some(item => item.rawgId === game.id);
+      if (isAlreadyInWishlist) {
+        showToast('warning', 'Attenzione', 'Questo gioco è già nella tua wishlist');
+        return;
+      }
+
+      // Aggiungi alla wishlist
+      await wishlistService.addToWishlist({
+        rawgId: game.id,
+        title: game.Title,
+        coverImage: game.CoverImage,
+        releaseYear: game.ReleaseYear || new Date().getFullYear(),
+        genres: game.Genres || [],
+        metacritic: game.Metacritic || 0,
+        notes: ""
+      });
+
+      // Ricarica la wishlist
+      await loadWishlist();
+      showToast('success', 'Successo', `${game.Title} è stato aggiunto alla wishlist!`);
+    } catch (error: any) {
+      console.error('Errore nell\'aggiunta alla wishlist:', error);
+      
+      // Estrai il messaggio di errore dal backend
+      let errorMessage = 'Errore durante l\'aggiunta del gioco alla wishlist';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.title) {
+        errorMessage = error.response.data.title;
+      } else if (error.response?.data) {
+        // Se il backend restituisce direttamente una stringa
+        errorMessage = typeof error.response.data === 'string' 
+          ? error.response.data 
+          : error.response.data.error || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showToast('error', 'Errore', errorMessage);
+    }
   };
+
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
   // Rimuovi dalla wishlist
   const handleRemove = async (id: number) => {
@@ -125,18 +173,40 @@ const WishlistPage: React.FC = () => {
     <div className="min-h-screen bg-secondary-bg">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <Heart className="h-8 w-8 text-cyan-500 fill-cyan-500" />
-          <h1 className="text-3xl font-bold text-text-primary">La mia Wishlist</h1>
-          <span className="bg-cyan-500 text-white text-sm px-2 py-1 rounded-full">
-            {wishlistItems.length}
-          </span>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <Heart className="h-8 w-8 text-cyan-500 fill-cyan-500" />
+            <h1 className="text-3xl font-bold text-text-primary">La mia Wishlist</h1>
+            <span className="bg-cyan-500 text-white text-sm px-2 py-1 rounded-full">
+              {wishlistItems.length}
+            </span>
+          </div>
         </div>
 
-        {/* Filtri e ricerca */}
+        {/* Barra di ricerca per aggiungere giochi */}
+        <div className="bg-primary-bg rounded-lg p-6 mb-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Plus className="h-5 w-5 text-cyan-500" />
+            <h2 className="text-lg font-semibold text-text-primary">Aggiungi nuovi giochi</h2>
+          </div>
+          <GameSearchBar
+            placeholder="Cerca giochi da aggiungere alla wishlist..."
+            onGameAdd={handleGameAdd}
+            buttonText="Aggiungi"
+            buttonVariant="cyan"
+            maxResults={6}
+            showTooltip={true}
+          />
+        </div>
+
+        {/* Filtri e ricerca nella wishlist */}
         <div className="bg-primary-bg rounded-lg p-4 mb-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Search className="h-5 w-5 text-text-secondary" />
+            <h3 className="text-md font-medium text-text-primary">Filtra la tua wishlist</h3>
+          </div>
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Barra di ricerca */}
+            {/* Barra di ricerca nella wishlist */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary h-5 w-5" />
               <input

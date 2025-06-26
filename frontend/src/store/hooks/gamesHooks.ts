@@ -169,6 +169,7 @@ export function useGamesStats() {
       averagePrice: 0,
       freeGames: 0,
       highestPrice: 0,
+      highestPriceGameTitle: undefined,
       costPerHour: 0
     }, 
     loading, 

@@ -168,7 +168,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       {/* Pulsante per comprimere/espandere */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-10`}
+        className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-50`}
       >
         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>

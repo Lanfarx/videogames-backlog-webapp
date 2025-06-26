@@ -3,11 +3,12 @@ import React, { ReactNode } from 'react';
 interface StatsCardProps {
     label: string;
     value: string;
+    subtitle?: string;
     icon?: ReactNode;
     variant?: 'default' | 'hero';
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, variant = 'default' }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, variant = 'default' }) => {
     // Formatta il valore con separatori per le migliaia solo se è un numero puro
     const formattedValue = (() => {
         if (value.includes('%') || value.includes('€') || value.includes('...')) {
@@ -26,6 +27,11 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, variant = 'de
                 <div className="text-4xl lg:text-5xl font-bold text-accent-primary font-primary mb-2 group-hover:scale-110 transition-transform duration-300">
                     {formattedValue}
                 </div>
+                {subtitle && (
+                    <div className="text-xs text-text-secondary/70 font-secondary mb-1">
+                        {subtitle}
+                    </div>
+                )}
                 <div className="text-sm text-text-secondary font-secondary">
                     {label}
                 </div>
@@ -42,6 +48,11 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, icon, variant = 'de
                 )}
             </div>
             <div className="text-4xl font-bold text-accent-primary font-primary">{formattedValue}</div>
+            {subtitle && (
+                <div className="text-xs text-text-secondary/70 font-secondary mt-1">
+                    {subtitle}
+                </div>
+            )}
         </div>
     );
 };
