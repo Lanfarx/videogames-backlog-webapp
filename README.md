@@ -177,56 +177,80 @@ Questo permette a tutti i tuoi amici di condividere lo stesso database senza con
 
 ## ⚙️ Setup Rapido
 
-**Per iniziare subito:**
+**Per iniziare subito (3 passi):**
 ```bash
-# 1. Clona il repository
+# 1. Prerequisiti
+# - Installa Docker Desktop (https://docker.com/products/docker-desktop)
+# - Avvialo e aspetta che sia completamente caricato
+
+# 2. Clona il repository
 git clone <repo-url>
 cd videogames-backlog-webapp
 
-# 2. Configura le variabili d'ambiente (OPZIONALE)
+# 3. Configura ambiente (OPZIONALE)
 cp .env.example .env
-# Modifica .env con le tue API keys (Steam e RAWG opzionali)
+# Modifica .env solo per API keys personali (Steam/RAWG)
 
-# 3. Avvia l'applicazione
-# Windows: deployment/windows/start.bat
-# Mac/Linux: deployment/unix/start.sh
+# 4. Avvia l'applicazione
+# Windows: .\deployment\windows\start.bat
+# Mac/Linux: ./deployment/unix/start.sh
 ```
+
+**L'app si aprirà automaticamente** su http://localhost:3000/landing
+
+### 🚀 Avvio Intelligente
+- **Prima volta**: Build automatica completa (5-10 minuti)
+- **Volte successive**: Avvio rapido (30 secondi)
+- **Auto-detecta** se serve ricostruire le immagini Docker
+- **Browser automatico** si apre al termine
 
 ## 📁 File di Configurazione
 
 ### Configurazione Unica (`.env`)
-Il file `.env` nella root del progetto contiene **tutte** le configurazioni:
+Il file `.env` nella root del progetto contiene **tutte** le configurazioni necessarie.
+
+**Per iniziare subito** (configurazione minima):
+```bash
+# Copia il file template
+cp .env.example .env
+```
+
+Il file `.env` di default è già configurato per funzionare. **Personalizza solo se necessario**:
 
 ```env
-# Database (obbligatorio per produzione)
-DATABASE_URL=your_database_connection_string_here
+# DATABASE (già configurato, personalizza solo se necessario)
+DATABASE_URL=your_cloud_database_url_here
 
-# API Keys personali (opzionali)
+# API KEYS (opzionali - migliora l'esperienza)
 STEAM_API_KEY=la_tua_chiave_steam
 REACT_APP_RAWG_API_KEY=la_tua_chiave_rawg
 
-# Configurazione porta
+# CONFIGURAZIONE PORTE (non modificare se non necessario)
 BACKEND_PORT=5000
 ```
 
-> 📝 **Nota**: Il database locale PostgreSQL è preconfigurato nei container Docker. La `DATABASE_URL` è necessaria solo per deployment in produzione.
+### 🎯 Database: Configurazione Intelligente
+- **Sviluppo locale**: PostgreSQL automatico nei container Docker
+- **Produzione/Condivisione**: Configura `DATABASE_URL` per database cloud
+- **Primo avvio**: Funziona subito senza configurazioni!
 
 ### Cosa Succede Senza API Keys?
 
-**✅ Funziona sempre**:
+**✅ Funziona sempre perfettamente**:
 - Gestione completa libreria giochi
 - Sistema sociale e recensioni  
 - Dashboard e statistiche
+- Autenticazione e privacy
 - Tutte le funzionalità core
 
 **🔑 Con RAWG API Key**:
 - Ricerca automatica giochi con copertine
 - Informazioni dettagliate (generi, sviluppatori, etc.)
-- Esperienza utente migliorata
+- Esperienza utente migliorata per l'aggiunta giochi
 
 **🎮 Con Steam API Key**:
 - Importazione automatica libreria Steam
-- Sincronizzazione achievement (futuro)
+- Sincronizzazione achievement (in sviluppo)
 
 ## 🚀 Avvio Applicazione
 

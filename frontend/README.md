@@ -1,10 +1,69 @@
-# Getting Started with Create React App
+# 🎮 Frontend - Backlog Videoludico
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend React TypeScript per l'applicazione di gestione backlog videogiochi.
 
-## Available Scripts
+## 🚀 Avvio Rapido
 
-In the project directory, you can run:
+**Per sviluppo locale, usa Docker (raccomandato):**
+```bash
+# Dalla root del progetto
+cd deployment/windows    # o deployment/unix
+start.bat                # o ./start.sh
+```
+
+**Per sviluppo frontend standalone:**
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## 🛠️ Stack Tecnologico
+
+### Core
+- **[React 19.1.0](https://react.dev/)** - Framework UI reattivo
+- **[TypeScript 4.9.5](https://www.typescriptlang.org/)** - Type safety
+- **[Create React App 5.0.1](https://create-react-app.dev/)** - Build tool
+
+### Styling & UI
+- **[Tailwind CSS](https://tailwindcss.com/)** - Framework CSS utility-first
+- **[Lucide React](https://lucide.dev/)** - Icone moderne e minimali
+- **[PostCSS](https://postcss.org/)** - Processore CSS avanzato
+
+### State Management & Routing
+- **[Redux Toolkit 2.8.2](https://redux-toolkit.js.org/)** - Gestione stato globale
+- **[React Router DOM 7.5.2](https://reactrouter.com/)** - Routing SPA
+- **[React Redux 9.2.0](https://react-redux.js.org/)** - Connessione React-Redux
+
+### HTTP & Data
+- **[Axios 1.9.0](https://axios-http.com/)** - Client HTTP per API
+
+## 📁 Struttura del Progetto
+
+```
+frontend/
+├── public/
+│   ├── index.html              # Template HTML principale
+│   ├── manifest.json           # PWA manifest
+│   └── placeholder.svg         # Placeholder assets
+├── src/
+│   ├── components/             # Componenti riutilizzabili
+│   ├── pages/                 # Pagine principali dell'app
+│   ├── store/                 # Redux store e services
+│   ├── types/                 # TypeScript type definitions
+│   ├── utils/                 # Utility functions
+│   ├── config/                # App configuration
+│   ├── styles/                # CSS files
+│   ├── App.tsx                # Root component
+│   └── index.tsx              # Entry point
+├── build/                     # Build output (generato)
+├── package.json               # Dependencies e scripts
+├── tailwind.config.js         # Tailwind configuration
+├── postcss.config.js          # PostCSS configuration
+└── tsconfig.json              # TypeScript configuration
+```
+
+## 🔧 Script Disponibili
 
 ### `npm start`
 

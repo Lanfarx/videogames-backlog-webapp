@@ -2,7 +2,32 @@
 
 Script per gestire facilmente il deployment dell'applicazione.
 
-## � Struttura Organizzata
+## ⚠️ Prerequisiti
+
+**Prima di usare qualsiasi script:**
+
+### 1. Docker Desktop
+- **Scarica**: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
+- **Installa** e **avvia** Docker Desktop
+- **Verifica**: L'icona Docker deve essere verde nella system tray
+- **Test**: Esegui `docker --version` per verificare l'installazione
+
+### 2. File .env Configurato
+```bash
+# Nella root del progetto (non in deployment/)
+cp .env.example .env
+```
+
+### 3. Spazio Disco
+- **Minimo**: 2GB liberi per immagini Docker
+- **Raccomandato**: 5GB per build completi
+
+### 4. Porte di Rete Libere
+- **Porta 3000**: Frontend React
+- **Porta 5000**: Backend .NET
+- **Verifica**: Se occupate, ferma i servizi o cambia configurazione
+
+## 📁 Struttura Organizzata
 
 ```
 deployment/
