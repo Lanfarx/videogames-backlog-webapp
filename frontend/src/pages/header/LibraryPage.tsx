@@ -41,7 +41,10 @@ const LibraryPage: React.FC = () => {
         paginationData, 
         paginationLoading, 
         fetchPaginatedGames
-    } = usePaginatedGames();const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    } = usePaginatedGames();const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+        const saved = localStorage.getItem('libraryViewMode');
+        return (saved as "grid" | "list") || "grid";
+    });
     const [currentPage, setCurrentPage] = useState(() => {
         const savedPage = localStorage.getItem('libraryCurrentPage');
         return savedPage ? parseInt(savedPage, 10) : 1;
@@ -50,26 +53,44 @@ const LibraryPage: React.FC = () => {
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [gameToDelete, setGameToDelete] = useState<string | null>(null);     const [filters, setFilters] = useState<GameFilters>({
-        Status: [],
-        Platform: [],
-        genre: [],
-        PriceRange: [0, 0],
-        hoursRange: [0, 0],
-        MetacriticRange: [0, 100],
-        PurchaseDate: "",
-    });
+    const [gameToDelete, setGameToDelete] = useState<string | null>(null); 
+
+    // Funzione per caricare i filtri salvati da localStorage
+    const loadSavedFilters = useCallback((): GameFilters => {
+        try {
+            const savedFilters = localStorage.getItem('libraryFilters');
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                // Assicurati che il formato sia corretto
+                return {
+                    Status: parsed.Status || [],
+                    Platform: parsed.Platform || [],
+                    genre: parsed.genre || [],
+                    PriceRange: parsed.PriceRange || [0, 0],
+                    hoursRange: parsed.hoursRange || [0, 0],
+                    MetacriticRange: parsed.MetacriticRange || [0, 100],
+                    PurchaseDate: parsed.PurchaseDate || "",
+                };
+            }
+        } catch (error) {
+            console.warn('Errore nel caricamento dei filtri salvati:', error);
+        }
+        // Valori di default se non ci sono filtri salvati
+        return {
+            Status: [],
+            Platform: [],
+            genre: [],
+            PriceRange: [0, 0],
+            hoursRange: [0, 0],
+            MetacriticRange: [0, 100],
+            PurchaseDate: "",
+        };
+    }, []);
+
+    const [filters, setFilters] = useState<GameFilters>(loadSavedFilters);
     
     // Filtri separati per il debouncing (solo range sliders)
-    const [debouncedFilters, setDebouncedFilters] = useState<GameFilters>({
-        Status: [],
-        Platform: [],
-        genre: [],
-        PriceRange: [0, 0],
-        hoursRange: [0, 0],
-        MetacriticRange: [0, 100],
-        PurchaseDate: "",
-    });    // Flag per evitare chiamate API prima che i massimali siano calcolati
+    const [debouncedFilters, setDebouncedFilters] = useState<GameFilters>(loadSavedFilters);    // Flag per evitare chiamate API prima che i massimali siano calcolati
     const [filtersInitialized, setFiltersInitialized] = useState(false);    // Stato per l'ordinamento con persistenza localStorage
     const [sortBy, setSortBy] = useState<SortOption>(() => {
         const savedSortBy = localStorage.getItem('librarySortBy');
@@ -80,7 +101,9 @@ const LibraryPage: React.FC = () => {
         return (savedSortOrder as SortOrder) || "asc";
     });
     const [gamesPerPage, setGamesPerPage] = useState(0);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState(() => {
+        return localStorage.getItem('librarySearchQuery') || "";
+    });
     const [columns, setColumns] = useState(4);
     const gridContainerRef = useRef<HTMLDivElement>(null);    // Funzione debounced per aggiornare i filtri di range
     const updateDebouncedFilters = useDebounce((newFilters: GameFilters) => {
@@ -96,21 +119,40 @@ const LibraryPage: React.FC = () => {
     useEffect(() => {
         if (allGamesFromStore.length > 0) {
             const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(allGamesFromStore);
+            
+            // Mantieni i filtri salvati ma aggiorna i range massimi se necessario
+            const savedFilters = loadSavedFilters();
             const newFilters = {
-                Status: [],
-                Platform: [],
-                genre: [],
-                PriceRange: [0, PriceRange[1]] as [number, number],
-                hoursRange: [0, hoursRange[1]] as [number, number],
-                MetacriticRange: [0, MetacriticRange[1]] as [number, number],
-                PurchaseDate: "",
+                Status: savedFilters.Status,
+                Platform: savedFilters.Platform,
+                genre: savedFilters.genre,
+                PriceRange: [
+                    savedFilters.PriceRange[0], 
+                    Math.min(savedFilters.PriceRange[1], PriceRange[1])
+                ] as [number, number],
+                hoursRange: [
+                    savedFilters.hoursRange[0],
+                    Math.min(savedFilters.hoursRange[1], hoursRange[1])
+                ] as [number, number],
+                MetacriticRange: [
+                    savedFilters.MetacriticRange[0],
+                    Math.min(savedFilters.MetacriticRange[1], MetacriticRange[1])
+                ] as [number, number],
+                PurchaseDate: savedFilters.PurchaseDate,
             };
+            
+            // Se non ci sono filtri salvati, usa i valori di default con i range massimi
+            if (!localStorage.getItem('libraryFilters')) {
+                newFilters.PriceRange = [0, PriceRange[1]];
+                newFilters.hoursRange = [0, hoursRange[1]];
+                newFilters.MetacriticRange = [0, MetacriticRange[1]];
+            }
             
             setFilters(newFilters);
             setDebouncedFilters(newFilters);
             setFiltersInitialized(true);
         }
-    }, [allGamesFromStore]);
+    }, [allGamesFromStore, loadSavedFilters]);
 
     // Sincronizza i filtri per il debouncing
     useEffect(() => {
@@ -292,7 +334,29 @@ const LibraryPage: React.FC = () => {
     useEffect(() => {
         localStorage.setItem('librarySortBy', sortBy);
         localStorage.setItem('librarySortOrder', sortOrder);
-    }, [sortBy, sortOrder]);    return (
+    }, [sortBy, sortOrder]);
+
+    // Effetto per salvare i filtri nel localStorage quando cambiano
+    useEffect(() => {
+        // Salva solo dopo che i filtri sono stati inizializzati
+        if (filtersInitialized) {
+            try {
+                localStorage.setItem('libraryFilters', JSON.stringify(filters));
+            } catch (error) {
+                console.warn('Errore nel salvare i filtri:', error);
+            }
+        }
+    }, [filters, filtersInitialized]);
+
+    // Effetto per salvare la modalità di visualizzazione nel localStorage
+    useEffect(() => {
+        localStorage.setItem('libraryViewMode', viewMode);
+    }, [viewMode]);
+
+    // Effetto per salvare la query di ricerca nel localStorage
+    useEffect(() => {
+        localStorage.setItem('librarySearchQuery', searchQuery);
+    }, [searchQuery]);    return (
         <div className="flex flex-col bg-secondary-bg min-h-screen w-full overflow-x-hidden library-container">
             <main className="flex-grow flex flex-col md:flex-row min-w-0 overflow-hidden library-main">
                 <SidebarFilter
@@ -363,15 +427,20 @@ const LibraryPage: React.FC = () => {
                                 <button
                                     onClick={() => {
                                         const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(allGamesFromStore);
-                                        setFilters({
+                                        const resetFilters: GameFilters = {
                                             Status: [],
                                             Platform: [],
                                             genre: [],
-                                            PriceRange: [0, PriceRange[1]],
-                                            hoursRange: [0, hoursRange[1]],
-                                            MetacriticRange: [0, MetacriticRange[1]],
-                                            PurchaseDate: "",                                        });
+                                            PriceRange: [0, PriceRange[1]] as [number, number],
+                                            hoursRange: [0, hoursRange[1]] as [number, number],
+                                            MetacriticRange: [0, MetacriticRange[1]] as [number, number],
+                                            PurchaseDate: "",
+                                        };
+                                        setFilters(resetFilters);
+                                        // Pulisci anche i filtri salvati
+                                        localStorage.removeItem('libraryFilters');
                                         setSearchQuery("");
+                                        localStorage.removeItem('librarySearchQuery');
                                         setCurrentPage(1);
                                         localStorage.setItem('libraryCurrentPage', '1');
                                     }}

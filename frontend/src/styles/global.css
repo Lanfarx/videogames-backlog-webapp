@@ -874,6 +874,23 @@ textarea:focus::placeholder {
   overflow: hidden;
 }
 
+/* Stili specifici per la sidebar della libreria */
+.library-sidebar {
+  position: relative;
+  z-index: 10;
+  overflow: visible !important; /* Permette al pulsante di sporgere */
+}
+
+.library-sidebar .absolute {
+  z-index: 999;
+}
+
+/* Assicura che il contenuto interno della sidebar non interferisca con il pulsante */
+.library-sidebar > div {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Assicura che nessun elemento causi scroll orizzontale indesiderato */
 * {
   box-sizing: border-box;
