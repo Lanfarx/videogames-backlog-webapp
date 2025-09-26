@@ -158,7 +158,9 @@ namespace VideoGamesBacklogBackend.Services
                 Count = newGamesCount,
                 UpdatedGames = new List<UpdatedGameInfo>(), // Nessun gioco aggiornato nell'initial load
                 DebugInfo = string.Join("; ", debugInfo)
-            };        }private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId)
+            };        }
+
+        private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId)
         {
             var existingGames = await _context.Games
                 .Where(g => g.UserId == userId && g.Platform == "Steam")
@@ -168,7 +170,7 @@ namespace VideoGamesBacklogBackend.Services
             await Task.Delay(1500); // 1.5 secondi di delay
 
             // Ottieni anche i giochi giocati di recente per la validazione
-            var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId);var updatedCount = 0;
+            var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId); var updatedCount = 0;
             var statusChangedCount = 0;
             var newGamesAdded = 0;
             var matchedGames = new List<string>();
@@ -179,6 +181,29 @@ namespace VideoGamesBacklogBackend.Services
             debugInfo.Add($"Steam games found: {steamGames.Count}");
             debugInfo.Add($"Recently played games found: {recentlyPlayedGames.Count}");
             debugInfo.Add($"Existing database games: {existingGames.Count}");
+            
+            // Debug specifico per capire se il gioco è presente nei dati Steam
+            var chillquariumInSteam = steamGames.FirstOrDefault(g => g.name.ToLower().Contains("chillquarium"));
+            if (chillquariumInSteam != null)
+            {
+                debugInfo.Add($"TROVATO nei Steam games: {chillquariumInSteam.name} (AppID: {chillquariumInSteam.appid}, Ore: {Math.Round(chillquariumInSteam.playtime_forever / 60.0)})");
+            }
+            
+            var chillquariumInRecent = recentlyPlayedGames.FirstOrDefault(g => g.name.ToLower().Contains("chillquarium"));
+            if (chillquariumInRecent != null)
+            {
+                debugInfo.Add($"TROVATO nei Recently Played: {chillquariumInRecent.name} (AppID: {chillquariumInRecent.appid}, Ore: {Math.Round(chillquariumInRecent.playtime_forever / 60.0)})");
+            }
+            
+            var chillquariumInDB = existingGames.FirstOrDefault(g => g.Title.ToLower().Contains("chillquarium"));
+            if (chillquariumInDB != null)
+            {
+                debugInfo.Add($"TROVATO nel DB: {chillquariumInDB.Title} (ID: {chillquariumInDB.Id}, Ore: {chillquariumInDB.HoursPlayed})");
+            }
+            else
+            {
+                debugInfo.Add("NON TROVATO nel database");
+            }
 
             // Crea un ClaimsPrincipal per l'utente per usare il GameService
             var userClaims = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -186,40 +211,31 @@ namespace VideoGamesBacklogBackend.Services
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString())
             }));
 
-            // Prima elabora i giochi posseduti (owned games)
-            foreach (var steamGame in steamGames)
+            // Elabora SOLO i giochi giocati di recente
+            foreach (var recentGame in recentlyPlayedGames)
             {
-                var existingGame = FindMatchingGame(existingGames, steamGame.name);
-
+                var existingGame = FindMatchingGame(existingGames, recentGame.name);
+                
                 if (existingGame != null)
                 {
-                    var newHours = (int)Math.Round(steamGame.playtime_forever / 60.0);
-                    var wasNotStarted = existingGame.Status == GameStatus.NotStarted;                  if (existingGame.HoursPlayed != newHours)
+                    // Gioco già presente nel database - aggiorna le ore
+                    var totalHours = (int)Math.Round(recentGame.playtime_forever / 60.0);
+                    var recentHours = (int)Math.Round(recentGame.playtime_2weeks / 60.0);
+                    var wasNotStarted = existingGame.Status == GameStatus.NotStarted;
+                    
+                    if (existingGame.HoursPlayed != totalHours)
                     {
-                        // Informazioni di debug sui giochi recenti (solo per logging)
-                        var recentGame = recentlyPlayedGames.FirstOrDefault(rg => rg.appid == steamGame.appid);
-                        var hoursDifference = newHours - existingGame.HoursPlayed;
-                        var recentHours = recentGame != null ? (int)Math.Round(recentGame.playtime_2weeks / 60.0) : 0;
+                        var hoursDifference = totalHours - existingGame.HoursPlayed;
                         var previousHours = existingGame.HoursPlayed;
                         var previousStatus = existingGame.Status.ToString();
 
-                        if (recentGame != null)
-                        {
-                            debugInfo.Add($"{steamGame.name}: Ore totali: {newHours}, Incremento: {hoursDifference}h, Ultime 2 settimane: {recentHours}h");
-                        }
-                        else
-                        {
-                            debugInfo.Add($"{steamGame.name}: Ore totali: {newHours}, Incremento: {hoursDifference}h (non presente nei recenti)");
-                        }
+                        debugInfo.Add($"{recentGame.name}: Ore totali: {totalHours}, Incremento: {hoursDifference}h, Ore recenti: {recentHours}h");
 
-                        // Usa il GameService che gestisce automaticamente controlli di stato e attività
-                        // Non impostare prezzi automaticamente per i giochi Steam
-                        var updatedGame = await _gameService.UpdateGamePlaytimeAsync(userClaims, existingGame.Id, newHours);
-                        
+                        var updatedGame = await _gameService.UpdateGamePlaytimeAsync(userClaims, existingGame.Id, totalHours);
+
                         if (updatedGame != null)
                         {
-                            // Controlla se lo stato è cambiato
-                            var statusChanged = wasNotStarted && newHours > 0;
+                            var statusChanged = wasNotStarted && totalHours > 0;
                             if (statusChanged)
                             {
                                 statusChangedCount++;
@@ -230,138 +246,104 @@ namespace VideoGamesBacklogBackend.Services
                             {
                                 GameTitle = existingGame.Title,
                                 PreviousHours = previousHours,
-                                NewHours = newHours,
+                                NewHours = totalHours,
                                 HoursAdded = hoursDifference,
                                 StatusChanged = statusChanged,
                                 PreviousStatus = previousStatus,
                                 NewStatus = updatedGame.Status.ToString()
                             });
-                            
+
                             updatedCount++;
+                            matchedGames.Add($"{recentGame.name} -> {existingGame.Title} (Ore: {totalHours})" +
+                                           (statusChanged ? " [STATO: Da iniziare → In corso]" : ""));
                         }
                     }
-                    
-                    matchedGames.Add($"{steamGame.name} -> {existingGame.Title} (Ore: {newHours})" + 
-                                   (wasNotStarted && newHours > 0 ? " [STATO: Da iniziare → In corso]" : ""));
+                    else
+                    {
+                        debugInfo.Add($"{recentGame.name} già aggiornato con le ore corrette: {totalHours}");
+                        matchedGames.Add($"{recentGame.name} -> {existingGame.Title} (Ore: {totalHours}) [NESSUN CAMBIAMENTO]");
+                    }
                 }
                 else
                 {
-                    unmatched.Add(steamGame.name);
-                }
-            }
+                    // Gioco non presente nel database ma giocato di recente
+                    var totalHours = (int)Math.Round(recentGame.playtime_forever / 60.0);
+                    var recentHours = (int)Math.Round(recentGame.playtime_2weeks / 60.0);
 
-            // Poi elabora i giochi giocati di recente che potrebbero non essere nei posseduti
-            foreach (var recentGame in recentlyPlayedGames)
-            {
-                // Verifica se questo gioco è già stato elaborato nei posseduti
-                var alreadyProcessed = steamGames.Any(sg => sg.appid == recentGame.appid);
-                
-                if (!alreadyProcessed)
-                {
-                    var existingGame = FindMatchingGame(existingGames, recentGame.name);
-                      if (existingGame != null)
+                    // Euristica per determinare se è probabilmente free-to-play
+                    var isProbablyFreeToPlay = (totalHours == 0 && recentHours > 0) || 
+                                               (totalHours > 0 && totalHours < 1);
+
+                    if (!isProbablyFreeToPlay)
                     {
-                        var totalHours = (int)Math.Round(recentGame.playtime_forever / 60.0);
-                        var recentHours = (int)Math.Round(recentGame.playtime_2weeks / 60.0);
-                        var wasNotStarted = existingGame.Status == GameStatus.NotStarted;
-                          if (existingGame.HoursPlayed != totalHours)
-                        {
-                            var hoursDifference = totalHours - existingGame.HoursPlayed;
-                            var previousHours = existingGame.HoursPlayed;
-                            var previousStatus = existingGame.Status.ToString();
-                            
-                            debugInfo.Add($"{recentGame.name} (Solo Recent): Ore totali: {totalHours}, Ore recenti: {recentHours}h");
-                            
-                            var updatedGame = await _gameService.UpdateGamePlaytimeAsync(userClaims, existingGame.Id, totalHours);
-                            
-                            if (updatedGame != null)
-                            {
-                                var statusChanged = wasNotStarted && totalHours > 0;
-                                if (statusChanged)
-                                {
-                                    statusChangedCount++;
-                                }
+                        debugInfo.Add($"{recentGame.name} (Owned/Family Share): Ore totali: {totalHours}, Ore recenti: {recentHours}h - AGGIUNTO");
 
-                                // Aggiungi alle informazioni strutturate
+                        try
+                        {
+                            var newGame = new Game
+                            {
+                                Title = recentGame.name,
+                                Platform = "Steam",
+                                HoursPlayed = totalHours,
+                                Status = totalHours > 0 ? GameStatus.InProgress : GameStatus.NotStarted,
+                                UserId = userId,
+                                PurchaseDate = DateTime.UtcNow.ToString("yyyy-MM-dd")
+                            };
+
+                            var addedGame = await _gameService.AddGameAsync(userClaims, newGame);
+
+                            if (addedGame != null)
+                            {
+                                newGamesAdded++;
+                                debugInfo.Add($"{recentGame.name} AGGIUNTO CORRETTAMENTE con ID: {addedGame.Id}");
+
                                 updatedGamesInfo.Add(new UpdatedGameInfo
                                 {
-                                    GameTitle = existingGame.Title,
-                                    PreviousHours = previousHours,
+                                    GameTitle = addedGame.Title,
+                                    PreviousHours = 0,
                                     NewHours = totalHours,
-                                    HoursAdded = hoursDifference,
-                                    StatusChanged = statusChanged,
-                                    PreviousStatus = previousStatus,
-                                    NewStatus = updatedGame.Status.ToString()
+                                    HoursAdded = totalHours,
+                                    StatusChanged = totalHours > 0,
+                                    PreviousStatus = "Non presente",
+                                    NewStatus = addedGame.Status.ToString()
                                 });
-                                
-                                updatedCount++;
-                                matchedGames.Add($"{recentGame.name} -> {existingGame.Title} (Ore: {totalHours}) [RECENT ONLY]" + 
-                                               (statusChanged ? " [STATO: Da iniziare → In corso]" : ""));
+
+                                matchedGames.Add($"{recentGame.name} [NUOVO GIOCO AGGIUNTO] (Ore: {totalHours})" +
+                                               (totalHours > 0 ? " [STATO: Nuovo → In corso]" : " [STATO: Nuovo → Da iniziare]"));
+                            }
+                            else
+                            {
+                                debugInfo.Add($"{recentGame.name} ERRORE: GameService ha restituito null");
                             }
                         }
-                    }                    else
+                        catch (Exception ex)
+                        {
+                            debugInfo.Add($"{recentGame.name} ERRORE nell'aggiunta: {ex.Message}");
+                        }
+                    }
+                    else
                     {
-                        // Gioco non presente nel database ma giocato di recente
-                        // Lo aggiungiamo automaticamente usando GameService
-                        var totalHours = (int)Math.Round(recentGame.playtime_forever / 60.0);
-                        var recentHours = (int)Math.Round(recentGame.playtime_2weeks / 60.0);
-                        
-                        debugInfo.Add($"{recentGame.name} (Nuovo da Recent): Ore totali: {totalHours}, Ore recenti: {recentHours}h - AGGIUNTO");
-                          
-                        var newGame = new Game
-                        {
-                            Title = recentGame.name,
-                            Platform = "Steam",
-                            HoursPlayed = totalHours,
-                            Status = totalHours > 0 ? GameStatus.InProgress : GameStatus.NotStarted,
-                            UserId = userId,
-                            PurchaseDate = DateTime.UtcNow.ToString("yyyy-MM-dd")
-                        };
-
-                        // Usa GameService per aggiungere il gioco e creare automaticamente l'attività
-                        var addedGame = await _gameService.AddGameAsync(userClaims, newGame);
-
-                        newGamesAdded++;
-                        
-                        // Aggiungi alle informazioni strutturate
-                        updatedGamesInfo.Add(new UpdatedGameInfo
-                        {
-                            GameTitle = addedGame.Title,
-                            PreviousHours = 0,
-                            NewHours = totalHours,
-                            HoursAdded = totalHours,
-                            StatusChanged = totalHours > 0,
-                            PreviousStatus = "Non presente",
-                            NewStatus = addedGame.Status.ToString()
-                        });
-                        
-                        matchedGames.Add($"{recentGame.name} [NUOVO GIOCO AGGIUNTO] (Ore: {totalHours})" + 
-                                       (totalHours > 0 ? " [STATO: Nuovo → In corso]" : " [STATO: Nuovo → Da iniziare]"));
+                        debugInfo.Add($"{recentGame.name} IGNORATO (probabilmente free-to-play): Ore totali: {totalHours}, Ore recenti: {recentHours}h");
                     }
                 }
-            }            debugInfo.Add($"Games matched and updated: {updatedCount}");
-            debugInfo.Add($"New games added from recently played: {newGamesAdded}");
-            debugInfo.Add($"Status changes (NotStarted → InProgress): {statusChangedCount}");
-            debugInfo.Add($"Unmatched games: {unmatched.Count}");
-            
-            if (unmatched.Any())
-            {
-                debugInfo.Add("UNMATCHED GAMES:");
-                debugInfo.AddRange(unmatched.Take(10)); // Mostra solo i primi 10 per evitare troppo output
-                if (unmatched.Count > 10)
-                {
-                    debugInfo.Add($"... e altri {unmatched.Count - 10} giochi non trovati");
-                }
             }
-            
-            debugInfo.AddRange(matchedGames);            var totalProcessed = updatedCount + newGamesAdded;
+
+            debugInfo.Add($"Recently played games processed: {recentlyPlayedGames.Count}");
+            debugInfo.Add($"Games matched and updated: {updatedCount}");
+            debugInfo.Add($"New recently played games added: {newGamesAdded}");
+            debugInfo.Add($"Status changes (NotStarted → InProgress): {statusChangedCount}");
+            debugInfo.Add("Only recently played games are processed - owned games ignored unless recently played");
+
+            debugInfo.AddRange(matchedGames);
+
+            var totalProcessed = updatedCount + newGamesAdded;
             var message = $"{updatedCount} giochi aggiornati con le ore di Steam";
-            
+
             if (newGamesAdded > 0)
             {
-                message += $", {newGamesAdded} nuovi giochi aggiunti";
+                message += $", {newGamesAdded} nuovi giochi aggiunti dai recently played";
             }
-            
+
             if (statusChangedCount > 0)
             {
                 message += $" ({statusChangedCount} cambiati a 'In corso')";

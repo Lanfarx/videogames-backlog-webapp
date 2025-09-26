@@ -165,6 +165,7 @@ export const getGameStats = async (): Promise<{
   averagePrice: number;
   freeGames: number;
   highestPrice: number;
+  highestPriceGameTitle?: string;
   costPerHour: number;
 }> => {
   const res = await apiClient.get(`${API_URL}/stats`);
@@ -180,6 +181,7 @@ export const getGameStats = async (): Promise<{
     averagePrice: res.data.averagePrice,
     freeGames: res.data.freeGames,
     highestPrice: res.data.highestPrice,
+    highestPriceGameTitle: res.data.highestPriceGameTitle,
     costPerHour: res.data.costPerHour
   };
 };

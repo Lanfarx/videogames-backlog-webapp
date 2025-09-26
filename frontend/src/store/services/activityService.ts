@@ -50,7 +50,7 @@ export interface ActivityFiltersDto {
 }
 
 export interface PaginatedActivitiesDto {
-  activities: Activity[];
+  activities: (Activity | ActivityWithReactions)[];
   totalCount: number;
   pageSize: number;
   currentPage: number;
@@ -85,15 +85,29 @@ function mapActivityTypeToApi(frontendType: ActivityType): number {
 
 // Mappatura da API response a tipo frontend
 function mapActivityFromApi(apiActivity: any): Activity {
-  return {
+  const baseActivity: Activity = {
     id: apiActivity.id,
     type: mapActivityTypeFromApi(apiActivity.type),
     gameId: apiActivity.gameId,
     gameTitle: apiActivity.gameTitle,
     timestamp: apiActivity.timestamp, // Mantieni come stringa per la serializzazione Redux
     additionalInfo: apiActivity.additionalInfo,
-    gameImageUrl: apiActivity.gameImageUrl
+    gameImageUrl: apiActivity.gameImageUrl,
+    // Includiamo i campi delle reazioni e commenti se presenti
+    comments: apiActivity.comments || [],
+    commentsCount: apiActivity.commentsCount || 0
   };
+
+  // Se ci sono reazioni o reactionsSummary, restituiamo un ActivityWithReactions
+  if (apiActivity.reactions || apiActivity.reactionsSummary || apiActivity.reactionCounts) {
+    return {
+      ...baseActivity,
+      reactions: apiActivity.reactions || [],
+      reactionSummary: apiActivity.reactionsSummary || []
+    } as ActivityWithReactions;
+  }
+
+  return baseActivity;
 }
 
 // Funzioni API

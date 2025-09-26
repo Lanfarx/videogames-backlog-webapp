@@ -47,6 +47,7 @@ interface GamesState {
     averagePrice: number;
     freeGames: number;
     highestPrice: number;
+    highestPriceGameTitle?: string;
     costPerHour: number;
   } | null;
   statsLoading: boolean;

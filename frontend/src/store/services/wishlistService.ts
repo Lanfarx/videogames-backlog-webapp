@@ -48,8 +48,15 @@ export const wishlistService = {
     apiClient.get<WishlistItem[]>(API_URL),
 
   // Aggiungi un gioco alla wishlist
-  addToWishlist: (dto: AddToWishlistDto) =>
-    apiClient.post<WishlistItem>(API_URL, dto),
+  addToWishlist: async (dto: AddToWishlistDto) => {
+    try {
+      console.log('Sending wishlist item:', dto); // Debug log
+      return await apiClient.post<WishlistItem>(API_URL, dto);
+    } catch (error: any) {
+      console.error('Wishlist API error:', error.response?.data); // Debug log
+      throw error;
+    }
+  },
 
   // Rimuovi un gioco dalla wishlist
   removeFromWishlist: (id: number) =>

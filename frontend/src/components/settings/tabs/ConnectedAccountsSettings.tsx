@@ -69,7 +69,7 @@ const ConnectedAccountsSettings: React.FC = () => {
             Collega i tuoi account di gioco per sincronizzare automaticamente la tua libreria e i tuoi progressi.
           </p>
           {/* Account Steam */}
-          <div className="border border-border-color rounded-lg overflow-hidden">
+          <div className="border border-border-color rounded-lg overflow-visible relative">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center space-x-3">
                 <div className="bg-platform-steam p-1.5 rounded">
@@ -148,11 +148,11 @@ const ConnectedAccountsSettings: React.FC = () => {
                       Collega
                     </button>
                   </div>                  <p className="text-xs text-text-secondary mt-1 text-right">
-                    <details className="relative">
+                    <details className="relative" style={{ zIndex: 9999 }}>
                       <summary className="cursor-pointer hover:underline text-accent-primary">
                         Come trovare il mio Steam ID?
                       </summary>
-                      <div className="absolute right-0 top-6 w-80 p-4 bg-primary-bg border border-border-color rounded-lg shadow-lg z-20">
+                      <div className="absolute right-0 top-6 w-80 p-4 bg-primary-bg border border-border-color rounded-lg shadow-xl" style={{ zIndex: 10000 }}>
                         <h4 className="font-medium text-text-primary mb-2">Come trovare il tuo Steam ID:</h4>
                         <ol className="text-xs text-text-secondary space-y-2 list-decimal list-inside">
                           <li>Apri Steam e vai al tuo profilo</li>

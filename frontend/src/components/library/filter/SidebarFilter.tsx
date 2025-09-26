@@ -15,17 +15,35 @@ interface SidebarFilterProps {
 }
 
 const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, gamesCount, games }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showAllGenres, setShowAllGenres] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('librarySidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showAllGenres, setShowAllGenres] = useState(() => {
+    const saved = localStorage.getItem('libraryShowAllGenres');
+    return saved ? JSON.parse(saved) : false;
+  });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    Status: true,
-    Platform: true,
-    genre: true,
-    Price: true,
-    hours: true,
-    Metacritic: true,
-    date: true,  });
+  const [expandedSections, setExpandedSections] = useState(() => {
+    try {
+      const savedExpandedSections = localStorage.getItem('libraryExpandedSections');
+      if (savedExpandedSections) {
+        return JSON.parse(savedExpandedSections);
+      }
+    } catch (error) {
+      console.warn('Errore nel caricamento degli stati espansi delle sezioni:', error);
+    }
+    // Valori di default
+    return {
+      Status: true,
+      Platform: true,
+      genre: true,
+      Price: true,
+      hours: true,
+      Metacritic: true,
+      date: true,
+    };
+  });
   // Hook per azioni sui giochi
   const { removeAll } = useGameActions();
 
@@ -61,8 +79,27 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     }));
   }, [games]);
 
+  // Salva gli stati espansi delle sezioni nel localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('libraryExpandedSections', JSON.stringify(expandedSections));
+    } catch (error) {
+      console.warn('Errore nel salvare gli stati espansi delle sezioni:', error);
+    }
+  }, [expandedSections]);
+
+  // Salva lo stato di collasso della sidebar
+  useEffect(() => {
+    localStorage.setItem('librarySidebarCollapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
+
+  // Salva lo stato "mostra tutti i generi"
+  useEffect(() => {
+    localStorage.setItem('libraryShowAllGenres', JSON.stringify(showAllGenres));
+  }, [showAllGenres]);
+
   const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
+    setExpandedSections((prev: typeof expandedSections) => ({
       ...prev,
       [section]: !prev[section],
     }));
@@ -129,15 +166,18 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   };
   // Reimposta tutti i filtri
   const resetFilters = () => {
-    setFilters({
+    const newFilters = {
       Status: [] as GameStatus[],
       Platform: [],
       genre: [],
-      PriceRange: [0, maxPrice],
-      hoursRange: [0, maxHours],
-      MetacriticRange: [0, maxMetacritic],
+      PriceRange: [0, maxPrice] as [number, number],
+      hoursRange: [0, maxHours] as [number, number],
+      MetacriticRange: [0, maxMetacritic] as [number, number],
       PurchaseDate: "",
-    });
+    };
+    setFilters(newFilters);
+    // Pulisci anche i filtri salvati nel localStorage
+    localStorage.removeItem('libraryFilters');
   };
   // Funzione per eliminare tutti i giochi
   const handleDeleteAllGames = async () => {
@@ -163,12 +203,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
   return (    <aside
       className={`transition-all duration-300 ${
         isCollapsed ? 'w-10' : 'w-full md:w-[240px] lg:w-[260px] max-w-[280px]'
-      } shrink-0 bg-secondary-bg border-r border-border-color relative min-w-0 overflow-hidden library-sidebar`}
+      } shrink-0 bg-secondary-bg border-r border-border-color relative min-w-0 overflow-visible library-sidebar`}
     >
       {/* Pulsante per comprimere/espandere */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-10`}
+        className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-50`}
       >
         {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>

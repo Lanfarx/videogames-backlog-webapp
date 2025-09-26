@@ -15,6 +15,7 @@ namespace VideoGamesBacklogBackend.Dto
         public decimal AveragePrice { get; set; }
         public int FreeGames { get; set; }
         public decimal HighestPrice { get; set; }
+        public string? HighestPriceGameTitle { get; set; }
         public decimal CostPerHour { get; set; }
     }
 }

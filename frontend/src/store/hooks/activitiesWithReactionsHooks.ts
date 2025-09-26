@@ -34,7 +34,8 @@ export function useActivitiesWithReactions() {
 
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      const activities = await activityReactionService.getUserActivitiesWithReactions();
+      // Carichiamo molte più attività per evitare la limitazione a 20
+      const activities = await activityReactionService.getUserActivitiesWithReactions(1, 1000);
       setState(prev => ({ 
         ...prev, 
         activities, 
@@ -101,7 +102,9 @@ export function usePublicActivitiesWithReactions(userIdOrUsername: string | numb
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const activities = await activityReactionService.getPublicActivitiesWithReactions(
-        typeof userIdOrUsername === 'string' ? parseInt(userIdOrUsername) : userIdOrUsername
+        typeof userIdOrUsername === 'string' ? parseInt(userIdOrUsername) : userIdOrUsername,
+        1, // page
+        1000 // pageSize aumentato per caricare tutte le attività
       );
       setState(prev => ({ 
         ...prev, 

@@ -60,7 +60,7 @@ export const fetchActivityReactions = createAsyncThunk(
 export const fetchUserDiaryWithReactions = createAsyncThunk(
   'activityReactions/fetchUserDiary',
   async (params: { page?: number; pageSize?: number } = {}) => {
-    const { page = 1, pageSize = 20 } = params;
+    const { page = 1, pageSize = 1000 } = params; // Aumentato pageSize per caricare tutte le attività
     return await activityReactionService.getUserActivitiesWithReactions(page, pageSize);
   }
 );
@@ -71,7 +71,7 @@ export const fetchUserDiaryWithReactions = createAsyncThunk(
 export const fetchFriendDiaryWithReactions = createAsyncThunk(
   'activityReactions/fetchFriendDiary',
   async (params: { userId: number; page?: number; pageSize?: number }) => {
-    const { userId, page = 1, pageSize = 20 } = params;
+    const { userId, page = 1, pageSize = 1000 } = params; // Aumentato pageSize per caricare tutte le attività
     return await activityReactionService.getPublicActivitiesWithReactions(userId, page, pageSize);
   }
 );

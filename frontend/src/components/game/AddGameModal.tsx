@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Upload, Award } from 'lucide-react';
+import { X, Upload, Award } from 'lucide-react';
 import { Game, GameStatus } from '../../types/game';
 import { Status_OPTIONS, GAME_PlatformS, Genres } from '../../constants/gameConstants';
 import { useAppDispatch } from '../../store/hooks';
@@ -9,7 +9,8 @@ import FormErrorInline from '../ui/atoms/FormErrorInline';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
 import { formatPrice, formatMetacriticScore } from '../../utils/gameDisplayUtils';
 
-import { getGameDetails, searchGames } from '../../store/services/rawgService';
+import { getGameDetails } from '../../store/services/rawgService';
+import GameSearchBar from '../ui/GameSearchBar';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "Rating"> & { id?: number, CompletionDate?: string, PlatinumDate?: string }
@@ -42,11 +43,10 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   onClose,
   prefillGame
 }) => {
-  const dispatch = useAppDispatch();  const { add } = useGameActions();
+  const dispatch = useAppDispatch();
+  const { add } = useGameActions();
   const [activeTab, setActiveTab] = useState<"search" | "manual">("search");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);  const [gameData, setGameData] = useState<GameFormData>(initialGameData);
+  const [gameData, setGameData] = useState<GameFormData>(initialGameData);
   const [formError, setFormError] = useState<string | null>(null);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
   const [originalMetacritic, setOriginalMetacritic] = useState<number>(0);
@@ -80,25 +80,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       setIsAutoFilled(true);
     }
   }, [isOpen, prefillGame]);
-  // Gestisce la ricerca
-  const handleSearch = async (query: string) => {
-    if (query.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setIsSearching(true);
-      try {
-      const data = await searchGames(query);
-      
-      // I dati sono già mappati dal servizio, li usiamo direttamente
-      setSearchResults(data.results);
-    } catch (error) {
-      console.error('Errore nella ricerca:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };  // Gestisce la selezione di un gioco dalla ricerca
+
+  // Gestisce la selezione di un gioco dalla ricerca (callback per GameSearchBar)
   const handleGameSelect = async (game: any) => {
     try {
       const fullData = await getGameDetails(game.id);
@@ -117,8 +100,6 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       setOriginalMetacritic(metacriticValue); // Salva il valore originale
       setActiveTab("manual");
       setIsAutoFilled(true);
-      setSearchQuery("");
-      setSearchResults([]);
     } catch (error) {
       console.error("Errore durante il caricamento dei dettagli del gioco:", error);
     }
@@ -282,75 +263,15 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
           {/* Tab content */}
           {activeTab === "search" ? (
             <div className="mb-8">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSearch(searchQuery);
-                }}
+              <GameSearchBar
+                placeholder="Cerca titolo del gioco..."
+                onGameSelect={handleGameSelect}
+                buttonText="Seleziona"
+                buttonVariant="primary"
+                maxResults={8}
+                showTooltip={true}
                 className="mb-6"
-              >
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cerca titolo del gioco..."
-                    className="w-full px-12 py-3 border border-border-color rounded-lg bg-primary-bg text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-secondary h-5 w-5" />
-                  <button
-                    type="submit"
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-accent-primary text-white font-roboto font-medium text-sm rounded-md hover:bg-accent-primary/90 transition-colors"
-                  >
-                    Cerca
-                  </button>
-                </div>
-              </form>
-
-              {/* Risultati della ricerca */}
-              <div className="bg-primary-bg border border-border-color rounded-lg overflow-hidden">
-                {isSearching ? (
-                  <div className="p-6 text-center text-text-secondary">Ricerca in corso...</div>
-                ) : searchResults.length > 0 ? (
-                  <div className="max-h-[320px] overflow-y-auto">
-                    {searchResults.map((game) => (
-                      <div
-                        key={game.id}
-                        className="flex items-center justify-between p-3 h-[72px] border-b border-border-color hover:bg-secondary-bg transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <div className="relative h-[50px] w-[50px] mr-3 overflow-hidden">
-                            <div className="absolute inset-0 bg-accent-secondary/20 z-10"></div>
-                            <img
-                              src={game.CoverImage || "/placeholder.svg"}
-                              alt={game.Title}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="font-montserrat font-medium text-base text-text-primary">{game.Title}</h3>                            <p className="font-roboto text-sm text-text-secondary">
-                              {game.ReleaseYear} • 
-                              <span className="ml-2 text-yellow-500 font-medium">{formatMetacriticScore(game.Metacritic)}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleGameSelect(game)}
-                          className="px-3 py-1 bg-accent-primary text-white font-roboto font-medium text-sm rounded-md hover:bg-accent-primary/90 transition-colors"
-                        >
-                          Seleziona
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : searchQuery ? (
-                  <div className="p-6 text-center text-text-secondary">Nessun risultato trovato</div>
-                ) : (
-                  <div className="p-6 text-center text-text-secondary">
-                    Cerca un gioco per titolo per visualizzare i risultati
-                  </div>
-                )}
-              </div>
+              />
             </div>
           ) : (
             <div id="add-game-manual-tab" className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

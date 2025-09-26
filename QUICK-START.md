@@ -1,238 +1,455 @@
 # 🚀 QUICK START - Backlog Videoludico
 
-Guida rapida per avviare l'applicazione sul tuo computer.
+Guida completa per avviare l'applicazione sul tuo computer in pochi minuti.
 
-## 📋 Prerequisiti
+## 📋 Prerequisiti Obbligatori
 
-### 1. Installa Docker Desktop
-- Scarica da [docker.com](https://www.docker.com/products/docker-desktop/)
-- Installa e avvia Docker Desktop
-- Aspetta che sia completamente caricato (icona verde)
+### 1. Docker Desktop
+- **Scarica**: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
+- **Installa** e **avvia** Docker Desktop
+- **Aspetta** che sia completamente caricato (icona verde)
+- **Verifica**: Il logo Docker deve essere visibile nella system tray
+
+### 2. Spazio su Disco
+- **Minimo**: 2GB liberi per le immagini Docker
+- **Raccomandato**: 5GB per eventuali ricostruzioni
+
+### 3. Porte di Rete
+- **Porta 3000**: Frontend (React)
+- **Porta 5000**: Backend (.NET)
+- Se occupate, l'app ti avviserà come liberarle
 
 ## 🎯 Avvio Rapido (Raccomandato)
 
-### Windows
-1. **Avvia**: Fai doppio clic su `deployment/windows/start.bat`
-2. **Scorciatoie**: Esegui `deployment/windows/crea-scorciatoie-desktop.bat` (opzionale)
-
-### Mac/Linux
-1. **Avvia**: Esegui `./deployment/unix/start.sh` dal terminale
-2. **Scorciatoie**: Esegui `./deployment/unix/crea-scorciatoie-desktop.sh` (opzionale)
-
-### Come Funzionano gli Script
-- **Primo avvio**: Build completa automatica (5-10 minuti)
-- **Avvii successivi**: Rapidi (30 secondi) se le immagini esistono
-- **Stop**: Usa `stop.bat`/`stop.sh` per fermare tutto
-- **Rebuild**: Usa `rebuild.bat`/`rebuild.sh` per ricostruire da zero
-
-🌐 **L'app si aprirà automaticamente su**: http://localhost:3000/landing
-
-## ⚙️ Configurazione Avanzata
-
-Se vuoi personalizzare l'applicazione, configura le API keys:
-
-2. **RAWG API Key** (per ricerca giochi):
-   - Vai su: https://rawg.io/apidocs
-   - Registrati gratuitamente e ottieni la chiave
-   - Inserisci nel file `frontend/.env`: `REACT_APP_RAWG_API_KEY=tua_chiave_qui`
-
-> ⚠️ **Importante**: Senza queste API keys alcune funzionalità saranno limitate, ma l'app funzionerà comunque!
-
-### 3. API Keys (Dettaglio)
-
-L'app funziona anche **senza** le API keys, ma con limitazioni:
-
-### ❌ Senza Steam API Key:
-- Non puoi importare automaticamente la tua libreria Steam
-- Devi aggiungere ogni gioco manualmente
-
-### ❌ Senza RAWG API Key:
-- Ricerca giochi limitata al database locale
-### 1. Configura le API Keys (Opzionale)
-
-**Per funzionalità aggiuntive**, configura il file `.env` nella root del progetto:
-
-```bash
-cp .env.example .env
-```
-
-Modifica il file `.env` con le tue API keys:
-- **STEAM_API_KEY**: Per importare libreria Steam (opzionale)
-- **REACT_APP_RAWG_API_KEY**: Per ricerca giochi migliorata (opzionale)
-
-🔑 **Per ottenere le API keys**:
-
-1. **Steam API Key** (per importare libreria Steam):
-   - Vai su: https://steamcommunity.com/dev/apikey
-   - Inserisci: `STEAM_API_KEY=tua_chiave_qui`
-
-2. **RAWG API Key** (per database giochi migliorato):
-   - Vai su: https://rawg.io/apidocs
-   - Crea account gratuito
-   - Inserisci: `REACT_APP_RAWG_API_KEY=tua_chiave_qui`
-
-### 🚫 Cosa Succede Senza API Keys?
-
-**Senza RAWG API Key**:
-- Funziona comunque perfettamente!
-- Meno informazioni automatiche sui giochi (cover, descrizioni, etc.)
-- Dovrai inserire manualmente i dettagli dei giochi
-
-**Senza Steam API Key**:
-- Non puoi importare automaticamente la libreria Steam
-- Puoi comunque aggiungere giochi manualmente
-
-### ✅ Funzionalità Sempre Disponibili:
-- Aggiunta manuale di giochi al backlog
-- Gestione stati (Completato, In corso, Da giocare, etc.)
-- Note personali sui giochi
-- Statistiche del backlog
-- Sistema sociale completo
-
-## 🚀 Metodi di Avvio
-
-### 🎯 METODO SEMPLICE (Raccomandato)
+### ⚡ Metodo Scorciatoie Desktop
 
 **Windows:**
-```bash
-cd deployment/windows
-start.bat                              # Avvio intelligente
-crea-scorciatoie-desktop.bat          # Crea scorciatoie (una volta)
+1. **Prima configurazione** (solo una volta):
+   ```cmd
+   cd deployment\windows
+   crea-scorciatoie-desktop.bat
+   ```
+2. **Uso quotidiano**: Doppio click su **"GameBacklog - Avvia"** sul desktop
+
+**Mac/Linux:**
+1. **Prima configurazione** (solo una volta):
+   ```bash
+   cd deployment/unix
+   chmod +x *.sh
+   ./crea-scorciatoie-desktop.sh
+   ```
+2. **Uso quotidiano**: Doppio click su **"GameBacklog - Avvia"** sul desktop
+
+### 🖱️ Metodo Manuale
+
+**Windows:**
+```cmd
+cd deployment\windows
+start.bat
 ```
 
 **Mac/Linux:**
 ```bash
 cd deployment/unix
-./start.sh                             # Avvio intelligente
-./crea-scorciatoie-desktop.sh         # Crea scorciatoie (una volta)
-```
-
-### � SCRIPT DISPONIBILI
-
-| Azione | Windows | Mac/Linux | Descrizione |
-|--------|---------|-----------|-------------|
-| **Avvio** | `start.bat` | `./start.sh` | Avvio rapido o build se necessario |
-| **Stop** | `stop.bat` | `./stop.sh` | Ferma tutti i container |
-| **Rebuild** | `rebuild.bat` | `./rebuild.sh` | Ricostruisce tutto da zero |
-| **Scorciatoie** | `crea-scorciatoie-desktop.bat` | `./crea-scorciatoie-desktop.sh` | Crea scorciatoie desktop |
-
-### ⚡ Come Funziona l'Avvio Intelligente
-
-- **Prima volta**: Build completa (5-10 minuti)
-- **Avvii successivi**: Rapidi (30 secondi) 
-- **Detecta automaticamente** se serve ricostruire
-- **Apre automaticamente** il browser su http://localhost:3000/landing
-chmod +x *.sh     # Solo la prima volta
 ./start.sh
 ```
 
-**Prima volta**: Ci vogliono 3-5 minuti per scaricare tutto  
-**Volte successive**: ~30 secondi
+### ⏱️ Tempi di Avvio
+- **Prima volta**: 5-10 minuti (build completa)
+- **Volte successive**: 30 secondi (avvio rapido)
+- **Auto-detecta**: Se serve ricostruire le immagini
+## ⚙️ Configurazione File .env (Opzionale)
 
-## 🌐 Accesso
+L'app **funziona perfettamente senza configurazioni**, ma puoi personalizzarla:
 
-Con le scorciatoie desktop, il browser si apre automaticamente!
-
-Altrimenti vai manualmente su:
-- **App**: http://localhost:3000
-- **API**: http://localhost:5000
-
-## 🛑 Fermare l'App
-
-### Con Scorciatoie Desktop
-Doppio click su **"Ferma Backlog Videoludico"** sul desktop
-
-### Metodo Manuale
-Nella cartella deployment:
-
-### Windows
+### 1. Crea il File di Configurazione
 ```bash
-cd deployment/windows
-stop.bat           # Oppure stop.ps1  
+# Nella root del progetto
+cp .env.example .env
 ```
 
-### Mac/Linux
+### 2. Configura API Keys (Opzionale)
+
+**Per funzionalità aggiuntive**, modifica il file `.env`:
+
+```env
+# =============================================================================
+# CONFIGURAZIONE BACKEND - BACKLOG VIDEOLUDICO  
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DATABASE (Automatico per sviluppo locale)
+# -----------------------------------------------------------------------------
+# Lascia vuoto per database locale PostgreSQL automatico
+# Configura solo per deployment condiviso con database cloud
+DATABASE_URL=
+
+# -----------------------------------------------------------------------------
+# API KEYS (Opzionali - migliorano l'esperienza)
+# -----------------------------------------------------------------------------
+# Steam Web API - per importare libreria Steam
+STEAM_API_KEY=
+
+# RAWG API - per database videogiochi completo
+REACT_APP_RAWG_API_KEY=
+
+# -----------------------------------------------------------------------------
+# CONFIGURAZIONE APPLICAZIONE (Non modificare)
+# -----------------------------------------------------------------------------
+BACKEND_PORT=5000
+```
+
+### 3. Come Ottenere le API Keys
+
+#### 🎮 Steam API Key (per importazione libreria)
+1. Vai su: https://steamcommunity.com/dev/apikey
+2. Accedi con il tuo account Steam
+3. Inserisci un dominio qualsiasi (es: `localhost`)
+4. Copia la chiave e incollala in: `STEAM_API_KEY=tua_chiave_qui`
+
+#### 🎯 RAWG API Key (per ricerca giochi migliorata)
+1. Vai su: https://rawg.io/apidocs
+2. Crea un account gratuito
+3. Ottieni la API key gratuita
+4. Copia la chiave e incollala in: `REACT_APP_RAWG_API_KEY=tua_chiave_qui`
+
+### 🚫 Funzionalità Senza API Keys
+
+**✅ Sempre Disponibili (senza API keys):**
+- ✅ Sistema di registrazione e login
+- ✅ Aggiunta manuale giochi al backlog
+- ✅ Gestione stati (Completato, In corso, Backlog, etc.)
+- ✅ Note e recensioni personali
+- ✅ Dashboard con statistiche complete
+- ✅ Sistema sociale (amici, attività, reazioni)
+- ✅ Timeline e notifiche
+- ✅ Tutte le funzionalità core dell'applicazione
+
+**🔑 Con RAWG API Key:**
+- ➕ Ricerca automatica giochi nel catalogo mondiale
+- ➕ Copertine e immagini automatiche
+- ➕ Informazioni dettagliate (generi, sviluppatori, anno)
+- ➕ Suggerimenti di giochi correlati
+
+**🎮 Con Steam API Key:**
+- ➕ Importazione automatica libreria Steam
+- ➕ Sincronizzazione ore di gioco Steam
+- ➕ Collegamento achievement (in sviluppo)
+
+## 🚀 Script di Avvio
+
+### 📁 Script Disponibili
+
+| **Azione** | **Windows** | **Mac/Linux** | **Descrizione** |
+|------------|-------------|---------------|-----------------|
+| **🚀 Avvio** | `start.bat` | `./start.sh` | Avvio intelligente (rapido o build se necessario) |
+| **🛑 Stop** | `stop.bat` | `./stop.sh` | Ferma tutti i container Docker |
+| **🔧 Rebuild** | `rebuild.bat` | `./rebuild.sh` | Ricostruisce tutto da zero (per aggiornamenti) |
+| **🖥️ Scorciatoie** | `crea-scorciatoie-desktop.bat` | `./crea-scorciatoie-desktop.sh` | Crea scorciatoie desktop (una volta) |
+
+### ⚡ Come Funziona l'Avvio Intelligente
+
+Gli script sono **smart** e ottimizzano automaticamente l'avvio:
+
+1. **Controlli preliminari**:
+   - ✅ Docker Desktop è avviato?
+   - ✅ File `.env` esiste?
+   - ✅ Porte 3000 e 5000 libere?
+
+2. **Detecta immagini Docker**:
+   - 🏃‍♂️ **Immagini esistenti**: Avvio rapido (30 sec)
+   - 🔨 **Immagini mancanti**: Build automatica (5-10 min)
+
+3. **Avvio automatico**:
+   - 🌐 Avvia i container Docker
+   - ⏳ Aspetta che i servizi siano pronti
+   - 🌐 Apre automaticamente il browser
+
+4. **Risultato finale**:
+   - **Frontend**: http://localhost:3000/landing
+   - **Backend API**: http://localhost:5000/swagger
+
+## 🌐 Accesso all'Applicazione
+
+### 🎯 URL Principali
+- **🏠 Homepage**: http://localhost:3000/landing
+- **📱 App Principale**: http://localhost:3000/dashboard
+- **🔧 API Docs**: http://localhost:5000/swagger
+- **💾 Database**: Interno ai container (PostgreSQL)
+
+### 🕐 Tempi di Attesa
+- **Primo avvio**: 5-10 minuti (download + build)
+- **Avvii successivi**: 30 secondi
+- **Pronto quando**: Il browser si apre automaticamente
+
+## 🛑 Fermare l'Applicazione
+
+### 🖥️ Con Scorciatoie Desktop
+- **Doppio click** su **"GameBacklog - Ferma"** sul desktop
+- Tutto si ferma automaticamente
+
+### 📁 Metodo Manuale
+
+**Windows:**
+```cmd
+cd deployment\windows
+stop.bat
+```
+
+**Mac/Linux:**
 ```bash
 cd deployment/unix
 ./stop.sh
 ```
 
-## 🔧 Comandi Utili
-
-### Vedere i Log
+### � Verifica che Tutto sia Fermo
 ```bash
-# Windows
-cd deployment/windows
-logs.bat
+# Controlla che i container siano fermati
+docker ps
 
-# Mac/Linux  
+# Dovrebbe mostrare una lista vuota o senza container 'videogames-*'
+```
+
+## �🔧 Comandi Utili per Diagnosi
+
+### 📊 Stato Container
+```bash
+# Vedi tutti i container in esecuzione
+docker ps
+
+# Vedi anche quelli fermati
+docker ps -a
+```
+
+### 📋 Log dell'Applicazione
+
+**Windows:**
+```cmd
+cd deployment\windows
+# Non ancora implementato - usa Docker Desktop per i log
+```
+
+**Mac/Linux:**
+```bash
 cd deployment/unix
 ./start.sh --logs
 ```
 
-### Stato Container
+**Manuale (tutti i sistemi):**
+```bash
+# Log in tempo reale
+docker-compose -f deployment/docker/docker-compose.prod.yml logs -f
+
+# Log solo backend
+docker logs videogames-backend-prod
+
+# Log solo frontend  
+docker logs videogames-frontend-prod
+```
+
+### 🧹 Pulizia Sistema (Se Necessaria)
+```bash
+# Rimuovi container fermati
+docker container prune
+
+# Rimuovi immagini non utilizzate
+docker image prune
+
+# Pulizia completa (ATTENZIONE: rimuove tutto)
+docker system prune -a
+```
+
+## 🚨 Risoluzione Problemi Comuni
+
+### ❌ "Docker non è in esecuzione"
+**Problema**: Script si ferma con errore Docker
+**Soluzione**:
+1. Apri Docker Desktop
+2. Aspetta che si carichi completamente (icona verde)
+3. Riprova il comando di avvio
+
+### ❌ "File .env non trovato"  
+**Problema**: Script non trova il file di configurazione
+**Soluzione**:
+```bash
+# Nella root del progetto
+cp .env.example .env
+```
+
+### ❌ "Porta già in uso" (Error port 3000/5000)
+**Problema**: Un'altra app usa le porte dell'applicazione
+**Soluzione Windows**:
+```cmd
+# Trova cosa usa la porta 3000
+netstat -ano | findstr :3000
+# Termina il processo (sostituisci PID con il numero trovato)
+taskkill /PID <numero_PID> /F
+```
+
+**Soluzione Mac/Linux**:
+```bash
+# Trova cosa usa la porta 3000
+lsof -i :3000
+# Termina il processo
+kill -9 <PID>
+```
+
+### ❌ "Database connection failed"
+**Problema**: Backend non si connette al database
+**Diagnosi**:
+1. Controlla il file `.env` nella root
+2. Verifica che `DATABASE_URL` sia vuoto (per sviluppo locale)
+3. Se usi database cloud, verifica la connection string
+
+**Soluzione**:
+```bash
+# Per sviluppo locale, assicurati che DATABASE_URL sia vuoto
+DATABASE_URL=
+
+# Riavvia tutto
+stop.bat    # o stop.sh
+start.bat   # o start.sh
+```
+
+### ❌ Build fallisce con errori di rete
+**Problema**: Download di pacchetti fallisce
+**Soluzione**:
+```bash
+# Pulisci cache Docker
+docker system prune -f
+
+# Riprova con rebuild completo
+rebuild.bat  # o rebuild.sh
+```
+
+### ❌ App lenta o non risponde
+**Problema**: L'app è molto lenta al primo avvio
+**Diagnosi**: È normale per il primo avvio (5-10 minuti)
+**Soluzione**:
+1. Aspetta pazientemente (controlla i log)
+2. Se fermo da >15 minuti, riavvia i container
+
+### ❌ Browser non si apre automaticamente
+**Problema**: Script completa ma browser non si apre
+**Soluzione**: Vai manualmente su http://localhost:3000/landing
+
+### 🔍 Come Controllare se Funziona Tutto
+
+**1. Controlla i container:**
 ```bash
 docker ps
+# Dovresti vedere:
+# videogames-backend-prod (porta 5000)
+# videogames-frontend-prod (porta 3000)
 ```
 
-### Riavvio Completo
+**2. Testa gli endpoint:**
+- **Frontend**: http://localhost:3000/landing → Dovrebbe caricare la homepage
+- **Backend**: http://localhost:5000/health → Dovrebbe restituire "OK"
+- **API Docs**: http://localhost:5000/swagger → Documentazione API
+
+**3. Controlla i log per errori:**
 ```bash
-# Windows
-cd deployment/windows
-stop.bat
-start.bat
-
-# Mac/Linux
-cd deployment/unix
-./stop.sh
-./start.sh
+# Windows: Usa Docker Desktop → Container → Logs
+# Mac/Linux: 
+docker logs videogames-backend-prod
+docker logs videogames-frontend-prod
 ```
 
-## 🚨 Problemi Comuni
+### 🆘 Riavvio Completo di Emergenza
 
-### "Database connection failed"
-- Verifica che `DATABASE_URL` sia corretto
-- Controlla che il database cloud sia attivo
-- Prova a ricreare il database
+Se nulla funziona, riavvio completo:
 
-### "Porta già in uso"
-- Chiudi altre app che usano porte 3000 o 5000
-- Su Windows: `netstat -ano | findstr :3000`
-- Su Mac/Linux: `lsof -i :3000`
+```bash
+# 1. Ferma tutto
+docker-compose -f deployment/docker/docker-compose.prod.yml down
 
-### "Docker non risponde"
-- Riavvia Docker Desktop
-- Aspetta che sia completamente caricato
-- Riprova il comando
+# 2. Rimuovi container e volumi
+docker container prune -f
+docker volume prune -f
 
-### App lenta al primo avvio
-- È normale, sta configurando tutto
-- Controlla i log: `docker-compose logs -f`
-- Se è bloccato, riavvia i container
+# 3. Ricostruisci tutto
+rebuild.bat  # o rebuild.sh
+```
 
-## 📱 Primo Uso
+## 📱 Primo Utilizzo dell'App
 
-1. Vai su http://localhost:3000
-2. **Registrati** con email e password
-3. **Completa il profilo** con le tue info
-4. **Aggiungi il tuo primo gioco** dalla libreria
+### 🚀 Accesso Iniziale
+1. **Apri il browser** su http://localhost:3000/landing (automatico con gli script)
+2. **Registrazione**: Crea il tuo account con email e password
+3. **Verifica email**: Non necessaria (sistema locale)
+4. **Login**: Accedi con le credenziali create
 
-## 🎮 Funzionalità Principali
+### ⚙️ Configurazione Iniziale Profilo
+1. **Completa il profilo**:
+   - Avatar (opzionale)
+   - Nome visualizzato
+   - Bio personale (opzionale)
+   - Impostazioni privacy
 
-- **📚 Library**: Gestisci i tuoi giochi
-- **📊 Dashboard**: Vedi le statistiche  
-- **👥 Friends**: Aggiungi amici e vedi le loro attività
-- **🔍 Catalog**: Cerca nuovi giochi da aggiungere
-- **⚙️ Settings**: Personalizza l'app
+2. **Configura preferenze**:
+   - Dark/Light mode
+   - Lingua interfaccia
+   - Notifiche
+
+### 🎮 Prime Azioni Raccomandate
+
+**1. Aggiungi il tuo primo gioco:**
+- Vai nella sezione **"Libreria"**
+- Click su **"Aggiungi Gioco"**
+- Cerca per titolo (RAWG API se configurata) o aggiungi manualmente
+- Imposta stato: Backlog, In Corso, Completato, etc.
+
+**2. Importa da Steam (se configurato):**
+- Vai in **"Impostazioni"** → **"Integrazioni"**
+- Collega account Steam
+- Importa automaticamente la tua libreria
+
+**3. Esplora le funzionalità:**
+- **📊 Dashboard**: Vedi statistiche del tuo backlog
+- **👥 Social**: Aggiungi amici e vedi le loro attività
+- **🔍 Catalogo**: Scopri nuovi giochi da aggiungere
+- **📈 Statistiche**: Analizza le tue abitudini di gioco
+
+### 🎯 Funzionalità Chiave da Provare
+
+- **Stati personalizzati**: Backlog → In Corso → Completato → Platino
+- **Ore di gioco**: Traccia il tempo dedicato a ogni gioco
+- **Recensioni**: Aggiungi voti e commenti personali
+- **Timeline sociale**: Vedi cosa fanno i tuoi amici
+- **Notifiche**: Ricevi aggiornamenti su attività social
+
+## 🔗 URL di Riferimento Rapido
+
+| **Funzione** | **URL** | **Descrizione** |
+|--------------|---------|-----------------|
+| 🏠 **Homepage** | http://localhost:3000/landing | Pagina di benvenuto |
+| 📱 **Dashboard** | http://localhost:3000/dashboard | Pannello principale utente |
+| 📚 **Libreria** | http://localhost:3000/library | Gestione giochi personali |
+| 👥 **Social** | http://localhost:3000/social | Timeline amici e attività |
+| 🔍 **Catalogo** | http://localhost:3000/catalog | Ricerca nuovi giochi |
+| ⚙️ **Impostazioni** | http://localhost:3000/settings | Configurazione account |
+| 🔧 **API Docs** | http://localhost:5000/swagger | Documentazione tecnica API |
+| 💊 **Health Check** | http://localhost:5000/health | Stato servizi backend |
 
 ---
 
-## 🆘 Supporto
+## 🆘 Supporto e Problemi
 
-Se hai problemi:
-1. Controlla che Docker sia avviato
-2. Verifica il file `.env`
-3. Guarda i log per errori
-4. Riavvia i container
+### 🔍 Prima di Chiedere Aiuto
+1. **Controlla i prerequisiti**: Docker Desktop avviato?
+2. **Verifica lo stato**: `docker ps` mostra i container?
+3. **Leggi i log**: Ci sono errori evidenti?
+4. **Riavvio completo**: Prova `stop.bat` + `start.bat`
 
-**Buon divertimento! 🎮**
+### 📞 Come Segnalare un Problema
+1. **Descrivi** cosa stavi facendo
+2. **Copia** eventuali messaggi di errore
+3. **Includi** output di `docker ps` e `docker logs`
+4. **Specifica** il tuo sistema operativo
+
+### 🎮 Happy Gaming!
+
+L'app è pronta! Inizia a organizzare il tuo backlog e condividi la passione per i videogiochi con i tuoi amici.
+
+**Divertiti e buon gaming! 🚀🎮**
