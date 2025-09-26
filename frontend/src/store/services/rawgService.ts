@@ -1,14 +1,12 @@
 import axios from 'axios';
+import { API_CONFIG } from '../../config/api';
 
-// Base URL per le API RAWG
-const BASE_URL = 'https://api.rawg.io/api';
+// Base URL per le API RAWG tramite il nostro backend
+const BASE_URL = `${API_CONFIG.BASE_URL}/api/rawg`;
 
-// Crea un'istanza di axios configurata
+// Crea un'istanza di axios configurata per il nostro backend
 const apiClient = axios.create({
-  baseURL: BASE_URL,
-  params: {
-    key: process.env.REACT_APP_RAWG_API_KEY
-  }
+  baseURL: BASE_URL
 });
 
 // Funzione per mappare i dati dell'API RAWG al formato interno
@@ -54,10 +52,10 @@ export const getGameDetails = async (gameId: string) => {
 // Funzione per cercare giochi
 export const searchGames = async (query: string) => {
   try {
-    const response = await apiClient.get('/games', { 
+    const response = await apiClient.get('/search', { 
       params: { 
-        search: query,
-        platforms: '1,4,7,18,22' // Corretto il nome del parametro
+        query: query,
+        platforms: '1,4,7,18,22'
       }
     });
     
@@ -84,10 +82,10 @@ export const searchGames = async (query: string) => {
 // Funzione per ottenere i giochi con paginazione
 export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {}) => {
   try {
-    const response = await apiClient.get('/games', {
+    const response = await apiClient.get('/paginated', {
       params: {
         page,
-        page_size: pageSize,
+        pageSize,
         ...extraParams
       }
     });
@@ -100,50 +98,17 @@ export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {
 
 export const getSimilarGames = async (genreIds: number[], excludeId: number, count: number = 4, Metacritic?: number) => {
   try {
-    const params: any = {
-      genres: genreIds.join(','),
-      exclude_additions: true,
-      ordering: '-rating,-metacritic,-released', // Ordina per rating, poi Metacritic, poi data
-      page_size: Math.min(40, count * 3), // Ottieni più risultati per filtrare meglio
-      platforms: '1,4,7,18,22,186,187', // Aggiunte console moderne
-      dates: '2000-01-01,' + new Date().toISOString().slice(0, 10), // Giochi dal 2000 in poi
-    };
+    const response = await apiClient.get('/similar', {
+      params: {
+        genreIds: genreIds.join(','),
+        excludeId,
+        count,
+        metacritic: Metacritic
+      }
+    });
     
-    // Filtro Metacritic più intelligente
-    if (typeof Metacritic === 'number' && Metacritic > 0) {
-      // Range dinamico basato sul punteggio
-      const range = Metacritic > 80 ? 15 : Metacritic > 60 ? 20 : 25;
-      params.metacritic = `${Math.max(0, Metacritic - range)},${Math.min(100, Metacritic + range)}`;
-    } else {
-      // Se non c'è Metacritic, filtra per giochi decenti
-      params.metacritic = '60,100';
-    }
-
-    const response = await apiClient.get('/games', { params });
-    
-    // Filtro e ordinamento più sofisticato
-    const results = response.data.results
-      .filter((g: any) => 
-        g.id !== excludeId &&
-        g.name &&
-        g.background_image &&
-        g.released &&
-        g.rating >= 3.5 && // Rating minimo più alto
-        g.ratings_count >= 10 && // Più recensioni per affidabilità
-        !g.name.toLowerCase().includes('dlc') &&
-        !g.name.toLowerCase().includes('expansion') &&
-        !g.name.toLowerCase().includes('season pass')
-      )
-      // Ordinamento personalizzato per rilevanza
-      .sort((a: any, b: any) => {
-        // Calcola score di similarità
-        const scoreA = calculateSimilarityScore(a, Metacritic);
-        const scoreB = calculateSimilarityScore(b, Metacritic);
-        return scoreB - scoreA;
-      })
-      .slice(0, count);
-
-    return results;
+    // Il backend già filtra e processa i risultati
+    return response.data.results || [];
   } catch (error) {
     console.error('Errore nel recupero di giochi simili:', error);
     throw error;

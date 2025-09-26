@@ -14,7 +14,8 @@ export const API_CONFIG = {
     COMMUNITY: '/api/community',
     NOTIFICATION: '/api/notification',
     ACTIVITY_REACTIONS: '/api/activity-reactions',
-    STEAM: '/api/steam'
+    STEAM: '/api/steam',
+    RAWG: '/api/rawg'
   }
 } as const;
 
@@ -33,5 +34,6 @@ export const API_URLS = {
   COMMUNITY: buildApiUrl(API_CONFIG.ENDPOINTS.COMMUNITY),
   NOTIFICATION: buildApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATION),
   ACTIVITY_REACTIONS: buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_REACTIONS),
-  STEAM: buildApiUrl(API_CONFIG.ENDPOINTS.STEAM)
+  STEAM: buildApiUrl(API_CONFIG.ENDPOINTS.STEAM),
+  RAWG: buildApiUrl(API_CONFIG.ENDPOINTS.RAWG)
 } as const;
