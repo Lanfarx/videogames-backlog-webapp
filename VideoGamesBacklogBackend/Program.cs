@@ -36,16 +36,9 @@ if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy => policy
-            .WithOrigins("http://localhost:3000", "http://localhost:5097")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-    );
-    
     options.AddPolicy("AllowAll",
         policy => policy
-            .AllowAnyOrigin()
+            .WithOrigins(Environment.GetEnvironmentVariable("CORS_ORIGINS") ?? "https://videogames-backlog-webapp.vercel.app")
             .AllowAnyHeader()
             .AllowAnyMethod()
     );
