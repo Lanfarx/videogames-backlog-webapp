@@ -11,6 +11,7 @@ import { formatPrice, formatMetacriticScore } from '../../utils/gameDisplayUtils
 
 import { getGameDetails } from '../../store/services/rawgService';
 import GameSearchBar from '../ui/GameSearchBar';
+import { searchHowLongToBeat } from '../../services/howLongToBeatService';
 
 // Tipo per i dati del form
 type GameFormData = Omit<Game, "id" | "Rating"> & { id?: number, CompletionDate?: string, PlatinumDate?: string }
@@ -87,6 +88,9 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       const fullData = await getGameDetails(game.id);
       const metacriticValue = fullData.Metacritic || 0;
       
+      // Fetch HowLongToBeat data in parallelo
+      const hltbData = await searchHowLongToBeat(fullData.Title);
+      
       setGameData({
         ...gameData,
         Title: fullData.Title,
@@ -96,6 +100,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         ReleaseYear: fullData.ReleaseYear || new Date().getFullYear(),
         Genres: fullData.Genres || [],
         Metacritic: metacriticValue,
+        HltbMainExtra: hltbData?.mainExtra || undefined,
+        HltbCompletionist: hltbData?.completionist || undefined,
       });
       setOriginalMetacritic(metacriticValue); // Salva il valore originale
       setActiveTab("manual");
@@ -192,9 +198,18 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       scrollErrorIntoView();
       return;
     }
-    setFormError(null);    
+    setFormError(null);
+    
+    // Fetch HowLongToBeat data se non già presente
+    let hltbData = null;
+    if (!gameData.HltbMainExtra && !gameData.HltbCompletionist) {
+      hltbData = await searchHowLongToBeat(gameData.Title);
+    }
+    
     const gameToSave = {
-      ...gameData
+      ...gameData,
+      HltbMainExtra: gameData.HltbMainExtra || hltbData?.mainExtra || undefined,
+      HltbCompletionist: gameData.HltbCompletionist || hltbData?.completionist || undefined,
     } as Game;      try {
       await add(gameToSave);
         // Le attività sono ora create automaticamente dal backend

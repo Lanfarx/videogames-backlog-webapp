@@ -9,6 +9,7 @@ import { useGameById } from '../../store/hooks/gamesHooks';
 import { getGameRating } from '../../utils/gamesUtils';
 import { searchGames, getGameDetails } from '../../store/services/rawgService';
 import { formatPrice, formatPurchaseDate } from '../../utils/gameDisplayUtils';
+import { searchHowLongToBeat } from '../../services/howLongToBeatService';
 
 interface GameInfoCardProps {
   game: Game;
@@ -24,12 +25,15 @@ const hasMissingData = (game: Game): boolean => {
          game.Publisher === 'Sconosciuto' ||
          game.Developer === '' ||
          game.Publisher === '' ||
-         !game.Metacritic ||         game.Metacritic === 0;
+         !game.Metacritic ||
+         game.Metacritic === 0 ||
+         !game.HltbMainExtra ||
+         !game.HltbCompletionist;
   
   return missing;
 };
 
-// Funzione per cercare e aggiornare i dati del gioco da RAWG
+// Funzione per cercare e aggiornare i dati del gioco da RAWG e HowLongToBeat
 const updateGameDataFromRAWG = async (game: Game, onEditInfo?: (updatedGame: Partial<Game>) => void) => {
   try {
     // Prima proviamo a cercare il gioco per titolo
@@ -37,8 +41,11 @@ const updateGameDataFromRAWG = async (game: Game, onEditInfo?: (updatedGame: Par
       if (searchResults.results && searchResults.results.length > 0) {
       const bestMatch = searchResults.results[0]; // Prendiamo il primo risultato
       
-      // Otteniamo i dettagli completi del gioco
+      // Otteniamo i dettagli completi del gioco da RAWG
       const gameDetails = await getGameDetails(bestMatch.id.toString());
+      
+      // Cerca i dati di HowLongToBeat in parallelo
+      const hltbData = await searchHowLongToBeat(game.Title);
       
       // Aggiorniamo i dati usando il pattern semplice
       const updateData: Partial<Game> = {
@@ -49,6 +56,9 @@ const updateGameDataFromRAWG = async (game: Game, onEditInfo?: (updatedGame: Par
         Genres: gameDetails.Genres || game.Genres,
         // Solo aggiorna Metacritic se il nuovo valore è valido (maggiore di 0)
         Metacritic: (gameDetails.Metacritic && gameDetails.Metacritic > 0) ? gameDetails.Metacritic : game.Metacritic,
+        // Aggiungi i dati di HowLongToBeat se disponibili
+        HltbMainExtra: hltbData?.mainExtra || game.HltbMainExtra,
+        HltbCompletionist: hltbData?.completionist || game.HltbCompletionist,
       };
       
       if (onEditInfo) {
@@ -219,7 +229,31 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
             </>
           )}
         </div>
-      </div>      {/* Prezzo - Spostato qui, subito dopo il tempo di gioco */}
+      </div>      {/* HowLongToBeat - Main + Extra */}
+      {currentGame.HltbMainExtra && currentGame.HltbMainExtra > 0 && (
+        <div className="flex justify-between items-center py-3 border-b border-border-color">
+          <span className="font-secondary font-medium text-sm text-text-secondary">
+            Tempo stimato (Main+Extra)
+          </span>
+          <span className="font-secondary text-base text-accent-secondary">
+            ~{currentGame.HltbMainExtra}h
+          </span>
+        </div>
+      )}
+
+      {/* HowLongToBeat - Completionist */}
+      {currentGame.HltbCompletionist && currentGame.HltbCompletionist > 0 && (
+        <div className="flex justify-between items-center py-3 border-b border-border-color">
+          <span className="font-secondary font-medium text-sm text-text-secondary">
+            Tempo stimato (100%)
+          </span>
+          <span className="font-secondary text-base text-accent-secondary">
+            ~{currentGame.HltbCompletionist}h
+          </span>
+        </div>
+      )}
+
+      {/* Prezzo - Spostato qui, subito dopo il tempo di gioco */}
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">
           Prezzo

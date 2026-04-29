@@ -28,7 +28,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, var
                     {formattedValue}
                 </div>
                 {subtitle && (
-                    <div className="text-xs text-text-secondary/70 font-secondary mb-1">
+                    <div className="text-xs text-text-secondary font-secondary mb-1">
                         {subtitle}
                     </div>
                 )}
@@ -49,7 +49,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, var
             </div>
             <div className="text-4xl font-bold text-accent-primary font-primary">{formattedValue}</div>
             {subtitle && (
-                <div className="text-xs text-text-secondary/70 font-secondary mt-1">
+                <div className="text-xs text-text-secondary font-secondary mt-1">
                     {subtitle}
                 </div>
             )}

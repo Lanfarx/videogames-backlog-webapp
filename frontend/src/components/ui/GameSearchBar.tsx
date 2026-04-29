@@ -147,7 +147,7 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => searchResults.length > 0 && setShowResults(true)}
-          className="w-full pl-10 pr-12 py-3 border border-border-color rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white text-text-primary placeholder-text-secondary"
+          className="w-full pl-10 pr-12 py-3 border border-border-color rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-primary-bg text-text-primary placeholder-text-secondary"
         />
         
         {/* Icona di caricamento o clear */}
@@ -167,14 +167,14 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
 
       {/* Risultati di ricerca */}
       {showResults && searchResults.length > 0 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white border border-border-color rounded-lg shadow-lg max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-primary-bg border border-border-color rounded-lg shadow-lg max-h-96 overflow-y-auto">
           {searchResults.map((game) => (
             <div
               key={game.id}
-              className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-border-color last:border-b-0"
+              className="flex items-center gap-3 p-3 hover:bg-secondary-bg transition-colors border-b border-border-color last:border-b-0"
             >
               {/* Immagine del gioco */}
-              <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded overflow-hidden">
+              <div className="flex-shrink-0 w-12 h-12 bg-secondary-bg rounded overflow-hidden">
                 <img
                   src={game.CoverImage}
                   alt={game.Title}
@@ -229,8 +229,8 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
 
       {/* Messaggio nessun risultato */}
       {showResults && searchResults.length === 0 && !isSearching && searchQuery.trim().length >= 2 && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-white border border-border-color rounded-lg shadow-lg p-4 text-center text-text-secondary">
-          Nessun gioco trovato per "{searchQuery}"
+        <div className="absolute top-full left-0 right-0 z-50 mt-2 bg-primary-bg border border-border-color rounded-lg shadow-lg p-4 text-center text-text-secondary">
+          Nessun gioco trovato
         </div>
       )}
 

@@ -64,6 +64,11 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
           <span className="mx-2">|</span>
           <Clock className="h-4 w-4 mr-1" />
           <span className="font-roboto text-xs">{effectiveHours} ore</span>
+          {game.HltbCompletionist && game.HltbCompletionist > 0 && (
+            <span className="font-roboto text-xs text-accent-secondary ml-1" title="Tempo stimato per il 100%">
+              (~{game.HltbCompletionist}h)
+            </span>
+          )}
           <span className="mx-2">|</span>
           <Award className="h-4 w-4 mr-1 text-yellow-500" />
           <span className="font-roboto text-xs">{formatMetacriticScore(game.Metacritic)}</span>

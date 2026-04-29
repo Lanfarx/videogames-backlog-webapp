@@ -21,6 +21,8 @@ namespace VideoGamesBacklogBackend.Dto
         public UpdateGameReviewDto? Review { get; set; }
         public string? Status { get; set; }
         public int? HoursPlayed { get; set; }
+        public double? HltbMainExtra { get; set; }
+        public double? HltbCompletionist { get; set; }
     }
 }
 

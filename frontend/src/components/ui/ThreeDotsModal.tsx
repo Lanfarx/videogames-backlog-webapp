@@ -94,7 +94,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
             Modifica gioco
           </button>
         </li>
-        <li>
+        <li className="relative">
           <button
             onClick={(e) => {
               e.preventDefault();

@@ -100,11 +100,34 @@ const LibraryPage: React.FC = () => {
         const savedSortOrder = localStorage.getItem('librarySortOrder');
         return (savedSortOrder as SortOrder) || "asc";
     });
-    const [gamesPerPage, setGamesPerPage] = useState(0);
+    // Calcola le colonne iniziali una sola volta
+    const calculateInitialColumns = () => {
+        const width = window.innerWidth;
+        if (width >= 1536) return 5;
+        if (width >= 1280) return 4;
+        if (width >= 1024) return 3;
+        if (width >= 640) return 2;
+        return 1;
+    };
+    
+    const [columns, setColumns] = useState(calculateInitialColumns);
+    
+    const [gamesPerPage, setGamesPerPage] = useState(() => {
+        // Calcola gamesPerPage iniziale in base alla vista salvata
+        const savedViewMode = localStorage.getItem('libraryViewMode');
+        const viewMode = (savedViewMode as "grid" | "list") || "grid";
+        const initialColumns = calculateInitialColumns();
+        if (viewMode === "grid") {
+            const rows = 3;
+            return initialColumns * rows;
+        } else {
+            return 14;
+        }
+    });
+    
     const [searchQuery, setSearchQuery] = useState(() => {
         return localStorage.getItem('librarySearchQuery') || "";
     });
-    const [columns, setColumns] = useState(4);
     const gridContainerRef = useRef<HTMLDivElement>(null);    // Funzione debounced per aggiornare i filtri di range
     const updateDebouncedFilters = useDebounce((newFilters: GameFilters) => {
         setDebouncedFilters(newFilters);
@@ -195,8 +218,8 @@ const LibraryPage: React.FC = () => {
     }, [searchQuery, sortBy, sortOrder, filtersInitialized, 
         debouncedFilters.Status, debouncedFilters.Platform, debouncedFilters.genre, debouncedFilters.PurchaseDate]);    // Carica i giochi paginati quando cambiano i parametri
     useEffect(() => {
-        // Non fare chiamate API finché i filtri non sono inizializzati
-        if (!filtersInitialized) return;
+        // Non fare chiamate API finché i filtri non sono inizializzati o gamesPerPage è 0
+        if (!filtersInitialized || gamesPerPage === 0) return;
         
         const loadPaginatedGames = async () => {
             const filtersParam = {
@@ -236,7 +259,9 @@ const LibraryPage: React.FC = () => {
         setColumns(calculateColumns());
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);    // Calcola gamesPerPage in base alla vista
+    }, []);
+    
+    // Calcola gamesPerPage in base alla vista
     useEffect(() => {
         if (viewMode === "grid") {
             const rows = 3;
@@ -244,11 +269,9 @@ const LibraryPage: React.FC = () => {
         } else {
             setGamesPerPage(14);
         }
-    }, [viewMode, columns]);    // Reset alla prima pagina quando cambia gamesPerPage
-    useEffect(() => {
-        setCurrentPage(1);
-        localStorage.setItem('libraryCurrentPage', '1');
-    }, [gamesPerPage]);const handleSortChange = (newSortBy: SortOption) => {
+    }, [viewMode, columns]);
+
+    const handleSortChange = (newSortBy: SortOption) => {
         if (sortBy === newSortBy) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc");
         } else {

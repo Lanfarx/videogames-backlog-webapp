@@ -80,6 +80,8 @@ export interface GamePlayInfo {
   Metacritic: number;
   Rating: number;
   Notes?: string;
+  HltbMainExtra?: number; // Tempo stimato Main + Extra (ore)
+  HltbCompletionist?: number; // Tempo stimato Completionist (ore)
 }
 
 /**

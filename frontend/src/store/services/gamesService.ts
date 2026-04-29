@@ -187,7 +187,7 @@ export const getGameStats = async (): Promise<{
 };
 
 // Giochi in corso paginati
-export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number = 6): Promise<{
+export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number): Promise<{
   games: any[];
   currentPage: number;
   totalPages: number;
@@ -211,7 +211,7 @@ export const getInProgressGamesPaginated = async (page: number = 1, pageSize: nu
 // Tutti i giochi paginati
 export const getGamesPaginated = async (
   page: number = 1, 
-  pageSize: number = 12, 
+  pageSize: number, 
   filters?: string, 
   sortBy?: string, 
   sortOrder?: string, 

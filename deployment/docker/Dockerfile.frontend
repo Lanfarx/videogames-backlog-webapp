@@ -5,7 +5,12 @@ WORKDIR /app
 
 # Copia package.json e installa le dipendenze
 COPY frontend/package*.json ./
-RUN npm ci
+
+# Configura npm per evitare timeout e usa install invece di ci
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install --legacy-peer-deps
 
 # Copia il codice sorgente
 COPY frontend/ ./

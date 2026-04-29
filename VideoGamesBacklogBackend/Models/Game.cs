@@ -50,6 +50,10 @@ namespace VideoGamesBacklogBackend.Models
         public int Metacritic { get; set; }        // Inizializza il Rating a 0
         public decimal Rating { get; set; } = 0;
 
+        // HowLongToBeat - Tempi stimati di completamento (in ore)
+        public double? HltbMainExtra { get; set; }  // Main + Extra content
+        public double? HltbCompletionist { get; set; }  // 100% Completamento
+
         public string? Notes { get; set; }
         public GameReview? Review { get; set; }        public List<GameComment> Comments { get; set; } = new List<GameComment>();
 

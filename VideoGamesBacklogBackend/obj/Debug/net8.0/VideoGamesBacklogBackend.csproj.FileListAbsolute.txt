@@ -153,3 +153,11 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\MailKit.dll
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\MimeKit.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\package-lock.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\package.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\swae.build.ex.cache
