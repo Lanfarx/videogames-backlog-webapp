@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
-using VideoGamesBacklogBackend.Models;
-using VideoGamesBacklogBackend.Models.auth;
+using Microsoft.AspNetCore.Identity;
+using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Entities.auth;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {
@@ -9,7 +8,7 @@ namespace VideoGamesBacklogBackend.Interfaces
     {
         Task<IdentityResult> RegisterAsync(RegisterModel model);
         Task<string?> LoginAsync(LoginModel model);
-        Task<User?> GetCurrentUserAsync(ClaimsPrincipal user);
+        Task<User?> GetCurrentUserAsync(int userId);
         Task<bool> ForgotPasswordAsync(ForgotPasswordModel model);
         Task<bool> ResetPasswordAsync(ResetPasswordModel model);
     }

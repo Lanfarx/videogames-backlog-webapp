@@ -2,183 +2,83 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VideoGamesBacklogBackend.Dto;
 using VideoGamesBacklogBackend.Interfaces;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class FriendshipController : ControllerBase
+    public class FriendshipController(IFriendshipService friendshipService) : ControllerBase
     {
-        private readonly IFriendshipService _friendshipService;
-
-        public FriendshipController(IFriendshipService friendshipService)
-        {
-            _friendshipService = friendshipService;
-        }
-
         [HttpPost("send-request")]
         public async Task<IActionResult> SendFriendRequest([FromBody] FriendRequestDto request)
         {
-            try
-            {
-                var result = await _friendshipService.SendFriendRequestAsync(User, request.UserName);
-                if (result)
-                {
-                    return Ok(new { message = "Richiesta di amicizia inviata con successo" });
-                }
-                return BadRequest(new { message = "Impossibile inviare la richiesta di amicizia" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            await friendshipService.SendFriendRequestAsync(User.GetUserId(), request.UserName);
+            return Ok(new { message = "Richiesta di amicizia inviata con successo" });
         }
 
-        [HttpPost("accept/{friendshipId}")]
+        [HttpPost("accept/{friendshipId:int}")]
         public async Task<IActionResult> AcceptFriendRequest(int friendshipId)
         {
-            try
-            {
-                var result = await _friendshipService.AcceptFriendRequestAsync(User, friendshipId);
-                if (result)
-                {
-                    return Ok(new { message = "Richiesta di amicizia accettata" });
-                }
-                return BadRequest(new { message = "Impossibile accettare la richiesta" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            await friendshipService.AcceptFriendRequestAsync(User.GetUserId(), friendshipId);
+            return Ok(new { message = "Richiesta di amicizia accettata" });
         }
 
-        [HttpPost("reject/{friendshipId}")]
+        [HttpPost("reject/{friendshipId:int}")]
         public async Task<IActionResult> RejectFriendRequest(int friendshipId)
         {
-            try
-            {
-                var result = await _friendshipService.RejectFriendRequestAsync(User, friendshipId);
-                if (result)
-                {
-                    return Ok(new { message = "Richiesta di amicizia rifiutata" });
-                }
-                return BadRequest(new { message = "Impossibile rifiutare la richiesta" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            await friendshipService.RejectFriendRequestAsync(User.GetUserId(), friendshipId);
+            return Ok(new { message = "Richiesta di amicizia rifiutata" });
         }
 
-        [HttpDelete("remove/{friendUserId}")]
+        [HttpDelete("remove/{friendUserId:int}")]
         public async Task<IActionResult> RemoveFriend(int friendUserId)
         {
-            try
-            {
-                var result = await _friendshipService.RemoveFriendAsync(User, friendUserId);
-                if (result)
-                {
-                    return Ok(new { message = "Amico rimosso con successo" });
-                }
-                return BadRequest(new { message = "Impossibile rimuovere l'amico" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            await friendshipService.RemoveFriendAsync(User.GetUserId(), friendUserId);
+            return Ok(new { message = "Amico rimosso con successo" });
         }
 
-        [HttpPost("block/{targetUserId}")]
+        [HttpPost("block/{targetUserId:int}")]
         public async Task<IActionResult> BlockUser(int targetUserId)
         {
-            try
-            {
-                var result = await _friendshipService.BlockUserAsync(User, targetUserId);
-                if (result)
-                {
-                    return Ok(new { message = "Utente bloccato con successo" });
-                }
-                return BadRequest(new { message = "Impossibile bloccare l'utente" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            await friendshipService.BlockUserAsync(User.GetUserId(), targetUserId);
+            return Ok(new { message = "Utente bloccato con successo" });
         }
 
         [HttpGet("pending-requests")]
-        public async Task<IActionResult> GetPendingFriendRequests()
+        public async Task<ActionResult<List<FriendshipDto>>> GetPendingFriendRequests()
         {
-            try
-            {
-                var requests = await _friendshipService.GetPendingFriendRequestsAsync(User);
-                return Ok(requests);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            var requests = await friendshipService.GetPendingFriendRequestsAsync(User.GetUserId());
+            return Ok(requests);
         }
 
         [HttpGet("sent-requests")]
-        public async Task<IActionResult> GetSentFriendRequests()
+        public async Task<ActionResult<List<FriendshipDto>>> GetSentFriendRequests()
         {
-            try
-            {
-                var requests = await _friendshipService.GetSentFriendRequestsAsync(User);
-                return Ok(requests);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            var requests = await friendshipService.GetSentFriendRequestsAsync(User.GetUserId());
+            return Ok(requests);
         }
 
         [HttpGet("friends")]
-        public async Task<IActionResult> GetFriends()
+        public async Task<ActionResult<List<FriendDto>>> GetFriends()
         {
-            try
-            {
-                var friends = await _friendshipService.GetFriendsAsync(User);
-                return Ok(friends);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            var friends = await friendshipService.GetFriendsAsync(User.GetUserId());
+            return Ok(friends);
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<PaginatedUsersDto>> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            try
-            {
-                var result = await _friendshipService.SearchUsersAsync(User, query, page, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            var result = await friendshipService.SearchUsersAsync(User.GetUserId(), query, page, pageSize);
+            return Ok(result);
         }
 
         [HttpGet("profile/{userName}")]
-        public async Task<IActionResult> GetPublicProfile(string userName)
+        public async Task<ActionResult<PublicProfileDto>> GetPublicProfile(string userName)
         {
-            try
-            {
-                var profile = await _friendshipService.GetPublicProfileAsync(User, userName);
-                if (profile == null)
-                {
-                    return NotFound(new { message = "Profilo non trovato" });
-                }
-                return Ok(profile);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore interno del server", error = ex.Message });
-            }
+            var profile = await friendshipService.GetPublicProfileAsync(User.GetUserId(), userName);
+            return Ok(profile);
         }
     }
 }

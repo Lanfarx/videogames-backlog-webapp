@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using VideoGamesBacklogBackend.Dto;
+using VideoGamesBacklogBackend.Helpers;
 using VideoGamesBacklogBackend.Interfaces;
 
 namespace VideoGamesBacklogBackend.Controllers
@@ -9,92 +9,38 @@ namespace VideoGamesBacklogBackend.Controllers
     [ApiController]
     [Route("api/activity-reactions")]
     [Authorize]
-    public class ActivityReactionController : ControllerBase
+    public class ActivityReactionController(IActivityService activityService) : ControllerBase
     {
-        private readonly IActivityService _activityService;
-
-        public ActivityReactionController(IActivityService activityService)
-        {
-            _activityService = activityService;
-        }
-
         [HttpPost]
         public async Task<IActionResult> ToggleReaction([FromBody] CreateActivityReactionDto createReactionDto)
         {
-            try
+            var result = await activityService.AddReactionAsync(createReactionDto, User.GetUserId());
+            
+            if (result == null)
             {
-                var userId = GetCurrentUserId();
-                if (!userId.HasValue)
-                {
-                    return Unauthorized("Utente non autenticato");
-                }
+                return Ok(new { message = "Reazione rimossa", removed = true });
+            }
 
-                var result = await _activityService.AddReactionAsync(createReactionDto, userId.Value);
-                
-                if (result == null)
-                {
-                    return Ok(new { message = "Reazione rimossa", removed = true });
-                }            return Ok(new { message = "Reazione aggiunta", reaction = result, removed = false });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore nell'aggiunta della reazione", error = ex.Message });
-            }
+            return Ok(new { message = "Reazione aggiunta", reaction = result, removed = false });
         }
-        [HttpGet("activity/{activityId}")]
+
+        [HttpGet("activity/{activityId:int}")]
         public async Task<IActionResult> GetActivityReactions(int activityId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (!userId.HasValue)
-                {
-                    return Unauthorized("Utente non autenticato");
-                }
-
-                var reactions = await _activityService.GetActivityReactionsAsync(activityId, userId.Value);
-                
-                return Ok(new { 
-                    activityId = activityId,
-                    reactions = reactions,
-                    message = "Reazioni recuperate con successo" 
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore nel recupero delle reazioni", error = ex.Message });
-            }
+            var reactions = await activityService.GetActivityReactionsAsync(activityId, User.GetUserId());
+            
+            return Ok(new { 
+                activityId,
+                reactions,
+                message = "Reazioni recuperate con successo" 
+            });
         }
 
-        [HttpDelete("{reactionId}")]
+        [HttpDelete("{reactionId:int}")]
         public async Task<IActionResult> RemoveReaction(int reactionId)
         {
-            try
-            {
-                var userId = GetCurrentUserId();
-                if (!userId.HasValue)
-                {
-                    return Unauthorized("Utente non autenticato");
-                }
-
-                var success = await _activityService.RemoveReactionAsync(reactionId, userId.Value);
-                
-                if (!success)
-                {
-                    return NotFound("Reazione non trovata o non autorizzato");
-                }
-
-                return Ok(new { message = "Reazione rimossa con successo" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Errore nella rimozione della reazione", error = ex.Message });
-            }        }
-
-        private int? GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(userIdClaim, out var userId) ? userId : null;
+            await activityService.RemoveReactionAsync(reactionId, User.GetUserId());
+            return Ok(new { message = "Reazione rimossa con successo" });
         }
     }
 }

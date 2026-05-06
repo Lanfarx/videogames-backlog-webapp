@@ -1,57 +1,49 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VideoGamesBacklogBackend.Services;
-using System.Security.Claims;
-using VideoGamesBacklogBackend.Data;
-using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Interfaces;
+using VideoGamesBacklogBackend.Dto;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]    public class ProfileController : ControllerBase
+    [Authorize]    
+    public class ProfileController(IProfileService profileService) : ControllerBase
     {
-        private readonly IProfileService _profileService;
-        private readonly AppDbContext _context;
-
-        public ProfileController(IProfileService profileService, AppDbContext context)
+        [HttpGet]
+        public async Task<ActionResult<UserProfileDto>> GetProfile()
         {
-            _profileService = profileService;
-            _context = context;
-        }[HttpGet]
-        public async Task<IActionResult> GetProfile()
-        {
-            var user = await _profileService.GetProfileAsync(User);
-            if (user == null) return NotFound();  
+            var user = await profileService.GetProfileAsync(User.GetUserId());
             return Ok(user);
-        }        [HttpPut]
-        public async Task<IActionResult> UpdateProfile([FromBody] User updated)
+        }        
+        
+        [HttpPut]
+        public async Task<ActionResult<UserProfileDto>> UpdateProfile([FromBody] UpdateProfileDto updated)
         {
-            var user = await _profileService.UpdateProfileAsync(User, updated);
-            if (user == null) return NotFound();
+            var user = await profileService.UpdateProfileAsync(User.GetUserId(), updated);
             return Ok(user);
-        }        [HttpPost("ChangePassword")]
+        }        
+        
+        [HttpPost("ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
         {
-            var result = await _profileService.ChangePasswordAsync(User, req.CurrentPassword, req.NewPassword);
-            if (!result) return BadRequest("Password attuale errata o nuova password non valida.");
+            await profileService.ChangePasswordAsync(User.GetUserId(), req.CurrentPassword, req.NewPassword);
             return Ok();
-        }        [HttpGet("avatar/{username}")]
+        }        
+        
+        [HttpGet("avatar/{username}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetUserAvatar(string username)
         {
-            var user = await _context.Users
-                .Where(u => u.UserName == username)
-                .Select(u => new { u.Avatar })
-                .FirstOrDefaultAsync();
+            var avatar = await profileService.GetUserAvatarAsync(username);
 
-            if (user == null)
+            if (avatar == null)
             {
-                return NotFound("Utente non trovato");
+                return NotFound(new { message = "Utente non trovato o avatar non impostato." });
             }
 
-            return Ok(new { avatar = user.Avatar });
+            return Ok(new { avatar });
         }
 
         public class ChangePasswordRequest

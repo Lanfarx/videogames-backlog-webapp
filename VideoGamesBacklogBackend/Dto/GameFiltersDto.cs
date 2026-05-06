@@ -1,5 +1,5 @@
-using VideoGamesBacklogBackend.Models;
 using System.Text.Json.Serialization;
+using VideoGamesBacklogBackend.Entities;
 
 namespace VideoGamesBacklogBackend.Dto
 {

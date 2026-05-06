@@ -1,26 +1,24 @@
-using System.Security.Claims;
-using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Dto;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {    public interface IGameService
-    {        Task<List<Game>> GetAllGamesAsync(ClaimsPrincipal userClaims);
-        Task<PaginatedGamesDto> GetGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 12, string? filters = null, string? sortBy = null, string? sortOrder = null, string? search = null);
-        Task<Game?> GetGameByIdAsync(ClaimsPrincipal userClaims, int gameId);
-        Task<Game?> GetGameByTitleAsync(ClaimsPrincipal userClaims, string title);
+    {        Task<List<GameDto>> GetAllGamesAsync(int userId);
+        Task<PaginatedGamesDto> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams);
+        Task<GameDto?> GetGameByIdAsync(int userId, int gameId);
+        Task<GameDto?> GetGameByTitleAsync(int userId, string title);
         Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null);
-        Task<Game> AddGameAsync(ClaimsPrincipal userClaims, Game game);
-        Task<Game?> UpdateGameAsync(ClaimsPrincipal userClaims, int gameId, UpdateGameDto updateDto);
-        Task<Game?> UpdateGameStatusAsync(ClaimsPrincipal userClaims, int gameId, string status);        Task<Game?> UpdateGamePlaytimeAsync(ClaimsPrincipal userClaims, int gameId, int hoursPlayed);
-        Task<bool> DeleteGameAsync(ClaimsPrincipal userClaims, int gameId);
-        Task<int> DeleteAllGamesAsync(ClaimsPrincipal userClaims);        Task<GameStatsDto> GetGameStatsAsync(ClaimsPrincipal userClaims);
+        Task<GameDto> AddGameAsync(int userId, CreateGameDto gameDto);
+        Task<GameDto?> UpdateGameAsync(int userId, int gameId, UpdateGameDto updateDto);
+        Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status);
+        Task<GameDto?> UpdateGamePlaytimeAsync(int userId, int gameId, int hoursPlayed);
+        Task<bool> DeleteGameAsync(int userId, int gameId);
+        Task<int> DeleteAllGamesAsync(int userId);
+        Task<GameStatsDto> GetGameStatsAsync(int userId);
         Task<GameStatsDto> GetUserStatsAsync(int userId);
-        Task<PaginatedGamesDto> GetInProgressGamesPaginatedAsync(ClaimsPrincipal userClaims, int page = 1, int pageSize = 6);
-        Task<List<GameComment>> GetCommentsAsync(ClaimsPrincipal userClaims, int gameId);
-        Task<GameComment?> AddCommentAsync(ClaimsPrincipal userClaims, int gameId, GameComment comment);
-        Task<bool> DeleteCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId);
-        Task<GameComment?> UpdateCommentAsync(ClaimsPrincipal userClaims, int gameId, int commentId, GameComment updatedComment);
+        Task<PaginatedGamesDto> GetInProgressGamesPaginatedAsync(int userId, int page = 1, int pageSize = 6);
+        Task<List<GameCommentDto>> GetCommentsAsync(int userId, int gameId);
+        Task<GameCommentDto?> AddCommentAsync(int userId, int gameId, CreateGameCommentDto commentDto);
+        Task<bool> DeleteCommentAsync(int userId, int gameId, int commentId);
+        Task<GameCommentDto?> UpdateCommentAsync(int userId, int gameId, int commentId, CreateGameCommentDto updatedComment);
     }
 }

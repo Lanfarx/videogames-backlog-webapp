@@ -1,12 +1,12 @@
-﻿using System.Security.Claims;
-using VideoGamesBacklogBackend.Models;
+using VideoGamesBacklogBackend.Dto;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {
     public interface IProfileService
     {
-        Task<User?> GetProfileAsync(ClaimsPrincipal userClaims);
-        Task<User?> UpdateProfileAsync(ClaimsPrincipal userClaims, User updated);
-        Task<bool> ChangePasswordAsync(ClaimsPrincipal userClaims, string currentPassword, string newPassword);
+        Task<UserProfileDto> GetProfileAsync(int userId);
+        Task<UserProfileDto> UpdateProfileAsync(int userId, UpdateProfileDto updated);
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<string?> GetUserAvatarAsync(string username);
     }
 }

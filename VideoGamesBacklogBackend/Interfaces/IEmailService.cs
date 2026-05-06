@@ -1,4 +1,4 @@
-using VideoGamesBacklogBackend.Models;
+using VideoGamesBacklogBackend.Entities;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {

@@ -1,25 +1,25 @@
-using System.Security.Claims;
 using VideoGamesBacklogBackend.Dto;
-using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {
     public interface IFriendshipService
     {
-        // Gestione richieste di amicizia
-        Task<bool> SendFriendRequestAsync(ClaimsPrincipal userClaims, string targetUserName);
-        Task<bool> AcceptFriendRequestAsync(ClaimsPrincipal userClaims, int friendshipId);
-        Task<bool> RejectFriendRequestAsync(ClaimsPrincipal userClaims, int friendshipId);
-        Task<bool> RemoveFriendAsync(ClaimsPrincipal userClaims, int friendUserId);
-        Task<bool> BlockUserAsync(ClaimsPrincipal userClaims, int targetUserId);
+        Task<bool> SendFriendRequestAsync(int userId, string targetUserName);
+        Task<bool> AcceptFriendRequestAsync(int userId, int friendshipId);
+        Task<bool> RejectFriendRequestAsync(int userId, int friendshipId);
+        Task<bool> RemoveFriendAsync(int userId, int friendUserId);
+        Task<bool> BlockUserAsync(int userId, int targetUserId);
         
         // Recupero dati amicizie
-        Task<List<FriendshipDto>> GetPendingFriendRequestsAsync(ClaimsPrincipal userClaims);
-        Task<List<FriendshipDto>> GetSentFriendRequestsAsync(ClaimsPrincipal userClaims);
-        Task<List<FriendDto>> GetFriendsAsync(ClaimsPrincipal userClaims);
+        Task<List<FriendshipDto>> GetPendingFriendRequestsAsync(int userId);
+        Task<List<FriendshipDto>> GetSentFriendRequestsAsync(int userId);
+        Task<List<FriendDto>> GetFriendsAsync(int userId);
         
         // Ricerca utenti e profili pubblici
-        Task<PaginatedUsersDto> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery, int page, int pageSize);
-        Task<PublicProfileDto?> GetPublicProfileAsync(ClaimsPrincipal userClaims, string userName);
+        Task<PaginatedUsersDto> SearchUsersAsync(int userId, string searchQuery, int page, int pageSize);
+        Task<PublicProfileDto> GetPublicProfileAsync(int userId, string userName);
+
+        // Utility condivisa per check di amicizia
+        Task<bool> AreUsersFriendsAsync(int userId1, int userId2);
     }
 }

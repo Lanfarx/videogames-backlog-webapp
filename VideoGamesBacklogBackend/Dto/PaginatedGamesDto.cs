@@ -2,7 +2,7 @@ namespace VideoGamesBacklogBackend.Dto
 {
     public class PaginatedGamesDto
     {
-        public List<object> Games { get; set; } = new List<object>();
+        public List<object> Games { get; set; } = [];
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int TotalItems { get; set; }

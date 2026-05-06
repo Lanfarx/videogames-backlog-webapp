@@ -39,7 +39,7 @@ namespace VideoGamesBacklogBackend.Dto
         public decimal OverallRating { get; set; }
         public string Date { get; set; } = string.Empty;
         public int HelpfulVotes { get; set; } // Per future implementazioni di voti utili
-        public List<ReviewCommentDto> Comments { get; set; } = new List<ReviewCommentDto>(); // Commenti alla recensione
+        public List<ReviewCommentDto> Comments { get; set; } = []; // Commenti alla recensione
         public int CommentsCount { get; set; } // Numero di commenti
     }
 
@@ -72,7 +72,7 @@ namespace VideoGamesBacklogBackend.Dto
     /// </summary>
     public class PaginatedReviewsDto
     {
-        public List<CommunityReviewDto> Reviews { get; set; } = new List<CommunityReviewDto>();
+        public List<CommunityReviewDto> Reviews { get; set; } = [];
         public int TotalCount { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }

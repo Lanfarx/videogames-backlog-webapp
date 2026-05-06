@@ -1,4 +1,4 @@
-﻿namespace VideoGamesBacklogBackend.Models.auth
+﻿namespace VideoGamesBacklogBackend.Entities.auth
 {
     public class LoginModel
     {

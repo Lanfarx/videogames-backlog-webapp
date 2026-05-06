@@ -1,53 +1,58 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using VideoGamesBacklogBackend.Data;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
+using VideoGamesBacklogBackend.Dto;
+using AutoMapper;
+using VideoGamesBacklogBackend.Entities;
 
 namespace VideoGamesBacklogBackend.Services
 {
-    public class ProfileService : IProfileService
+    public class ProfileService(AppDbContext dbContext, UserManager<User> userManager, IMapper mapper)
+        : IProfileService
     {
-        private readonly AppDbContext _dbContext;
-        private readonly UserManager<User> _userManager;
-        public ProfileService(AppDbContext dbContext, UserManager<User> userManager)
+        public async Task<UserProfileDto> GetProfileAsync(int userId)
         {
-            _dbContext = dbContext;
-            _userManager = userManager;
-        }
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) throw new KeyNotFoundException("Utente non trovato.");
+            return mapper.Map<UserProfileDto>(user);
+        }        
+        
+        public async Task<UserProfileDto> UpdateProfileAsync(int userId, UpdateProfileDto updated)
+        {
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) throw new KeyNotFoundException("Utente non trovato.");
 
-        public async Task<User?> GetProfileAsync(ClaimsPrincipal userClaims)
-        {
-            var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Id.ToString() == userId);
-        }        public async Task<User?> UpdateProfileAsync(ClaimsPrincipal userClaims, User updated)
-        {
-            var userId = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _dbContext.Users.Include(u => u.Library).FirstOrDefaultAsync(u => u.Id.ToString() == userId);
-            if (user == null) return null;
+            mapper.Map(updated, user);
 
-            // Aggiorna le proprietà dell'utente
-            user.UserName = updated.UserName;
-            user.Email = updated.Email;
-            user.FullName = updated.FullName;
-            user.Bio = updated.Bio;
-            user.Avatar = updated.Avatar;
-            user.Tags = updated.Tags;
-            user.PrivacySettings = updated.PrivacySettings;
-            user.steamId = updated.steamId;
-            user.AppPreferences = updated.AppPreferences;
-
-            await _dbContext.SaveChangesAsync();
-            return user;
-        }        public async Task<bool> ChangePasswordAsync(ClaimsPrincipal userClaims, string currentPassword, string newPassword)
+            await dbContext.SaveChangesAsync();
+            return mapper.Map<UserProfileDto>(user);
+        }        
+        
+        public async Task<string?> GetUserAvatarAsync(string username)
         {
-            var userId = userClaims.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
-            if (user == null) return false;
-            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-            return result.Succeeded;
+            var user = await dbContext.Users
+                .Where(u => u.UserName == username)
+                .Select(u => new { u.Avatar })
+                .FirstOrDefaultAsync();
+
+            return user?.Avatar;
+        }        
+        
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) throw new KeyNotFoundException("Utente non trovato.");
+            
+            var result = await userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new ArgumentException($"Errore cambio password: {errors}");
+            }
+            
+            return true;
         }
     }
 }

@@ -1,44 +1,32 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models.auth;
 using VideoGamesBacklogBackend.Helpers;
-using VideoGamesBacklogBackend.Models;
-using VideoGamesBacklogBackend.Data;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Entities.auth;
 
 namespace VideoGamesBacklogBackend.Services
-{    public class AuthService : IAuthService
+{    public class AuthService(
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
+        IConfiguration configuration,
+        IEmailService emailService,
+        IMapper mapper,
+        ILogger<AuthService> logger)
+        : IAuthService
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
-        private readonly IConfiguration _configuration;
-        private readonly AppDbContext _dbContext;
-        private readonly IEmailService _emailService;       
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IConfiguration configuration, AppDbContext dbContext, IEmailService emailService)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _configuration = configuration;
-            _dbContext = dbContext;
-            _emailService = emailService;
-        }
+
         public async Task<IdentityResult> RegisterAsync(RegisterModel model)
         {
             try
             {
-                var user = new User
-                {
-                    UserName = model.UserName,
-                    Email = model.Email,
-                    Tags = model.Tags,
-                    MemberSince = DateTime.UtcNow
-                };
+                var user = mapper.Map<User>(model);
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+                var result = await userManager.CreateAsync(user, model.Password);
                 return result;
             }
             catch (Exception ex)
@@ -55,76 +43,56 @@ namespace VideoGamesBacklogBackend.Services
             User? user = null;
 
             // Prova a trovare per email
-            user = await _userManager.FindByEmailAsync(model.Identifier);
+            user = await userManager.FindByEmailAsync(model.Identifier);
 
             // Se non trovato, prova per UserName
             if (user == null)
-                user = await _userManager.FindByNameAsync(model.Identifier);
+                user = await userManager.FindByNameAsync(model.Identifier);
 
             if (user == null) return null;
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+            var result = await signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (!result.Succeeded) return null;
 
             return GenerateJwtToken(user);
         }
 
-        public async Task<User?> GetCurrentUserAsync(ClaimsPrincipal user)
+        public async Task<User?> GetCurrentUserAsync(int userId)
         {
-            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null) return null;
-            return await _userManager.FindByIdAsync(userId);
+            return await userManager.FindByIdAsync(userId.ToString());
         }        public async Task<bool> ForgotPasswordAsync(ForgotPasswordModel model)
         {
-            try
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
-                {
-                    // Non rivelare se l'email esiste o meno per motivi di sicurezza
-                    // Restituiamo sempre true per non far capire se l'email esiste
-                    return true;
-                }
+                // Non rivelare se l'email esiste o meno per motivi di sicurezza
+                return true;
+            }
 
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                
-                // Invia l'email di reset password
-                var emailSent = await _emailService.SendPasswordResetEmailAsync(user, token);
-                
-                if (!emailSent)
-                {
-                    Console.WriteLine($"Errore nell'invio dell'email per {user.Email}. Token di fallback: {token}");
-                }
-                
-                return true; // Restituiamo sempre true per sicurezza
-            }
-            catch (Exception ex)
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            
+            var emailSent = await emailService.SendPasswordResetEmailAsync(user, token);
+            
+            if (!emailSent)
             {
-                Console.WriteLine($"Error in ForgotPasswordAsync: {ex.Message}");
-                return false;
+                logger.LogWarning("Errore nell'invio dell'email di reset per {Email}", user.Email);
             }
+            
+            return true;
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordModel model)
         {
-            try
-            {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null) return false;
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user == null) return false;
 
-                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-                return result.Succeeded;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in ResetPasswordAsync: {ex.Message}");
-                return false;
-            }
+            var result = await userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            return result.Succeeded;
         }
 
         private string GenerateJwtToken(User user)
         {
-            var jwtSettings = _configuration.GetSection("JwtSettings").Get<JwtSettings>();            var claims = new[]
+            var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();            var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), 
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),

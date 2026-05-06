@@ -1,42 +1,30 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using VideoGamesBacklogBackend.Entities.auth;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
-using VideoGamesBacklogBackend.Models.auth;
+using VideoGamesBacklogBackend.Helpers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }    [HttpPost("register")]
+    [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        try
-        {
-            var result = await _authService.RegisterAsync(model);
+        var result = await authService.RegisterAsync(model);
             
-            if (result.Succeeded) 
-            {
-                return Ok();
-            }
-            
-            return BadRequest(result.Errors);
-        }        catch (Exception)
+        if (result.Succeeded) 
         {
-            throw;
+            return Ok();
         }
+            
+        return BadRequest(result.Errors);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
-        var token = await _authService.LoginAsync(model);
+        var token = await authService.LoginAsync(model);
         if (token == null) return Unauthorized();
         return Ok(new { token });
     }
@@ -44,7 +32,7 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordModel model)
     {
-        var result = await _authService.ForgotPasswordAsync(model);
+        var result = await authService.ForgotPasswordAsync(model);
         if (result)
         {
             return Ok(new { message = "Se l'email è registrata, riceverai un link per il reset della password." });
@@ -55,7 +43,7 @@ public class AuthController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
     {
-        var result = await _authService.ResetPasswordAsync(model);
+        var result = await authService.ResetPasswordAsync(model);
         if (result)
         {
             return Ok(new { message = "Password resettata con successo." });
@@ -67,7 +55,7 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var user = await _authService.GetCurrentUserAsync(User);
+        var user = await authService.GetCurrentUserAsync(User.GetUserId());
         if (user == null) return NotFound();
         return Ok(new { userId = user.Id, email = user.Email, username = user.UserName });
     }

@@ -1,84 +1,41 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using VideoGamesBacklogBackend.Services;
-using VideoGamesBacklogBackend.Models;
-using System.Security.Claims;
+using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Interfaces;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class SteamController : ControllerBase
+    public class SteamController(ISteamService steamService) : ControllerBase
     {
-        private readonly ISteamService _steamService;
-
-        public SteamController(ISteamService steamService)
-        {
-            _steamService = steamService;
-        }
-
         [HttpGet("games/{steamId}")]
         public async Task<ActionResult<List<SteamGame>>> GetSteamGames(string steamId)
         {
-            try
-            {
-                var games = await _steamService.GetSteamGamesAsync(steamId);
-                return Ok(new { games });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var games = await steamService.GetSteamGamesAsync(steamId);
+            return Ok(new { games });
         }
 
         [HttpGet("recent-games/{steamId}")]
         public async Task<ActionResult<List<RecentlyPlayedGame>>> GetRecentlyPlayedGames(string steamId)
         {
-            try
-            {
-                var games = await _steamService.GetRecentlyPlayedGamesAsync(steamId);
-                return Ok(new { games });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var games = await steamService.GetRecentlyPlayedGamesAsync(steamId);
+            return Ok(new { games });
         }
 
         [HttpPost("sync")]
         public async Task<ActionResult<SteamSyncResponse>> SyncSteamGames([FromBody] SteamSyncRequest request)
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null)
-                {
-                    return Unauthorized(new { error = "Token non valido" });
-                }
+            if (string.IsNullOrEmpty(request.SteamId))
+                throw new ArgumentException("Steam ID richiesto.");
 
-                if (!int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return BadRequest(new { error = "ID utente non valido" });
-                }
+            if (request.SyncType is not ("initial_load" or "update_hours"))
+                throw new ArgumentException("Tipo di sincronizzazione non valido. Usa 'initial_load' o 'update_hours'.");
 
-                if (string.IsNullOrEmpty(request.SteamId))
-                {
-                    return BadRequest(new { error = "Steam ID richiesto" });
-                }
-
-                if (request.SyncType != "initial_load" && request.SyncType != "update_hours")
-                {
-                    return BadRequest(new { error = "Tipo di sincronizzazione non valido. Usa 'initial_load' o 'update_hours'" });
-                }
-
-                var result = await _steamService.SyncSteamGamesAsync(request.SteamId, request.SyncType, userId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var result = await steamService.SyncSteamGamesAsync(request.SteamId, request.SyncType, User.GetUserId());
+            return Ok(result);
         }
     }
 }

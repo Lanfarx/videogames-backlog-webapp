@@ -1,120 +1,82 @@
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using VideoGamesBacklogBackend.Data;
 using VideoGamesBacklogBackend.Dto;
+using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Services
-{    public class FriendshipService : IFriendshipService
+{
+    public class FriendshipService(
+        AppDbContext context,
+        IGameService gameService,
+        INotificationService notificationService)
+        : IFriendshipService
     {
-        private readonly AppDbContext _context;
-        private readonly IGameService _gameService;
-        private readonly INotificationService _notificationService;
-
-        public FriendshipService(AppDbContext context, IGameService gameService, INotificationService notificationService)
+        public async Task<bool> SendFriendRequestAsync(int userId, string targetUserName)
         {
-            _context = context;
-            _gameService = gameService;
-            _notificationService = notificationService;
-        }
+            var targetUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == targetUserName);
 
-        private int GetUserId(ClaimsPrincipal userClaims)
-        {
-            var userIdString = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.Parse(userIdString ?? "0");
-        }
+            if (targetUser == null) throw new KeyNotFoundException("Utente non trovato.");
+            if (targetUser.Id == userId) throw new ArgumentException("Non puoi inviare una richiesta a te stesso.");
+            if (!targetUser.PrivacySettings.FriendRequests) throw new ArgumentException("Questo utente non accetta richieste di amicizia.");
 
-        public async Task<bool> SendFriendRequestAsync(ClaimsPrincipal userClaims, string targetUserName)
-        {
-            var senderId = GetUserId(userClaims);
-            var targetUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == targetUserName);
-            
-            if (targetUser == null || targetUser.Id == senderId)
-                return false;
+            var existingFriendship = await context.Friendships
+                .FirstOrDefaultAsync(f =>
+                    (f.SenderId == userId && f.ReceiverId == targetUser.Id) ||
+                    (f.SenderId == targetUser.Id && f.ReceiverId == userId));
 
-            // Controlla se l'utente target accetta richieste di amicizia
-            if (!targetUser.PrivacySettings.FriendRequests)
-                return false;
-
-            // Controlla se esiste già una richiesta o amicizia
-            var existingFriendship = await _context.Friendships
-                .FirstOrDefaultAsync(f => 
-                    (f.SenderId == senderId && f.ReceiverId == targetUser.Id) ||
-                    (f.SenderId == targetUser.Id && f.ReceiverId == senderId));
-
-            // Permetti di reinviare la richiesta solo se la precedente è stata rifiutata
             if (existingFriendship != null)
             {
-                if (existingFriendship.Status == FriendshipStatus.Rejected) {
-                    _context.Friendships.Remove(existingFriendship);
-                    await _context.SaveChangesAsync();
-                } else {
-                    return false;
+                if (existingFriendship.Status == FriendshipStatus.Rejected)
+                {
+                    context.Friendships.Remove(existingFriendship);
+                    await context.SaveChangesAsync();
                 }
-            }            var friendship = new Friendship
+                else
+                {
+                    throw new ArgumentException("Richiesta di amicizia già inviata o siete già amici.");
+                }
+            }
+
+            var friendship = new Friendship
             {
-                SenderId = senderId,
+                SenderId = userId,
                 ReceiverId = targetUser.Id,
                 Status = FriendshipStatus.Pending
             };
 
-            _context.Friendships.Add(friendship);
-            await _context.SaveChangesAsync();
+            context.Friendships.Add(friendship);
+            await context.SaveChangesAsync();
 
-            // Ottieni il nome utente del mittente per la notifica
-            var senderUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+            var senderUser = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             if (senderUser != null)
             {
-                // Crea notifica per il destinatario
-                await _notificationService.CreateFriendRequestNotificationAsync(
-                    targetUser.Id, 
-                    senderId, 
+                await notificationService.CreateFriendRequestNotificationAsync(
+                    targetUser.Id,
+                    userId,
                     senderUser.UserName ?? "",
                     friendship.Id
                 );
             }
 
             return true;
-        }        public async Task<bool> AcceptFriendRequestAsync(ClaimsPrincipal userClaims, int friendshipId)
+        }
+
+        public async Task<bool> AcceptFriendRequestAsync(int userId, int friendshipId)
         {
-            var userId = GetUserId(userClaims);
-            var friendship = await _context.Friendships
+            var friendship = await context.Friendships
                 .Include(f => f.Sender)
                 .Include(f => f.Receiver)
-                .FirstOrDefaultAsync(f => f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
+                .FirstOrDefaultAsync(f =>
+                    f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
 
-            if (friendship == null)
-                return false;
+            if (friendship == null) throw new KeyNotFoundException("Richiesta di amicizia non trovata o non valida.");
 
             friendship.Status = FriendshipStatus.Accepted;
             friendship.AcceptedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
-            // Crea notifica per il mittente della richiesta originale
-            await _notificationService.CreateFriendAcceptedNotificationAsync(
-                friendship.SenderId,
-                userId,
-                friendship.Receiver.UserName ?? ""
-            );
-
-            return true;
-        }        public async Task<bool> RejectFriendRequestAsync(ClaimsPrincipal userClaims, int friendshipId)
-        {
-            var userId = GetUserId(userClaims);
-            var friendship = await _context.Friendships
-                .Include(f => f.Sender)
-                .Include(f => f.Receiver)
-                .FirstOrDefaultAsync(f => f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
-
-            if (friendship == null)
-                return false;
-
-            friendship.Status = FriendshipStatus.Rejected;
-            await _context.SaveChangesAsync();
-
-            // Crea notifica per il mittente della richiesta originale
-            await _notificationService.CreateFriendRejectedNotificationAsync(
+            await notificationService.CreateFriendAcceptedNotificationAsync(
                 friendship.SenderId,
                 userId,
                 friendship.Receiver.UserName ?? ""
@@ -123,47 +85,63 @@ namespace VideoGamesBacklogBackend.Services
             return true;
         }
 
-        public async Task<bool> RemoveFriendAsync(ClaimsPrincipal userClaims, int friendUserId)
+        public async Task<bool> RejectFriendRequestAsync(int userId, int friendshipId)
         {
-            var userId = GetUserId(userClaims);
-            var friendship = await _context.Friendships
-                .FirstOrDefaultAsync(f => 
+            var friendship = await context.Friendships
+                .Include(f => f.Sender)
+                .Include(f => f.Receiver)
+                .FirstOrDefaultAsync(f =>
+                    f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
+
+            if (friendship == null) throw new KeyNotFoundException("Richiesta di amicizia non trovata o non valida.");
+
+            friendship.Status = FriendshipStatus.Rejected;
+            await context.SaveChangesAsync();
+
+            await notificationService.CreateFriendRejectedNotificationAsync(
+                friendship.SenderId,
+                userId,
+                friendship.Receiver.UserName ?? ""
+            );
+
+            return true;
+        }
+
+        public async Task<bool> RemoveFriendAsync(int userId, int friendUserId)
+        {
+            var friendship = await context.Friendships
+                .FirstOrDefaultAsync(f =>
                     ((f.SenderId == userId && f.ReceiverId == friendUserId) ||
                      (f.SenderId == friendUserId && f.ReceiverId == userId)) &&
                     f.Status == FriendshipStatus.Accepted);
 
-            if (friendship == null)
-                return false;
+            if (friendship == null) throw new KeyNotFoundException("Amicizia non trovata.");
 
-            _context.Friendships.Remove(friendship);
-            await _context.SaveChangesAsync();
+            context.Friendships.Remove(friendship);
+            await context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<bool> BlockUserAsync(ClaimsPrincipal userClaims, int targetUserId)
+        public async Task<bool> BlockUserAsync(int userId, int targetUserId)
         {
-            var userId = GetUserId(userClaims);
-            // Rimuovi qualsiasi amicizia o blocco esistente
-            var existingFriendship = await _context.Friendships
-                .FirstOrDefaultAsync(f => 
+            var existingFriendship = await context.Friendships
+                .FirstOrDefaultAsync(f =>
                     (f.SenderId == userId && f.ReceiverId == targetUserId) ||
                     (f.SenderId == targetUserId && f.ReceiverId == userId));
 
             if (existingFriendship != null)
             {
-                // Se già bloccato, sblocca (rimuovi il blocco e non aggiungere un nuovo blocco)
                 if (existingFriendship.Status == FriendshipStatus.Blocked && existingFriendship.SenderId == userId)
                 {
-                    _context.Friendships.Remove(existingFriendship);
-                    await _context.SaveChangesAsync();
-                    return true; // Utente sbloccato
+                    context.Friendships.Remove(existingFriendship);
+                    await context.SaveChangesAsync();
+                    return true;
                 }
-                // Se non è un blocco, rimuovi la relazione per poi bloccare
-                _context.Friendships.Remove(existingFriendship);
-                await _context.SaveChangesAsync();
+
+                context.Friendships.Remove(existingFriendship);
+                await context.SaveChangesAsync();
             }
 
-            // Crea un nuovo record di blocco
             var blockFriendship = new Friendship
             {
                 SenderId = userId,
@@ -171,16 +149,14 @@ namespace VideoGamesBacklogBackend.Services
                 Status = FriendshipStatus.Blocked
             };
 
-            _context.Friendships.Add(blockFriendship);
-            await _context.SaveChangesAsync();
+            context.Friendships.Add(blockFriendship);
+            await context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<List<FriendshipDto>> GetPendingFriendRequestsAsync(ClaimsPrincipal userClaims)
+        public async Task<List<FriendshipDto>> GetPendingFriendRequestsAsync(int userId)
         {
-            var userId = GetUserId(userClaims);
-            
-            return await _context.Friendships
+            return await context.Friendships
                 .Include(f => f.Sender)
                 .Where(f => f.ReceiverId == userId && f.Status == FriendshipStatus.Pending)
                 .Select(f => new FriendshipDto
@@ -197,11 +173,9 @@ namespace VideoGamesBacklogBackend.Services
                 .ToListAsync();
         }
 
-        public async Task<List<FriendshipDto>> GetSentFriendRequestsAsync(ClaimsPrincipal userClaims)
+        public async Task<List<FriendshipDto>> GetSentFriendRequestsAsync(int userId)
         {
-            var userId = GetUserId(userClaims);
-            
-            return await _context.Friendships
+            return await context.Friendships
                 .Include(f => f.Receiver)
                 .Where(f => f.SenderId == userId && f.Status == FriendshipStatus.Pending)
                 .Select(f => new FriendshipDto
@@ -218,24 +192,19 @@ namespace VideoGamesBacklogBackend.Services
                 .ToListAsync();
         }
 
-        public async Task<List<FriendDto>> GetFriendsAsync(ClaimsPrincipal userClaims)
+        public async Task<List<FriendDto>> GetFriendsAsync(int userId)
         {
-            var userId = GetUserId(userClaims);
-            
-            var friendships = await _context.Friendships
+            var friendships = await context.Friendships
                 .Include(f => f.Sender)
                 .Include(f => f.Receiver)
-                .Where(f => 
-                    (f.SenderId == userId || f.ReceiverId == userId) && 
+                .Where(f =>
+                    (f.SenderId == userId || f.ReceiverId == userId) &&
                     f.Status == FriendshipStatus.Accepted)
                 .ToListAsync();
 
-            var friends = new List<FriendDto>();
-            
-            foreach (var friendship in friendships)
-            {
-                var friend = friendship.SenderId == userId ? friendship.Receiver : friendship.Sender;
-                friends.Add(new FriendDto
+            return friendships.Select(friendship =>
+                    friendship.SenderId == userId ? friendship.Receiver : friendship.Sender)
+                .Select(friend => new FriendDto
                 {
                     UserId = friend.Id,
                     UserName = friend.UserName ?? "",
@@ -243,20 +212,18 @@ namespace VideoGamesBacklogBackend.Services
                     Avatar = friend.Avatar,
                     Bio = friend.Bio,
                     MemberSince = friend.MemberSince
-                });
-            }
-
-            return friends;
+                })
+                .ToList();
         }
 
-        public async Task<PaginatedUsersDto> SearchUsersAsync(ClaimsPrincipal userClaims, string searchQuery, int page = 1, int pageSize = 10)
+        public async Task<PaginatedUsersDto> SearchUsersAsync(int userId, string searchQuery,
+            int page = 1, int pageSize = 10)
         {
-            var userId = GetUserId(userClaims);
             if (string.IsNullOrWhiteSpace(searchQuery) || searchQuery.Length < 2)
             {
                 return new PaginatedUsersDto
                 {
-                    Users = new List<PublicProfileDto>(),
+                    Users = [],
                     TotalCount = 0,
                     CurrentPage = page,
                     TotalPages = 0,
@@ -264,10 +231,10 @@ namespace VideoGamesBacklogBackend.Services
                 };
             }
 
-            var queryable = _context.Users
+            var queryable = context.Users
                 .Where(u => u.Id != userId &&
-                           (u.UserName!.Contains(searchQuery) ||
-                            (u.FullName != null && u.FullName.Contains(searchQuery))));
+                            (u.UserName!.Contains(searchQuery) ||
+                             (u.FullName != null && u.FullName.Contains(searchQuery))));
 
             var totalCount = await queryable.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -280,20 +247,21 @@ namespace VideoGamesBacklogBackend.Services
             var result = new List<PublicProfileDto>();
             foreach (var user in users)
             {
-                var friendship = await _context.Friendships
+                var friendship = await context.Friendships
                     .FirstOrDefaultAsync(f =>
                         (f.SenderId == userId && f.ReceiverId == user.Id) ||
-                        (f.SenderId == user.Id && f.ReceiverId == userId));                var profile = new PublicProfileDto
+                        (f.SenderId == user.Id && f.ReceiverId == userId));
+                var profile = new PublicProfileDto
                 {
                     UserId = user.Id,
-                    UserName = user.UserName ?? "",                    FullName = user.FullName,
+                    UserName = user.UserName ?? "", FullName = user.FullName,
                     Avatar = user.Avatar,
                     Bio = user.Bio,
                     MemberSince = user.MemberSince,
                     Tags = user.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries),
                     IsProfilePrivate = user.PrivacySettings.IsPrivate,
-                    CanViewStats = !user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowStats,
-                    CanViewDiary = !user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowDiary,
+                    CanViewStats = user.PrivacySettings is { IsPrivate: false, ShowStats: true },
+                    CanViewDiary = user.PrivacySettings is { IsPrivate: false, ShowDiary: true },
                     AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
                     FriendshipId = friendship?.Id,
                     FriendshipStatus = friendship?.Status.ToString(),
@@ -313,32 +281,31 @@ namespace VideoGamesBacklogBackend.Services
             };
         }
 
-        public async Task<PublicProfileDto?> GetPublicProfileAsync(ClaimsPrincipal userClaims, string userName)
+        public async Task<PublicProfileDto> GetPublicProfileAsync(int userId, string userName)
         {
-            var userId = GetUserId(userClaims);
-            var user = await _context.Users
+            var user = await context.Users
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
-            if (user == null)
-                return null;
+            if (user == null) throw new KeyNotFoundException("Utente non trovato.");
 
-            var friendship = await _context.Friendships
-                .FirstOrDefaultAsync(f => 
+            var friendship = await context.Friendships
+                .FirstOrDefaultAsync(f =>
                     (f.SenderId == userId && f.ReceiverId == user.Id) ||
                     (f.SenderId == user.Id && f.ReceiverId == userId));
 
             var isFriend = friendship?.Status == FriendshipStatus.Accepted;
-            var canViewPrivateContent = user.Id == userId || isFriend;            var profile = new PublicProfileDto
+            var canViewPrivateContent = user.Id == userId || isFriend;
+            var profile = new PublicProfileDto
             {
                 UserId = user.Id,
                 UserName = user.UserName ?? "",
                 FullName = user.FullName,
-                Avatar = user.Avatar,                Bio = user.Bio,
+                Avatar = user.Avatar, Bio = user.Bio,
                 MemberSince = user.MemberSince,
                 Tags = user.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries),
                 IsProfilePrivate = user.PrivacySettings.IsPrivate,
-                CanViewStats = (!user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowStats) || canViewPrivateContent,
-                CanViewDiary = (!user.PrivacySettings.IsPrivate && user.PrivacySettings.ShowDiary) || canViewPrivateContent,
+                CanViewStats = user.PrivacySettings is { IsPrivate: false, ShowStats: true } || canViewPrivateContent,
+                CanViewDiary = user.PrivacySettings is { IsPrivate: false, ShowDiary: true } || canViewPrivateContent,
                 AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
                 FriendshipId = friendship?.Id,
                 FriendshipStatus = friendship?.Status.ToString(),
@@ -346,13 +313,21 @@ namespace VideoGamesBacklogBackend.Services
                 IsRequestSender = friendship?.SenderId == userId
             };
 
-            // Aggiungi statistiche se visibili
             if (profile.CanViewStats)
             {
-                profile.Stats = await _gameService.GetUserStatsAsync(user.Id);
+                profile.Stats = await gameService.GetUserStatsAsync(user.Id);
             }
 
             return profile;
+        }
+
+        public async Task<bool> AreUsersFriendsAsync(int userId1, int userId2)
+        {
+            return await context.Friendships
+                .AnyAsync(f =>
+                    ((f.SenderId == userId1 && f.ReceiverId == userId2) ||
+                     (f.SenderId == userId2 && f.ReceiverId == userId1)) &&
+                    f.Status == FriendshipStatus.Accepted);
         }
     }
 }

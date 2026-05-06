@@ -3,22 +3,18 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System.Web;
+using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Helpers;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Services
 {
-    public class EmailService : IEmailService
+    public class EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
+        : IEmailService
     {
-        private readonly EmailSettings _emailSettings;
-        private readonly ILogger<EmailService> _logger;
+        private readonly EmailSettings _emailSettings = emailSettings.Value;
 
-        public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
-        {
-            _emailSettings = emailSettings.Value;
-            _logger = logger;
-        }        public async Task<bool> SendPasswordResetEmailAsync(User user, string resetToken)
+        public async Task<bool> SendPasswordResetEmailAsync(User user, string resetToken)
         {
             try
             {
@@ -34,7 +30,7 @@ namespace VideoGamesBacklogBackend.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore nell'invio dell'email di reset password per {Email}", user.Email);
+                logger.LogError(ex, "Errore nell'invio dell'email di reset password per {Email}", user.Email);
                 return false;
             }
         }        private async Task<bool> SendEmailInternalAsync(string toEmail, string subject, string htmlBody, string textBody)
@@ -59,28 +55,28 @@ namespace VideoGamesBacklogBackend.Services
                 // Configurazione specifica per Gmail - accetta i certificati SSL
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 
-                _logger.LogInformation("Tentativo di connessione a {Host}:{Port}", _emailSettings.SmtpHost, _emailSettings.SmtpPort);
+                logger.LogInformation("Tentativo di connessione a {Host}:{Port}", _emailSettings.SmtpHost, _emailSettings.SmtpPort);
                 
                 // Connessione a Gmail con StartTLS
                 await client.ConnectAsync(_emailSettings.SmtpHost, _emailSettings.SmtpPort, SecureSocketOptions.StartTls);
 
                 if (!string.IsNullOrEmpty(_emailSettings.SmtpUsername))
                 {
-                    _logger.LogInformation("Tentativo di autenticazione per {Username}", _emailSettings.SmtpUsername);
+                    logger.LogInformation("Tentativo di autenticazione per {Username}", _emailSettings.SmtpUsername);
                     await client.AuthenticateAsync(_emailSettings.SmtpUsername, _emailSettings.SmtpPassword);
-                    _logger.LogInformation("Autenticazione completata con successo");
+                    logger.LogInformation("Autenticazione completata con successo");
                 }
 
-                _logger.LogInformation("Invio email in corso...");
+                logger.LogInformation("Invio email in corso...");
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
-                _logger.LogInformation("Email inviata con successo a {Email}", toEmail);
+                logger.LogInformation("Email inviata con successo a {Email}", toEmail);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore nell'invio dell'email a {Email}. Dettagli: {Message}", toEmail, ex.Message);
+                logger.LogError(ex, "Errore nell'invio dell'email a {Email}. Dettagli: {Message}", toEmail, ex.Message);
                 return false;
             }
         }

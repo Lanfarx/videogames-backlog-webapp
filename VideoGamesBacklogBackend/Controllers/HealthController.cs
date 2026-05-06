@@ -1,29 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using VideoGamesBacklogBackend.Data;
 
 namespace VideoGamesBacklogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HealthController : ControllerBase
+    public class HealthController(AppDbContext context, ILogger<HealthController> logger) : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly ILogger<HealthController> _logger;
-
-        public HealthController(AppDbContext context, ILogger<HealthController> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {
             try
             {
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                var canConnect = await _context.Database.CanConnectAsync(cts.Token);
+                var canConnect = await context.Database.CanConnectAsync(cts.Token);
                 if (canConnect)
                 {
                     return Ok(new {
@@ -45,7 +35,7 @@ namespace VideoGamesBacklogBackend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Health check failed");
+                logger.LogError(ex, "Health check failed");
                 return StatusCode(503, new {
                     status = "unhealthy",
                     timestamp = DateTime.UtcNow,

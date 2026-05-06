@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 using VideoGamesBacklogBackend.Data;
+using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Helpers;
-using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
-using VideoGamesBacklogBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +20,7 @@ if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
     {
         foreach (var line in File.ReadAllLines(envFile))
         {
-            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith('#') || string.IsNullOrWhiteSpace(line)) continue;
             
             var parts = line.Split('=', 2);
             if (parts.Length == 2)
@@ -47,7 +44,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -162,17 +159,28 @@ builder.Services.AddAuthorization();
 // Configurazione Email Settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-// Dependency Injection
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<IActivityService, ActivityService>();
-builder.Services.AddScoped<IFriendshipService, FriendshipService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<ISteamService, SteamService>();
-builder.Services.AddScoped<ICommunityService, CommunityService>();
-builder.Services.AddScoped<IWishlistService, WishlistService>();
+// Configurazione Steam Settings
+builder.Services.Configure<SteamSettings>(options => {
+    options.ApiKey = builder.Configuration["SteamApiKey"] 
+                   ?? Environment.GetEnvironmentVariable("STEAM_API_KEY") 
+                   ?? string.Empty;
+});
+
+// Dependency Injection Automatizzata
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<VideoGamesBacklogBackend.Mappings.AutoMapperProfile>());
+var serviceInterfaces = typeof(Program).Assembly.GetTypes()
+    .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace == "VideoGamesBacklogBackend.Interfaces");
+
+foreach (var serviceInterface in serviceInterfaces)
+{
+    var implementation = typeof(Program).Assembly.GetTypes()
+        .FirstOrDefault(t => t is { IsClass: true, IsAbstract: false } && serviceInterface.IsAssignableFrom(t));
+
+    if (implementation != null)
+    {
+        builder.Services.AddScoped(serviceInterface, implementation);
+    }
+}
 builder.Services.AddHttpClient();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -187,7 +195,11 @@ builder.Services.Configure<JsonOptions>(options =>
 
 var app = builder.Build();
 
+// Aggiunta del Global Exception Handler Middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
 // TEST CONNESSIONE DATABASE ALL'AVVIO (solo un test basico)
+
 try
 {
     using var scope = app.Services.CreateScope();
@@ -195,23 +207,15 @@ try
     
     var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var canConnect = await context.Database.CanConnectAsync(cts.Token);
-    
-    if (canConnect)
-    {
-        Console.WriteLine("✅ Database connection successful!");
-    }
-    else
-    {
-        Console.WriteLine("❌ Database connection failed");
-    }
+
+    Console.WriteLine(canConnect ? "Database connection successful!" : "Database connection failed");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"❌ Database connection error: {ex.Message}");
-    Console.WriteLine("⚠️ Continuing startup - connection will be retried on first request");
+    Console.WriteLine($"Database connection error: {ex.Message}");
+    Console.WriteLine("Continuing startup - connection will be retried on first request");
 }
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -223,7 +227,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-Console.WriteLine("🚀 Application started successfully!");
-Console.WriteLine($"🌍 Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine("Application started successfully!");
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 
 app.Run();

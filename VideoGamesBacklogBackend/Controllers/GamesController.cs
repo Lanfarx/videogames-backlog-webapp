@@ -1,161 +1,143 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
 using VideoGamesBacklogBackend.Dto;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class GamesController : ControllerBase
+    public class GamesController(IGameService gameService) : ControllerBase
     {
-        private readonly IGameService _gameService;
-        public GamesController(IGameService gameService)
+        [HttpGet]
+        public async Task<ActionResult<List<GameDto>>> GetAll()
         {
-            _gameService = gameService;
-        }        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var games = await _gameService.GetAllGamesAsync(User);
+            var games = await gameService.GetAllGamesAsync(User.GetUserId());
             return Ok(games);
         }
 
         [HttpGet("paginated")]
-        public async Task<IActionResult> GetPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 12, [FromQuery] string? filters = null, [FromQuery] string? sortBy = null, [FromQuery] string? sortOrder = null, [FromQuery] string? search = null)
+        public async Task<ActionResult<PaginatedGamesDto>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
         {
-            var result = await _gameService.GetGamesPaginatedAsync(User, page, pageSize, filters, sortBy, sortOrder, search);
+            var result = await gameService.GetGamesPaginatedAsync(User.GetUserId(), queryParams);
             return Ok(result);
-        }        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<GameDto>> GetById(int id)
         {
-            var game = await _gameService.GetGameByIdAsync(User, id);
-            if (game == null) return NotFound();
+            var game = await gameService.GetGameByIdAsync(User.GetUserId(), id);
             return Ok(game);
         }
 
         [HttpGet("by-title/{title}")]
-        public async Task<IActionResult> GetByTitle(string title)
+        public async Task<ActionResult<GameDto>> GetByTitle(string title)
         {
-            // Decodifica il titolo che potrebbe contenere caratteri speciali
             var decodedTitle = Uri.UnescapeDataString(title);
-            var game = await _gameService.GetGameByTitleAsync(User, decodedTitle);
-            if (game == null) return NotFound();
+            var game = await gameService.GetGameByTitleAsync(User.GetUserId(), decodedTitle);
             return Ok(game);
         }
-        [HttpGet("public/{id}")]
+
+        [HttpGet("public/{id:int}")]
         public async Task<IActionResult> GetPublicGameInfo(int id)
         {
-            int? currentUserId = null;
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (int.TryParse(userIdClaim, out int userId))
-                {
-                    currentUserId = userId;
-                }
-            }
-            
-            var gameInfo = await _gameService.GetGamePublicInfoByIdAsync(id, currentUserId);
-            if (gameInfo == null)
-            {
-                return NotFound();
-            }
-            
+            var currentUserId = User.GetOptionalUserId();
+            var gameInfo = await gameService.GetGamePublicInfoByIdAsync(id, currentUserId);
             return Ok(gameInfo);
         }
-        
+
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] Game game)
+        public async Task<ActionResult<GameDto>> Add([FromBody] CreateGameDto gameDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var created = await _gameService.AddGameAsync(User, game);
+            var created = await gameService.AddGameAsync(User.GetUserId(), gameDto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }        [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateGame(int id, [FromBody] UpdateGameDto updateDto)
-        {
-            var game = await _gameService.UpdateGameAsync(User, id, updateDto);
-            if (game == null) return NotFound();
-            return Ok(game);
         }
-        
-         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateGameStatusDto statusDto)
+
+        [HttpPatch("{id:int}")]
+        public async Task<ActionResult<GameDto>> UpdateGame(int id, [FromBody] UpdateGameDto updateDto)
         {
-            var game = await _gameService.UpdateGameStatusAsync(User, id, statusDto.Status);
-            if (game == null) return NotFound();
+            var game = await gameService.UpdateGameAsync(User.GetUserId(), id, updateDto);
             return Ok(game);
         }
 
-        [HttpPatch("{id}/playtime")]
-        public async Task<IActionResult> UpdatePlaytime(int id, [FromBody] UpdateGamePlaytimeDto playtimeDto)
+        [HttpPatch("{id:int}/status")]
+        public async Task<ActionResult<GameDto>> UpdateStatus(int id, [FromBody] UpdateGameStatusDto statusDto)
         {
-            var game = await _gameService.UpdateGamePlaytimeAsync(User, id, playtimeDto.HoursPlayed);
-            if (game == null) return NotFound();
+            var game = await gameService.UpdateGameStatusAsync(User.GetUserId(), id, statusDto.Status);
             return Ok(game);
-        }       
-         [HttpDelete("{id}")]
+        }
+
+        [HttpPatch("{id:int}/playtime")]
+        public async Task<ActionResult<GameDto>> UpdatePlaytime(int id, [FromBody] UpdateGamePlaytimeDto playtimeDto)
+        {
+            var game = await gameService.UpdateGamePlaytimeAsync(User.GetUserId(), id, playtimeDto.HoursPlayed);
+            return Ok(game);
+        }
+
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _gameService.DeleteGameAsync(User, id);
-            if (!result) return NotFound();
+            await gameService.DeleteGameAsync(User.GetUserId(), id);
             return NoContent();
         }
 
         [HttpDelete("all")]
         public async Task<IActionResult> DeleteAll()
         {
-            var deletedCount = await _gameService.DeleteAllGamesAsync(User);
+            var deletedCount = await gameService.DeleteAllGamesAsync(User.GetUserId());
             return Ok(new { DeletedCount = deletedCount, Message = $"Eliminati {deletedCount} giochi" });
-        }// Statistiche
+        } 
+
+        // Statistiche
         [HttpGet("stats")]
-        public async Task<IActionResult> GetStats()
+        public async Task<ActionResult<GameStatsDto>> GetStats()
         {
-            var stats = await _gameService.GetGameStatsAsync(User);
+            var stats = await gameService.GetGameStatsAsync(User.GetUserId());
             return Ok(stats);
         }
 
         // Giochi in corso paginati
         [HttpGet("in-progress")]
-        public async Task<IActionResult> GetInProgressPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 6)
+        public async Task<ActionResult<PaginatedGamesDto>> GetInProgressPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 6)
         {
-            var result = await _gameService.GetInProgressGamesPaginatedAsync(User, page, pageSize);
+            var result = await gameService.GetInProgressGamesPaginatedAsync(User.GetUserId(), page, pageSize);
             return Ok(result);
         }
 
         // Commenti
-        [HttpGet("{gameId}/Comments")]
-        public async Task<IActionResult> GetComments(int gameId)
+        [HttpGet("{gameId:int}/Comments")]
+        public async Task<ActionResult<List<GameCommentDto>>> GetComments(int gameId)
         {
-            var comments = await _gameService.GetCommentsAsync(User, gameId);
+            var comments = await gameService.GetCommentsAsync(User.GetUserId(), gameId);
             return Ok(comments);
         }
 
-        [HttpPost("{gameId}/Comments")]
-        public async Task<IActionResult> AddComment(int gameId, [FromBody] GameComment comment)
+        [HttpPost("{gameId:int}/Comments")]
+        public async Task<ActionResult<GameCommentDto>> AddComment(int gameId, [FromBody] CreateGameCommentDto commentDto)
         {
-            var created = await _gameService.AddCommentAsync(User, gameId, comment);
-            if (created == null) return NotFound();
+            var created = await gameService.AddCommentAsync(User.GetUserId(), gameId, commentDto);
             return Ok(created);
-        }        [HttpDelete("{gameId}/Comments/{commentId}")]
+        }
+
+        [HttpDelete("{gameId:int}/Comments/{commentId:int}")]
         public async Task<IActionResult> DeleteComment(int gameId, int commentId)
         {
-            var result = await _gameService.DeleteCommentAsync(User, gameId, commentId);
-            if (!result) return NotFound();
+            await gameService.DeleteCommentAsync(User.GetUserId(), gameId, commentId);
             return NoContent();
         }
 
-        [HttpPut("{gameId}/Comments/{commentId}")]
-        public async Task<IActionResult> UpdateComment(int gameId, int commentId, [FromBody] GameComment comment)
+        [HttpPut("{gameId:int}/Comments/{commentId:int}")]
+        public async Task<ActionResult<GameCommentDto>> UpdateComment(int gameId, int commentId,
+            [FromBody] CreateGameCommentDto commentDto)
         {
-            var updated = await _gameService.UpdateCommentAsync(User, gameId, commentId, comment);
-            if (updated == null) return NotFound();
+            var updated = await gameService.UpdateCommentAsync(User.GetUserId(), gameId, commentId, commentDto);
             return Ok(updated);
         }
     }

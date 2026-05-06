@@ -1,25 +1,29 @@
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
-namespace VideoGamesBacklogBackend.Models
+namespace VideoGamesBacklogBackend.Entities
 {
     public enum GameStatus
     {
-        [System.ComponentModel.DataAnnotations.Display(Name = "NotStarted")]
+        [Display(Name = "NotStarted")]
         NotStarted,
-        [System.ComponentModel.DataAnnotations.Display(Name = "InProgress")]
+
+        [Display(Name = "InProgress")]
         InProgress,
-        [System.ComponentModel.DataAnnotations.Display(Name = "Completed")]
+
+        [Display(Name = "Completed")]
         Completed,
-        [System.ComponentModel.DataAnnotations.Display(Name = "Abandoned")]
+
+        [Display(Name = "Abandoned")]
         Abandoned,
-        [System.ComponentModel.DataAnnotations.Display(Name = "Platinum")]
+
+        [Display(Name = "Platinum")]
         Platinum
     }
 
-    public class Game
+    public class Game : IUserOwnedEntity
     {
         [Key]
         public int Id { get; set; }
@@ -28,7 +32,7 @@ namespace VideoGamesBacklogBackend.Models
         public string Title { get; set; } = string.Empty;
         public string? Platform { get; set; } = string.Empty;
         public int ReleaseYear { get; set; }
-        public string[] Genres { get; set; } = Array.Empty<string>();
+        public string[] Genres { get; set; } = [];
 
         [Required]
         [Column(TypeName = "varchar(20)")]
@@ -45,31 +49,33 @@ namespace VideoGamesBacklogBackend.Models
         public string? Publisher { get; set; }
         public string? CompletionDate { get; set; }
         public string? PlatinumDate { get; set; }
-   
+
         public int HoursPlayed { get; set; }
-        public int Metacritic { get; set; }        // Inizializza il Rating a 0
+        public int Metacritic { get; set; }
         public decimal Rating { get; set; } = 0;
 
         // HowLongToBeat - Tempi stimati di completamento (in ore)
-        public double? HltbMainExtra { get; set; }  // Main + Extra content
-        public double? HltbCompletionist { get; set; }  // 100% Completamento
+        public double? HltbMainExtra { get; set; }
+        public double? HltbCompletionist { get; set; }
 
         public string? Notes { get; set; }
-        public GameReview? Review { get; set; }        public List<GameComment> Comments { get; set; } = new List<GameComment>();
+        public GameReview? Review { get; set; }
+
+        public List<GameComment> Comments { get; set; } = [];
 
         // Relazione uno-a-molti: un gioco può ricevere molti commenti sulla sua recensione
-        public List<ReviewComment> ReviewComments { get; set; } = new List<ReviewComment>();
+        public List<ReviewComment> ReviewComments { get; set; } = [];
 
-        // Foreign key per l'utente proprietario
+        // Foreign key per l'utente proprietario (IUserOwnedEntity)
         [ForeignKey("User")]
         public int UserId { get; set; }
-        [JsonIgnore] // Evita il loop di serializzazione
+        [JsonIgnore]
         public User? User { get; set; }
 
-        // Relazione uno-a-molti: un gioco ha molte attivit�
-        public List<Activity> Activities { get; set; } = new List<Activity>();
-    }    
-    
+        // Relazione uno-a-molti: un gioco ha molte attività
+        public List<Activity> Activities { get; set; } = [];
+    }
+
     [Owned]
     public class GameReview
     {
@@ -82,33 +88,23 @@ namespace VideoGamesBacklogBackend.Models
         public bool? IsPublic { get; set; }
     }
 
-    public class GameComment
+    /// <summary>
+    /// Commento personale dell'utente su un gioco nella propria libreria.
+    /// </summary>
+    public class GameComment : BaseComment
     {
-        [Key]
-        public int Id { get; set; }
-        public string Date { get; set; } = string.Empty;
-        public string Text { get; set; } = string.Empty;
-
-        // Foreign key verso Game
         [ForeignKey("Game")]
         public int GameId { get; set; }
         [JsonIgnore]
         public Game? Game { get; set; }
     }
 
-    // Modello per i commenti alle recensioni
-    public class ReviewComment
+    /// <summary>
+    /// Commento di un utente sulla recensione pubblica di un altro utente.
+    /// </summary>
+    public class ReviewComment : BaseComment
     {
-        [Key]
-        public int Id { get; set; }
-
-        [Required]
-        public string Text { get; set; } = string.Empty;
-
-        [Required]
-        public string Date { get; set; } = string.Empty;
-
-        // Foreign key verso la recensione del gioco (identificata da GameId dell'autore della recensione)
+        // Foreign key verso la recensione del gioco
         [ForeignKey("ReviewGame")]
         public int ReviewGameId { get; set; }
         [JsonIgnore]

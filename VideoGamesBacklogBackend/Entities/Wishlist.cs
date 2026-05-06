@@ -2,35 +2,37 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace VideoGamesBacklogBackend.Models
+namespace VideoGamesBacklogBackend.Entities
 {
-    public class Wishlist
+    public class Wishlist : IUserOwnedEntity
     {
         [Key]
-        public int Id { get; set; }        [Required]
+        public int Id { get; set; }
+
+        [Required]
         public string Title { get; set; } = string.Empty;
-        
+
         public string? CoverImage { get; set; }
-        
+
         public int ReleaseYear { get; set; }
-        
-        public string[] Genres { get; set; } = Array.Empty<string>();
-        
+
+        public string[] Genres { get; set; } = [];
+
         public int Metacritic { get; set; }
-        
+
         // Data di aggiunta alla wishlist
         public string AddedDate { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        
+
         // ID del gioco su RAWG per poter recuperare i dettagli
         public int RawgId { get; set; }
-        
+
         // Note personali dell'utente per questo gioco
         public string? Notes { get; set; }
 
-        // Foreign key per l'utente proprietario
+        // Foreign key per l'utente proprietario (IUserOwnedEntity)
         [ForeignKey("User")]
         public int UserId { get; set; }
-        [JsonIgnore] // Evita il loop di serializzazione
+        [JsonIgnore]
         public User? User { get; set; }
     }
 }

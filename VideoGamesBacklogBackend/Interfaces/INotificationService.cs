@@ -1,5 +1,4 @@
 using VideoGamesBacklogBackend.Dto;
-using VideoGamesBacklogBackend.Models;
 
 namespace VideoGamesBacklogBackend.Interfaces
 {

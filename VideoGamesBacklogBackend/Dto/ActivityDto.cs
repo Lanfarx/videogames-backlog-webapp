@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using VideoGamesBacklogBackend.Models;
+using VideoGamesBacklogBackend.Entities;
 
 namespace VideoGamesBacklogBackend.Dto
 {    public class ActivityDto
@@ -13,7 +13,7 @@ namespace VideoGamesBacklogBackend.Dto
         public object? GameImageUrl { get; internal set; }
         
         // Lista delle reazioni raggruppate per emoji
-        public List<ActivityReactionSummaryDto> ReactionsSummary { get; set; } = new List<ActivityReactionSummaryDto>();
+        public List<ActivityReactionSummaryDto> ReactionsSummary { get; set; } = [];
         
         // Per sapere se l'utente corrente ha già reagito e con quale emoji
         public string? UserReaction { get; set; }        // Proprietà aggiuntive per le reazioni (quando necessario)
@@ -21,7 +21,7 @@ namespace VideoGamesBacklogBackend.Dto
         public Dictionary<string, int>? ReactionCounts { get; set; }
 
         // Commenti all'attività (solo per attività di tipo "Rated")
-        public List<ActivityCommentDto> Comments { get; set; } = new List<ActivityCommentDto>();
+        public List<ActivityCommentDto> Comments { get; set; } = [];
         public int CommentsCount { get; set; }
     }
 
@@ -50,7 +50,7 @@ namespace VideoGamesBacklogBackend.Dto
 
     public class PaginatedActivitiesDto
     {
-        public List<ActivityDto> Activities { get; set; } = new List<ActivityDto>();
+        public List<ActivityDto> Activities { get; set; } = [];
         public int TotalCount { get; set; }
         public int PageSize { get; set; }
         public int CurrentPage { get; set; }
@@ -83,7 +83,7 @@ namespace VideoGamesBacklogBackend.Dto
     {
         public string Emoji { get; set; } = string.Empty;
         public int Count { get; set; }
-        public List<string> UserNames { get; set; } = new List<string>(); // Per mostrare chi ha reagito
+        public List<string> UserNames { get; set; } = []; // Per mostrare chi ha reagito
     }
 
     public class AddActivityReactionDto
@@ -133,10 +133,10 @@ namespace VideoGamesBacklogBackend.Dto
         public DateTime Timestamp { get; set; }
         public string? AdditionalInfo { get; set; }
         public string? GameImageUrl { get; set; }
-        public List<ActivityReactionDto> Reactions { get; set; } = new List<ActivityReactionDto>();
+        public List<ActivityReactionDto> Reactions { get; set; } = [];
         public Dictionary<string, int> ReactionCounts { get; set; } = new Dictionary<string, int>();        public string? UserReaction { get; set; } // L'emoji della reazione dell'utente corrente, se presente
         // Commenti all'attività (solo per attività di tipo "Rated")
-        public List<ActivityCommentDto> Comments { get; set; } = new List<ActivityCommentDto>();
+        public List<ActivityCommentDto> Comments { get; set; } = [];
         public int CommentsCount { get; set; }
     }
 }

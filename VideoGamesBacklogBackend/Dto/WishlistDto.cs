@@ -5,7 +5,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string Title { get; set; } = string.Empty;
         public string? CoverImage { get; set; }
         public int ReleaseYear { get; set; }
-        public string[] Genres { get; set; } = Array.Empty<string>();
+        public string[] Genres { get; set; } = [];
         public int Metacritic { get; set; }
         public string AddedDate { get; set; } = string.Empty;
         public int RawgId { get; set; }
@@ -18,7 +18,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string Title { get; set; } = string.Empty;
         public string? CoverImage { get; set; }
         public int ReleaseYear { get; set; }
-        public string[] Genres { get; set; } = Array.Empty<string>();
+        public string[] Genres { get; set; } = [];
         public int Metacritic { get; set; }
         public int RawgId { get; set; }
         public string? Notes { get; set; }

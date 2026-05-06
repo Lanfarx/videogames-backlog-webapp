@@ -1,5 +1,3 @@
-using VideoGamesBacklogBackend.Models;
-
 namespace VideoGamesBacklogBackend.Dto
 {
     public class UpdateGameDto

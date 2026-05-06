@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace VideoGamesBacklogBackend.Models
+namespace VideoGamesBacklogBackend.Entities
 {
     public class Friendship
     {

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Edit, Trash2, MoreVertical, Clock, Settings } from 'lucide-react'; // Aggiunto Settings per "Modifica stato"
+import { Edit, Trash2, Clock, Settings } from 'lucide-react'; // Aggiunto Settings per "Modifica stato"
 import type { Game, GameStatus } from '../../types/game';
 import StatusChangePopover from '../ui/StatusChangePopover';
 import PlaytimePopover from '../ui/PlaytimePopover';
@@ -94,7 +94,7 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
             Modifica gioco
           </button>
         </li>
-        <li className="relative">
+        <li>
           <button
             onClick={(e) => {
               e.preventDefault();
