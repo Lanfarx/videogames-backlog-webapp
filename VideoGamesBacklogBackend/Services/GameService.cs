@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AutoMapper;
 using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Services
 {
@@ -22,7 +23,7 @@ namespace VideoGamesBacklogBackend.Services
             return mapper.Map<List<GameDto>>(games);
         }
 
-        public async Task<PaginatedGamesDto> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
+        public async Task<PaginatedResult<object>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
         {
             var query = dbContext.Games.Where(g => g.UserId == userId);
 
@@ -123,25 +124,8 @@ namespace VideoGamesBacklogBackend.Services
                 query = query.OrderBy(g => g.Title);
             }
 
-            var totalItems = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalItems / queryParams.PageSize);
-
-            var games = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
-                .Include(g => g.Comments)
-                .ToListAsync();
-
-            return new PaginatedGamesDto
-            {
-                Games = games.Cast<object>().ToList(),
-                CurrentPage = queryParams.Page,
-                TotalPages = totalPages,
-                TotalItems = totalItems,
-                PageSize = queryParams.PageSize,
-                HasNextPage = queryParams.Page < totalPages,
-                HasPreviousPage = queryParams.Page > 1
-            };
+            query = query.Include(g => g.Comments);
+            return await query.PaginateAsync<object>(queryParams.Page, queryParams.PageSize);
         }
 
         public async Task<GameDto?> GetGameByIdAsync(int userId, int gameId)
@@ -366,50 +350,15 @@ namespace VideoGamesBacklogBackend.Services
             return true;
         }
 
-        public async Task<GameStatsDto> GetGameStatsAsync(int userId) => await GetUserStatsAsync(userId);
 
-        public async Task<GameStatsDto> GetUserStatsAsync(int userId)
-        {
-            var games = await dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
 
-            var totalSpent = games.Sum(g => g.Price);
-            var freeGames = games.Count(g => g.Price == 0);
-            var paidGames = games.Where(g => g.Price > 0).ToList();
-            var totalHours = games.Sum(g => g.HoursPlayed);
-
-            var highestPriceGame = games.Count > 0 ? games.OrderByDescending(g => g.Price).First() : null;
-
-            return new GameStatsDto
-            {
-                Total = games.Count,
-                InProgress = games.Count(g => g.Status == GameStatus.InProgress),
-                Completed = games.Count(g => g.Status is GameStatus.Completed or GameStatus.Platinum),
-                NotStarted = games.Count(g => g.Status == GameStatus.NotStarted),
-                Abandoned = games.Count(g => g.Status == GameStatus.Abandoned),
-                Platinum = games.Count(g => g.Status == GameStatus.Platinum),
-                TotalHours = totalHours,
-                TotalSpent = totalSpent,
-                AveragePrice = paidGames.Count > 0 ? paidGames.Average(g => g.Price) : 0,
-                FreeGames = freeGames,
-                HighestPrice = highestPriceGame?.Price ?? 0,
-                HighestPriceGameTitle = highestPriceGame?.Title,
-                CostPerHour = totalHours > 0 ? totalSpent / totalHours : 0
-            };
-        }
-
-        public async Task<PaginatedGamesDto> GetInProgressGamesPaginatedAsync(int userId, int page = 1, int pageSize = 6)
+        public async Task<PaginatedResult<object>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams)
         {
             var query = dbContext.Games
                 .Where(g => g.UserId == userId && g.Status == GameStatus.InProgress)
                 .OrderByDescending(g => g.Id);
 
-            var totalItems = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            var games = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(g => new
+            var projectedQuery = query.Select(g => new
                 {
                     g.Id,
                     g.Title,
@@ -418,86 +367,12 @@ namespace VideoGamesBacklogBackend.Services
                     g.HoursPlayed,
                     g.Rating,
                     g.Genres
-                })
-                .ToListAsync();
+                });
 
-            return new PaginatedGamesDto
-            {
-                Games = games.Cast<object>().ToList(),
-                CurrentPage = page,
-                TotalPages = totalPages,
-                TotalItems = totalItems,
-                PageSize = pageSize,
-                HasNextPage = page < totalPages,
-                HasPreviousPage = page > 1
-            };
+            return await projectedQuery.PaginateAsync<object>(queryParams);
         }
 
-        public async Task<List<GameCommentDto>> GetCommentsAsync(int userId, int gameId)
-        {
-            var game = await dbContext.Games
-                .Include(g => g.Comments)
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
 
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
-            return mapper.Map<List<GameCommentDto>>(game.Comments);
-        }
-
-        public async Task<GameCommentDto?> AddCommentAsync(int userId, int gameId, CreateGameCommentDto commentDto)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
-
-            var comment = new GameComment
-            {
-                GameId = gameId,
-                Text = commentDto.Text,
-                Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
-            };
-            dbContext.GameComments.Add(comment);
-            await dbContext.SaveChangesAsync();
-            return mapper.Map<GameCommentDto>(comment);
-        }
-
-        public async Task<bool> DeleteCommentAsync(int userId, int gameId, int commentId)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
-
-            var comment = await dbContext.GameComments
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
-
-            if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
-
-            dbContext.GameComments.Remove(comment);
-            await dbContext.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<GameCommentDto?> UpdateCommentAsync(int userId, int gameId, int commentId, CreateGameCommentDto updatedComment)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
-
-            var comment = await dbContext.GameComments
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
-
-            if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
-
-            if (!string.IsNullOrWhiteSpace(updatedComment.Text))
-                comment.Text = updatedComment.Text;
-
-            comment.Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-            await dbContext.SaveChangesAsync();
-            return mapper.Map<GameCommentDto>(comment);
-        }
 
         public async Task<int> DeleteAllGamesAsync(int userId)
         {

@@ -9,12 +9,12 @@ namespace VideoGamesBacklogBackend.Controllers
     [ApiController]
     [Route("api/activity-reactions")]
     [Authorize]
-    public class ActivityReactionController(IActivityService activityService) : ControllerBase
+    public class ActivityReactionController(IActivityReactionService activityReactionService) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> ToggleReaction([FromBody] CreateActivityReactionDto createReactionDto)
         {
-            var result = await activityService.AddReactionAsync(createReactionDto, User.GetUserId());
+            var result = await activityReactionService.AddReactionAsync(createReactionDto, User.GetUserId());
             
             if (result == null)
             {
@@ -27,7 +27,7 @@ namespace VideoGamesBacklogBackend.Controllers
         [HttpGet("activity/{activityId:int}")]
         public async Task<IActionResult> GetActivityReactions(int activityId)
         {
-            var reactions = await activityService.GetActivityReactionsAsync(activityId, User.GetUserId());
+            var reactions = await activityReactionService.GetActivityReactionsAsync(activityId, User.GetUserId());
             
             return Ok(new { 
                 activityId,
@@ -39,7 +39,7 @@ namespace VideoGamesBacklogBackend.Controllers
         [HttpDelete("{reactionId:int}")]
         public async Task<IActionResult> RemoveReaction(int reactionId)
         {
-            await activityService.RemoveReactionAsync(reactionId, User.GetUserId());
+            await activityReactionService.RemoveReactionAsync(reactionId, User.GetUserId());
             return Ok(new { message = "Reazione rimossa con successo" });
         }
     }

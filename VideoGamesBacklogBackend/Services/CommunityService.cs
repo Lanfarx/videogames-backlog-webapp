@@ -10,8 +10,6 @@ namespace VideoGamesBacklogBackend.Services
 {
     public class CommunityService(
         AppDbContext context,
-        ILogger<CommunityService> logger,
-        INotificationService notificationService,
         IMapper mapper)
         : ICommunityService
     {
@@ -121,75 +119,44 @@ namespace VideoGamesBacklogBackend.Services
             return ratingsWithCount;
         }
 
-        public async Task<PaginatedReviewsDto> GetReviewsAsync(string gameTitle, int page, int pageSize,
+        public async Task<PaginatedResult<CommunityReviewDto>> GetReviewsAsync(string gameTitle, PaginationQueryParameters queryParams,
             int? currentUserId = null)
         {
-            var allGames = await context.Games
-                .Include(g => g.User)
-                .Include(g => g.ReviewComments)
-                .Where(g => g.Review != null && g.Review.IsPublic == true)
-                .ToListAsync();
+            var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: true, currentUserId);
+            var query = games.OrderByDescending(g => g.Review!.Date).AsQueryable();
 
-            var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
-                .Where(g => !currentUserId.HasValue || g.UserId != currentUserId.Value)
-                .OrderByDescending(g => g.Review!.Date)
-                .ToList();
+            var result = await query.PaginateAsync(queryParams);
 
-            var totalCount = games.Count;
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            var paginatedGames = games
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-            var reviews = paginatedGames.Select(mapper.Map<CommunityReviewDto>).ToList();
-
-            return new PaginatedReviewsDto
+            return new PaginatedResult<CommunityReviewDto>
             {
-                Reviews = reviews,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize,
-                TotalPages = totalPages
+                Items = result.Items.Select(mapper.Map<CommunityReviewDto>).ToList(),
+                TotalItems = result.TotalItems,
+                CurrentPage = result.CurrentPage,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages
             };
         }
 
-        public async Task<PaginatedReviewsDto> GetPublicReviewsAsync(string gameTitle, int page, int pageSize)
+        public async Task<PaginatedResult<CommunityReviewDto>> GetPublicReviewsAsync(string gameTitle, PaginationQueryParameters queryParams)
         {
-            var allGames = await context.Games
-                .Include(g => g.User)
-                .Include(g => g.ReviewComments)
-                .Where(g => g.Review != null && g.Review.IsPublic == true)
-                .ToListAsync();
+            var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: true);
+            var query = games.OrderByDescending(g => g.Review!.Date).AsQueryable();
 
-            var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
-                .OrderByDescending(g => g.Review!.Date)
-                .ToList();
+            var result = await query.PaginateAsync(queryParams);
 
-            var totalCount = games.Count;
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            var paginatedGames = games
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-            var reviews = paginatedGames.Select(mapper.Map<CommunityReviewDto>).ToList();
-
-            return new PaginatedReviewsDto
+            return new PaginatedResult<CommunityReviewDto>
             {
-                Reviews = reviews,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize,
-                TotalPages = totalPages
+                Items = result.Items.Select(mapper.Map<CommunityReviewDto>).ToList(),
+                TotalItems = result.TotalItems,
+                CurrentPage = result.CurrentPage,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages
             };
         }
 
         public async Task<ReviewStatsDto> GetReviewStatsAsync(string gameTitle)
         {
-            var allGames = await context.Games
-                .Where(g => g.Review != null && g.Review.IsPublic == true)
-                .ToListAsync();
-
-            var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
+            var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: false);
 
             if (!(games.Count > 0))
             {
@@ -221,193 +188,16 @@ namespace VideoGamesBacklogBackend.Services
         public async Task<List<CommunityReviewDto>> GetTopReviewsAsync(string gameTitle, int limit,
             int? currentUserId = null)
         {
-            var allGames = await context.Games
-                .Include(g => g.User)
-                .Include(g => g.ReviewComments)
-                .Where(g => g.Review != null && g.Review.IsPublic == true)
-                .ToListAsync();
+            var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: true, currentUserId);
 
-            var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle))
-                .Where(g => !currentUserId.HasValue || g.UserId != currentUserId.Value)
-                .OrderByDescending(g => g.Rating)
+            games = games.OrderByDescending(g => g.Rating)
                 .ThenByDescending(g => g.Review!.Date)
                 .Take(limit)
                 .ToList();
             return games.Select(mapper.Map<CommunityReviewDto>).ToList();
         }
 
-        /// <summary>
-        /// Ottiene i commenti per una specifica recensione
-        /// </summary>
-        public async Task<List<ReviewCommentDto>> GetReviewCommentsAsync(int reviewGameId)
-        {
-            var comments = await context.ReviewComments
-                .Include(rc => rc.Author)
-                .Where(rc => rc.ReviewGameId == reviewGameId)
-                .OrderBy(rc => rc.Date)
-                .ToListAsync();
 
-            return mapper.Map<List<ReviewCommentDto>>(comments);
-        }
-
-        /// <summary>
-        /// Aggiunge un commento a una recensione
-        /// </summary>
-        public async Task<ReviewCommentDto?> AddReviewCommentAsync(CreateReviewCommentDto createCommentDto,
-            int authorId)
-        {
-            var reviewGame = await context.Games
-                .Include(g => g.User)
-                .FirstOrDefaultAsync(g => g.Id == createCommentDto.ReviewGameId
-                                          && g.Review != null
-                                          && g.Review.IsPublic == true);
-
-            if (reviewGame == null)
-                throw new KeyNotFoundException("Recensione non trovata o non pubblica.");
-
-            var newComment = new ReviewComment
-            {
-                Text = createCommentDto.Text,
-                Date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
-                AuthorId = authorId,
-                ReviewGameId = createCommentDto.ReviewGameId
-            };
-
-            context.ReviewComments.Add(newComment);
-            await context.SaveChangesAsync();
-
-            var savedComment = await context.ReviewComments
-                .Include(rc => rc.Author)
-                .FirstOrDefaultAsync(rc => rc.Id == newComment.Id);
-
-            if (savedComment == null) return null;
-
-            try
-            {
-                await notificationService.CreateReviewCommentNotificationAsync(
-                    reviewGame.UserId,
-                    authorId,
-                    savedComment.Author?.UserName ?? "Utente sconosciuto",
-                    reviewGame.Title,
-                    createCommentDto.ReviewGameId
-                );
-            }
-            catch (Exception notificationEx)
-            {
-                logger.LogError(notificationEx,
-                    "Errore nella creazione della notifica per commento recensione");
-            }
-
-            return mapper.Map<ReviewCommentDto>(savedComment);
-        }
-
-        /// <summary>
-        /// Elimina un commento a una recensione
-        /// </summary>
-        public async Task<bool> DeleteReviewCommentAsync(int commentId, int userId)
-        {
-            var comment = await context.ReviewComments
-                .FirstOrDefaultAsync(rc => rc.Id == commentId);
-
-            if (comment == null)
-                throw new KeyNotFoundException("Commento non trovato.");
-
-            if (comment.AuthorId != userId)
-                throw new UnauthorizedAccessException("Non sei autorizzato ad eliminare questo commento.");
-
-            context.ReviewComments.Remove(comment);
-            await context.SaveChangesAsync();
-
-            return true;
-        }
-
-        /// <summary>
-        /// Ottiene tutti i commenti per un'attività
-        /// </summary>
-        public async Task<List<ActivityCommentDto>> GetActivityCommentsAsync(int activityId)
-        {
-            var comments = await context.ActivityComments
-                .Include(ac => ac.Author)
-                .Where(ac => ac.ActivityId == activityId)
-                .OrderBy(ac => ac.Date)
-                .ToListAsync();
-
-            return mapper.Map<List<ActivityCommentDto>>(comments);
-        }
-
-        /// <summary>
-        /// Aggiunge un commento a un'attività
-        /// </summary>
-        public async Task<ActivityCommentDto?> AddActivityCommentAsync(CreateActivityCommentDto createCommentDto,
-            int authorId)
-        {
-            var activity = await context.Activities
-                .Include(a => a.Game)
-                .FirstOrDefaultAsync(a => a.Id == createCommentDto.ActivityId);
-
-            if (activity == null)
-                throw new KeyNotFoundException("Attività non trovata.");
-
-            var newComment = new ActivityComment
-            {
-                Text = createCommentDto.Text,
-                Date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
-                ActivityId = createCommentDto.ActivityId,
-                AuthorId = authorId
-            };
-
-            context.ActivityComments.Add(newComment);
-            await context.SaveChangesAsync();
-
-            var savedComment = await context.ActivityComments
-                .Include(ac => ac.Author)
-                .FirstOrDefaultAsync(ac => ac.Id == newComment.Id);
-
-            if (savedComment == null) return null;
-
-            // Crea notifica per il proprietario dell'attività (solo per attività di tipo "Rated")
-            if (activity is { Game: not null, Type: ActivityType.Rated } &&
-                activity.Game.UserId != authorId)
-            {
-                try
-                {
-                    await notificationService.CreateReviewCommentNotificationAsync(
-                        activity.Game.UserId,
-                        authorId,
-                        savedComment.Author?.UserName ?? "Utente sconosciuto",
-                        activity.GameTitle,
-                        createCommentDto.ActivityId
-                    );
-                }
-                catch (Exception notificationEx)
-                {
-                    logger.LogError(notificationEx,
-                        "Errore nella creazione della notifica per commento all'attività");
-                }
-            }
-
-            return mapper.Map<ActivityCommentDto>(savedComment);
-        }
-
-        /// <summary>
-        /// Elimina un commento a un'attività
-        /// </summary>
-        public async Task<bool> DeleteActivityCommentAsync(int commentId, int userId)
-        {
-            var comment = await context.ActivityComments
-                .FirstOrDefaultAsync(ac => ac.Id == commentId);
-
-            if (comment == null)
-                throw new KeyNotFoundException("Commento non trovato.");
-
-            if (comment.AuthorId != userId)
-                throw new UnauthorizedAccessException("Non sei autorizzato ad eliminare questo commento.");
-
-            context.ActivityComments.Remove(comment);
-            await context.SaveChangesAsync();
-
-            return true;
-        }
 
         private static AspectStatsDto CalculateAspectStats(IEnumerable<decimal> values)
         {
@@ -428,6 +218,27 @@ namespace VideoGamesBacklogBackend.Services
                     .GroupBy(v => (int)Math.Round(v))
                     .ToDictionary(g => g.Key, g => g.Count())
             };
+        }
+
+        private async Task<List<Game>> GetPublicGamesMatchingTitleAsync(string gameTitle, bool includeDetails = false, int? currentUserId = null)
+        {
+            var query = context.Games.Where(g => g.Review != null && g.Review.IsPublic == true);
+
+            if (includeDetails)
+            {
+                query = query.Include(g => g.User).Include(g => g.ReviewComments);
+            }
+
+            var allGames = await query.ToListAsync();
+
+            var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle));
+
+            if (currentUserId.HasValue)
+            {
+                games = games.Where(g => g.UserId != currentUserId.Value);
+            }
+
+            return games.ToList();
         }
     }
 }

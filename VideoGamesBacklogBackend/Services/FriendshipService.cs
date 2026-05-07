@@ -3,12 +3,13 @@ using VideoGamesBacklogBackend.Data;
 using VideoGamesBacklogBackend.Dto;
 using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Interfaces;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Services
 {
     public class FriendshipService(
         AppDbContext context,
-        IGameService gameService,
+        IGameStatsService gameStatsService,
         INotificationService notificationService)
         : IFriendshipService
     {
@@ -216,18 +217,18 @@ namespace VideoGamesBacklogBackend.Services
                 .ToList();
         }
 
-        public async Task<PaginatedUsersDto> SearchUsersAsync(int userId, string searchQuery,
-            int page = 1, int pageSize = 10)
+        public async Task<PaginatedResult<PublicProfileDto>> SearchUsersAsync(int userId, string searchQuery,
+            PaginationQueryParameters queryParams)
         {
             if (string.IsNullOrWhiteSpace(searchQuery) || searchQuery.Length < 2)
             {
-                return new PaginatedUsersDto
+                return new PaginatedResult<PublicProfileDto>
                 {
-                    Users = [],
-                    TotalCount = 0,
-                    CurrentPage = page,
+                    Items = [],
+                    TotalItems = 0,
+                    CurrentPage = queryParams.Page,
                     TotalPages = 0,
-                    PageSize = pageSize
+                    PageSize = queryParams.PageSize
                 };
             }
 
@@ -236,16 +237,10 @@ namespace VideoGamesBacklogBackend.Services
                             (u.UserName!.Contains(searchQuery) ||
                              (u.FullName != null && u.FullName.Contains(searchQuery))));
 
-            var totalCount = await queryable.CountAsync();
-            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-            var users = await queryable
-                .OrderBy(u => u.UserName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+            var result = await queryable.OrderBy(u => u.UserName).PaginateAsync(queryParams);
 
-            var result = new List<PublicProfileDto>();
-            foreach (var user in users)
+            var profiles = new List<PublicProfileDto>();
+            foreach (var user in result.Items)
             {
                 var friendship = await context.Friendships
                     .FirstOrDefaultAsync(f =>
@@ -268,16 +263,16 @@ namespace VideoGamesBacklogBackend.Services
                     IsFriend = friendship?.Status == FriendshipStatus.Accepted,
                     IsRequestSender = friendship?.SenderId == userId
                 };
-                result.Add(profile);
+                profiles.Add(profile);
             }
 
-            return new PaginatedUsersDto
+            return new PaginatedResult<PublicProfileDto>
             {
-                Users = result,
-                TotalCount = totalCount,
-                CurrentPage = page,
-                TotalPages = totalPages,
-                PageSize = pageSize
+                Items = profiles,
+                TotalItems = result.TotalItems,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages,
+                PageSize = result.PageSize
             };
         }
 
@@ -315,7 +310,7 @@ namespace VideoGamesBacklogBackend.Services
 
             if (profile.CanViewStats)
             {
-                profile.Stats = await gameService.GetUserStatsAsync(user.Id);
+                profile.Stats = await gameStatsService.GetUserStatsAsync(user.Id);
             }
 
             return profile;

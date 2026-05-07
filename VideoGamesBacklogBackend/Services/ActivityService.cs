@@ -4,18 +4,17 @@ using VideoGamesBacklogBackend.Dto;
 using VideoGamesBacklogBackend.Interfaces;
 using AutoMapper;
 using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Helpers;
 
 namespace VideoGamesBacklogBackend.Services
 {
     public class ActivityService(
         AppDbContext context,
-        INotificationService notificationService,
         IFriendshipService friendshipService,
-        IMapper mapper,
-        ILogger<ActivityService> logger)
+        IMapper mapper)
         : IActivityService
     {
-        public async Task<PaginatedActivitiesDto> GetActivitiesAsync(int userId, ActivityQueryParameters queryParams)
+        public async Task<PaginatedResult<ActivityDto>> GetActivitiesAsync(int userId, ActivityQueryParameters queryParams)
         {
             var query = context.Activities
                 .Include(a => a.Game)
@@ -49,22 +48,16 @@ namespace VideoGamesBacklogBackend.Services
                 ? query.OrderBy(a => a.Timestamp)
                 : query.OrderByDescending(a => a.Timestamp);
 
-            var totalCount = await query.CountAsync();
-            var totalPages = (int)Math.Ceiling((double)totalCount / queryParams.PageSize);
+            var result = await query.PaginateAsync(queryParams.Page, queryParams.PageSize);
 
-            var activities = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
-                .ToListAsync();
-
-            return new PaginatedActivitiesDto
+            return new PaginatedResult<ActivityDto>
             {
-                Activities = activities.Select(activity =>
+                Items = result.Items.Select(activity =>
                     mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId)).ToList(),
-                TotalCount = totalCount,
-                PageSize = queryParams.PageSize,
-                CurrentPage = queryParams.Page,
-                TotalPages = totalPages
+                TotalItems = result.TotalItems,
+                PageSize = result.PageSize,
+                CurrentPage = result.CurrentPage,
+                TotalPages = result.TotalPages
             };
         }
 
@@ -371,7 +364,7 @@ namespace VideoGamesBacklogBackend.Services
             }
         }
 
-        public async Task<PaginatedActivitiesDto> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId,
+        public async Task<PaginatedResult<ActivityDto>> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId,
             ActivityQueryParameters queryParams)
         {
             User? targetUser = null;
@@ -431,25 +424,21 @@ namespace VideoGamesBacklogBackend.Services
 
             query = queryParams.SortDirection?.ToLower() == "asc" ? query.OrderBy(a => a.Timestamp) : query.OrderByDescending(a => a.Timestamp);
 
-            var totalCount = await query.CountAsync(); 
-            var activities = await query
-                .Skip((queryParams.Page - 1) * queryParams.PageSize)
-                .Take(queryParams.PageSize)
-                .ToListAsync();
+            var result = await query.PaginateAsync(queryParams.Page, queryParams.PageSize);
 
-            return new PaginatedActivitiesDto
+            return new PaginatedResult<ActivityDto>
             {
-                Activities = activities
+                Items = result.Items
                     .Select(a => mapper.Map<ActivityDto>(a, opt => opt.Items["CurrentUserId"] = currentUserId))
                     .ToList(),
-                TotalCount = totalCount,
-                Page = queryParams.Page,
-                PageSize = queryParams.PageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / queryParams.PageSize)
+                TotalItems = result.TotalItems,
+                CurrentPage = result.CurrentPage,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages
             };
         }
 
-        private async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
+        public async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
         {
             if (targetUserId == currentUserId) return true;
 
@@ -458,104 +447,6 @@ namespace VideoGamesBacklogBackend.Services
 
             if (!targetUser.PrivacySettings.IsPrivate) return true;
             return await friendshipService.AreUsersFriendsAsync(currentUserId, targetUserId);
-        } 
-
-        public async Task<ActivityReactionDto?> AddReactionAsync(CreateActivityReactionDto createReactionDto,
-            int userId)
-        {
-            var activity = await context.Activities
-                .Include(a => a.Game)
-                .FirstOrDefaultAsync(a => a.Id == createReactionDto.ActivityId);
-            if (activity == null) return null;
-
-            var existingReaction = await context.ActivityReactions
-                .FirstOrDefaultAsync(r => r.ActivityId == createReactionDto.ActivityId
-                                          && r.UserId == userId
-                                          && r.Emoji == createReactionDto.Emoji);
-
-            if (existingReaction != null)
-            {
-                context.ActivityReactions.Remove(existingReaction);
-                await context.SaveChangesAsync();
-                return null; 
-            }
-
-            var reaction = new ActivityReaction
-            {
-                Emoji = createReactionDto.Emoji,
-                ActivityId = createReactionDto.ActivityId,
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            context.ActivityReactions.Add(reaction);
-            await context.SaveChangesAsync();
-
-            var user = await context.Users.FindAsync(userId);
-
-            if (activity.Game != null && activity.Game.UserId != userId)
-            {
-                try
-                {
-                    await notificationService.CreateActivityReactionNotificationAsync(
-                        activity.Game.UserId,
-                        userId,
-                        user?.UserName ?? "Utente sconosciuto",
-                        createReactionDto.Emoji,
-                        activity.GameTitle,
-                        createReactionDto.ActivityId
-                    );
-                }
-                catch (Exception notificationEx)
-                {
-                    logger.LogWarning(notificationEx,
-                        "Errore nella creazione della notifica per reazione all'attività {ActivityId}",
-                        createReactionDto.ActivityId);
-                }
-            }
-
-            return mapper.Map<ActivityReactionDto>(reaction);
-        }
-
-        public async Task<bool> RemoveReactionAsync(int reactionId, int userId)
-        {
-            var reaction = await context.ActivityReactions
-                .FirstOrDefaultAsync(r => r.Id == reactionId && r.UserId == userId);
-
-            if (reaction == null)
-                throw new KeyNotFoundException("Reazione non trovata o non autorizzato.");
-
-            context.ActivityReactions.Remove(reaction);
-            await context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<List<ActivityReactionDto>> GetActivityReactionsAsync(int activityId, int userId)
-        {
-            var activity = await context.Activities
-                .Include(a => a.Game)
-                .FirstOrDefaultAsync(a => a.Id == activityId);
-
-            if (activity == null)
-                throw new KeyNotFoundException("Attività non trovata.");
-
-            if (activity.Game!.UserId != userId)
-            {
-                var canViewDiary = await CanViewUserDiary(activity.Game.UserId, userId);
-                if (!canViewDiary)
-                {
-                    throw new UnauthorizedAccessException(
-                        "Non hai i permessi per visualizzare le reazioni di questa attività");
-                }
-            }
-
-            var reactions = await context.ActivityReactions
-                .Include(r => r.User)
-                .Where(r => r.ActivityId == activityId)
-                .OrderBy(r => r.CreatedAt)
-                .ToListAsync();
-
-            return mapper.Map<List<ActivityReactionDto>>(reactions);
         }
     }
 }

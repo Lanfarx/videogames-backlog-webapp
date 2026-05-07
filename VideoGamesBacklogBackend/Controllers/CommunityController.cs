@@ -40,13 +40,12 @@ namespace VideoGamesBacklogBackend.Controllers
         }
 
         [HttpGet("reviews/{gameTitle}")]
-        public async Task<ActionResult<PaginatedReviewsDto>> GetReviews(
+        public async Task<ActionResult<PaginatedResult<CommunityReviewDto>>> GetReviews(
             string gameTitle,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] PaginationQueryParameters queryParams)
         {
             var currentUserId = User.GetOptionalUserId();
-            var reviews = await communityService.GetReviewsAsync(gameTitle, page, pageSize, currentUserId);
+            var reviews = await communityService.GetReviewsAsync(gameTitle, queryParams, currentUserId);
             return Ok(reviews);
         }
 
@@ -65,48 +64,6 @@ namespace VideoGamesBacklogBackend.Controllers
             var currentUserId = User.GetOptionalUserId();
             var reviews = await communityService.GetTopReviewsAsync(gameTitle, limit, currentUserId);
             return Ok(reviews);
-        }
-
-        [HttpGet("review-comments/{reviewGameId:int}")]
-        public async Task<ActionResult<List<ReviewCommentDto>>> GetReviewComments(int reviewGameId)
-        {
-            var comments = await communityService.GetReviewCommentsAsync(reviewGameId);
-            return Ok(comments);
-        }
-
-        [HttpPost("review-comments")]
-        public async Task<ActionResult<ReviewCommentDto>> AddReviewComment([FromBody] CreateReviewCommentDto createCommentDto)
-        {
-            var comment = await communityService.AddReviewCommentAsync(createCommentDto, User.GetUserId());
-            return Ok(comment);
-        }
-
-        [HttpDelete("review-comments/{commentId:int}")]
-        public async Task<IActionResult> DeleteReviewComment(int commentId)
-        {
-            await communityService.DeleteReviewCommentAsync(commentId, User.GetUserId());
-            return Ok(new { message = "Commento eliminato con successo" });
-        }
-
-        [HttpGet("activity-comments/{activityId:int}")]
-        public async Task<ActionResult<List<ActivityCommentDto>>> GetActivityComments(int activityId)
-        {
-            var comments = await communityService.GetActivityCommentsAsync(activityId);
-            return Ok(comments);
-        }
-
-        [HttpPost("activity-comments")]
-        public async Task<ActionResult<ActivityCommentDto>> AddActivityComment([FromBody] CreateActivityCommentDto createCommentDto)
-        {
-            var comment = await communityService.AddActivityCommentAsync(createCommentDto, User.GetUserId());
-            return Ok(comment);
-        }
-
-        [HttpDelete("activity-comments/{commentId:int}")]
-        public async Task<IActionResult> DeleteActivityComment(int commentId)
-        {
-            await communityService.DeleteActivityCommentAsync(commentId, User.GetUserId());
-            return Ok(new { message = "Commento eliminato con successo" });
         }
     }
 }

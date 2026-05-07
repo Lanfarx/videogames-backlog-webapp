@@ -9,7 +9,7 @@ namespace VideoGamesBacklogBackend.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class GamesController(IGameService gameService) : ControllerBase
+    public class GamesController(IGameService gameService, IGameStatsService gameStatsService) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<List<GameDto>>> GetAll()
@@ -19,7 +19,7 @@ namespace VideoGamesBacklogBackend.Controllers
         }
 
         [HttpGet("paginated")]
-        public async Task<ActionResult<PaginatedGamesDto>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
+        public async Task<ActionResult<PaginatedResult<object>>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
         {
             var result = await gameService.GetGamesPaginatedAsync(User.GetUserId(), queryParams);
             return Ok(result);
@@ -51,11 +51,6 @@ namespace VideoGamesBacklogBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<GameDto>> Add([FromBody] CreateGameDto gameDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var created = await gameService.AddGameAsync(User.GetUserId(), gameDto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
@@ -99,46 +94,18 @@ namespace VideoGamesBacklogBackend.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<GameStatsDto>> GetStats()
         {
-            var stats = await gameService.GetGameStatsAsync(User.GetUserId());
+            var stats = await gameStatsService.GetGameStatsAsync(User.GetUserId());
             return Ok(stats);
         }
 
         // Giochi in corso paginati
         [HttpGet("in-progress")]
-        public async Task<ActionResult<PaginatedGamesDto>> GetInProgressPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 6)
+        public async Task<ActionResult<PaginatedResult<object>>> GetInProgressPaginated([FromQuery] PaginationQueryParameters queryParams)
         {
-            var result = await gameService.GetInProgressGamesPaginatedAsync(User.GetUserId(), page, pageSize);
+            var result = await gameService.GetInProgressGamesPaginatedAsync(User.GetUserId(), queryParams);
             return Ok(result);
         }
 
-        // Commenti
-        [HttpGet("{gameId:int}/Comments")]
-        public async Task<ActionResult<List<GameCommentDto>>> GetComments(int gameId)
-        {
-            var comments = await gameService.GetCommentsAsync(User.GetUserId(), gameId);
-            return Ok(comments);
-        }
 
-        [HttpPost("{gameId:int}/Comments")]
-        public async Task<ActionResult<GameCommentDto>> AddComment(int gameId, [FromBody] CreateGameCommentDto commentDto)
-        {
-            var created = await gameService.AddCommentAsync(User.GetUserId(), gameId, commentDto);
-            return Ok(created);
-        }
-
-        [HttpDelete("{gameId:int}/Comments/{commentId:int}")]
-        public async Task<IActionResult> DeleteComment(int gameId, int commentId)
-        {
-            await gameService.DeleteCommentAsync(User.GetUserId(), gameId, commentId);
-            return NoContent();
-        }
-
-        [HttpPut("{gameId:int}/Comments/{commentId:int}")]
-        public async Task<ActionResult<GameCommentDto>> UpdateComment(int gameId, int commentId,
-            [FromBody] CreateGameCommentDto commentDto)
-        {
-            var updated = await gameService.UpdateCommentAsync(User.GetUserId(), gameId, commentId, commentDto);
-            return Ok(updated);
-        }
     }
 }

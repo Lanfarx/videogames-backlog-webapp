@@ -70,14 +70,7 @@ namespace VideoGamesBacklogBackend.Dto
     /// <summary>
     /// DTO per le recensioni paginate
     /// </summary>
-    public class PaginatedReviewsDto
-    {
-        public List<CommunityReviewDto> Reviews { get; set; } = [];
-        public int TotalCount { get; set; }
-        public int Page { get; set; }
-        public int PageSize { get; set; }
-        public int TotalPages { get; set; }
-    }
+
 
     /// <summary>
     /// DTO per le statistiche dettagliate delle recensioni

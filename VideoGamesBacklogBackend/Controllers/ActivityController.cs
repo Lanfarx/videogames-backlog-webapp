@@ -12,7 +12,7 @@ namespace VideoGamesBacklogBackend.Controllers
     public class ActivityController(IActivityService activityService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<PaginatedActivitiesDto>> GetActivities(
+        public async Task<ActionResult<PaginatedResult<ActivityDto>>> GetActivities(
             [FromQuery] ActivityQueryParameters queryParams)
         {
             var result = await activityService.GetActivitiesAsync(User.GetUserId(), queryParams);
@@ -81,7 +81,7 @@ namespace VideoGamesBacklogBackend.Controllers
         }
 
         [HttpGet("public/{userIdOrUsername}")]
-        public async Task<ActionResult<PaginatedActivitiesDto>> GetPublicActivities(
+        public async Task<ActionResult<PaginatedResult<ActivityDto>>> GetPublicActivities(
             string userIdOrUsername,
             [FromQuery] ActivityQueryParameters queryParams)
         {

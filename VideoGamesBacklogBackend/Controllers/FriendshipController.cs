@@ -67,10 +67,9 @@ namespace VideoGamesBacklogBackend.Controllers
             return Ok(friends);
         }
 
-        [HttpGet("search")]
-        public async Task<ActionResult<PaginatedUsersDto>> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<PaginatedResult<PublicProfileDto>>> SearchUsers([FromQuery] string query, [FromQuery] PaginationQueryParameters queryParams)
         {
-            var result = await friendshipService.SearchUsersAsync(User.GetUserId(), query, page, pageSize);
+            var result = await friendshipService.SearchUsersAsync(User.GetUserId(), query, queryParams);
             return Ok(result);
         }
 

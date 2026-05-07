@@ -16,7 +16,7 @@ namespace VideoGamesBacklogBackend.Interfaces
         Task<List<FriendDto>> GetFriendsAsync(int userId);
         
         // Ricerca utenti e profili pubblici
-        Task<PaginatedUsersDto> SearchUsersAsync(int userId, string searchQuery, int page, int pageSize);
+        Task<PaginatedResult<PublicProfileDto>> SearchUsersAsync(int userId, string searchQuery, PaginationQueryParameters queryParams);
         Task<PublicProfileDto> GetPublicProfileAsync(int userId, string userName);
 
         // Utility condivisa per check di amicizia

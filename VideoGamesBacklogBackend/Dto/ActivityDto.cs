@@ -48,15 +48,7 @@ namespace VideoGamesBacklogBackend.Dto
         public string SortDirection { get; set; } = "desc";
     }
 
-    public class PaginatedActivitiesDto
-    {
-        public List<ActivityDto> Activities { get; set; } = [];
-        public int TotalCount { get; set; }
-        public int PageSize { get; set; }
-        public int CurrentPage { get; set; }
-        public int TotalPages { get; set; }
-        public int Page { get; internal set; }
-    }
+
 
     // DTO per le reazioni emoji alle attività
     public class ActivityReactionDto

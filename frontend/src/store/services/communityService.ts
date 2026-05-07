@@ -11,17 +11,29 @@ import {
 } from '../../types/community';
 import { ActivityComment, CreateActivityCommentDto } from '../../types/activity';
 import { getToken } from '../../utils/getToken';
-import { API_CONFIG, buildApiUrl } from '../../config/api';
+import { API_CONFIG, API_URLS, buildApiUrl } from '../../config/api';
 
 const API_BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.COMMUNITY);
 
-// Crea istanza axios per le notifiche
+// Crea istanza axios per le api community
 const communityApi = axios.create({
   baseURL: API_BASE_URL
 });
 
+// Istanza generica
+const apiClient = axios.create();
+
 // Istanza axios che aggiunge il token JWT se presente
 communityApi.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers = config.headers || {};
@@ -189,8 +201,8 @@ export class CommunityService {
    */
   static async getReviewComments(reviewGameId: number): Promise<ReviewCommentDto[]> {
     try {
-      const response = await communityApi.get<ReviewCommentDto[]>(
-        `/review-comments/${reviewGameId}`
+      const response = await apiClient.get<ReviewCommentDto[]>(
+        `${API_URLS.REVIEW_COMMENTS}/${reviewGameId}`
       );
       return response.data;
     } catch (error) {
@@ -204,8 +216,8 @@ export class CommunityService {
    */
   static async addReviewComment(createCommentDto: CreateReviewCommentDto): Promise<ReviewCommentDto | null> {
     try {
-      const response = await communityApi.post<ReviewCommentDto>(
-        '/review-comments',
+      const response = await apiClient.post<ReviewCommentDto>(
+        API_URLS.REVIEW_COMMENTS,
         createCommentDto
       );
       return response.data;
@@ -219,7 +231,7 @@ export class CommunityService {
    */
   static async deleteReviewComment(commentId: number): Promise<boolean> {
     try {
-      await communityApi.delete(`/review-comments/${commentId}`);
+      await apiClient.delete(`${API_URLS.REVIEW_COMMENTS}/${commentId}`);
       return true;
     } catch (error) {
       console.error('Errore nell\'eliminazione del commento:', error);
@@ -234,8 +246,8 @@ export class CommunityService {
    */
   static async getActivityComments(activityId: number): Promise<ActivityComment[]> {
     try {
-      const response = await communityApi.get<ActivityComment[]>(
-        `/activity-comments/${activityId}`
+      const response = await apiClient.get<ActivityComment[]>(
+        `${API_URLS.ACTIVITY_COMMENTS}/${activityId}`
       );
       return response.data;
     } catch (error) {
@@ -249,8 +261,8 @@ export class CommunityService {
    */
   static async addActivityComment(createCommentDto: CreateActivityCommentDto): Promise<ActivityComment | null> {
     try {
-      const response = await communityApi.post<ActivityComment>(
-        '/activity-comments',
+      const response = await apiClient.post<ActivityComment>(
+        API_URLS.ACTIVITY_COMMENTS,
         createCommentDto
       );
       return response.data;
@@ -265,23 +277,10 @@ export class CommunityService {
    */
   static async deleteActivityComment(commentId: number): Promise<boolean> {
     try {
-      await communityApi.delete(`/activity-comments/${commentId}`);
+      await apiClient.delete(`${API_URLS.ACTIVITY_COMMENTS}/${commentId}`);
       return true;
     } catch (error) {
       console.error('Errore nell\'eliminazione del commento dell\'attività:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Aggiunge una nuova recensione
-   */
-  static async addReview(reviewData: any): Promise<boolean> {
-    try {
-      await communityApi.post('/reviews', reviewData);
-      return true;
-    } catch (error) {
-      console.error('Errore nell\'aggiunta della recensione:', error);
       return false;
     }
   }
