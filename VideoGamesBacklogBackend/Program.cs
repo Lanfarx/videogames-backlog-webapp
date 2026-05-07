@@ -6,9 +6,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
-using VideoGamesBacklogBackend.Data;
+using VideoGamesBacklogBackend.Common.Configuration;
 using VideoGamesBacklogBackend.Entities;
-using VideoGamesBacklogBackend.Helpers;
+using VideoGamesBacklogBackend.Infrastructure.Data;
+using VideoGamesBacklogBackend.Infrastructure.Middleware;
+using VideoGamesBacklogBackend.Mappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -167,7 +169,7 @@ builder.Services.Configure<SteamSettings>(options => {
 });
 
 // Dependency Injection Automatizzata
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<VideoGamesBacklogBackend.Mappings.AutoMapperProfile>());
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 var serviceInterfaces = typeof(Program).Assembly.GetTypes()
     .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace == "VideoGamesBacklogBackend.Interfaces");
 
