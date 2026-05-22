@@ -1,48 +1,45 @@
 using Microsoft.AspNetCore.Mvc;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 
-namespace VideoGamesBacklogBackend.Controllers.Common
+namespace VideoGamesBacklogBackend.Controllers.Common;
+
+[ApiController]
+[Route("api/[controller]")]
+public class HealthController(AppDbContext context, ILogger<HealthController> logger) : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class HealthController(AppDbContext context, ILogger<HealthController> logger) : ControllerBase
+    [HttpGet]
+    public async Task<IActionResult> Get()
     {
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        try
         {
-            try
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var canConnect = await context.Database.CanConnectAsync(cts.Token);
+            if (canConnect)
             {
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                var canConnect = await context.Database.CanConnectAsync(cts.Token);
-                if (canConnect)
-                {
-                    return Ok(new {
-                        status = "healthy",
-                        timestamp = DateTime.UtcNow,
-                        database = "connected",
-                        environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "unknown"
-                    });
-                }
-                else
-                {
-                    return StatusCode(503, new {
-                        status = "unhealthy",
-                        timestamp = DateTime.UtcNow,
-                        database = "disconnected",
-                        error = "Cannot connect to database"
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Health check failed");
-                return StatusCode(503, new {
-                    status = "unhealthy",
+                return Ok(new {
+                    status = "healthy",
                     timestamp = DateTime.UtcNow,
-                    database = "error",
-                    error = ex.Message
+                    database = "connected",
+                    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "unknown"
                 });
             }
+
+            return StatusCode(503, new {
+                status = "unhealthy",
+                timestamp = DateTime.UtcNow,
+                database = "disconnected",
+                error = "Cannot connect to database"
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Health check failed");
+            return StatusCode(503, new {
+                status = "unhealthy",
+                timestamp = DateTime.UtcNow,
+                database = "error",
+                error = ex.Message
+            });
         }
     }
 }

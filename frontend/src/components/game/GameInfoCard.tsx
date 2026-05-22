@@ -110,11 +110,6 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
   const handleEditInfoClick = () => {
     setShowEditInfoModal(true);
   };
-  const handleSaveInfo = (updatedInfo: Partial<Game>) => {
-    if (onEditInfo) {
-      onEditInfo(updatedInfo);
-    }
-  };
 
   const handleUpdateFromRAWG = async () => {
     if (!onEditInfo) return;
@@ -253,18 +248,20 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
         </div>
       )}
 
-      {/* Prezzo - Spostato qui, subito dopo il tempo di gioco */}
+      {/* Prezzo / Tipo acquisizione */}
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">
-          Prezzo
+          {currentGame.Price === null || currentGame.Price === undefined ? 'Tipo acquisizione' : 'Prezzo'}
         </span>
         <span className="font-secondary text-base text-text-primary">
-          {currentGame.Price !== undefined ? formatPrice(currentGame.Price) : 'Non specificato'}
+          {currentGame.Price !== undefined ? formatPrice(currentGame.Price, currentGame.Platform) : 'Non specificato'}
         </span>
-      </div>      {/* Data di acquisto */}
+      </div>
+
+      {/* Data di acquisto / Ottenimento */}
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">
-          Data di acquisto
+          {currentGame.Price === 0 ? 'Data di ottenimento' : (currentGame.Price === null || currentGame.Price === undefined ? 'Data di aggiunta' : 'Data di acquisto')}
         </span>
         <span className="font-secondary text-base text-text-primary">
           {formatPurchaseDate(currentGame.PurchaseDate, currentGame.Platform)}
@@ -314,7 +311,6 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
       <EditGameInfoModal
         isOpen={showEditInfoModal}
         onClose={() => setShowEditInfoModal(false)}
-        onSave={handleSaveInfo}
         game={currentGame}
       />
     </div>

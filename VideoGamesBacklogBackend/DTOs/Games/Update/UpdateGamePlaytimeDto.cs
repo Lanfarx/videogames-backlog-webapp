@@ -1,7 +1,6 @@
-namespace VideoGamesBacklogBackend.DTOs.Games.Update
+namespace VideoGamesBacklogBackend.DTOs.Games.Update;
+
+public class UpdateGamePlaytimeDto
 {
-    public class UpdateGamePlaytimeDto
-    {
-        public int HoursPlayed { get; set; }
-    }
+    public int HoursPlayed { get; set; }
 }

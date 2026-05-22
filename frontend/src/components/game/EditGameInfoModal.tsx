@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
-import { Game, GameStatus, GameUpdateInput } from '../../types/game';
+import { Game, GameUpdateInput } from '../../types/game';
 import { GAME_PlatformS } from '../../constants/gameConstants';
-import { useGameActions, useGameStatusActions, useGamePlaytimeActions } from '../../store/hooks/gamesHooks';
+import { useGameActions } from '../../store/hooks/gamesHooks';
 
 interface EditGameInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (updatedGame: Partial<Game>) => void; // Opzionale per backward compatibility
   game: Game;
 }
 
 const EditGameInfoModal = ({
   isOpen,
   onClose,
-  onSave,
   game
-}: EditGameInfoModalProps) => {  const { update } = useGameActions();
-  const { updateStatus } = useGameStatusActions();
-  const { updatePlaytime } = useGamePlaytimeActions();
+}: EditGameInfoModalProps) => {
+  const { update } = useGameActions();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     Platform: game.Platform || '',
-    Price: game.Price !== undefined ? game.Price.toString() : '',
+    Price: game.Price != null ? game.Price.toString() : '',
     PurchaseDate: game.PurchaseDate || '',
     HoursPlayed: game.HoursPlayed.toString(),
     CompletionDate: game.CompletionDate || '',
@@ -32,7 +30,7 @@ const EditGameInfoModal = ({
     if (isOpen) {
       setFormData({
         Platform: game.Platform || '',
-        Price: game.Price !== undefined ? game.Price.toString() : '',
+        Price: game.Price != null ? game.Price.toString() : '',
         PurchaseDate: game.PurchaseDate || '',
         HoursPlayed: game.HoursPlayed.toString(),
         CompletionDate: game.CompletionDate || '',
@@ -54,77 +52,73 @@ const EditGameInfoModal = ({
       ...prev,
       [name]: value
     }));
-  };  const handleSubmit = (e: React.FormEvent) => {
+  }; const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+
     // Convertiamo le ore in un numero
     const newHoursPlayed = parseFloat(formData.HoursPlayed) || 0;
-      // Costruiamo l'oggetto di aggiornamento con solo i campi modificati
+    // Costruiamo l'oggetto di aggiornamento con solo i campi modificati
     const updateData: GameUpdateInput = {};
-    
+
     if (formData.Platform && formData.Platform !== game.Platform) {
       updateData.Platform = formData.Platform;
     }
-    
-    if (formData.Price && parseFloat(formData.Price) !== game.Price) {
-      updateData.Price = parseFloat(formData.Price);
-    }    // Aggiorna la data di acquisto se modificata o se viene svuotata (per impostare "Family Share")
-    if (formData.PurchaseDate !== game.PurchaseDate) {
-      updateData.PurchaseDate = formData.PurchaseDate === "" ? "" : formData.PurchaseDate;
+
+    const currentPriceStr = game.Price !== null && game.Price !== undefined ? game.Price.toString() : '';
+    if (formData.Price !== currentPriceStr) {
+      updateData.Price = formData.Price === '' ? -2 : parseFloat(formData.Price);
     }
-    
+
+    // Aggiorna la data di acquisto se modificata o se viene svuotata (per impostare "Family Share")
+    // Normalizza entrambi i valori per confronto corretto (null/undefined -> '')
+    const currentPurchaseDate = game.PurchaseDate || '';
+    if (formData.PurchaseDate !== currentPurchaseDate) {
+      updateData.PurchaseDate = formData.PurchaseDate === '' ? '' : formData.PurchaseDate;
+    }
+
     if (newHoursPlayed !== game.HoursPlayed) {
       updateData.HoursPlayed = newHoursPlayed;
     }
-    
+
     // Aggiorna le date se modificate
-    if (hasBeenCompleted && formData.CompletionDate !== game.CompletionDate) {
+    if (hasBeenCompleted && formData.CompletionDate !== (game.CompletionDate || '')) {
       if (formData.CompletionDate) {
         updateData.CompletionDate = formData.CompletionDate;
       }
     }
-    
-    if (isPlatinum && formData.PlatinumDate !== game.PlatinumDate) {
+
+    if (isPlatinum && formData.PlatinumDate !== (game.PlatinumDate || '')) {
       if (formData.PlatinumDate) {
         updateData.PlatinumDate = formData.PlatinumDate;
       }
     }
-    
+
     // Determiniamo se è necessario cambiare lo stato del gioco
-    let newStatus: GameStatus | undefined = undefined;
-    
-    // Se le ore vengono impostate a 0 e lo stato non è già "NotStarted",
-    // cambiamo lo stato a "NotStarted"
-    if (newHoursPlayed === 0 && game.Status !== 'NotStarted') {
-      newStatus = 'NotStarted';
-      updateData.Status = newStatus;
+    // Solo se le ore sono effettivamente cambiate
+    if (newHoursPlayed !== game.HoursPlayed) {
+      // Se le ore vengono impostate a 0 e lo stato non è già "NotStarted",
+      // cambiamo lo stato a "NotStarted"
+      if (newHoursPlayed === 0 && game.Status !== 'NotStarted') {
+        updateData.Status = 'NotStarted';
+      }
+      // Se le ore passano da 0 a un valore maggiore e lo stato è "NotStarted",
+      // cambiamo lo stato a "InProgress"
+      else if (newHoursPlayed > 0 && game.HoursPlayed === 0 && game.Status === 'NotStarted') {
+        updateData.Status = 'InProgress';
+      }
     }
-    // Se le ore passano da 0 a un valore maggiore e lo stato è "NotStarted",
-    // cambiamo lo stato a "InProgress"
-    else if (newHoursPlayed > 0 && game.HoursPlayed === 0 && game.Status === 'NotStarted') {
-      newStatus = 'InProgress';
-      updateData.Status = newStatus;
-    }
-      // Esegui l'aggiornamento solo se ci sono campi modificati
+
+    // Esegui l'aggiornamento solo se ci sono campi modificati
     if (Object.keys(updateData).length > 0) {
-      update(game.id, updateData);
-      // Note: Backend automatically creates activities for game updates including status and playtime changes
+      try {
+        await update(game.id, updateData);
+      } catch (error) {
+        console.error("Errore durante l'aggiornamento:", error);
+      }
     }
-    
-    // Chiama la callback opzionale per backward compatibility
-    if (onSave) {
-      const updatedGame: Partial<Game> = {
-        Platform: formData.Platform,
-        Price: formData.Price ? parseFloat(formData.Price) : undefined,
-        PurchaseDate: formData.PurchaseDate || undefined,
-        HoursPlayed: newHoursPlayed,
-        ...(hasBeenCompleted && { CompletionDate: formData.CompletionDate || undefined }),
-        ...(isPlatinum && { PlatinumDate: formData.PlatinumDate || undefined }),
-        ...(newStatus && { Status: newStatus })
-      };
-      onSave(updatedGame);
-    }
-    
+
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -134,16 +128,16 @@ const EditGameInfoModal = ({
   return (
     <>
       {/* Overlay */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary-bg rounded-lg shadow-lg z-50 w-full max-w-md overflow-auto max-h-[90vh]">
         <div className="p-6">
           <h3 className="text-lg font-primary font-bold text-text-primary mb-4">Modifica informazioni personali</h3>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 mb-6">
               <div className="space-y-2">
@@ -165,7 +159,7 @@ const EditGameInfoModal = ({
                   ))}
                 </select>
               </div>
-              
+
               <div className="space-y-2">
                 <label htmlFor="Price" className="block text-text-primary font-secondary text-sm">
                   Prezzo (€)
@@ -177,10 +171,13 @@ const EditGameInfoModal = ({
                   value={formData.Price}
                   onChange={handleChange}
                   step="0.01"
-                  min="0"
+                  min="-1"
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                   placeholder="0.00"
                 />
+                <p className="text-xs text-text-secondary mt-1">
+                  Inserisci 0 se Gratis, oppure -1 se Regalato. Lascia vuoto per Family Share/Game Pass.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -213,7 +210,7 @@ const EditGameInfoModal = ({
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
                 />
                 <p className="text-xs text-text-secondary">
-                  {game.Status === 'NotStarted' 
+                  {game.Status === 'NotStarted'
                     ? "Nota: aggiungere ore di gioco cambierà automaticamente lo stato del gioco a \"In corso\""
                     : "Nota: reimpostare a 0 le ore di gioco cambierà automaticamente lo stato del gioco a \"Da iniziare\""}
                 </p>
@@ -259,7 +256,7 @@ const EditGameInfoModal = ({
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -270,9 +267,19 @@ const EditGameInfoModal = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-white rounded-lg bg-accent-primary hover:bg-accent-primary/90 transition-colors font-secondary"
+                disabled={isSubmitting}
+                className={`px-4 py-2 text-white rounded-lg transition-colors font-secondary flex items-center justify-center min-w-[150px] ${
+                  isSubmitting ? "bg-accent-primary/70 cursor-not-allowed" : "bg-accent-primary hover:bg-accent-primary/90"
+                }`}
               >
-                Salva modifiche
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    Salvataggio...
+                  </>
+                ) : (
+                  "Salva modifiche"
+                )}
               </button>
             </div>
           </form>

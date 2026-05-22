@@ -33,9 +33,9 @@ const initialGameData: GameFormData = {
   Platform: "",
   Status: "NotStarted",
   HoursPlayed: 0,
-  Metacritic: 0,
+  Metacritic: undefined,
   PurchaseDate: new Date().toISOString().split("T")[0],
-  Price: 0,
+  Price: undefined,
   Notes: "",
 };
 
@@ -50,13 +50,15 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const [gameData, setGameData] = useState<GameFormData>(initialGameData);
   const [formError, setFormError] = useState<string | null>(null);
   const [isAutoFilled, setIsAutoFilled] = useState(false);
-  const [originalMetacritic, setOriginalMetacritic] = useState<number>(0);
+  const [originalMetacritic, setOriginalMetacritic] = useState<number | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Sempre nuovo gioco, resetta il form all'apertura
   useEffect(() => {
     setGameData(initialGameData);
     setIsAutoFilled(false);
     setFormError(null); // reset errore su chiusura modal
-    setOriginalMetacritic(0); // reset valore originale Metacritic
+    setOriginalMetacritic(undefined); // reset valore originale Metacritic
+    setIsSubmitting(false); // resetta stato submit
   }, [isOpen]);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   // Prefill da catalogo (o altro) se fornito
   useEffect(() => {
     if (isOpen && prefillGame) {
-      const metacriticValue = prefillGame.Metacritic || 0;
+      const metacriticValue = prefillGame.Metacritic !== null && prefillGame.Metacritic !== undefined ? prefillGame.Metacritic : undefined;
       setGameData(prev => ({
         ...prev,
         Title: prefillGame.Title || "",
@@ -86,7 +88,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const handleGameSelect = async (game: any) => {
     try {
       const fullData = await getGameDetails(game.id);
-      const metacriticValue = fullData.Metacritic || 0;
+      const metacriticValue = fullData.Metacritic || undefined;
       
       // Fetch HowLongToBeat data in parallelo
       const hltbData = await searchHowLongToBeat(fullData.Title);
@@ -199,6 +201,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
       return;
     }
     setFormError(null);
+    setIsSubmitting(true);
     
     // Fetch HowLongToBeat data se non già presente
     let hltbData = null;
@@ -220,6 +223,8 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
     } catch (error) {
       console.error("Errore durante il salvataggio del gioco:", error);
       setFormError("Errore durante il salvataggio del gioco. Riprova.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -359,10 +364,15 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       </label>
                       <input
                         type="number"
-                        value={gameData.Metacritic || 0}
+                        value={gameData.Metacritic ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          let numericValue = Number.parseInt(value) || 0;
+                          if (value === "") {
+                            handleGameDataChange({ Metacritic: undefined });
+                            return;
+                          }
+                          let numericValue = Number.parseInt(value);
+                          if (isNaN(numericValue)) return;
                           
                           // Limita il valore tra 0 e 100
                           if (numericValue < 0) numericValue = 0;
@@ -371,7 +381,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                           handleGameDataChange({ Metacritic: numericValue });
                         }}
                         onInput={(e) => {
-                          // Previene l'inserimento diretto di valori > 100
+                          // Previene l'inserimento directo di valori > 100
                           const target = e.target as HTMLInputElement;
                           const value = target.value;
                           if (value && Number.parseInt(value) > 100) {
@@ -385,6 +395,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                             : ''
                         }`}
                         disabled={isAutoFilled && originalMetacritic != null && originalMetacritic > 0}
+                        placeholder="N.D."
                       />
                     </div>
 
@@ -522,11 +533,21 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                       <label className="block font-roboto font-medium text-sm text-text-secondary mb-2">Prezzo (€)</label>
                       <input
                         type="number"
-                        value={gameData.Price}
-                        onChange={(e) => handleGameDataChange({ Price: Number.parseFloat(e.target.value) || 0 })}
+                        value={gameData.Price ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            handleGameDataChange({ Price: undefined });
+                            return;
+                          }
+                          const numericValue = Number.parseFloat(value);
+                          if (isNaN(numericValue)) return;
+                          handleGameDataChange({ Price: numericValue >= 0 ? numericValue : 0 });
+                        }}
                         min="0"
                         step="0.01"
                         className="w-full p-3 border border-border-color rounded-md bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary transition-colors font-roboto text-base"
+                        placeholder="Lascia vuoto per Gratis/Condiviso/Pass"
                         />
                     </div>
                       {/* Data di completamento */}
@@ -579,7 +600,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                 <div className="bg-secondary-bg rounded-xl p-6 sticky top-8">
                   <h3 className="font-montserrat font-semibold text-xl text-text-primary mb-4">Anteprima scheda</h3>
 
-                  <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm h-[360px] relative">
+                  <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm relative overflow-hidden flex flex-col">
                     {/* Indicatore di stato */}
                     <StatusIndicator Status={gameData.Status} />
 
@@ -600,12 +621,12 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                     </div>
 
                     {/* Contenuto */}
-                    <div className="p-4">
-                      <h3 className="font-montserrat font-semibold text-base text-text-primary line-clamp-2 h-12">
+                    <div className="p-4 flex-grow">
+                      <h3 className="font-montserrat font-semibold text-base text-text-primary line-clamp-2 min-h-[3rem]">
                         {gameData.Title || "Titolo del gioco"}
                       </h3>
 
-                      <div className="flex items-center mt-2 text-text-secondary">
+                      <div className="flex items-center mt-2 text-text-secondary flex-wrap">
                         <span className="font-roboto text-xs">{gameData.Platform || "Piattaforma"}</span>                        <span className="mx-2">|</span>
                         <span className="font-roboto text-xs">{gameData.HoursPlayed} ore</span>
                         <>
@@ -613,12 +634,11 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                           <Award className="h-4 w-4 mr-1 text-yellow-500" />
                           <span className="font-roboto text-xs">{formatMetacriticScore(gameData.Metacritic)}</span>
                         </>
-                      </div>{/* Prezzo */}
-                      {gameData.Price !== undefined && (
-                        <div className="mt-2 text-text-secondary">
-                          <span className="font-roboto text-xs">{formatPrice(gameData.Price)}</span>
-                        </div>
-                      )}
+                      </div>
+                      {/* Prezzo */}
+                      <div className="mt-2 text-text-secondary">
+                        <span className="font-roboto text-xs">{formatPrice(gameData.Price, gameData.Platform)}</span>
+                      </div>
 
                       {/* Stato */}
                       <div className="mt-2">
@@ -642,9 +662,19 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
           </button>          {activeTab === "manual" && (
             <button
               onClick={() => handleSave()}
-              className="px-6 py-3 bg-accent-primary text-white font-roboto font-medium text-base rounded-lg hover:bg-accent-primary/90 transition-colors"
+              disabled={isSubmitting}
+              className={`px-6 py-3 text-white font-roboto font-medium text-base rounded-lg transition-colors flex items-center justify-center min-w-[120px] ${
+                isSubmitting ? "bg-accent-primary/70 cursor-not-allowed" : "bg-accent-primary hover:bg-accent-primary/90"
+              }`}
             >
-              Salva
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Salvataggio...
+                </>
+              ) : (
+                "Salva"
+              )}
             </button>
           )}
         </div>

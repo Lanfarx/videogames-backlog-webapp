@@ -19,18 +19,30 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Prendi le preferenze dal profilo globale
   const userProfile = useSelector((state: RootState) => state.user.profile);
-  // Imposta "light" come valore predefinito invece di "system"
-  const [theme, setThemeState] = useState<Theme>(userProfile?.appPreferences?.theme || "light");
-  const [accentColor, setAccentColorState] = useState<AccentColor>(userProfile?.appPreferences?.accentColor || "arancione");
+  // Imposta dal localStorage come fallback se il profilo non è ancora caricato
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (userProfile?.appPreferences?.theme) return userProfile.appPreferences.theme;
+    const saved = localStorage.getItem('app-theme');
+    if (saved === 'dark' || saved === 'light') return saved as Theme;
+    return 'light';
+  });
+  const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
+    if (userProfile?.appPreferences?.accentColor) return userProfile.appPreferences.accentColor;
+    const saved = localStorage.getItem('app-accent-color');
+    if (saved) return saved as AccentColor;
+    return 'arancione';
+  });
   const [mounted, setMounted] = useState(false);
 
   // Aggiorna il tema quando cambia il profilo globale
   useEffect(() => {
     if (userProfile?.appPreferences?.theme) {
       setThemeState(userProfile.appPreferences.theme);
+      localStorage.setItem('app-theme', userProfile.appPreferences.theme);
     }
     if (userProfile?.appPreferences?.accentColor) {
       setAccentColorState(userProfile.appPreferences.accentColor);
+      localStorage.setItem('app-accent-color', userProfile.appPreferences.accentColor);
     }
     setMounted(true);
   }, [userProfile]);
@@ -50,10 +62,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme)
+    localStorage.setItem('app-theme', newTheme);
   }
 
   const setAccentColor = (newColor: AccentColor) => {
     setAccentColorState(newColor)
+    localStorage.setItem('app-accent-color', newColor);
   }
 
   const value = {

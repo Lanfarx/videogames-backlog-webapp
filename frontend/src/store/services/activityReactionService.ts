@@ -1,12 +1,13 @@
 import axios from 'axios';
 import { getToken } from '../../utils/getToken';
-import { 
-  ActivityReaction, 
-  ActivityReactionSummary, 
-  ActivityWithReactions, 
+import {
+  ActivityReaction,
+  ActivityReactionSummary,
+  ActivityWithReactions,
   CreateActivityReactionDto,
-  ActivityType 
+  ActivityType
 } from '../../types/activity';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
 
 const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_REACTIONS);
@@ -90,22 +91,24 @@ export const activityReactionService = {
    * Ottiene le attività del diary dell'utente corrente con le reazioni
    */
   getUserActivitiesWithReactions: async (page: number = 1, pageSize: number = 20): Promise<ActivityWithReactions[]> => {
-    const response = await apiClient.get(`${ACTIVITY_API_URL}`, {
+    const response = await apiClient.get<BackendPaginatedResponse<any>>(`${ACTIVITY_API_URL}`, {
       params: { page, pageSize }
     });
-    return response.data.activities.map(mapActivityWithReactionsFromApi);
+    const paginated = mapPaginatedResponse(response.data, mapActivityWithReactionsFromApi);
+    return paginated.items;
   },  /**
    * Ottiene le attività pubbliche di un utente con le reazioni (per i profili degli amici)
    */
   getPublicActivitiesWithReactions: async (
-    userId: number, 
-    page: number = 1, 
+    userId: number,
+    page: number = 1,
     pageSize: number = 20
   ): Promise<ActivityWithReactions[]> => {
-    const response = await apiClient.get(`${ACTIVITY_API_URL}/public/${userId}`, {
+    const response = await apiClient.get<BackendPaginatedResponse<any>>(`${ACTIVITY_API_URL}/public/${userId}`, {
       params: { page, pageSize }
     });
-    return response.data.activities.map(mapActivityWithReactionsFromApi);
+    const paginated = mapPaginatedResponse(response.data, mapActivityWithReactionsFromApi);
+    return paginated.items;
   }
 };
 

@@ -54,23 +54,23 @@ export const getGameDetails = async (gameId: string) => {
 // Funzione per cercare giochi
 export const searchGames = async (query: string) => {
   try {
-    const response = await apiClient.get('/games', { 
-      params: { 
+    const response = await apiClient.get('/games', {
+      params: {
         search: query,
         platforms: '1,4,7,18,22' // Corretto il nome del parametro
       }
     });
-    
+
     // Mappa i risultati usando la funzione di mapping
     const mappedResults = response.data.results.map(mapRawgGameToInternalFormat);
-    
-    // Filtra i risultati per includere solo giochi con dati sufficienti
-    const filteredResults = mappedResults.filter((game: any) => 
-      game.Title && 
-      game.ReleaseYear && 
-      game.RatingsCount > 3 // Almeno 3 recensioni per validità
+
+    // Filtra i risultati per includere solo giochi con un titolo
+    const filteredResults = mappedResults.filter((game: any) =>
+      game.Title
+      // Abbiamo rimosso i filtri su ReleaseYear e RatingsCount > 3 perché 
+      // bloccavano l'aggiunta di giochi indie, appena usciti o in accesso anticipato
     );
-    
+
     return {
       ...response.data,
       results: filteredResults
@@ -108,7 +108,7 @@ export const getSimilarGames = async (genreIds: number[], excludeId: number, cou
       platforms: '1,4,7,18,22,186,187', // Aggiunte console moderne
       dates: '2000-01-01,' + new Date().toISOString().slice(0, 10), // Giochi dal 2000 in poi
     };
-    
+
     // Filtro Metacritic più intelligente
     if (typeof Metacritic === 'number' && Metacritic > 0) {
       // Range dinamico basato sul punteggio
@@ -120,10 +120,10 @@ export const getSimilarGames = async (genreIds: number[], excludeId: number, cou
     }
 
     const response = await apiClient.get('/games', { params });
-    
+
     // Filtro e ordinamento più sofisticato
     const results = response.data.results
-      .filter((g: any) => 
+      .filter((g: any) =>
         g.id !== excludeId &&
         g.name &&
         g.background_image &&
@@ -153,13 +153,13 @@ export const getSimilarGames = async (genreIds: number[], excludeId: number, cou
 // Funzione helper per calcolare score di similarità
 const calculateSimilarityScore = (game: any, originalMetacritic?: number): number => {
   let score = 0;
-  
+
   // Base score dal rating
   score += game.rating * 10;
-  
+
   // Bonus per numero di recensioni (logaritmico per evitare bias)
   score += Math.log10(game.ratings_count + 1) * 5;
-  
+
   // Bonus per Metacritic se simile al gioco originale
   if (originalMetacritic && game.metacritic) {
     const metacriticDiff = Math.abs(game.metacritic - originalMetacritic);
@@ -167,17 +167,17 @@ const calculateSimilarityScore = (game: any, originalMetacritic?: number): numbe
   } else if (game.metacritic) {
     score += game.metacritic * 0.2;
   }
-  
+
   // Penalità per giochi troppo vecchi o troppo nuovi
   if (game.released) {
     const year = new Date(game.released).getFullYear();
     const currentYear = new Date().getFullYear();
     const yearDiff = Math.abs(currentYear - year);
-    
+
     if (yearDiff <= 3) score += 10; // Bonus per giochi recenti
     else if (yearDiff > 10) score -= 5; // Penalità per giochi molto vecchi
   }
-  
+
   return score;
 };
 

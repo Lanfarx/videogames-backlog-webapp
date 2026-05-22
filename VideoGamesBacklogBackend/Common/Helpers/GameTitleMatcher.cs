@@ -10,8 +10,8 @@ namespace VideoGamesBacklogBackend.Common.Helpers;
 public static partial class GameTitleMatcher
 {
     // Array ordinati per lunghezza della stringa da cercare per evitare sovrapposizioni
-    // (es. evitare di trasformare "VIII" in "V" + "III"). Risolve bug nascosti nell'implementazione precedente.
-    private static readonly (string Roman, string Arabic)[] _romanToArabic =
+    // (es. Evitare di trasformare "VIII" in "V" + "III"). Risolve bug nascosti nell'implementazione precedente.
+    private static readonly (string Roman, string Arabic)[] RomanToArabic =
     [
         (" VIII", " 8"),
         (" VII", " 7"),
@@ -24,7 +24,7 @@ public static partial class GameTitleMatcher
         (" X", " 10")
     ];
 
-    private static readonly (string Arabic, string Roman)[] _arabicToRoman =
+    private static readonly (string Arabic, string Roman)[] ArabicToRoman =
     [
         (" 10", " X"),
         (" 9", " IX"),
@@ -38,7 +38,7 @@ public static partial class GameTitleMatcher
     ];
 
     // Suffixes ordinati per lunghezza decrescente
-    private static readonly string[] _editionSuffixes = 
+    private static readonly string[] EditionSuffixes = 
     [
         " Game of the Year Edition",
         " Ultimate Edition",
@@ -72,7 +72,7 @@ public static partial class GameTitleMatcher
 
         var normalized = title.Trim();
         
-        foreach (var (roman, arabic) in _romanToArabic)
+        foreach (var (roman, arabic) in RomanToArabic)
         {
             normalized = normalized.Replace(roman, arabic, StringComparison.OrdinalIgnoreCase);
         }
@@ -87,16 +87,14 @@ public static partial class GameTitleMatcher
 
         var result = title.Trim();
 
-        // Rimuove dinamicamente qualsiasi suffisso anno invece di hardcodarli tutti da (2009) a (2025)
+        // Rimuove dinamicamente qualsiasi suffisso anno invece di hardcode tutti da (2009) a (2025)
         result = YearSuffixRegex().Replace(result, string.Empty);
 
-        foreach (var suffix in _editionSuffixes)
+        foreach (var suffix in EditionSuffixes)
         {
-            if (result.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            {
-                result = result[..^suffix.Length].Trim();
-                break; 
-            }
+            if (!result.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) continue;
+            result = result[..^suffix.Length].Trim();
+            break;
         }
 
         return result;
@@ -108,7 +106,7 @@ public static partial class GameTitleMatcher
             return string.Empty;
 
         var result = title.Trim();
-        foreach (var (arabic, roman) in _arabicToRoman)
+        foreach (var (arabic, roman) in ArabicToRoman)
         {
             result = result.Replace(arabic, roman, StringComparison.OrdinalIgnoreCase);
         }
@@ -132,24 +130,17 @@ public static partial class GameTitleMatcher
         var normalizedString = title.Normalize(NormalizationForm.FormD);
         var stringBuilder = new StringBuilder(capacity: normalizedString.Length);
 
-        foreach (var c in normalizedString)
+        foreach (var c in from c in normalizedString let unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c) where unicodeCategory != UnicodeCategory.NonSpacingMark select c)
         {
-            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-            {
-                stringBuilder.Append(c);
-            }
+            stringBuilder.Append(c);
         }
         var withoutDiacritics = stringBuilder.ToString().Normalize(NormalizationForm.FormC);
 
         // 2. Mantiene solo lettere, numeri e spazi
         var finalBuilder = new StringBuilder(capacity: withoutDiacritics.Length);
-        foreach (var c in withoutDiacritics)
+        foreach (var c in withoutDiacritics.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)))
         {
-            if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
-            {
-                finalBuilder.Append(c);
-            }
+            finalBuilder.Append(c);
         }
 
         return MultipleSpacesRegex().Replace(finalBuilder.ToString(), " ").Trim();
@@ -157,8 +148,7 @@ public static partial class GameTitleMatcher
 
     public static string RemoveLeadingArticles(string title)
     {
-        if (string.IsNullOrWhiteSpace(title)) return string.Empty;
-        return LeadingArticlesRegex().Replace(title.Trim(), string.Empty);
+        return string.IsNullOrWhiteSpace(title) ? string.Empty : LeadingArticlesRegex().Replace(title.Trim(), string.Empty);
     }
 
     public static bool DoesGameTitleMatch(string gameTitle, string searchTitle)

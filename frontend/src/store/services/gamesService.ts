@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Game, GameInput, GameUpdateInput, GameComment } from '../../types/game';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
 
@@ -103,7 +104,7 @@ export const getGameByTitle = async (title: string): Promise<Game> => {
 };
 
 export const createGame = async (game: GameInput): Promise<Game> => {
-  const res = await apiClient.post<Game>(API_URL, game );
+  const res = await apiClient.post<Game>(API_URL, game);
   return mapGameFromApi(res.data);
 };
 
@@ -196,25 +197,26 @@ export const getInProgressGamesPaginated = async (page: number = 1, pageSize: nu
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }> => {
-  const res = await apiClient.get(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
+  const paginated = mapPaginatedResponse(res.data);
   return {
-    games: res.data.games,
-    currentPage: res.data.currentPage,
-    totalPages: res.data.totalPages,
-    totalItems: res.data.totalItems,
-    pageSize: res.data.pageSize,
-    hasNextPage: res.data.hasNextPage,
-    hasPreviousPage: res.data.hasPreviousPage
+    games: paginated.items,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages,
+    totalItems: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    hasNextPage: paginated.hasNextPage,
+    hasPreviousPage: paginated.hasPreviousPage
   };
 };
 
 // Tutti i giochi paginati
 export const getGamesPaginated = async (
-  page: number = 1, 
-  pageSize: number, 
-  filters?: string, 
-  sortBy?: string, 
-  sortOrder?: string, 
+  page: number = 1,
+  pageSize: number,
+  filters?: string,
+  sortBy?: string,
+  sortOrder?: string,
   search?: string
 ): Promise<{
   games: Game[];
@@ -229,20 +231,21 @@ export const getGamesPaginated = async (
     page: page.toString(),
     pageSize: pageSize.toString(),
   });
-  
+
   if (filters) params.append('filters', filters);
   if (sortBy) params.append('sortBy', sortBy);
   if (sortOrder) params.append('sortOrder', sortOrder);
   if (search) params.append('search', search);
 
-  const res = await apiClient.get(`${API_URL}/paginated?${params.toString()}`);
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/paginated?${params.toString()}`);
+  const paginated = mapPaginatedResponse(res.data, mapGameFromApi);
   return {
-    games: res.data.games.map(mapGameFromApi),
-    currentPage: res.data.currentPage,
-    totalPages: res.data.totalPages,
-    totalItems: res.data.totalItems,
-    pageSize: res.data.pageSize,
-    hasNextPage: res.data.hasNextPage,
-    hasPreviousPage: res.data.hasPreviousPage
+    games: paginated.items,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages,
+    totalItems: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    hasNextPage: paginated.hasNextPage,
+    hasPreviousPage: paginated.hasPreviousPage
   };
 };

@@ -171,7 +171,7 @@ builder.Services.Configure<SteamSettings>(options => {
 // Dependency Injection Automatizzata
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 var serviceInterfaces = typeof(Program).Assembly.GetTypes()
-    .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace == "VideoGamesBacklogBackend.Interfaces");
+    .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace != null && t.Namespace.StartsWith("VideoGamesBacklogBackend.Interfaces"));
 
 foreach (var serviceInterface in serviceInterfaces)
 {

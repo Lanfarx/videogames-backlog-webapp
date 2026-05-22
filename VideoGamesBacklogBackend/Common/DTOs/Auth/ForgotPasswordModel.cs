@@ -1,7 +1,6 @@
-namespace VideoGamesBacklogBackend.Common.DTOs.Auth
+namespace VideoGamesBacklogBackend.Common.DTOs.Auth;
+
+public class ForgotPasswordModel
 {
-    public class ForgotPasswordModel
-    {
-        public string Email { get; set; } = string.Empty;
-    }
+    public string Email { get; set; } = string.Empty;
 }

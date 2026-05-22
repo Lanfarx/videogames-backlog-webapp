@@ -119,7 +119,7 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
                   <span className="text-xs text-text-disabled">Non valutato</span>
                 )}
               </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
-                {game.Price !== undefined ? formatPrice(game.Price) : "-"}
+                {game.Price !== undefined ? formatPrice(game.Price, game.Platform) : "-"}
               </td>              <td className="p-3 border-b border-border-color font-roboto text-sm text-text-secondary">
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />

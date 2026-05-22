@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Activity, ActivityFilters, ActivityType, ActivityWithReactions } from '../../types/activity';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
 
@@ -118,7 +119,7 @@ export const getActivities = async (
   pageSize: number = 20
 ): Promise<PaginatedActivitiesDto> => {
   const params: any = { page, pageSize };
-  
+
   // Mappa i filtri frontend sul formato del DTO backend
   if (filters.Types?.length) {
     // Converti i tipi stringa in numeri per il backend
@@ -134,14 +135,15 @@ export const getActivities = async (
   if (filters.Limit !== undefined) params.Limit = filters.Limit;
   if (filters.SortDirection !== undefined) params.SortDirection = filters.SortDirection;
 
-  const res = await apiClient.get(API_URL, { params });
-  
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(API_URL, { params });
+  const paginated = mapPaginatedResponse(res.data, mapActivityFromApi);
+
   return {
-    activities: res.data.activities.map(mapActivityFromApi),
-    totalCount: res.data.totalCount,
-    pageSize: res.data.pageSize,
-    currentPage: res.data.currentPage,
-    totalPages: res.data.totalPages
+    activities: paginated.items,
+    totalCount: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages
   };
 };
 
@@ -196,7 +198,7 @@ export const getPublicActivities = async (
   pageSize: number = 20
 ): Promise<PaginatedActivitiesDto> => {
   const params: any = { page, pageSize };
-  
+
   // Converti i filtri di tipo da stringa a numero per il backend
   if (filters.types?.length) {
     const numericTypes = filters.types.map(mapActivityTypeToApi);
@@ -204,39 +206,23 @@ export const getPublicActivities = async (
       params[`Types[${index}]`] = type;
     });
   }
-  
+
   // Aggiungi altri filtri se presenti
   if (filters.year !== undefined) params.Year = filters.year;
   if (filters.month !== undefined) params.Month = filters.month;
   if (filters.GameId !== undefined) params.GameId = filters.GameId;
   if (filters.limit !== undefined) params.Limit = filters.limit;
   if (filters.sortDirection !== undefined) params.SortDirection = filters.sortDirection;
-  
-  const res = await apiClient.get(`${API_URL}/public/${userIdOrUsername}`, { params });
-  
+
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/public/${userIdOrUsername}`, { params });
+  const paginated = mapPaginatedResponse(res.data, mapActivityFromApi);
+
   return {
-    activities: res.data.activities.map(mapActivityFromApi),
-    totalCount: res.data.totalCount,
-    pageSize: res.data.pageSize,
-    currentPage: res.data.page,
-    totalPages: res.data.totalPages
+    activities: paginated.items,
+    totalCount: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages
   };
 };
-
-/**
- * Mappatura da API response a ActivityWithReactions frontend
- */
-function mapActivityWithReactionsFromApi(apiActivity: any): ActivityWithReactions {
-  return {
-    id: apiActivity.id,
-    type: mapActivityTypeFromApi(apiActivity.type),
-    gameId: apiActivity.gameId,
-    gameTitle: apiActivity.gameTitle,
-    timestamp: apiActivity.timestamp,
-    additionalInfo: apiActivity.additionalInfo,
-    gameImageUrl: apiActivity.gameImageUrl,
-    reactions: apiActivity.reactions || [],
-    reactionSummary: apiActivity.reactionSummary || []
-  };
-}
 

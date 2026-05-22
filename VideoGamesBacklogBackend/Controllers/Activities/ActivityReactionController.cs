@@ -4,43 +4,37 @@ using VideoGamesBacklogBackend.Common.Extensions;
 using VideoGamesBacklogBackend.DTOs.Activities;
 using VideoGamesBacklogBackend.Interfaces.Activities;
 
-namespace VideoGamesBacklogBackend.Controllers.Activities
+namespace VideoGamesBacklogBackend.Controllers.Activities;
+
+[ApiController]
+[Route("api/activity-reactions")]
+[Authorize]
+public class ActivityReactionController(IActivityReactionService activityReactionService) : ControllerBase
 {
-    [ApiController]
-    [Route("api/activity-reactions")]
-    [Authorize]
-    public class ActivityReactionController(IActivityReactionService activityReactionService) : ControllerBase
+    [HttpPost]
+    public async Task<IActionResult> ToggleReaction([FromBody] CreateActivityReactionDto createReactionDto)
     {
-        [HttpPost]
-        public async Task<IActionResult> ToggleReaction([FromBody] CreateActivityReactionDto createReactionDto)
-        {
-            var result = await activityReactionService.AddReactionAsync(createReactionDto, User.GetUserId());
+        var result = await activityReactionService.AddReactionAsync(createReactionDto, User.GetUserId());
             
-            if (result == null)
-            {
-                return Ok(new { message = "Reazione rimossa", removed = true });
-            }
+        return result == null ? Ok(new { message = "Reazione rimossa", removed = true }) : Ok(new { message = "Reazione aggiunta", reaction = result, removed = false });
+    }
 
-            return Ok(new { message = "Reazione aggiunta", reaction = result, removed = false });
-        }
-
-        [HttpGet("activity/{activityId:int}")]
-        public async Task<IActionResult> GetActivityReactions(int activityId)
-        {
-            var reactions = await activityReactionService.GetActivityReactionsAsync(activityId, User.GetUserId());
+    [HttpGet("activity/{activityId:int}")]
+    public async Task<IActionResult> GetActivityReactions(int activityId)
+    {
+        var reactions = await activityReactionService.GetActivityReactionsAsync(activityId, User.GetUserId());
             
-            return Ok(new { 
-                activityId,
-                reactions,
-                message = "Reazioni recuperate con successo" 
-            });
-        }
+        return Ok(new { 
+            activityId,
+            reactions,
+            message = "Reazioni recuperate con successo" 
+        });
+    }
 
-        [HttpDelete("{reactionId:int}")]
-        public async Task<IActionResult> RemoveReaction(int reactionId)
-        {
-            await activityReactionService.RemoveReactionAsync(reactionId, User.GetUserId());
-            return Ok(new { message = "Reazione rimossa con successo" });
-        }
+    [HttpDelete("{reactionId:int}")]
+    public async Task<IActionResult> RemoveReaction(int reactionId)
+    {
+        await activityReactionService.RemoveReactionAsync(reactionId, User.GetUserId());
+        return Ok(new { message = "Reazione rimossa con successo" });
     }
 }

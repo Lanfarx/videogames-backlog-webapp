@@ -162,4 +162,3 @@ C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBacke
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\swae.build.ex.cache
 C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\bin\Debug\net8.0\AutoMapper.dll
-C:\Users\loryn\Documents\GitHub\videogames-backlog-webapp\VideoGamesBacklogBackend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

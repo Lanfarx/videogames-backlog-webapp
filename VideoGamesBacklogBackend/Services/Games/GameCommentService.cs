@@ -1,80 +1,80 @@
 using AutoMapper;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Games;
 
-namespace VideoGamesBacklogBackend.Services.Games
+namespace VideoGamesBacklogBackend.Services.Games;
+
+[UsedImplicitly]
+public class GameCommentService(
+    AppDbContext dbContext,
+    IMapper mapper) : IGameCommentService
 {
-    public class GameCommentService(
-        AppDbContext dbContext,
-        IMapper mapper) : IGameCommentService
+    public async Task<List<GameCommentDto>> GetCommentsAsync(int userId, int gameId)
     {
-        public async Task<List<GameCommentDto>> GetCommentsAsync(int userId, int gameId)
+        var game = await dbContext.Games
+            .Include(g => g.Comments)
+            .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+        return game == null ? throw new KeyNotFoundException("Gioco non trovato.") : mapper.Map<List<GameCommentDto>>(game.Comments);
+    }
+
+    public async Task<GameCommentDto?> AddCommentAsync(int userId, int gameId, CreateGameCommentDto commentDto)
+    {
+        var game = await dbContext.Games
+            .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+
+        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+
+        var comment = new GameComment
         {
-            var game = await dbContext.Games
-                .Include(g => g.Comments)
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+            GameId = gameId,
+            Text = commentDto.Text,
+            Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
+        };
+        dbContext.GameComments.Add(comment);
+        await dbContext.SaveChangesAsync();
+        return mapper.Map<GameCommentDto>(comment);
+    }
 
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
-            return mapper.Map<List<GameCommentDto>>(game.Comments);
-        }
+    public async Task<bool> DeleteCommentAsync(int userId, int gameId, int commentId)
+    {
+        var game = await dbContext.Games
+            .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
 
-        public async Task<GameCommentDto?> AddCommentAsync(int userId, int gameId, CreateGameCommentDto commentDto)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
 
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        var comment = await dbContext.GameComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
 
-            var comment = new GameComment
-            {
-                GameId = gameId,
-                Text = commentDto.Text,
-                Date = DateTime.UtcNow.ToString("yyyy-MM-dd")
-            };
-            dbContext.GameComments.Add(comment);
-            await dbContext.SaveChangesAsync();
-            return mapper.Map<GameCommentDto>(comment);
-        }
+        if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
 
-        public async Task<bool> DeleteCommentAsync(int userId, int gameId, int commentId)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+        dbContext.GameComments.Remove(comment);
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
 
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+    public async Task<GameCommentDto?> UpdateCommentAsync(int userId, int gameId, int commentId, CreateGameCommentDto updatedComment)
+    {
+        var game = await dbContext.Games
+            .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
 
-            var comment = await dbContext.GameComments
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
+        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
 
-            if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
+        var comment = await dbContext.GameComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
 
-            dbContext.GameComments.Remove(comment);
-            await dbContext.SaveChangesAsync();
-            return true;
-        }
+        if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
 
-        public async Task<GameCommentDto?> UpdateCommentAsync(int userId, int gameId, int commentId, CreateGameCommentDto updatedComment)
-        {
-            var game = await dbContext.Games
-                .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
+        if (!string.IsNullOrWhiteSpace(updatedComment.Text))
+            comment.Text = updatedComment.Text;
 
-            if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        comment.Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-            var comment = await dbContext.GameComments
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.GameId == gameId);
-
-            if (comment == null) throw new KeyNotFoundException("Commento non trovato.");
-
-            if (!string.IsNullOrWhiteSpace(updatedComment.Text))
-                comment.Text = updatedComment.Text;
-
-            comment.Date = DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-            await dbContext.SaveChangesAsync();
-            return mapper.Map<GameCommentDto>(comment);
-        }
+        await dbContext.SaveChangesAsync();
+        return mapper.Map<GameCommentDto>(comment);
     }
 }

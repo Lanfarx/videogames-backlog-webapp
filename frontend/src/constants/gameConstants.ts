@@ -60,6 +60,7 @@ export const GAME_PlatformS: GamePlatform[] = [
   'Nintendo Switch',
   'Steam',
   'Epic Games Store',
+  'Amazon Luna',
   'GOG',
   'iOS',
   'Android'

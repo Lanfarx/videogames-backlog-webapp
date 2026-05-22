@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { 
-  CommunityStatsDto, 
-  CommunityReviewDto, 
-  PaginatedReviewsDto, 
+import {
+  CommunityStatsDto,
+  CommunityReviewDto,
+  PaginatedReviewsDto,
   ReviewStatsDto,
   CommunityRatingsResponse,
   CommunityRatingsWithCountResponse,
@@ -10,6 +10,7 @@ import {
   CreateReviewCommentDto
 } from '../../types/community';
 import { ActivityComment, CreateActivityCommentDto } from '../../types/activity';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, API_URLS, buildApiUrl } from '../../config/api';
 
@@ -43,15 +44,15 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export class CommunityService {
-  
+
   /**
    * Ottiene le statistiche della community per un gioco
    */
   static async getCommunityStats(gameTitle: string): Promise<CommunityStatsDto> {
     try {
-        const response = await communityApi.get<CommunityStatsDto>(
-            `/stats/${encodeURIComponent(gameTitle)}`
-        );
+      const response = await communityApi.get<CommunityStatsDto>(
+        `/stats/${encodeURIComponent(gameTitle)}`
+      );
       return response.data;
     } catch (error) {
       console.error('Errore nel recupero delle statistiche:', error);
@@ -117,18 +118,25 @@ export class CommunityService {
    * Ottiene le recensioni per un gioco con paginazione
    */
   static async getReviews(
-    gameTitle: string, 
-    page: number = 1, 
+    gameTitle: string,
+    page: number = 1,
     pageSize: number = 10
   ): Promise<PaginatedReviewsDto> {
     try {
-      const response = await communityApi.get<PaginatedReviewsDto>(
+      const response = await communityApi.get<BackendPaginatedResponse<CommunityReviewDto>>(
         `/reviews/${encodeURIComponent(gameTitle)}`,
         {
           params: { page, pageSize }
         }
       );
-      return response.data;
+      const paginated = mapPaginatedResponse(response.data);
+      return {
+        reviews: paginated.items,
+        totalCount: paginated.totalItems,
+        page: paginated.currentPage,
+        pageSize: paginated.pageSize,
+        totalPages: paginated.totalPages
+      };
     } catch (error) {
       console.error('Errore nel recupero delle recensioni:', error);
       return {
@@ -144,18 +152,25 @@ export class CommunityService {
    * Ottiene le recensioni pubbliche per un gioco con paginazione (senza la recensione dell'utente corrente)
    */
   static async getPublicReviews(
-    gameTitle: string, 
-    page: number = 1, 
+    gameTitle: string,
+    page: number = 1,
     pageSize: number = 10
   ): Promise<PaginatedReviewsDto> {
     try {
-      const response = await communityApi.get<PaginatedReviewsDto>(
+      const response = await communityApi.get<BackendPaginatedResponse<CommunityReviewDto>>(
         `/reviews/${encodeURIComponent(gameTitle)}`,
         {
           params: { page, pageSize }
         }
       );
-      return response.data;
+      const paginated = mapPaginatedResponse(response.data);
+      return {
+        reviews: paginated.items,
+        totalCount: paginated.totalItems,
+        page: paginated.currentPage,
+        pageSize: paginated.pageSize,
+        totalPages: paginated.totalPages
+      };
     } catch (error) {
       console.error('Errore nel recupero delle recensioni pubbliche:', error);
       return {

@@ -72,13 +72,12 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
           <span className="mx-2">|</span>
           <Award className="h-4 w-4 mr-1 text-yellow-500" />
           <span className="font-roboto text-xs">{formatMetacriticScore(game.Metacritic)}</span>
-        </div>{/* Prezzo e Data di acquisto */}
-        <div className="mt-2 flex items-center justify-between text-text-secondary">
+        </div>        <div className="mt-2 flex items-center justify-between text-text-secondary">
           <span className="font-roboto text-xs">
-            {formatPurchaseDateWithLabel(game.PurchaseDate, game.Platform)}
+            {formatPurchaseDateWithLabel(game.PurchaseDate, game.Platform, game.Price)}
           </span>
-          {game.Price !== undefined && (
-            <span className="font-roboto text-xs">{formatPrice(game.Price)}</span>
+          {game.Price !== undefined && game.Price !== -1 && !(game.Price === 0 && !game.PurchaseDate) && (
+            <span className="font-roboto text-xs">{formatPrice(game.Price, game.Platform)}</span>
           )}
         </div>
 

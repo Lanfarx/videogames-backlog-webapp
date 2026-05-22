@@ -1,7 +1,6 @@
-namespace VideoGamesBacklogBackend.DTOs.Games.Update
+namespace VideoGamesBacklogBackend.DTOs.Games.Update;
+
+public class UpdateGameStatusDto
 {
-    public class UpdateGameStatusDto
-    {
-        public string Status { get; set; } = string.Empty;
-    }
+    public string Status { get; set; } = string.Empty;
 }

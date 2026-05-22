@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getToken } from '../../utils/getToken';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
 
 const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.FRIENDSHIP);
@@ -146,13 +147,20 @@ export const friendshipService = {
     page: number = 1,
     pageSize: number = 10
   ): Promise<SearchUsersResponse> => {
-    const response = await apiClient.get(
+    const response = await apiClient.get<BackendPaginatedResponse<PublicProfile>>(
       `${API_URL}/search`,
       {
         params: { query, page, pageSize }
       }
     );
-    return response.data;
+    const paginated = mapPaginatedResponse(response.data);
+    return {
+      users: paginated.items,
+      totalCount: paginated.totalItems,
+      currentPage: paginated.currentPage,
+      totalPages: paginated.totalPages,
+      pageSize: paginated.pageSize
+    };
   },
   // Ottieni profilo pubblico per userId
   getPublicProfile: async (userId: number): Promise<PublicProfile> => {

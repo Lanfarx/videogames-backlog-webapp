@@ -45,7 +45,7 @@ const EditGameDetailsModal = ({
       ReleaseYear: Number(formData.ReleaseYear),
       Genres: formData.Genres.split(',').map(genre => genre.trim()).filter(Boolean),
       CoverImage: formData.CoverImage,
-      Metacritic: Number(formData.Metacritic) || 0
+      Metacritic: formData.Metacritic === null || formData.Metacritic === undefined || isNaN(Number(formData.Metacritic)) ? -1 : Number(formData.Metacritic)
     };
     
     // Aggiorna il gioco usando il nuovo pattern unificato
@@ -117,10 +117,18 @@ const EditGameDetailsModal = ({
                   type="number"
                   id="Metacritic"
                   name="Metacritic"
-                  value={formData.Metacritic}
+                  value={formData.Metacritic ?? ""}
                   onChange={(e) => {
                     const value = e.target.value;
-                    let numericValue = Number.parseInt(value) || 0;
+                    if (value === "") {
+                      setFormData(prev => ({
+                        ...prev,
+                        Metacritic: null
+                      }));
+                      return;
+                    }
+                    let numericValue = Number.parseInt(value);
+                    if (isNaN(numericValue)) return;
                     
                     // Limita il valore tra 0 e 100
                     if (numericValue < 0) numericValue = 0;
@@ -142,6 +150,7 @@ const EditGameDetailsModal = ({
                   min="0"
                   max="100"
                   className="w-full px-3 py-2 border border-border-color rounded-lg bg-primary-bg text-text-primary focus:outline-none focus:border-accent-primary"
+                  placeholder="N.D."
                 />
               </div>              <div className="space-y-2">
                 <label htmlFor="ReleaseYear" className="block text-text-secondary font-secondary text-sm">

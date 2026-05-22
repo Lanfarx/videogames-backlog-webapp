@@ -1,24 +1,21 @@
 using VideoGamesBacklogBackend.DTOs.Social;
 
-namespace VideoGamesBacklogBackend.Interfaces.Social
+namespace VideoGamesBacklogBackend.Interfaces.Social;
+
+public interface INotificationService
 {
-    public interface INotificationService
-    {
-        Task<IEnumerable<NotificationDto>> GetUserNotificationsAsync(int userId);
-        Task<IEnumerable<NotificationDto>> GetUnreadNotificationsAsync(int userId);
-        Task<int> GetUnreadCountAsync(int userId);
-        Task<NotificationDto?> CreateNotificationAsync(CreateNotificationDto createDto);
-        Task<bool> MarkAsReadAsync(int notificationId, int userId);
-        Task<bool> MarkAllAsReadAsync(int userId);
-        Task<bool> DeleteNotificationAsync(int notificationId, int userId);
-        Task<bool> DeleteReadNotificationsAsync(int userId);
-          // Metodi helper per creare notifiche specifiche
-        Task CreateFriendRequestNotificationAsync(int receiverId, int senderId, string senderUserName, int friendshipId);
-        Task CreateFriendAcceptedNotificationAsync(int receiverId, int senderId, string senderUserName);
-        Task CreateFriendRejectedNotificationAsync(int receiverId, int senderId, string senderUserName);
+    Task<IEnumerable<NotificationDto>> GetUserNotificationsAsync(int userId);
+    Task<int> GetUnreadCountAsync(int userId);
+    Task<bool> MarkAsReadAsync(int notificationId, int userId);
+    Task<bool> MarkAllAsReadAsync(int userId);
+    Task<bool> DeleteNotificationAsync(int notificationId, int userId);
+    Task<bool> DeleteReadNotificationsAsync(int userId);
+    // Metodi helper per creare notifiche specifiche
+    Task CreateFriendRequestNotificationAsync(int receiverId, int senderId, string senderUserName, int friendshipId);
+    Task CreateFriendAcceptedNotificationAsync(int receiverId, int senderId, string senderUserName);
+    Task CreateFriendRejectedNotificationAsync(int receiverId, int senderId, string senderUserName);
         
-        // Notifiche per commenti e reazioni
-        Task CreateReviewCommentNotificationAsync(int reviewOwnerId, int commentAuthorId, string commentAuthorName, string gameTitle, int reviewGameId);
-        Task CreateActivityReactionNotificationAsync(int activityOwnerId, int reactorId, string reactorName, string emoji, string gameTitle, int activityId);
-    }
+    // Notifiche per commenti e reazioni
+    Task CreateReviewCommentNotificationAsync(int reviewOwnerId, int commentAuthorId, string commentAuthorName, string gameTitle, int reviewGameId);
+    Task CreateActivityReactionNotificationAsync(int activityOwnerId, int reactorId, string reactorName, string emoji, string gameTitle, int activityId);
 }
