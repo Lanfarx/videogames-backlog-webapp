@@ -5,7 +5,7 @@ namespace VideoGamesBacklogBackend.DTOs.Games;
 public class GameCommentDto
 {
     public int Id { get; set; }
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public string Text { get; set; } = string.Empty;
     public int GameId { get; set; }
 }
@@ -13,6 +13,6 @@ public class GameCommentDto
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 public class CreateGameCommentDto
 {
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public string Text { get; set; } = string.Empty;
 }

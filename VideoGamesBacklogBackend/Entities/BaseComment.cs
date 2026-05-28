@@ -15,5 +15,5 @@ public abstract class BaseComment
     public string Text { get; set; } = string.Empty;
 
     [Required]
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
 }

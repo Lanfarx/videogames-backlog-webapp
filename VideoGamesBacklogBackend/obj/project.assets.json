@@ -3475,10 +3475,10 @@
         "tools/net461-x86/System.Diagnostics.FileVersionInfo.dll",
         "tools/net461-x86/System.Diagnostics.Process.dll",
         "tools/net461-x86/System.Diagnostics.StackTrace.dll",
+        "tools/net461-x86/System.Diagnostics.TextWriterTraceListener.dll",
         "tools/net461-x86/System.Diagnostics.Tools.dll",
         "tools/net461-x86/System.Diagnostics.TraceSource.dll",
         "tools/net461-x86/System.Diagnostics.Tracing.dll",
-        "tools/net461-x86/System.Diagnostics.textWriterTraceListener.dll",
         "tools/net461-x86/System.Drawing.Primitives.dll",
         "tools/net461-x86/System.Dynamic.Runtime.dll",
         "tools/net461-x86/System.Globalization.Calendars.dll",
@@ -3539,6 +3539,9 @@
         "tools/net461-x86/System.Security.Cryptography.X509Certificates.dll",
         "tools/net461-x86/System.Security.Principal.dll",
         "tools/net461-x86/System.Security.SecureString.dll",
+        "tools/net461-x86/System.Text.Encoding.Extensions.dll",
+        "tools/net461-x86/System.Text.Encoding.dll",
+        "tools/net461-x86/System.Text.RegularExpressions.dll",
         "tools/net461-x86/System.Threading.Overlapped.dll",
         "tools/net461-x86/System.Threading.Tasks.Parallel.dll",
         "tools/net461-x86/System.Threading.Tasks.dll",
@@ -3553,9 +3556,6 @@
         "tools/net461-x86/System.Xml.XPath.dll",
         "tools/net461-x86/System.Xml.XmlDocument.dll",
         "tools/net461-x86/System.Xml.XmlSerializer.dll",
-        "tools/net461-x86/System.text.Encoding.Extensions.dll",
-        "tools/net461-x86/System.text.Encoding.dll",
-        "tools/net461-x86/System.text.RegularExpressions.dll",
         "tools/net461-x86/netstandard.dll",
         "tools/net461/GetDocument.Insider.exe",
         "tools/net461/GetDocument.Insider.exe.config",
@@ -3578,10 +3578,10 @@
         "tools/net461/System.Diagnostics.FileVersionInfo.dll",
         "tools/net461/System.Diagnostics.Process.dll",
         "tools/net461/System.Diagnostics.StackTrace.dll",
+        "tools/net461/System.Diagnostics.TextWriterTraceListener.dll",
         "tools/net461/System.Diagnostics.Tools.dll",
         "tools/net461/System.Diagnostics.TraceSource.dll",
         "tools/net461/System.Diagnostics.Tracing.dll",
-        "tools/net461/System.Diagnostics.textWriterTraceListener.dll",
         "tools/net461/System.Drawing.Primitives.dll",
         "tools/net461/System.Dynamic.Runtime.dll",
         "tools/net461/System.Globalization.Calendars.dll",
@@ -3642,6 +3642,9 @@
         "tools/net461/System.Security.Cryptography.X509Certificates.dll",
         "tools/net461/System.Security.Principal.dll",
         "tools/net461/System.Security.SecureString.dll",
+        "tools/net461/System.Text.Encoding.Extensions.dll",
+        "tools/net461/System.Text.Encoding.dll",
+        "tools/net461/System.Text.RegularExpressions.dll",
         "tools/net461/System.Threading.Overlapped.dll",
         "tools/net461/System.Threading.Tasks.Parallel.dll",
         "tools/net461/System.Threading.Tasks.dll",
@@ -3656,9 +3659,6 @@
         "tools/net461/System.Xml.XPath.dll",
         "tools/net461/System.Xml.XmlDocument.dll",
         "tools/net461/System.Xml.XmlSerializer.dll",
-        "tools/net461/System.text.Encoding.Extensions.dll",
-        "tools/net461/System.text.Encoding.dll",
-        "tools/net461/System.text.RegularExpressions.dll",
         "tools/net461/netstandard.dll",
         "tools/netcoreapp2.1/GetDocument.Insider.deps.json",
         "tools/netcoreapp2.1/GetDocument.Insider.dll",
@@ -5487,7 +5487,6 @@
       },
       "frameworks": {
         "net8.0": {
-          "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {}
         }
@@ -5506,7 +5505,6 @@
     },
     "frameworks": {
       "net8.0": {
-        "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
           "AutoMapper": {

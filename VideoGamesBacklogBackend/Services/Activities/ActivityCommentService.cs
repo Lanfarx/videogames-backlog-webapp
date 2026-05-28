@@ -38,7 +38,7 @@ public class ActivityCommentService(
         var newComment = new ActivityComment
         {
             Text = createCommentDto.Text,
-            Date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+            Date = DateTime.UtcNow,
             ActivityId = createCommentDto.ActivityId,
             AuthorId = authorId
         };

@@ -18,6 +18,7 @@ public class ReviewCommentService(
     public async Task<List<ReviewCommentDto>> GetReviewCommentsAsync(int reviewGameId)
     {
         var comments = await context.ReviewComments
+            .AsNoTracking()
             .Include(rc => rc.Author)
             .Where(rc => rc.ReviewGameId == reviewGameId)
             .OrderBy(rc => rc.Date)
@@ -40,7 +41,7 @@ public class ReviewCommentService(
         var newComment = new ReviewComment
         {
             Text = createCommentDto.Text,
-            Date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Date = DateTime.UtcNow,
             AuthorId = authorId,
             ReviewGameId = createCommentDto.ReviewGameId
         };

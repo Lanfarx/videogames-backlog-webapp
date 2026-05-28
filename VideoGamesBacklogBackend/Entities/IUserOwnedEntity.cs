@@ -6,6 +6,7 @@ namespace VideoGamesBacklogBackend.Entities;
 /// </summary>
 public interface IUserOwnedEntity
 {
+    int Id { get; set; }
     int UserId { get; set; }
     User? User { get; set; }
 }

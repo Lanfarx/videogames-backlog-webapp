@@ -14,6 +14,7 @@ public class NotificationService(AppDbContext context, IMapper mapper) : INotifi
     public async Task<IEnumerable<NotificationDto>> GetUserNotificationsAsync(int userId)
     {
         var notifications = await context.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();

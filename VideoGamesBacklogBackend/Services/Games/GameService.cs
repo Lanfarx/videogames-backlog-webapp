@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using VideoGamesBacklogBackend.Common.DTOs.Pagination;
 using VideoGamesBacklogBackend.Common.Extensions;
+using VideoGamesBacklogBackend.Common.Extensions.Query;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.DTOs.Games.Update;
 using VideoGamesBacklogBackend.Entities;
@@ -12,6 +13,7 @@ using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Activities;
 using VideoGamesBacklogBackend.Interfaces.Games;
 using VideoGamesBacklogBackend.Interfaces.Social;
+using VideoGamesBacklogBackend.Common.Helpers;
 
 namespace VideoGamesBacklogBackend.Services.Games;
 
@@ -25,27 +27,16 @@ public class GameService(
 {
     public async Task<List<GameDto>> GetAllGamesAsync(int userId)
     {
-        var games = await dbContext.Games.Where(g => g.UserId == userId).Include(g => g.Comments).ToListAsync();
+        var games = await dbContext.Games.AsNoTracking().AsSplitQuery().Where(g => g.UserId == userId).Include(g => g.Comments).ToListAsync();
         return mapper.Map<List<GameDto>>(games);
     }
 
     public async Task<PaginatedResult<object>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
     {
-        var query = dbContext.Games.Where(g => g.UserId == userId);
+        var query = dbContext.Games.AsNoTracking().Where(g => g.UserId == userId);
 
-        // Applica ricerca
-        if (!string.IsNullOrEmpty(queryParams.Search))
-        {
-            var searchLower = queryParams.Search.ToLower();
-            query = query.Where(g =>
-                g.Title.ToLower().Contains(searchLower) ||
-                (g.Developer != null && g.Developer.ToLower().Contains(searchLower)) ||
-                (g.Publisher != null && g.Publisher.ToLower().Contains(searchLower)) ||
-                g.Genres.Any(genre => genre.ToLower().Contains(searchLower))
-            );
-        }
+        query = query.ApplySearch(queryParams.Search);
 
-        // Applica filtri
         if (!string.IsNullOrEmpty(queryParams.Filters))
         {
             try
@@ -56,87 +47,47 @@ public class GameService(
                     Converters = { new JsonStringEnumConverter() }
                 };
                 var gameFilters = JsonSerializer.Deserialize<GameFiltersDto>(queryParams.Filters, options);
-                if (gameFilters != null)
-                {
-                    if (gameFilters.Status?.Count > 0)
-                        query = query.Where(g => gameFilters.Status.Contains(g.Status));
-
-                    if (gameFilters.Platform?.Count > 0)
-                        query = query.Where(g => g.Platform != null && gameFilters.Platform.Contains(g.Platform));
-
-                    if (gameFilters.Genre?.Count > 0)
-                        query = query.Where(g => g.Genres.Any(genre => gameFilters.Genre.Contains(genre)));
-
-                    if (gameFilters.PriceRange?.Length == 2)
-                    {
-                        var minPrice = gameFilters.PriceRange[0];
-                        var maxPrice = gameFilters.PriceRange[1];
-                        query = query.Where(g => g.Price == null || g.Price == -1 || (g.Price >= minPrice && g.Price <= maxPrice));
-                    }
-
-                    if (gameFilters.HoursRange?.Length == 2)
-                    {
-                        var minHours = gameFilters.HoursRange[0];
-                        var maxHours = gameFilters.HoursRange[1];
-                        query = query.Where(g => g.HoursPlayed >= minHours && g.HoursPlayed <= maxHours);
-                    }
-
-                    if (gameFilters.MetacriticRange?.Length == 2)
-                    {
-                        var minMetacritic = gameFilters.MetacriticRange[0];
-                        var maxMetacritic = gameFilters.MetacriticRange[1];
-                        query = query.Where(g => g.Metacritic == null || (g.Metacritic >= minMetacritic && g.Metacritic <= maxMetacritic));
-                    }
-
-                    if (!string.IsNullOrEmpty(gameFilters.PurchaseDate))
-                    {
-                        query = query.Where(g => g.PurchaseDate == gameFilters.PurchaseDate);
-                    }
-                }
+                query = query.ApplyFilters(gameFilters);
             }
-            catch (JsonException)
-            {
-                // Se il parsing JSON fallisce, ignora i filtri
-            }
+            catch (JsonException) { }
         }
 
-        // Applica ordinamento
-        if (!string.IsNullOrEmpty(queryParams.SortBy))
+        query = query.ApplySorting(queryParams.SortBy, queryParams.SortOrder);
+
+        var projectedQuery = query.Select(g => new GameDto
         {
-            var isAscending = queryParams.SortOrder?.ToLower() != "desc";
+            Id = g.Id,
+            Title = g.Title,
+            Platform = g.Platform,
+            ReleaseYear = g.ReleaseYear,
+            Genres = g.Genres,
+            Status = g.Status.ToString(),
+            CoverImage = g.CoverImage,
+            Price = g.Price,
+            PurchaseDate = g.PurchaseDate,
+            Developer = g.Developer,
+            Publisher = g.Publisher,
+            CompletionDate = g.CompletionDate,
+            PlatinumDate = g.PlatinumDate,
+            HoursPlayed = g.HoursPlayed,
+            Metacritic = g.Metacritic,
+            Rating = g.Rating,
+            HltbMainExtra = g.HltbMainExtra,
+            HltbCompletionist = g.HltbCompletionist,
+            Notes = g.Notes,
+            UserId = g.UserId
+        });
 
-            query = queryParams.SortBy.ToLower() switch
-            {
-                "title" => isAscending ? query.OrderBy(g => g.Title) : query.OrderByDescending(g => g.Title),
-                "releasedate" => isAscending
-                    ? query.OrderBy(g => g.ReleaseYear)
-                    : query.OrderByDescending(g => g.ReleaseYear),
-                "hoursplayed" => isAscending
-                    ? query.OrderBy(g => g.HoursPlayed)
-                    : query.OrderByDescending(g => g.HoursPlayed),
-                "rating" => isAscending ? query.OrderBy(g => g.Rating) : query.OrderByDescending(g => g.Rating),
-                "metacritic" => isAscending
-                    ? query.OrderBy(g => g.Metacritic)
-                    : query.OrderByDescending(g => g.Metacritic),
-                "price" => isAscending ? query.OrderBy(g => g.Price) : query.OrderByDescending(g => g.Price),
-                "purchasedate" => isAscending
-                    ? query.OrderBy(g => g.PurchaseDate)
-                    : query.OrderByDescending(g => g.PurchaseDate),
-                _ => query.OrderBy(g => g.Title)
-            };
-        }
-        else
+        var paginatedGames = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
+        
+        foreach (var item in paginatedGames.Items)
         {
-            query = query.OrderBy(g => g.Title);
+            item.CoverImage = ImageUrlHelper.DecodeImageUrl(item.CoverImage);
         }
-
-        query = query.Include(g => g.Comments);
-        var paginatedGames = await query.PaginateAsync(queryParams.Page, queryParams.PageSize);
-        var mappedItems = mapper.Map<List<GameDto>>(paginatedGames.Items);
 
         return new PaginatedResult<object>
         {
-            Items = mappedItems.Cast<object>().ToList(),
+            Items = paginatedGames.Items.Cast<object>().ToList(),
             TotalItems = paginatedGames.TotalItems,
             TotalPages = paginatedGames.TotalPages,
             CurrentPage = paginatedGames.CurrentPage,
@@ -146,15 +97,13 @@ public class GameService(
 
     public async Task<GameDto?> GetGameByIdAsync(int userId, int gameId)
     {
-        var game = await dbContext.Games.Include(g => g.Comments)
-            .FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-            
-        return game == null ? throw new KeyNotFoundException("Gioco non trovato.") : mapper.Map<GameDto>(game);
+        var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId, q => q.AsSplitQuery().Include(g => g.Comments));
+        return mapper.Map<GameDto>(game);
     }
 
     public async Task<GameDto?> GetGameByTitleAsync(int userId, string title)
     {
-        var game = await dbContext.Games.Include(g => g.Comments)
+        var game = await dbContext.Games.AsNoTracking().AsSplitQuery().Include(g => g.Comments)
             .FirstOrDefaultAsync(g => g.Title == title && g.UserId == userId);
             
         return game == null ? throw new KeyNotFoundException("Gioco non trovato.") : mapper.Map<GameDto>(game);
@@ -163,6 +112,7 @@ public class GameService(
     public async Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null)
     {
         var game = await dbContext.Games
+            .AsNoTracking()
             .Include(g => g.User)
             .FirstOrDefaultAsync(g => g.Id == gameId);
 
@@ -195,7 +145,7 @@ public class GameService(
             title = game.Title,
             platform = game.Platform,
             releaseYear = game.ReleaseYear,
-            coverImage = game.CoverImage,
+            coverImage = ImageUrlHelper.DecodeImageUrl(game.CoverImage),
             developer = game.Developer,
             publisher = game.Publisher,
             userId = game.UserId,
@@ -218,6 +168,8 @@ public class GameService(
     {
         var game = mapper.Map<Game>(gameDto);
         game.UserId = userId;
+        game.CoverImage = ImageUrlHelper.EncodeImageUrl(game.CoverImage);
+        game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
 
         if (gameDto.Review != null)
         {
@@ -243,12 +195,13 @@ public class GameService(
 
     public async Task<GameDto?> UpdateGameAsync(int userId, int gameId, UpdateGameDto updateDto)
     {
-        var game = await dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
         var previousRating = game.Rating;
 
         mapper.Map(updateDto, game);
+        game.CoverImage = ImageUrlHelper.EncodeImageUrl(game.CoverImage);
+        game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
 
         if (updateDto.Price.HasValue)
         {
@@ -262,7 +215,7 @@ public class GameService(
 
         if (updateDto.PurchaseDate != null)
         {
-            game.PurchaseDate = string.IsNullOrEmpty(updateDto.PurchaseDate) ? null : updateDto.PurchaseDate;
+            game.PurchaseDate = updateDto.PurchaseDate;
         }
 
         if (updateDto.ReleaseYear.HasValue)
@@ -301,8 +254,7 @@ public class GameService(
 
     public async Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status)
     {
-        var game = await dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
         await StatusChangeFunctionAsync(status, game, userId);
         await dbContext.SaveChangesAsync();
@@ -312,7 +264,7 @@ public class GameService(
     private async Task StatusChangeFunctionAsync(string status, Game game, int userId)
     {
         var previousStatus = game.Status.ToString();
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         if (Enum.TryParse<GameStatus>(status, out var newStatus))
         {
@@ -326,8 +278,7 @@ public class GameService(
                     break;
                 case GameStatus.Platinum:
                     game.PlatinumDate = today;
-                    if (string.IsNullOrEmpty(game.CompletionDate))
-                        game.CompletionDate = today;
+                    game.CompletionDate ??= today;
                     break;
                 case GameStatus.NotStarted:
                 case GameStatus.InProgress:
@@ -348,8 +299,7 @@ public class GameService(
 
     public async Task<GameDto?> UpdateGamePlaytimeAsync(int userId, int gameId, int hoursPlayed)
     {
-        var game = await dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
         await PlaytimeChangeFunctionAsync(hoursPlayed, game, userId);
 
@@ -374,8 +324,7 @@ public class GameService(
 
     public async Task<bool> DeleteGameAsync(int userId, int gameId)
     {
-        var game = await dbContext.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.UserId == userId);
-        if (game == null) throw new KeyNotFoundException("Gioco non trovato.");
+        var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
             
         dbContext.Games.Remove(game);
         await dbContext.SaveChangesAsync();
@@ -387,6 +336,7 @@ public class GameService(
     public async Task<PaginatedResult<object>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams)
     {
         var query = dbContext.Games
+            .AsNoTracking()
             .Where(g => g.UserId == userId && g.Status == GameStatus.InProgress)
             .OrderByDescending(g => g.Id);
 
@@ -401,7 +351,18 @@ public class GameService(
             g.Genres
         });
 
-        return await projectedQuery.PaginateAsync<object>(queryParams);
+        var paginatedGames = await projectedQuery.PaginateAsync(queryParams);
+
+        var items = paginatedGames.Items.Select(g => g with { CoverImage = ImageUrlHelper.DecodeImageUrl(g.CoverImage) }).Cast<object>().ToList();
+
+        return new PaginatedResult<object>
+        {
+            Items = items,
+            TotalItems = paginatedGames.TotalItems,
+            TotalPages = paginatedGames.TotalPages,
+            CurrentPage = paginatedGames.CurrentPage,
+            PageSize = paginatedGames.PageSize
+        };
     }
 
 

@@ -19,7 +19,11 @@ public class CommunityService(
 {
     public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)
     {
-        var allGames = await context.Games
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
+        
+        var query = context.Games.AsNoTracking().Where(g => g.NormalizedTitle == normalizedTitle);
+
+        var games = await query
             .Select(g => new
             {
                 g.Id,
@@ -31,7 +35,6 @@ public class CommunityService(
             })
             .ToListAsync();
 
-        var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
         if (games.Count == 0)
         {
             return new CommunityStatsDto();
@@ -69,25 +72,23 @@ public class CommunityService(
 
     public async Task<decimal> GetCommunityRatingAsync(string gameTitle)
     {
-        var games = await context.Games
-            .Where(g => g.Rating > 0)
-            .ToListAsync();
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
+        
+        var query = context.Games.AsNoTracking().Where(g => g.Rating > 0 && g.NormalizedTitle == normalizedTitle);
 
-        games = games.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
+        var rating = await query.AverageAsync(g => (decimal?)g.Rating);
 
-        return games.Count > 0 ? Math.Round(games.Average(g => g.Rating), 2) : 0;
+        return rating.HasValue ? Math.Round(rating.Value, 2) : 0;
     }
 
     public async Task<CommunityRatingDto> GetCommunityRatingWithCountAsync(string gameTitle)
     {
-        var games = await context.Games
-            .Where(g => g.Rating > 0)
-            .ToListAsync();
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
+        
+        var query = context.Games.AsNoTracking().Where(g => g.Rating > 0 && g.NormalizedTitle == normalizedTitle);
 
-        games = games.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle)).ToList();
-
-        var reviewCount = games.Count;
-        var rating = reviewCount > 0 ? Math.Round(games.Average(g => g.Rating), 2) : 0;
+        var reviewCount = await query.CountAsync();
+        var rating = reviewCount > 0 ? await query.AverageAsync(g => g.Rating) : 0;
 
         return new CommunityRatingDto
         {
@@ -126,37 +127,59 @@ public class CommunityService(
     public async Task<PaginatedResult<CommunityReviewDto>> GetReviewsAsync(string gameTitle, PaginationQueryParameters queryParams,
         int? currentUserId = null)
     {
-        var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: true, currentUserId);
-        var query = games.OrderByDescending(g => g.Review!.Date).AsQueryable();
+        var query = GetPublicGamesMatchingTitleQuery(gameTitle, currentUserId);
+        
+        var sortedQuery = query.OrderByDescending(g => g.Review!.Date).ThenByDescending(g => g.Id);
+        
+        var projectedQuery = sortedQuery.Select(g => new
+        {
+            g.Id,
+            g.Title,
+            UserId = g.User != null ? g.User.Id : 0,
+            UserName = g.User != null ? g.User.UserName : "Utente sconosciuto",
+            Avatar = g.User != null ? g.User.Avatar : null,
+            ReviewText = g.Review != null ? g.Review.Text : "",
+            ReviewGameplay = g.Review != null ? g.Review.Gameplay : 0,
+            ReviewGraphics = g.Review != null ? g.Review.Graphics : 0,
+            ReviewStory = g.Review != null ? g.Review.Story : 0,
+            ReviewSound = g.Review != null ? g.Review.Sound : 0,
+            OverallRating = g.Rating,
+            ReviewDate = g.Review != null && g.Review.Date.HasValue ? g.Review.Date.Value : DateTime.MinValue,
+            CommentsCount = g.ReviewComments.Count
+        });
 
-        var result = await query.PaginateAsync(queryParams);
+        // The query is now fully filtered by NormalizedTitle in the database. We can paginate directly via EF Core!
+        var paginatedResult = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
+
+        var resultItems = paginatedResult.Items.Select(g => new CommunityReviewDto
+        {
+            GameTitle = g.Title,
+            Username = g.UserName ?? "Utente sconosciuto",
+            Avatar = g.Avatar,
+            Text = g.ReviewText,
+            Gameplay = g.ReviewGameplay,
+            Graphics = g.ReviewGraphics,
+            Story = g.ReviewStory,
+            Sound = g.ReviewSound,
+            OverallRating = g.OverallRating,
+            Date = g.ReviewDate,
+            CommentsCount = g.CommentsCount
+        }).ToList();
 
         return new PaginatedResult<CommunityReviewDto>
         {
-            Items = result.Items.Select(mapper.Map<CommunityReviewDto>).ToList(),
-            TotalItems = result.TotalItems,
-            CurrentPage = result.CurrentPage,
-            PageSize = result.PageSize,
-            TotalPages = result.TotalPages
+            Items = resultItems,
+            TotalItems = paginatedResult.TotalItems,
+            CurrentPage = paginatedResult.CurrentPage,
+            PageSize = paginatedResult.PageSize,
+            TotalPages = paginatedResult.TotalPages
         };
     }
 
     [UsedImplicitly]
     public async Task<PaginatedResult<CommunityReviewDto>> GetPublicReviewsAsync(string gameTitle, PaginationQueryParameters queryParams)
     {
-        var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: true);
-        var query = games.OrderByDescending(g => g.Review!.Date).AsQueryable();
-
-        var result = await query.PaginateAsync(queryParams);
-
-        return new PaginatedResult<CommunityReviewDto>
-        {
-            Items = result.Items.Select(mapper.Map<CommunityReviewDto>).ToList(),
-            TotalItems = result.TotalItems,
-            CurrentPage = result.CurrentPage,
-            PageSize = result.PageSize,
-            TotalPages = result.TotalPages
-        };
+        return await GetReviewsAsync(gameTitle, queryParams);
     }
 
     public async Task<ReviewStatsDto> GetReviewStatsAsync(string gameTitle)
@@ -227,22 +250,28 @@ public class CommunityService(
 
     private async Task<List<Game>> GetPublicGamesMatchingTitleAsync(string gameTitle, bool includeDetails = false, int? currentUserId = null)
     {
-        var query = context.Games.Where(g => g.Review != null && g.Review.IsPublic == true);
+        var query = GetPublicGamesMatchingTitleQuery(gameTitle, currentUserId);
 
         if (includeDetails)
         {
-            query = query.Include(g => g.User).Include(g => g.ReviewComments);
+            query = query.AsSplitQuery().Include(g => g.User).Include(g => g.ReviewComments);
         }
 
-        var allGames = await query.ToListAsync();
-
-        var games = allGames.Where(g => GameTitleMatcher.DoesGameTitleMatch(g.Title, gameTitle));
+        return await query.ToListAsync();
+    }
+    
+    private IQueryable<Game> GetPublicGamesMatchingTitleQuery(string gameTitle, int? currentUserId = null)
+    {
+        var query = context.Games.AsNoTracking().Where(g => g.Review != null && g.Review.IsPublic == true);
 
         if (currentUserId.HasValue)
         {
-            games = games.Where(g => g.UserId != currentUserId.Value);
+            query = query.Where(g => g.UserId != currentUserId.Value);
         }
 
-        return games.ToList();
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
+        query = query.Where(g => g.NormalizedTitle == normalizedTitle);
+
+        return query;
     }
 }

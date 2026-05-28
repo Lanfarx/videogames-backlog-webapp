@@ -15,6 +15,8 @@ public class Wishlist : IUserOwnedEntity
     [Required]
     public string Title { get; set; } = string.Empty;
 
+    public string NormalizedTitle { get; set; } = string.Empty;
+
     public string? CoverImage { get; set; }
 
     public int ReleaseYear { get; set; }
@@ -24,7 +26,7 @@ public class Wishlist : IUserOwnedEntity
     public int? Metacritic { get; set; }
 
     // Data di aggiunta alla wishlist
-    public string AddedDate { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-dd");
+    public DateOnly AddedDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     // ID del gioco su RAWG per poter recuperare i dettagli
     public int RawgId { get; set; }

@@ -14,7 +14,7 @@ public class GameStatsService(AppDbContext dbContext) : IGameStatsService
 
     public async Task<GameStatsDto> GetUserStatsAsync(int userId)
     {
-        var games = await dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
+        var games = await dbContext.Games.AsNoTracking().Where(g => g.UserId == userId).ToListAsync();
 
         var totalSpent = games.Where(g => g.Price > 0).Sum(g => g.Price ?? 0);
         var freeGames = games.Count(g => g.Price is 0 or null or -1);

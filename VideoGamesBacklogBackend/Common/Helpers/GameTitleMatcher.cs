@@ -13,28 +13,15 @@ public static partial class GameTitleMatcher
     // (es. Evitare di trasformare "VIII" in "V" + "III"). Risolve bug nascosti nell'implementazione precedente.
     private static readonly (string Roman, string Arabic)[] RomanToArabic =
     [
-        (" VIII", " 8"),
-        (" VII", " 7"),
-        (" III", " 3"),
-        (" IV", " 4"),
-        (" VI", " 6"),
-        (" IX", " 9"),
-        (" II", " 2"),
-        (" V", " 5"),
-        (" X", " 10")
-    ];
-
-    private static readonly (string Arabic, string Roman)[] ArabicToRoman =
-    [
-        (" 10", " X"),
-        (" 9", " IX"),
-        (" 8", " VIII"),
-        (" 7", " VII"),
-        (" 6", " VI"),
-        (" 5", " V"),
-        (" 4", " IV"),
-        (" 3", " III"),
-        (" 2", " II")
+        ("VIII", "8"),
+        ("VII", "7"),
+        ("III", "3"),
+        ("IV", "4"),
+        ("VI", "6"),
+        ("IX", "9"),
+        ("II", "2"),
+        ("V", "5"),
+        ("X", "10")
     ];
 
     // Suffixes ordinati per lunghezza decrescente
@@ -74,7 +61,7 @@ public static partial class GameTitleMatcher
         
         foreach (var (roman, arabic) in RomanToArabic)
         {
-            normalized = normalized.Replace(roman, arabic, StringComparison.OrdinalIgnoreCase);
+            normalized = Regex.Replace(normalized, $@"\b{roman}\b", arabic, RegexOptions.IgnoreCase);
         }
 
         return normalized;
@@ -97,19 +84,6 @@ public static partial class GameTitleMatcher
             break;
         }
 
-        return result;
-    }
-
-    private static string ConvertArabicToRoman(string title)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-            return string.Empty;
-
-        var result = title.Trim();
-        foreach (var (arabic, roman) in ArabicToRoman)
-        {
-            result = result.Replace(arabic, roman, StringComparison.OrdinalIgnoreCase);
-        }
         return result;
     }
 
@@ -151,62 +125,20 @@ public static partial class GameTitleMatcher
         return string.IsNullOrWhiteSpace(title) ? string.Empty : LeadingArticlesRegex().Replace(title.Trim(), string.Empty);
     }
 
-    public static bool DoesGameTitleMatch(string gameTitle, string searchTitle)
+    /// <summary>
+    /// Restituisce il titolo completamente normalizzato da usare come colonna nel database per match precisi.
+    /// Applica tutti i passaggi di normalizzazione: spazi, numeri romani, edizioni, punteggiatura e articoli.
+    /// </summary>
+    public static string GetFullyNormalizedTitle(string title)
     {
-        if (string.IsNullOrWhiteSpace(gameTitle) || string.IsNullOrWhiteSpace(searchTitle))
-            return false;
+        if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
-        // 1. Exact match (più veloce)
-        if (gameTitle.Equals(searchTitle, StringComparison.OrdinalIgnoreCase))
-            return true;
-        
-        // 2. Normalizzazione di base: spazi multipli e '&' -> 'and'
-        var cleanGame = NormalizeWhitespacesAndAnds(gameTitle);
-        var cleanSearch = NormalizeWhitespacesAndAnds(searchTitle);
-        
-        if (cleanGame.Equals(cleanSearch, StringComparison.OrdinalIgnoreCase))
-            return true;
+        var cleanTitle = NormalizeWhitespacesAndAnds(title);
+        var normTitle = NormalizeGameTitle(cleanTitle);
+        var withoutEdition = RemoveEditionSuffixes(normTitle);
+        var noPunct = RemovePunctuationAndDiacritics(withoutEdition);
+        var noArticles = RemoveLeadingArticles(noPunct);
 
-        // 3. Normalizzazione numeri romani in arabi
-        var normGame = NormalizeGameTitle(cleanGame);
-        var normSearch = NormalizeGameTitle(cleanSearch);
-
-        if (normGame.Equals(normSearch, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // 4. Rimozione dei suffissi delle edizioni (GOTY, Special, ecc.)
-        var gameWithoutEdition = RemoveEditionSuffixes(normGame);
-        var searchWithoutEdition = RemoveEditionSuffixes(normSearch);
-
-        if (gameWithoutEdition.Equals(searchWithoutEdition, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // 5. Fallback conversione da arabo a romano (casi limite)
-        var gameRoman = ConvertArabicToRoman(normGame);
-        var searchRoman = ConvertArabicToRoman(normSearch);
-
-        if (gameRoman.Equals(normSearch, StringComparison.OrdinalIgnoreCase) ||
-            normGame.Equals(searchRoman, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        // 6. Normalizzazione "Hard": Rimozione punteggiatura (-, :, ') e accenti/diacritici
-        var gameNoPunct = RemovePunctuationAndDiacritics(gameWithoutEdition);
-        var searchNoPunct = RemovePunctuationAndDiacritics(searchWithoutEdition);
-
-        if (gameNoPunct.Equals(searchNoPunct, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // 7. Ultima spiaggia: rimozione articoli iniziali ("The ", "A ", "An ")
-        var gameNoArticles = RemoveLeadingArticles(gameNoPunct);
-        var searchNoArticles = RemoveLeadingArticles(searchNoPunct);
-
-        return gameNoArticles.Equals(searchNoArticles, StringComparison.OrdinalIgnoreCase);
-    }
-
-    public static T? FindMatchingGame<T>(IEnumerable<T> games, Func<T, string> titleSelector, string searchTitle) where T : class
-    {
-        return games.FirstOrDefault(game => DoesGameTitleMatch(titleSelector(game), searchTitle));
+        return noArticles.ToLowerInvariant();
     }
 }

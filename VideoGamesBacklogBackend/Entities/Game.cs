@@ -33,6 +33,7 @@ public class Game : IUserOwnedEntity
 
     [Required]
     public string Title { get; set; } = string.Empty;
+    public string NormalizedTitle { get; set; } = string.Empty;
     public string? Platform { get; set; } = string.Empty;
     public int ReleaseYear { get; set; }
     public string[] Genres { get; set; } = [];
@@ -46,12 +47,12 @@ public class Game : IUserOwnedEntity
     public decimal? Price { get; set; }
 
     // Inizializza la data di acquisto alla data attuale (formato ISO)
-    public string? PurchaseDate { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-dd");
+    public DateOnly? PurchaseDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     public string? Developer { get; set; }
     public string? Publisher { get; set; }
-    public string? CompletionDate { get; set; }
-    public string? PlatinumDate { get; set; }
+    public DateOnly? CompletionDate { get; set; }
+    public DateOnly? PlatinumDate { get; set; }
 
     public int HoursPlayed { get; set; }
     public int? Metacritic { get; set; }
@@ -88,7 +89,7 @@ public class GameReview
     public decimal Graphics { get; set; }
     public decimal Story { get; set; }
     public decimal Sound { get; set; }
-    public string Date { get; set; } = string.Empty;
+    public DateTime? Date { get; set; } = DateTime.UtcNow;
     public bool? IsPublic { get; set; }
 }
 

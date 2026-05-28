@@ -8,6 +8,7 @@ using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Activities;
 using VideoGamesBacklogBackend.Interfaces.Social;
+using VideoGamesBacklogBackend.Common.Helpers;
 
 namespace VideoGamesBacklogBackend.Services.Activities;
 
@@ -20,54 +21,15 @@ public class ActivityService(
 {
     public async Task<PaginatedResult<ActivityDto>> GetActivitiesAsync(int userId, ActivityQueryParameters queryParams)
     {
-        var query = context.Activities
-            .Include(a => a.Game)
-            .Include(a => a.Reactions)
-            .ThenInclude(r => r.User)
-            .Include(a => a.ActivityComments)
-            .ThenInclude(c => c.Author)
-            .Where(a => a.Game!.UserId == userId);
-
-        if (queryParams.Types?.Length > 0)
-        {
-            query = query.Where(a => queryParams.Types.Contains(a.Type));
-        }
-
-        if (queryParams.Year.HasValue)
-        {
-            query = query.Where(a => a.Timestamp.Year == queryParams.Year.Value);
-        }
-
-        if (queryParams.Month.HasValue)
-        {
-            query = query.Where(a => a.Timestamp.Month == queryParams.Month.Value);
-        }
-
-        if (queryParams.GameId.HasValue)
-        {
-            query = query.Where(a => a.GameId == queryParams.GameId.Value);
-        }
-
-        query = queryParams.SortOrder?.ToLower() == "asc"
-            ? query.OrderBy(a => a.Timestamp)
-            : query.OrderByDescending(a => a.Timestamp);
-
-        var result = await query.PaginateAsync(queryParams.Page, queryParams.PageSize);
-
-        return new PaginatedResult<ActivityDto>
-        {
-            Items = result.Items.Select(activity =>
-                mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId)).ToList(),
-            TotalItems = result.TotalItems,
-            PageSize = result.PageSize,
-            CurrentPage = result.CurrentPage,
-            TotalPages = result.TotalPages
-        };
+        var query = context.Activities.AsNoTracking().Where(a => a.Game!.UserId == userId);
+        return await GetPaginatedActivitiesInternalAsync(query, userId, queryParams);
     }
 
     public async Task<ActivityDto?> GetActivityByIdAsync(int activityId, int userId)
     {
         var activity = await context.Activities
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(a => a.Game)
             .Include(a => a.Reactions)
             .ThenInclude(r => r.User)
@@ -97,6 +59,7 @@ public class ActivityService(
         context.Activities.Add(activity);
         await context.SaveChangesAsync();
         var createdActivity = await context.Activities
+            .AsSplitQuery()
             .Include(a => a.Game)
             .Include(a => a.Reactions)
             .ThenInclude(r => r.User)
@@ -111,6 +74,7 @@ public class ActivityService(
         UpdateActivityDto updateActivityDto)
     {
         var activity = await context.Activities
+            .AsSplitQuery()
             .Include(a => a.Game)
             .Include(a => a.Reactions)
             .ThenInclude(r => r.User)
@@ -149,6 +113,8 @@ public class ActivityService(
     public async Task<List<ActivityDto>> GetRecentActivitiesAsync(int userId, int count = 10)
     {
         var activities = await context.Activities
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(a => a.Game)
             .Include(a => a.Reactions)
             .ThenInclude(r => r.User)
@@ -166,6 +132,8 @@ public class ActivityService(
     public async Task<List<ActivityDto>> GetActivitiesByGameAsync(int gameId, int userId)
     {
         var activities = await context.Activities
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(a => a.Game)
             .Include(a => a.Reactions)
             .ThenInclude(r => r.User)
@@ -182,6 +150,7 @@ public class ActivityService(
     public async Task<Dictionary<string, int>> GetActivityStatsByTypeAsync(int userId, int? year = null)
     {
         var query = context.Activities
+            .AsNoTracking()
             .Include(a => a.Game)
             .Where(a => a.Game!.UserId == userId);
 
@@ -398,14 +367,26 @@ public class ActivityService(
             throw new UnauthorizedAccessException("Non hai i permessi per visualizzare il diario di questo utente");
         } 
 
-        var query = context.Activities
-            .Include(a => a.Game)
-            .Include(a => a.Reactions)
-            .ThenInclude(r => r.User)
-            .Include(a => a.ActivityComments)
-            .ThenInclude(c => c.Author)
-            .Where(a => a.Game!.UserId == targetUserId);
+        var query = context.Activities.AsNoTracking().Where(a => a.Game!.UserId == targetUserId);
+        return await GetPaginatedActivitiesInternalAsync(query, currentUserId, queryParams);
+    }
 
+    public async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
+    {
+        if (targetUserId == currentUserId) return true;
+
+        var targetUser = await context.Users.FindAsync(targetUserId);
+        if (targetUser == null) return false;
+
+        if (!targetUser.PrivacySettings.IsPrivate) return true;
+        return await friendshipService.AreUsersFriendsAsync(currentUserId, targetUserId);
+    }
+
+    private static async Task<PaginatedResult<ActivityDto>> GetPaginatedActivitiesInternalAsync(
+        IQueryable<Activity> query,
+        int currentUserId,
+        ActivityQueryParameters queryParams)
+    {
         if (queryParams.Types?.Length > 0)
         {
             query = query.Where(a => queryParams.Types.Contains(a.Type));
@@ -426,30 +407,69 @@ public class ActivityService(
             query = query.Where(a => a.GameId == queryParams.GameId.Value);
         }
 
-        query = queryParams.SortOrder?.ToLower() == "asc" ? query.OrderBy(a => a.Timestamp) : query.OrderByDescending(a => a.Timestamp);
+        var sortedQuery = queryParams.SortOrder?.ToLower() == "asc"
+            ? query.OrderBy(a => a.Timestamp).ThenBy(a => a.Id)
+            : query.OrderByDescending(a => a.Timestamp).ThenByDescending(a => a.Id);
 
-        var result = await query.PaginateAsync(queryParams.Page, queryParams.PageSize);
+        var projectedQuery = sortedQuery.AsSplitQuery().Select(a => new
+        {
+            a.Id,
+            a.Type,
+            a.GameId,
+            a.GameTitle,
+            a.Timestamp,
+            a.AdditionalInfo,
+            GameImageUrl = a.Game != null ? a.Game.CoverImage : null,
+            CommentsCount = a.ActivityComments.Count,
+            Reactions = a.Reactions.Select(r => new { r.UserId, r.Emoji, UserName = r.User != null ? r.User.UserName : null }).ToList(),
+            Comments = a.ActivityComments.Select(c => new { c.Id, c.Text, c.Date, c.AuthorId, UserName = c.Author != null ? c.Author.UserName : null, Avatar = c.Author != null ? c.Author.Avatar : null, c.ActivityId }).ToList()
+        });
+
+        var result = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
+
+        var items = result.Items.Select(a => new ActivityDto
+        {
+            Id = a.Id,
+            Type = a.Type,
+            GameId = a.GameId,
+            GameTitle = a.GameTitle,
+            Timestamp = a.Timestamp,
+            AdditionalInfo = a.AdditionalInfo,
+            GameImageUrl = ImageUrlHelper.DecodeImageUrl(a.GameImageUrl),
+            CommentsCount = a.CommentsCount,
+            UserReaction = a.Reactions.FirstOrDefault(r => r.UserId == currentUserId)?.Emoji,
+            ReactionsSummary = a.Reactions.GroupBy(r => r.Emoji).Select(g => new ActivityReactionSummaryDto
+            {
+                Emoji = g.Key,
+                Count = g.Count(),
+                UserNames = g.Where(r => !string.IsNullOrEmpty(r.UserName)).Select(r => r.UserName!).ToList()
+            }).ToList(),
+            ReactionCounts = a.Reactions.GroupBy(r => r.Emoji).ToDictionary(g => g.Key, g => g.Count()),
+            Reactions = a.Reactions.Select(r => new ActivityReactionDto
+            {
+                Emoji = r.Emoji,
+                UserId = r.UserId,
+                UserName = r.UserName
+            }).ToList(),
+            Comments = a.Comments.Select(c => new ActivityCommentDto
+            {
+                Id = c.Id,
+                Text = c.Text,
+                Date = c.Date,
+                AuthorId = c.AuthorId,
+                AuthorUsername = c.UserName ?? "Utente sconosciuto",
+                AuthorAvatar = c.Avatar,
+                ActivityId = c.ActivityId
+            }).ToList()
+        }).ToList();
 
         return new PaginatedResult<ActivityDto>
         {
-            Items = result.Items
-                .Select(a => mapper.Map<ActivityDto>(a, opt => opt.Items["CurrentUserId"] = currentUserId))
-                .ToList(),
+            Items = items,
             TotalItems = result.TotalItems,
-            CurrentPage = result.CurrentPage,
             PageSize = result.PageSize,
+            CurrentPage = result.CurrentPage,
             TotalPages = result.TotalPages
         };
-    }
-
-    public async Task<bool> CanViewUserDiary(int targetUserId, int currentUserId)
-    {
-        if (targetUserId == currentUserId) return true;
-
-        var targetUser = await context.Users.FindAsync(targetUserId);
-        if (targetUser == null) return false;
-
-        if (!targetUser.PrivacySettings.IsPrivate) return true;
-        return await friendshipService.AreUsersFriendsAsync(currentUserId, targetUserId);
     }
 }

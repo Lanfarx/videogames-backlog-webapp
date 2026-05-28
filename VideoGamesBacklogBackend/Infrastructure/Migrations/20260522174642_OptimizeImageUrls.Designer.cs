@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VideoGamesBacklogBackend.Infrastructure.Data;
@@ -11,9 +12,11 @@ using VideoGamesBacklogBackend.Infrastructure.Data;
 namespace VideoGamesBacklogBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522174642_OptimizeImageUrls")]
+    partial class OptimizeImageUrls
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,8 +202,9 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -288,8 +292,8 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly?>("CompletionDate")
-                        .HasColumnType("date");
+                    b.Property<string>("CompletionDate")
+                        .HasColumnType("text");
 
                     b.Property<string>("CoverImage")
                         .HasColumnType("text");
@@ -313,18 +317,14 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<int?>("Metacritic")
                         .HasColumnType("integer");
 
-                    b.Property<string>("NormalizedTitle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("PlatinumDate")
-                        .HasColumnType("date");
+                    b.Property<string>("PlatinumDate")
+                        .HasColumnType("text");
 
                     b.Property<decimal?>("Price")
                         .HasColumnType("numeric");
@@ -332,8 +332,8 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<string>("Publisher")
                         .HasColumnType("text");
 
-                    b.Property<DateOnly?>("PurchaseDate")
-                        .HasColumnType("date");
+                    b.Property<string>("PurchaseDate")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("Rating")
                         .HasColumnType("numeric");
@@ -354,8 +354,6 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NormalizedTitle");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("Games");
@@ -369,8 +367,9 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("GameId")
                         .HasColumnType("integer");
@@ -439,8 +438,9 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<int>("AuthorId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ReviewGameId")
                         .HasColumnType("integer");
@@ -552,8 +552,9 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly>("AddedDate")
-                        .HasColumnType("date");
+                    b.Property<string>("AddedDate")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("CoverImage")
                         .HasColumnType("text");
@@ -564,10 +565,6 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<int?>("Metacritic")
                         .HasColumnType("integer");
-
-                    b.Property<string>("NormalizedTitle")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
@@ -586,8 +583,6 @@ namespace VideoGamesBacklogBackend.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("NormalizedTitle");
 
                     b.HasIndex("UserId");
 
@@ -726,8 +721,9 @@ namespace VideoGamesBacklogBackend.Migrations
                             b1.Property<int>("GameId")
                                 .HasColumnType("integer");
 
-                            b1.Property<DateTime?>("Date")
-                                .HasColumnType("timestamp with time zone");
+                            b1.Property<string>("Date")
+                                .IsRequired()
+                                .HasColumnType("text");
 
                             b1.Property<decimal>("Gameplay")
                                 .HasColumnType("numeric");

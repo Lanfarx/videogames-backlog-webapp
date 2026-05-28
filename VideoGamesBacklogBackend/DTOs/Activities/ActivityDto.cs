@@ -114,7 +114,7 @@ public class ActivityCommentDto
 {
     public int Id { get; set; }
     public string Text { get; set; } = string.Empty;
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public int AuthorId { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
     public string? AuthorAvatar { get; set; }

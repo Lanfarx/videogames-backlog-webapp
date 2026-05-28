@@ -7,6 +7,6 @@ public class UpdateGameReviewDto
     public decimal? Graphics { get; set; }
     public decimal? Story { get; set; }
     public decimal? Sound { get; set; }
-    public string? Date { get; set; }
+    public DateTime? Date { get; set; }
     public bool? IsPublic { get; set; }
 }

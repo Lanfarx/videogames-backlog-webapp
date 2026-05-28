@@ -4,11 +4,10 @@ using VideoGamesBacklogBackend.Entities;
 
 namespace VideoGamesBacklogBackend.Infrastructure.Data.Configurations;
 
-public class GameConfiguration : IEntityTypeConfiguration<Game>
+public class WishlistConfiguration : IEntityTypeConfiguration<Wishlist>
 {
-    public void Configure(EntityTypeBuilder<Game> builder)
+    public void Configure(EntityTypeBuilder<Wishlist> builder)
     {
-        builder.OwnsOne(g => g.Review);
-        builder.HasIndex(g => g.NormalizedTitle);
+        builder.HasIndex(w => w.NormalizedTitle);
     }
 }

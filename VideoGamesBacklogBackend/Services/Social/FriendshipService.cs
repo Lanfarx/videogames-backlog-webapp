@@ -4,6 +4,7 @@ using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.DTOs.Social;
 using VideoGamesBacklogBackend.Common.DTOs.Pagination;
 using VideoGamesBacklogBackend.Common.Extensions;
+using VideoGamesBacklogBackend.Common.Extensions.Query;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Games;
 using VideoGamesBacklogBackend.Interfaces.Social;
@@ -26,9 +27,8 @@ public class FriendshipService(
         if (!targetUser.PrivacySettings.FriendRequests) throw new ArgumentException("Questo utente non accetta richieste di amicizia.");
 
         var existingFriendship = await context.Friendships
-            .FirstOrDefaultAsync(f =>
-                (f.SenderId == userId && f.ReceiverId == targetUser.Id) ||
-                (f.SenderId == targetUser.Id && f.ReceiverId == userId));
+            .WhereBetweenUsers(userId, targetUser.Id)
+            .FirstOrDefaultAsync();
 
         if (existingFriendship != null)
         {
@@ -72,8 +72,8 @@ public class FriendshipService(
         var friendship = await context.Friendships
             .Include(f => f.Sender)
             .Include(f => f.Receiver)
-            .FirstOrDefaultAsync(f =>
-                f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
+            .WherePendingRequest(userId, friendshipId)
+            .FirstOrDefaultAsync();
 
         if (friendship == null) throw new KeyNotFoundException("Richiesta di amicizia non trovata o non valida.");
 
@@ -95,8 +95,8 @@ public class FriendshipService(
         var friendship = await context.Friendships
             .Include(f => f.Sender)
             .Include(f => f.Receiver)
-            .FirstOrDefaultAsync(f =>
-                f.Id == friendshipId && f.ReceiverId == userId && f.Status == FriendshipStatus.Pending);
+            .WherePendingRequest(userId, friendshipId)
+            .FirstOrDefaultAsync();
 
         if (friendship == null) throw new KeyNotFoundException("Richiesta di amicizia non trovata o non valida.");
 
@@ -115,10 +115,8 @@ public class FriendshipService(
     public async Task<bool> RemoveFriendAsync(int userId, int friendUserId)
     {
         var friendship = await context.Friendships
-            .FirstOrDefaultAsync(f =>
-                ((f.SenderId == userId && f.ReceiverId == friendUserId) ||
-                 (f.SenderId == friendUserId && f.ReceiverId == userId)) &&
-                f.Status == FriendshipStatus.Accepted);
+            .WhereBetweenUsers(userId, friendUserId)
+            .FirstOrDefaultAsync(f => f.Status == FriendshipStatus.Accepted);
 
         if (friendship == null) throw new KeyNotFoundException("Amicizia non trovata.");
 
@@ -130,9 +128,8 @@ public class FriendshipService(
     public async Task<bool> BlockUserAsync(int userId, int targetUserId)
     {
         var existingFriendship = await context.Friendships
-            .FirstOrDefaultAsync(f =>
-                (f.SenderId == userId && f.ReceiverId == targetUserId) ||
-                (f.SenderId == targetUserId && f.ReceiverId == userId));
+            .WhereBetweenUsers(userId, targetUserId)
+            .FirstOrDefaultAsync();
 
         if (existingFriendship != null)
         {
@@ -162,6 +159,7 @@ public class FriendshipService(
     public async Task<List<FriendshipDto>> GetPendingFriendRequestsAsync(int userId)
     {
         return await context.Friendships
+            .AsNoTracking()
             .Include(f => f.Sender)
             .Where(f => f.ReceiverId == userId && f.Status == FriendshipStatus.Pending)
             .Select(f => new FriendshipDto
@@ -181,6 +179,7 @@ public class FriendshipService(
     public async Task<List<FriendshipDto>> GetSentFriendRequestsAsync(int userId)
     {
         return await context.Friendships
+            .AsNoTracking()
             .Include(f => f.Receiver)
             .Where(f => f.SenderId == userId && f.Status == FriendshipStatus.Pending)
             .Select(f => new FriendshipDto
@@ -200,6 +199,8 @@ public class FriendshipService(
     public async Task<List<FriendDto>> GetFriendsAsync(int userId)
     {
         var friendships = await context.Friendships
+            .AsNoTracking()
+            .AsSplitQuery()
             .Include(f => f.Sender)
             .Include(f => f.Receiver)
             .Where(f =>
@@ -247,9 +248,8 @@ public class FriendshipService(
         foreach (var user in result.Items)
         {
             var friendship = await context.Friendships
-                .FirstOrDefaultAsync(f =>
-                    (f.SenderId == userId && f.ReceiverId == user.Id) ||
-                    (f.SenderId == user.Id && f.ReceiverId == userId));
+                .WhereBetweenUsers(userId, user.Id)
+                .FirstOrDefaultAsync();
             var profile = new PublicProfileDto
             {
                 UserId = user.Id,
@@ -288,9 +288,8 @@ public class FriendshipService(
         if (user == null) throw new KeyNotFoundException("Utente non trovato.");
 
         var friendship = await context.Friendships
-            .FirstOrDefaultAsync(f =>
-                (f.SenderId == userId && f.ReceiverId == user.Id) ||
-                (f.SenderId == user.Id && f.ReceiverId == userId));
+            .WhereBetweenUsers(userId, user.Id)
+            .FirstOrDefaultAsync();
 
         var isFriend = friendship?.Status == FriendshipStatus.Accepted;
         var canViewPrivateContent = user.Id == userId || isFriend;
@@ -323,9 +322,7 @@ public class FriendshipService(
     public async Task<bool> AreUsersFriendsAsync(int userId1, int userId2)
     {
         return await context.Friendships
-            .AnyAsync(f =>
-                ((f.SenderId == userId1 && f.ReceiverId == userId2) ||
-                 (f.SenderId == userId2 && f.ReceiverId == userId1)) &&
-                f.Status == FriendshipStatus.Accepted);
+            .WhereBetweenUsers(userId1, userId2)
+            .AnyAsync(f => f.Status == FriendshipStatus.Accepted);
     }
 }

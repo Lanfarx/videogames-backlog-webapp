@@ -10,7 +10,7 @@ public class WishlistDto
     public int ReleaseYear { get; set; }
     public string[] Genres { get; set; } = [];
     public int? Metacritic { get; set; }
-    public string AddedDate { get; set; } = string.Empty;
+    public DateOnly AddedDate { get; set; }
     public int RawgId { get; set; }
     public string? Notes { get; set; }
     public int UserId { get; set; }

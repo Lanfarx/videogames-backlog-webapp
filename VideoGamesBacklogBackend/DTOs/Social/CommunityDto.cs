@@ -42,7 +42,7 @@ public class CommunityReviewDto
     public decimal Story { get; set; }
     public decimal Sound { get; set; }
     public decimal OverallRating { get; set; }
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public int HelpfulVotes { get; set; } // Per future implementazioni di voti utili
     public List<ReviewCommentDto> Comments { get; set; } = []; // Commenti alla recensione
     public int CommentsCount { get; set; } // Numero di commenti
@@ -56,7 +56,7 @@ public class ReviewCommentDto
 {
     public int Id { get; set; }
     public string Text { get; set; } = string.Empty;
-    public string Date { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public int AuthorId { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
     public string? AuthorAvatar { get; set; }
