@@ -41,7 +41,6 @@ public class WishlistService(AppDbContext context, IMapper mapper) : IWishlistSe
 
         var wishlistItem = mapper.Map<Entities.Wishlist>(dto);
         wishlistItem.UserId = userId;
-        wishlistItem.CoverImage = ImageUrlHelper.EncodeImageUrl(wishlistItem.CoverImage);
         wishlistItem.NormalizedTitle = normalizedTitle;
 
         context.Wishlists.Add(wishlistItem);

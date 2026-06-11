@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { syncWithSteam, SteamSyncResponse, UpdatedGameInfo } from '../../store/services/steamService';
@@ -16,7 +16,18 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [syncResult, setSyncResult] = useState<SteamSyncResponse | null>(null);
-  const [showDetails, setShowDetails] = useState(false);  const handleSync = async () => {
+  const [showDetails, setShowDetails] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleSync = async () => {
     if (!userProfile?.steamId) {
       setError('Steam ID non trovato nel profilo. Collega il tuo account Steam nelle impostazioni.');
       return;
@@ -27,9 +38,11 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
     setMessage('');
     setSyncResult(null);
     setShowDetails(false);
+    
+    abortControllerRef.current = new AbortController();
   
-      try {
-      const result = await syncWithSteam(userProfile.steamId, syncType);
+    try {
+      const result = await syncWithSteam(userProfile.steamId, syncType, abortControllerRef.current.signal);
       setMessage(result.message);
       setSyncResult(result);
       
@@ -45,6 +58,10 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
           onHide();
         }, 2000);
       }    } catch (error: any) {
+      if (error.name === 'CanceledError' || error.message === 'canceled') {
+        console.log('Sincronizzazione annullata');
+        return;
+      }
       console.error('Errore sincronizzazione Steam:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Errore durante la sincronizzazione';
       
@@ -58,7 +75,11 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
       setLoading(false);
     }
   };
+
   const handleClose = () => {
+    if (loading && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     if (syncResult) {
       onSyncComplete();
     }

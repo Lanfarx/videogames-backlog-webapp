@@ -41,6 +41,7 @@ interface CommentsSectionProps<T extends BaseComment, C extends CreateCommentDto
     noComments?: string;
     confirmDelete?: string;
   };
+  isEntityOwner?: boolean;
 }
 
 const defaultTexts = {
@@ -59,7 +60,8 @@ function CommentsSection<T extends BaseComment, C extends CreateCommentDto>({
   addComment,
   deleteComment,
   createCommentDto,
-  texts = {}
+  texts = {},
+  isEntityOwner = false
 }: CommentsSectionProps<T, C>) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -235,6 +237,7 @@ function CommentsSection<T extends BaseComment, C extends CreateCommentDto>({
           ) : comments.length > 0 ? (
             <div className="space-y-3">              {comments.map((comment, index) => {
                 const isOwnComment = user && user.userName === comment.authorUsername;
+                const canDelete = isOwnComment || isEntityOwner;
                 const isDeletingThis = deleting === comment.id;
                 
                 return (                  <div 
@@ -284,7 +287,8 @@ function CommentsSection<T extends BaseComment, C extends CreateCommentDto>({
                             })}
                           </span>
                         </div>
-                        {isOwnComment && (                          <button
+                        {canDelete && (                         
+                           <button
                             onClick={() => handleDeleteComment(comment.id)}
                             disabled={isDeletingThis}
                             className="text-text-secondary hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-500/10 disabled:opacity-50"

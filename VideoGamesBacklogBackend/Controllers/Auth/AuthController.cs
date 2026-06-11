@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using VideoGamesBacklogBackend.Common.DTOs.Auth;
 using VideoGamesBacklogBackend.Common.Extensions;
 using VideoGamesBacklogBackend.Interfaces.Auth;
@@ -11,6 +12,7 @@ namespace VideoGamesBacklogBackend.Controllers.Auth;
 public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("register")]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
         var result = await authService.RegisterAsync(model);
@@ -24,6 +26,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var token = await authService.LoginAsync(model);
@@ -32,6 +35,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordModel model)
     {
         var result = await authService.ForgotPasswordAsync(model);
@@ -43,6 +47,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
     {
         var result = await authService.ResetPasswordAsync(model);

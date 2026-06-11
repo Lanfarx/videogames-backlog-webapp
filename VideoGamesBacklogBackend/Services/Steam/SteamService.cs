@@ -24,47 +24,47 @@ public class SteamService(
 
     private readonly string _steamApiKey = steamSettings.Value.ApiKey;
 
-    public async Task<List<SteamGame>> GetSteamGamesAsync(string steamId) =>
+    public async Task<List<SteamGame>> GetSteamGamesAsync(string steamId, CancellationToken cancellationToken = default) =>
         await CallSteamApiAsync<SteamGamesResponse, List<SteamGame>>(
             "GetOwnedGames",
             steamId,
             "include_appinfo=1&include_played_free_games=0&include_free_sub=0",
-            r => r?.Response.Games ?? []);
+            r => r?.Response.Games ?? [], cancellationToken);
 
-    public async Task<List<RecentlyPlayedGame>> GetRecentlyPlayedGamesAsync(string steamId) =>
+    public async Task<List<RecentlyPlayedGame>> GetRecentlyPlayedGamesAsync(string steamId, CancellationToken cancellationToken = default) =>
         await CallSteamApiAsync<RecentlyPlayedGamesResponse, List<RecentlyPlayedGame>>(
             "GetRecentlyPlayedGames",
             steamId,
             "count=0",
-            r => r?.Response.Games ?? []);
+            r => r?.Response.Games ?? [], cancellationToken);
 
-    public async Task<SteamSyncResponse> SyncSteamGamesAsync(string steamId, string syncType, int userId)
+    public async Task<SteamSyncResponse> SyncSteamGamesAsync(string steamId, string syncType, int userId, CancellationToken cancellationToken = default)
     {
         try
         {
-            var steamGames = await GetSteamGamesAsync(steamId);
+            var steamGames = await GetSteamGamesAsync(steamId, cancellationToken);
 
             return syncType switch
             {
-                "initial_load" => await InitialLoadSteamGames(steamGames, userId),
-                "update_hours" => await UpdateGameHours(steamGames, userId, steamId),
+                "initial_load" => await InitialLoadSteamGames(steamGames, userId, cancellationToken),
+                "update_hours" => await UpdateGameHours(steamGames, userId, steamId, cancellationToken),
                 _ => throw new ArgumentException("Tipo di sincronizzazione non valido")
             };
         }
-        catch (Exception ex) when (ex.Message.Contains("Limite di richieste Steam raggiunto"))
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Limite di richieste Steam raggiunto"))
         {
             throw new Exception(
-                "Steam API: troppe richieste. Riprova tra 5-10 minuti. Questo limite protegge i server Steam da sovraccarico.");
+                "Steam API: troppe richieste. Riprova tra 5-10 minuti. Questo limite protegge i server Steam da sovraccarico.", ex);
         }
     }
 
-    private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId)
+    private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId, CancellationToken cancellationToken)
     {
         var existingGamesTitles = await context.Games
             .AsNoTracking()
             .Where(g => g.UserId == userId)
             .Select(g => g.NormalizedTitle)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var newGamesCount = 0;
         var debugInfo = new List<string>();
@@ -73,18 +73,23 @@ public class SteamService(
         debugInfo.Add($"Steam games to process: {steamGames.Count}");
         debugInfo.Add($"Existing games in database: {existingGamesTitles.Count}");
 
-        foreach (var game in from steamGame in steamGames let normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name) 
-                 where !existingGamesTitles.Contains(normalizedTitle) let hoursPlayed = (int)Math.Round(steamGame.PlaytimeForever / 60.0) select new CreateGameDto
+        var newGames = (from steamGame in steamGames 
+                 let normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name) 
+                 where !existingGamesTitles.Contains(normalizedTitle) 
+                 let hoursPlayed = (int)Math.Round(steamGame.PlaytimeForever / 60.0) 
+                 select new CreateGameDto
                  {
                      Title = steamGame.Name,
                      Platform = "Steam",
                      HoursPlayed = hoursPlayed,
                      Status = hoursPlayed > 0 ? "InProgress" : "NotStarted",
                      PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
-                 })
+                 }).ToList();
+
+        if (newGames.Count > 0)
         {
-            await gameService.AddGameAsync(userId, game);
-            newGamesCount++;
+            await gameService.AddGamesBulkAsync(userId, newGames);
+            newGamesCount = newGames.Count;
         }
 
         debugInfo.Add($"New games added: {newGamesCount}");
@@ -108,18 +113,17 @@ public class SteamService(
         public List<string> MatchedGames { get; } = [];
         public List<UpdatedGameInfo> UpdatedGamesInfo { get; } = [];
         public List<string> DebugInfo { get; init; } = [];
+        public List<CreateGameDto> GamesToAdd { get; } = [];
+        public List<(int GameId, int HoursPlayed)> GamesToUpdate { get; } = [];
     }
 
-    private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId)
+    private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId, CancellationToken cancellationToken)
     {
         var existingGamesCount = await context.Games
             .Where(g => g.UserId == userId && g.Platform == "Steam")
-            .CountAsync();
+            .CountAsync(cancellationToken);
 
-        // Delay per evitare rate limiting di Steam
-        await Task.Delay(1000);
-
-        var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId);
+        var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId, cancellationToken);
         
         var syncContext = new SyncContext
         {
@@ -132,21 +136,38 @@ public class SteamService(
             ]
         };
 
+        var normalizedTitles = recentlyPlayedGames
+            .Select(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name))
+            .ToList();
+
+        var existingGames = await context.Games
+            .Where(g => g.UserId == userId && g.Platform == "Steam" && normalizedTitles.Contains(g.NormalizedTitle))
+            .ToListAsync(cancellationToken);
+
         // Elabora SOLO i giochi giocati di recente
         foreach (var recentGame in recentlyPlayedGames)
         {
             var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(recentGame.Name);
-            var existingGame = await context.Games
-                .FirstOrDefaultAsync(g => g.UserId == userId && g.Platform == "Steam" && g.NormalizedTitle == normalizedTitle);
+            var existingGame = existingGames.FirstOrDefault(g => g.NormalizedTitle == normalizedTitle);
 
             if (existingGame != null)
             {
-                await ProcessExistingGameAsync(syncContext, existingGame, recentGame);
+                ProcessExistingGame(syncContext, existingGame, recentGame);
             }
             else
             {
-                await ProcessNewGameAsync(syncContext, recentGame);
+                ProcessNewGame(syncContext, recentGame);
             }
+        }
+
+        if (syncContext.GamesToUpdate.Count > 0)
+        {
+            await gameService.UpdateGamesPlaytimeBulkAsync(userId, syncContext.GamesToUpdate);
+        }
+
+        if (syncContext.GamesToAdd.Count > 0)
+        {
+            await gameService.AddGamesBulkAsync(userId, syncContext.GamesToAdd);
         }
 
         syncContext.DebugInfo.Add($"Recently played games processed: {recentlyPlayedGames.Count}");
@@ -179,7 +200,7 @@ public class SteamService(
         };
     }
 
-    private async Task ProcessExistingGameAsync(SyncContext syncContext, Game existingGame, RecentlyPlayedGame recentGame)
+    private void ProcessExistingGame(SyncContext syncContext, Game existingGame, RecentlyPlayedGame recentGame)
     {
         var totalHours = (int)Math.Round(recentGame.PlaytimeForever / 60.0);
         var recentHours = (int)Math.Round(recentGame.Playtime2Weeks / 60.0);
@@ -194,9 +215,8 @@ public class SteamService(
             syncContext.DebugInfo.Add(
                 $"{recentGame.Name}: Ore totali: {totalHours}, Incremento: {hoursDifference}h, Ore recenti: {recentHours}h");
 
-            var updatedGame = await gameService.UpdateGamePlaytimeAsync(syncContext.UserId, existingGame.Id, totalHours);
+            syncContext.GamesToUpdate.Add((existingGame.Id, totalHours));
 
-            if (updatedGame == null) return;
             var statusChanged = wasNotStarted && totalHours > 0;
             if (statusChanged)
             {
@@ -211,7 +231,7 @@ public class SteamService(
                 HoursAdded = hoursDifference,
                 StatusChanged = statusChanged,
                 PreviousStatus = previousStatus,
-                NewStatus = updatedGame.Status
+                NewStatus = statusChanged ? GameStatus.InProgress.ToString() : previousStatus
             });
 
             syncContext.UpdatedCount++;
@@ -226,7 +246,7 @@ public class SteamService(
         }
     }
 
-    private async Task ProcessNewGameAsync(SyncContext syncContext, RecentlyPlayedGame recentGame)
+    private void ProcessNewGame(SyncContext syncContext, RecentlyPlayedGame recentGame)
     {
         var totalHours = (int)Math.Round(recentGame.PlaytimeForever / 60.0);
         var recentHours = (int)Math.Round(recentGame.Playtime2Weeks / 60.0);
@@ -249,20 +269,20 @@ public class SteamService(
                     PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
                 };
 
-                var addedGame = await gameService.AddGameAsync(syncContext.UserId, newGame);
+                syncContext.GamesToAdd.Add(newGame);
 
                 syncContext.NewGamesAdded++;
-                syncContext.DebugInfo.Add($"{recentGame.Name} AGGIUNTO CORRETTAMENTE con ID: {addedGame.Id}");
+                syncContext.DebugInfo.Add($"{recentGame.Name} AGGIUNTO ALLA CODA BULK");
 
                 syncContext.UpdatedGamesInfo.Add(new UpdatedGameInfo
                 {
-                    GameTitle = addedGame.Title,
+                    GameTitle = newGame.Title,
                     PreviousHours = 0,
                     NewHours = totalHours,
                     HoursAdded = totalHours,
                     StatusChanged = totalHours > 0,
                     PreviousStatus = "Non presente",
-                    NewStatus = addedGame.Status
+                    NewStatus = newGame.Status
                 });
 
                 syncContext.MatchedGames.Add($"{recentGame.Name} [NUOVO GIOCO AGGIUNTO] (Ore: {totalHours})" +
@@ -287,25 +307,25 @@ public class SteamService(
     /// Costruisce l'URL e invoca la Steam API.
     /// </summary>
     private async Task<TResult> CallSteamApiAsync<TResponse, TResult>(
-        string method, string steamId, string extraParams, Func<TResponse?, TResult> extractor)
+        string method, string steamId, string extraParams, Func<TResponse?, TResult> extractor, CancellationToken cancellationToken)
     {
         var url = $"https://api.steampowered.com/IPlayerService/{method}/v1/?key={_steamApiKey}&steamid={steamId}&{extraParams}";
-        return await FetchSteamApiAsync(url, extractor);
+        return await FetchSteamApiAsync(url, extractor, cancellationToken);
     }
 
     /// <summary>
     /// Centralizza le chiamate HTTP alla Steam API con gestione errori e rate limiting.
     /// </summary>
     private async Task<TResult> FetchSteamApiAsync<TResponse, TResult>(
-        string url, Func<TResponse?, TResult> extractor)
+        string url, Func<TResponse?, TResult> extractor, CancellationToken cancellationToken)
     {
         try
         {
-            var response = await httpClient.GetStringAsync(url);
+            var response = await httpClient.GetStringAsync(url, cancellationToken);
             var steamResponse = JsonSerializer.Deserialize<TResponse>(response, JsonOptions);
             return extractor(steamResponse);
         }
-        catch (HttpRequestException ex) when (ex.Message.Contains("429"))
+        catch (HttpRequestException ex) when (ex.Message.Contains("429") || ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         {
             throw new InvalidOperationException(
                 "Limite di richieste Steam raggiunto. Riprova tra qualche minuto.", ex);

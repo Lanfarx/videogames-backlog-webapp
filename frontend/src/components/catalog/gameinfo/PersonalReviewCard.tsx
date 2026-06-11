@@ -164,6 +164,7 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
           <ReviewCommentsSection 
             reviewGameId={game.id} 
             commentsCount={commentsCount}
+            ownerId={game.UserId}
           />
         </div>
       )}

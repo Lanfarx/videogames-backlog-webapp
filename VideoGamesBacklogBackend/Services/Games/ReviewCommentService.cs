@@ -77,12 +77,13 @@ public class ReviewCommentService(
     public async Task<bool> DeleteReviewCommentAsync(int commentId, int userId)
     {
         var comment = await context.ReviewComments
+            .Include(rc => rc.ReviewGame)
             .FirstOrDefaultAsync(rc => rc.Id == commentId);
 
         if (comment == null)
             throw new KeyNotFoundException("Commento non trovato.");
 
-        if (comment.AuthorId != userId)
+        if (comment.AuthorId != userId && (comment.ReviewGame == null || comment.ReviewGame.UserId != userId))
             throw new UnauthorizedAccessException("Non sei autorizzato ad eliminare questo commento.");
 
         context.ReviewComments.Remove(comment);

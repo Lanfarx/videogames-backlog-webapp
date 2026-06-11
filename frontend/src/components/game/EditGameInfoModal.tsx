@@ -74,7 +74,7 @@ const EditGameInfoModal = ({
     // Normalizza entrambi i valori per confronto corretto (null/undefined -> '')
     const currentPurchaseDate = game.PurchaseDate || '';
     if (formData.PurchaseDate !== currentPurchaseDate) {
-      updateData.PurchaseDate = formData.PurchaseDate === '' ? '' : formData.PurchaseDate;
+      updateData.PurchaseDate = formData.PurchaseDate === '' ? '0001-01-01' : formData.PurchaseDate;
     }
 
     if (newHoursPlayed !== game.HoursPlayed) {
@@ -83,15 +83,11 @@ const EditGameInfoModal = ({
 
     // Aggiorna le date se modificate
     if (hasBeenCompleted && formData.CompletionDate !== (game.CompletionDate || '')) {
-      if (formData.CompletionDate) {
-        updateData.CompletionDate = formData.CompletionDate;
-      }
+      updateData.CompletionDate = formData.CompletionDate === '' ? '0001-01-01' : formData.CompletionDate;
     }
 
     if (isPlatinum && formData.PlatinumDate !== (game.PlatinumDate || '')) {
-      if (formData.PlatinumDate) {
-        updateData.PlatinumDate = formData.PlatinumDate;
-      }
+      updateData.PlatinumDate = formData.PlatinumDate === '' ? '0001-01-01' : formData.PlatinumDate;
     }
 
     // Determiniamo se è necessario cambiare lo stato del gioco

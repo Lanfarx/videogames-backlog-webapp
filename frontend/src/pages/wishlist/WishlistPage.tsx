@@ -60,7 +60,9 @@ const WishlistPage: React.FC = () => {
       // Estrai il messaggio di errore dal backend
       let errorMessage = 'Errore durante l\'aggiunta del gioco alla wishlist';
       
-      if (error.response?.data?.message) {
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.title) {
         errorMessage = error.response.data.title;
@@ -101,10 +103,6 @@ const WishlistPage: React.FC = () => {
         return;
       }
 
-      // Rimuovi dalla wishlist
-      await wishlistService.removeFromWishlist(id);
-      setWishlistItems(prev => prev.filter(item => item.id !== id));
-
       // Ottieni i dettagli completi da RAWG
       const gameDetails = await getGameDetails(wishlistItem.rawgId.toString());
       
@@ -122,7 +120,7 @@ const WishlistPage: React.FC = () => {
       // Apri il modale di aggiunta gioco
       setIsAddGameModalOpen(true);
       
-      showToast('success', 'Successo', 'Gioco rimosso dalla wishlist. Completa ora l\'aggiunta alla libreria!');
+      showToast('info', 'Completamento', 'Completa ora l\'aggiunta alla libreria. Il gioco verrà rimosso automaticamente dalla wishlist.');
     } catch (error) {
       console.error('Errore nello spostamento:', error);
       showToast('error', 'Errore', 'Errore nello spostamento del gioco');
@@ -280,6 +278,7 @@ const WishlistPage: React.FC = () => {
           setPrefillGame(null);
         }}
         prefillGame={prefillGame}
+        onSuccess={() => loadWishlist()}
       />
     </div>
   );

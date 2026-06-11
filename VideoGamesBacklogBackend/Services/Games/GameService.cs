@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AutoMapper;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using VideoGamesBacklogBackend.Common.DTOs.Pagination;
 using VideoGamesBacklogBackend.Common.Extensions;
 using VideoGamesBacklogBackend.Common.Extensions.Query;
@@ -22,16 +23,18 @@ public class GameService(
     AppDbContext dbContext,
     IActivityService activityService,
     IFriendshipService friendshipService,
-    IMapper mapper)
+    IMapper mapper,
+    IMemoryCache cache,
+    ILogger<GameService> logger)
     : IGameService
 {
     public async Task<List<GameDto>> GetAllGamesAsync(int userId)
     {
-        var games = await dbContext.Games.AsNoTracking().AsSplitQuery().Where(g => g.UserId == userId).Include(g => g.Comments).ToListAsync();
+        var games = await dbContext.Games.AsNoTracking().AsSplitQuery().Where(g => g.UserId == userId).ToListAsync();
         return mapper.Map<List<GameDto>>(games);
     }
 
-    public async Task<PaginatedResult<object>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
+    public async Task<PaginatedResult<GameDto>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
     {
         var query = dbContext.Games.AsNoTracking().Where(g => g.UserId == userId);
 
@@ -49,7 +52,11 @@ public class GameService(
                 var gameFilters = JsonSerializer.Deserialize<GameFiltersDto>(queryParams.Filters, options);
                 query = query.ApplyFilters(gameFilters);
             }
-            catch (JsonException) { }
+            catch (JsonException ex) 
+            { 
+                logger.LogWarning(ex, "Impossibile parsare i filtri di ricerca JSON: {Filters}", queryParams.Filters);
+                throw new ArgumentException("Formato filtri JSON non valido", nameof(queryParams.Filters), ex);
+            }
         }
 
         query = query.ApplySorting(queryParams.SortBy, queryParams.SortOrder);
@@ -79,15 +86,10 @@ public class GameService(
         });
 
         var paginatedGames = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
-        
-        foreach (var item in paginatedGames.Items)
-        {
-            item.CoverImage = ImageUrlHelper.DecodeImageUrl(item.CoverImage);
-        }
 
-        return new PaginatedResult<object>
+        return new PaginatedResult<GameDto>
         {
-            Items = paginatedGames.Items.Cast<object>().ToList(),
+            Items = paginatedGames.Items.ToList(),
             TotalItems = paginatedGames.TotalItems,
             TotalPages = paginatedGames.TotalPages,
             CurrentPage = paginatedGames.CurrentPage,
@@ -103,13 +105,14 @@ public class GameService(
 
     public async Task<GameDto?> GetGameByTitleAsync(int userId, string title)
     {
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(title);
         var game = await dbContext.Games.AsNoTracking().AsSplitQuery().Include(g => g.Comments)
-            .FirstOrDefaultAsync(g => g.Title == title && g.UserId == userId);
+            .FirstOrDefaultAsync(g => g.NormalizedTitle == normalizedTitle && g.UserId == userId);
             
         return game == null ? throw new KeyNotFoundException("Gioco non trovato.") : mapper.Map<GameDto>(game);
     }
 
-    public async Task<object?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null)
+    public async Task<GamePublicInfoDto?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null)
     {
         var game = await dbContext.Games
             .AsNoTracking()
@@ -137,28 +140,28 @@ public class GameService(
         return CreateGame(game, canShowReview);
     }
 
-    private static object CreateGame(Game game, bool canShowReview)
+    private static GamePublicInfoDto CreateGame(Game game, bool canShowReview)
     {
-        return new
+        return new GamePublicInfoDto
         {
-            id = game.Id,
-            title = game.Title,
-            platform = game.Platform,
-            releaseYear = game.ReleaseYear,
-            coverImage = ImageUrlHelper.DecodeImageUrl(game.CoverImage),
-            developer = game.Developer,
-            publisher = game.Publisher,
-            userId = game.UserId,
-            review = canShowReview
-                ? new
+            Id = game.Id,
+            Title = game.Title,
+            Platform = game.Platform,
+            ReleaseYear = game.ReleaseYear,
+            CoverImage = game.CoverImage,
+            Developer = game.Developer,
+            Publisher = game.Publisher,
+            UserId = game.UserId,
+            Review = canShowReview && game.Review != null
+                ? new GamePublicReviewDto
                 {
-                    text = game.Review?.Text,
-                    gameplay = game.Review?.Gameplay,
-                    graphics = game.Review?.Graphics,
-                    story = game.Review?.Story,
-                    sound = game.Review?.Sound,
-                    date = game.Review?.Date,
-                    isPublic = game.Review?.IsPublic
+                    Text = game.Review.Text,
+                    Gameplay = game.Review.Gameplay,
+                    Graphics = game.Review.Graphics,
+                    Story = game.Review.Story,
+                    Sound = game.Review.Sound,
+                    Date = game.Review.Date,
+                    IsPublic = game.Review.IsPublic
                 }
                 : null
         };
@@ -168,8 +171,16 @@ public class GameService(
     {
         var game = mapper.Map<Game>(gameDto);
         game.UserId = userId;
-        game.CoverImage = ImageUrlHelper.EncodeImageUrl(game.CoverImage);
         game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
+
+        var existingGame = await dbContext.Games
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.UserId == userId && g.NormalizedTitle == game.NormalizedTitle);
+
+        if (existingGame != null)
+        {
+            throw new InvalidOperationException("Hai già questo gioco nel tuo backlog.");
+        }
 
         if (gameDto.Review != null)
         {
@@ -185,11 +196,22 @@ public class GameService(
             };
         }
 
+        SetInitialGameStatusAndDates(game);
+
         dbContext.Games.Add(game);
+
+        var wishlistItem = await dbContext.Wishlists
+            .FirstOrDefaultAsync(w => w.UserId == userId && w.NormalizedTitle == game.NormalizedTitle);
+        if (wishlistItem != null)
+        {
+            dbContext.Wishlists.Remove(wishlistItem);
+        }
+
         await dbContext.SaveChangesAsync();
 
         await activityService.CreateAddGameActivityAsync(game, userId);
 
+        InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
     }
 
@@ -200,8 +222,10 @@ public class GameService(
         var previousRating = game.Rating;
 
         mapper.Map(updateDto, game);
-        game.CoverImage = ImageUrlHelper.EncodeImageUrl(game.CoverImage);
         game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
+
+        if (game.CompletionDate == DateOnly.MinValue) game.CompletionDate = null;
+        if (game.PlatinumDate == DateOnly.MinValue) game.PlatinumDate = null;
 
         if (updateDto.Price.HasValue)
         {
@@ -215,7 +239,7 @@ public class GameService(
 
         if (updateDto.PurchaseDate != null)
         {
-            game.PurchaseDate = updateDto.PurchaseDate;
+            game.PurchaseDate = updateDto.PurchaseDate.Value == DateOnly.MinValue ? null : updateDto.PurchaseDate;
         }
 
         if (updateDto.ReleaseYear.HasValue)
@@ -249,6 +273,7 @@ public class GameService(
             await PlaytimeChangeFunctionAsync(updateDto.HoursPlayed.Value, game, userId);
 
         await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
     }
 
@@ -258,6 +283,7 @@ public class GameService(
 
         await StatusChangeFunctionAsync(status, game, userId);
         await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
     }
 
@@ -283,7 +309,6 @@ public class GameService(
                 case GameStatus.NotStarted:
                 case GameStatus.InProgress:
                 case GameStatus.Abandoned:
-                    break;
                 default:
                     if (previousStatus is "Completed" or "Platinum")
                     {
@@ -304,20 +329,13 @@ public class GameService(
         await PlaytimeChangeFunctionAsync(hoursPlayed, game, userId);
 
         await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
     }
 
     private async Task PlaytimeChangeFunctionAsync(int hoursPlayed, Game game, int userId)
     {
-        var previousHours = game.HoursPlayed;
-        var wasNotStarted = game.Status == GameStatus.NotStarted;
-
-        game.HoursPlayed = hoursPlayed;
-
-        if (wasNotStarted && hoursPlayed > 0)
-        {
-            game.Status = GameStatus.InProgress;
-        }
+        var (updatedGame, _, previousHours, wasNotStarted) = ApplyPlaytimeChange(game, hoursPlayed);
 
         await activityService.CreatePlaytimeActivityAsync(game, hoursPlayed, previousHours, wasNotStarted, userId);
     }
@@ -328,34 +346,35 @@ public class GameService(
             
         dbContext.Games.Remove(game);
         await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
         return true;
     }
 
 
 
-    public async Task<PaginatedResult<object>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams)
+    public async Task<PaginatedResult<InProgressGameDto>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams)
     {
         var query = dbContext.Games
             .AsNoTracking()
             .Where(g => g.UserId == userId && g.Status == GameStatus.InProgress)
             .OrderByDescending(g => g.Id);
 
-        var projectedQuery = query.Select(g => new
+        var projectedQuery = query.Select(g => new InProgressGameDto
         {
-            g.Id,
-            g.Title,
-            g.CoverImage,
-            g.Platform,
-            g.HoursPlayed,
-            g.Rating,
-            g.Genres
+            Id = g.Id,
+            Title = g.Title,
+            CoverImage = g.CoverImage,
+            Platform = g.Platform,
+            HoursPlayed = g.HoursPlayed,
+            Rating = g.Rating,
+            Genres = g.Genres
         });
 
         var paginatedGames = await projectedQuery.PaginateAsync(queryParams);
 
-        var items = paginatedGames.Items.Select(g => g with { CoverImage = ImageUrlHelper.DecodeImageUrl(g.CoverImage) }).Cast<object>().ToList();
+        var items = paginatedGames.Items.ToList();
 
-        return new PaginatedResult<object>
+        return new PaginatedResult<InProgressGameDto>
         {
             Items = items,
             TotalItems = paginatedGames.TotalItems,
@@ -369,14 +388,14 @@ public class GameService(
 
     public async Task<int> DeleteAllGamesAsync(int userId)
     {
-        var games = await dbContext.Games.Where(g => g.UserId == userId).ToListAsync();
+        var count = await dbContext.Games.Where(g => g.UserId == userId).ExecuteDeleteAsync();
 
-        if (games.Count == 0) return 0;
-
-        dbContext.Games.RemoveRange(games);
-        await dbContext.SaveChangesAsync();
-
-        return games.Count;
+        if (count > 0)
+        {
+            InvalidateUserStatsCache(userId);
+        }
+        
+        return count;
     }
 
     private async Task<bool> CanViewReview(GameReview? review, User targetUser, int currentUserId)
@@ -395,5 +414,101 @@ public class GameService(
         }
 
         return true;
+    }
+
+    public async Task<List<GameDto>> AddGamesBulkAsync(int userId, List<CreateGameDto> gamesDto)
+    {
+        if (gamesDto == null || gamesDto.Count == 0) return [];
+
+        var existingGamesTitles = await dbContext.Games
+            .AsNoTracking()
+            .Where(g => g.UserId == userId)
+            .Select(g => g.NormalizedTitle)
+            .ToListAsync();
+
+        var gamesToProcess = gamesDto
+            .Where(dto => !existingGamesTitles.Contains(GameTitleMatcher.GetFullyNormalizedTitle(dto.Title)))
+            .GroupBy(dto => GameTitleMatcher.GetFullyNormalizedTitle(dto.Title))
+            .Select(group => group.First())
+            .ToList();
+
+        if (gamesToProcess.Count == 0) return [];
+
+        var games = mapper.Map<List<Game>>(gamesToProcess);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var normalizedTitles = new List<string>();
+
+        foreach (var game in games)
+        {
+            game.UserId = userId;
+            game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
+            normalizedTitles.Add(game.NormalizedTitle);
+
+            SetInitialGameStatusAndDates(game);
+        }
+
+        dbContext.Games.AddRange(games);
+        await dbContext.SaveChangesAsync();
+
+        await dbContext.Wishlists
+            .Where(w => w.UserId == userId && normalizedTitles.Contains(w.NormalizedTitle))
+            .ExecuteDeleteAsync();
+
+        await activityService.CreateAddGamesBulkActivityAsync(games, userId);
+
+        InvalidateUserStatsCache(userId);
+        return mapper.Map<List<GameDto>>(games);
+    }
+
+    public async Task UpdateGamesPlaytimeBulkAsync(int userId, List<(int GameId, int HoursPlayed)> updates)
+    {
+        var gameIds = updates.Select(u => u.GameId).ToList();
+        var games = await dbContext.Games.Where(g => g.UserId == userId && gameIds.Contains(g.Id)).ToListAsync();
+
+        var activityUpdates = new List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)>();
+
+        foreach (var update in updates)
+        {
+            var game = games.FirstOrDefault(g => g.Id == update.GameId);
+            if (game == null) continue;
+
+            var result = ApplyPlaytimeChange(game, update.HoursPlayed);
+            activityUpdates.Add(result);
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        await activityService.CreatePlaytimeBulkActivityAsync(activityUpdates, userId);
+        InvalidateUserStatsCache(userId);
+    }
+    private void SetInitialGameStatusAndDates(Game game)
+    {
+        if (game.HoursPlayed > 0 && game.Status == GameStatus.NotStarted)
+        {
+            game.Status = GameStatus.InProgress;
+        }
+
+        if (game.CompletionDate == DateOnly.MinValue) game.CompletionDate = null;
+        if (game.PlatinumDate == DateOnly.MinValue) game.PlatinumDate = null;
+    }
+
+    private (Game Game, int NewHours, int PreviousHours, bool WasNotStarted) ApplyPlaytimeChange(Game game, int hoursPlayed)
+    {
+        var previousHours = game.HoursPlayed;
+        var wasNotStarted = game.Status == GameStatus.NotStarted;
+
+        game.HoursPlayed = hoursPlayed;
+
+        if (wasNotStarted && hoursPlayed > 0)
+        {
+            game.Status = GameStatus.InProgress;
+        }
+
+        return (game, hoursPlayed, previousHours, wasNotStarted);
+    }
+
+    private void InvalidateUserStatsCache(int userId)
+    {
+        cache.Remove($"UserStats_{userId}");
     }
 }

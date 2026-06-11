@@ -8,7 +8,6 @@ using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Activities;
 using VideoGamesBacklogBackend.Interfaces.Social;
-using VideoGamesBacklogBackend.Common.Helpers;
 
 namespace VideoGamesBacklogBackend.Services.Activities;
 
@@ -54,20 +53,12 @@ public class ActivityService(
             GameId = createActivityDto.GameId,
             GameTitle = game.Title,
             AdditionalInfo = createActivityDto.AdditionalInfo,
-            Timestamp = DateTime.UtcNow
+            Timestamp = DateTime.UtcNow,
+            Game = game
         };
-        context.Activities.Add(activity);
-        await context.SaveChangesAsync();
-        var createdActivity = await context.Activities
-            .AsSplitQuery()
-            .Include(a => a.Game)
-            .Include(a => a.Reactions)
-            .ThenInclude(r => r.User)
-            .Include(a => a.ActivityComments)
-            .ThenInclude(c => c.Author)
-            .FirstAsync(a => a.Id == activity.Id);
+        await SaveActivityEntityAsync(activity);
 
-        return mapper.Map<ActivityDto>(createdActivity, opt => opt.Items["CurrentUserId"] = userId);
+        return mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId);
     }
 
     public async Task<ActivityDto?> UpdateActivityAsync(int activityId, int userId,
@@ -112,39 +103,23 @@ public class ActivityService(
 
     public async Task<List<ActivityDto>> GetRecentActivitiesAsync(int userId, int count = 10)
     {
-        var activities = await context.Activities
+        var query = context.Activities
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(a => a.Game)
-            .Include(a => a.Reactions)
-            .ThenInclude(r => r.User)
-            .Include(a => a.ActivityComments)
-            .ThenInclude(c => c.Author)
             .Where(a => a.Game!.UserId == userId)
             .OrderByDescending(a => a.Timestamp)
-            .Take(count)
-            .ToListAsync();
+            .Take(count);
 
-        return activities.Select(a => mapper.Map<ActivityDto>(a, opt => opt.Items["CurrentUserId"] = userId))
-            .ToList();
+        return await ProjectAndMapActivitiesAsync(query, userId);
     }
 
     public async Task<List<ActivityDto>> GetActivitiesByGameAsync(int gameId, int userId)
     {
-        var activities = await context.Activities
+        var query = context.Activities
             .AsNoTracking()
-            .AsSplitQuery()
-            .Include(a => a.Game)
-            .Include(a => a.Reactions)
-            .ThenInclude(r => r.User)
-            .Include(a => a.ActivityComments)
-            .ThenInclude(c => c.Author)
             .Where(a => a.GameId == gameId && a.Game!.UserId == userId)
-            .OrderByDescending(a => a.Timestamp)
-            .ToListAsync();
+            .OrderByDescending(a => a.Timestamp);
 
-        return activities.Select(a => mapper.Map<ActivityDto>(a, opt => opt.Items["CurrentUserId"] = userId))
-            .ToList();
+        return await ProjectAndMapActivitiesAsync(query, userId);
     }
 
     public async Task<Dictionary<string, int>> GetActivityStatsByTypeAsync(int userId, int? year = null)
@@ -200,6 +175,20 @@ public class ActivityService(
                 return;
         }
 
+        var threshold = DateTime.UtcNow.AddHours(-2);
+        var recentActivity = await context.Activities
+            .Where(a => a.GameId == game.Id && a.Type == activityType && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .OrderByDescending(a => a.Timestamp)
+            .FirstOrDefaultAsync();
+
+        if (recentActivity != null)
+        {
+            recentActivity.AdditionalInfo = additionalInfo;
+            recentActivity.Timestamp = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+            return;
+        }
+
         var createActivityDto = new CreateActivityDto
         {
             Type = activityType,
@@ -215,33 +204,61 @@ public class ActivityService(
         int userId)
     {
         var hoursDifference = newHours - previousHours;
-        string additionalInfo;
-        if (wasNotStarted && newHours > 0)
+        var threshold = DateTime.UtcNow.AddHours(-2);
+        var recentActivity = await context.Activities
+            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Played && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .OrderByDescending(a => a.Timestamp)
+            .FirstOrDefaultAsync();
+
+        if (recentActivity != null)
         {
-            additionalInfo = hoursDifference == 1
-                ? $"iniziato - {hoursDifference} ora giocata"
-                : $"iniziato - {hoursDifference} ore giocate";
-        }
-        else switch (hoursDifference)
-        {
-            case < 0:
-                additionalInfo = $"-{Math.Abs(hoursDifference)} ore";
-                break;
-            case > 0:
-                additionalInfo = $"{hoursDifference} ore";
-                break;
-            default:
+            var previousDelta = ExtractPlaytimeDelta(recentActivity.AdditionalInfo);
+            var totalDifference = previousDelta + hoursDifference;
+            
+            if (totalDifference == 0)
+            {
+                context.Activities.Remove(recentActivity);
+                await context.SaveChangesAsync();
                 return;
+            }
+
+            var wasInitiated = (recentActivity.AdditionalInfo ?? "").Contains("iniziato");
+            recentActivity.AdditionalInfo = FormatPlaytimeDelta(totalDifference, wasInitiated);
+            recentActivity.Timestamp = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+            return;
         }
+
+        if (hoursDifference == 0) return;
 
         var createActivityDto = new CreateActivityDto
         {
             Type = ActivityType.Played,
             GameId = game.Id,
-            AdditionalInfo = additionalInfo
+            AdditionalInfo = FormatPlaytimeDelta(hoursDifference, wasNotStarted)
         };
 
         await CreateActivityAsync(userId, createActivityDto);
+    }
+
+    private static int ExtractPlaytimeDelta(string? additionalInfo)
+    {
+        var input = additionalInfo ?? "";
+        var match = System.Text.RegularExpressions.Regex.Match(input, @"(-?\d+)\s*or[ea]");
+        if (match.Success && int.TryParse(match.Groups[1].Value, out var val))
+            return val;
+            
+        var fallbackMatch = System.Text.RegularExpressions.Regex.Match(input, @"-?\d+");
+        return fallbackMatch.Success && int.TryParse(fallbackMatch.Value, out val) ? val : 0;
+    }
+
+    private static string FormatPlaytimeDelta(int delta, bool wasInitiated)
+    {
+        if (wasInitiated && delta > 0)
+        {
+            return delta == 1 ? $"iniziato - {delta} ora giocata" : $"iniziato - {delta} ore giocate";
+        }
+        return delta < 0 ? $"-{Math.Abs(delta)} ore" : $"{delta} ore";
     }
 
     public async Task CreateRatingActivityAsync(Game game, decimal newRating, decimal previousRating, int userId)
@@ -249,8 +266,22 @@ public class ActivityService(
         if (newRating == previousRating || newRating == 0)
             return;
 
+        var threshold = DateTime.UtcNow.AddHours(-2);
+        var recentActivity = await context.Activities
+            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Rated && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .OrderByDescending(a => a.Timestamp)
+            .FirstOrDefaultAsync();
+
         var formattedRating = newRating % 1 == 0 ? newRating.ToString("0") : newRating.ToString("0.0");
         var additionalInfo = $"{formattedRating}/5 stelle";
+
+        if (recentActivity != null)
+        {
+            recentActivity.AdditionalInfo = additionalInfo;
+            recentActivity.Timestamp = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+            return;
+        }
 
         var createActivityDto = new CreateActivityDto
         {
@@ -311,48 +342,28 @@ public class ActivityService(
 
         await CreateActivityAsync(userId, createActivityDto);
 
-        if (game.HoursPlayed > 0 && game.Status != GameStatus.NotStarted)
-        {
-            var activityType = game.Status switch
-            {
-                GameStatus.InProgress => ActivityType.Played,
-                GameStatus.Completed => ActivityType.Completed,
-                GameStatus.Platinum => ActivityType.Platinum,
-                GameStatus.Abandoned => ActivityType.Abandoned,
-                _ => ActivityType.Played
-            };
 
-            var playedActivityDto = new CreateActivityDto
-            {
-                Type = activityType,
-                GameId = game.Id,
-                AdditionalInfo = game.HoursPlayed > 0
-                    ? game.HoursPlayed == 1
-                        ? $"iniziato - {game.HoursPlayed} ora giocata"
-                        : $"iniziato - {game.HoursPlayed} ore giocate"
-                    : null
-            };
-
-            await CreateActivityAsync(userId, playedActivityDto);
-        }
     }
 
     public async Task<PaginatedResult<ActivityDto>> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId,
         ActivityQueryParameters queryParams)
     {
-        User? targetUser;
+        User? targetUser = null;
+        int targetUserId = 0;
 
-        if (int.TryParse(userIdOrUsername, out var targetUserId))
+        if (int.TryParse(userIdOrUsername, out var parsedId))
         {
-            targetUser = await context.Users.FindAsync(targetUserId);
+            targetUser = await context.Users.FindAsync(parsedId);
         }
-        else
+
+        if (targetUser == null)
         {
             targetUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == userIdOrUsername);
-            if (targetUser != null)
-            {
-                targetUserId = targetUser.Id;
-            }
+        }
+
+        if (targetUser != null)
+        {
+            targetUserId = targetUser.Id;
         }
 
         if (targetUser == null)
@@ -380,6 +391,100 @@ public class ActivityService(
 
         if (!targetUser.PrivacySettings.IsPrivate) return true;
         return await friendshipService.AreUsersFriendsAsync(currentUserId, targetUserId);
+    }
+
+    private class ActivityProjection
+    {
+        public int Id { get; set; }
+        public ActivityType Type { get; set; }
+        public int GameId { get; set; }
+        public string GameTitle { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string? AdditionalInfo { get; set; }
+        public string? GameImageUrl { get; set; }
+        public int CommentsCount { get; set; }
+        public IEnumerable<ReactionProjection> Reactions { get; set; } = [];
+        public IEnumerable<CommentProjection> Comments { get; set; } = [];
+    }
+
+    private class ReactionProjection
+    {
+        public int UserId { get; set; }
+        public string Emoji { get; set; } = string.Empty;
+        public string? UserName { get; set; }
+    }
+
+    private class CommentProjection
+    {
+        public int Id { get; set; }
+        public string Text { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public int AuthorId { get; set; }
+        public string? UserName { get; set; }
+        public string? Avatar { get; set; }
+        public int ActivityId { get; set; }
+    }
+
+    private static IQueryable<ActivityProjection> GetProjectedQuery(IQueryable<Activity> query)
+    {
+        return query.AsSplitQuery().Select(a => new ActivityProjection
+        {
+            Id = a.Id,
+            Type = a.Type,
+            GameId = a.GameId,
+            GameTitle = a.GameTitle,
+            Timestamp = a.Timestamp,
+            AdditionalInfo = a.AdditionalInfo,
+            GameImageUrl = a.Game != null ? a.Game.CoverImage : null,
+            CommentsCount = a.ActivityComments.Count,
+            Reactions = a.Reactions.Select(r => new ReactionProjection { UserId = r.UserId, Emoji = r.Emoji, UserName = r.User != null ? r.User.UserName : null }).ToList(),
+            Comments = a.ActivityComments.Select(c => new CommentProjection { Id = c.Id, Text = c.Text, Date = c.Date, AuthorId = c.AuthorId, UserName = c.Author != null ? c.Author.UserName : null, Avatar = c.Author != null ? c.Author.Avatar : null, ActivityId = c.ActivityId }).ToList()
+        });
+    }
+
+    private static ActivityDto MapToDto(ActivityProjection a, int currentUserId)
+    {
+        return new ActivityDto
+        {
+            Id = a.Id,
+            Type = a.Type,
+            GameId = a.GameId,
+            GameTitle = a.GameTitle,
+            Timestamp = a.Timestamp,
+            AdditionalInfo = a.AdditionalInfo,
+            GameImageUrl = a.GameImageUrl,
+            CommentsCount = a.CommentsCount,
+            UserReaction = a.Reactions.FirstOrDefault(r => r.UserId == currentUserId)?.Emoji,
+            ReactionsSummary = a.Reactions.GroupBy(r => r.Emoji).Select(g => new ActivityReactionSummaryDto
+            {
+                Emoji = g.Key,
+                Count = g.Count(),
+                UserNames = g.Where(r => !string.IsNullOrEmpty(r.UserName)).Select(r => r.UserName!).ToList()
+            }).ToList(),
+            ReactionCounts = a.Reactions.GroupBy(r => r.Emoji).ToDictionary(g => g.Key, g => g.Count()),
+            Reactions = a.Reactions.Select(r => new ActivityReactionDto
+            {
+                Emoji = r.Emoji,
+                UserId = r.UserId,
+                UserName = r.UserName
+            }).ToList(),
+            Comments = a.Comments.Select(c => new ActivityCommentDto
+            {
+                Id = c.Id,
+                Text = c.Text,
+                Date = c.Date,
+                AuthorId = c.AuthorId,
+                AuthorUsername = c.UserName ?? "Utente sconosciuto",
+                AuthorAvatar = c.Avatar,
+                ActivityId = c.ActivityId
+            }).ToList()
+        };
+    }
+
+    private static async Task<List<ActivityDto>> ProjectAndMapActivitiesAsync(IQueryable<Activity> query, int currentUserId)
+    {
+        var result = await GetProjectedQuery(query).ToListAsync();
+        return result.Select(a => MapToDto(a, currentUserId)).ToList();
     }
 
     private static async Task<PaginatedResult<ActivityDto>> GetPaginatedActivitiesInternalAsync(
@@ -411,65 +516,66 @@ public class ActivityService(
             ? query.OrderBy(a => a.Timestamp).ThenBy(a => a.Id)
             : query.OrderByDescending(a => a.Timestamp).ThenByDescending(a => a.Id);
 
-        var projectedQuery = sortedQuery.AsSplitQuery().Select(a => new
-        {
-            a.Id,
-            a.Type,
-            a.GameId,
-            a.GameTitle,
-            a.Timestamp,
-            a.AdditionalInfo,
-            GameImageUrl = a.Game != null ? a.Game.CoverImage : null,
-            CommentsCount = a.ActivityComments.Count,
-            Reactions = a.Reactions.Select(r => new { r.UserId, r.Emoji, UserName = r.User != null ? r.User.UserName : null }).ToList(),
-            Comments = a.ActivityComments.Select(c => new { c.Id, c.Text, c.Date, c.AuthorId, UserName = c.Author != null ? c.Author.UserName : null, Avatar = c.Author != null ? c.Author.Avatar : null, c.ActivityId }).ToList()
-        });
-
+        var projectedQuery = GetProjectedQuery(sortedQuery);
         var result = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
-
-        var items = result.Items.Select(a => new ActivityDto
-        {
-            Id = a.Id,
-            Type = a.Type,
-            GameId = a.GameId,
-            GameTitle = a.GameTitle,
-            Timestamp = a.Timestamp,
-            AdditionalInfo = a.AdditionalInfo,
-            GameImageUrl = ImageUrlHelper.DecodeImageUrl(a.GameImageUrl),
-            CommentsCount = a.CommentsCount,
-            UserReaction = a.Reactions.FirstOrDefault(r => r.UserId == currentUserId)?.Emoji,
-            ReactionsSummary = a.Reactions.GroupBy(r => r.Emoji).Select(g => new ActivityReactionSummaryDto
-            {
-                Emoji = g.Key,
-                Count = g.Count(),
-                UserNames = g.Where(r => !string.IsNullOrEmpty(r.UserName)).Select(r => r.UserName!).ToList()
-            }).ToList(),
-            ReactionCounts = a.Reactions.GroupBy(r => r.Emoji).ToDictionary(g => g.Key, g => g.Count()),
-            Reactions = a.Reactions.Select(r => new ActivityReactionDto
-            {
-                Emoji = r.Emoji,
-                UserId = r.UserId,
-                UserName = r.UserName
-            }).ToList(),
-            Comments = a.Comments.Select(c => new ActivityCommentDto
-            {
-                Id = c.Id,
-                Text = c.Text,
-                Date = c.Date,
-                AuthorId = c.AuthorId,
-                AuthorUsername = c.UserName ?? "Utente sconosciuto",
-                AuthorAvatar = c.Avatar,
-                ActivityId = c.ActivityId
-            }).ToList()
-        }).ToList();
 
         return new PaginatedResult<ActivityDto>
         {
-            Items = items,
+            Items = result.Items.Select(a => MapToDto(a, currentUserId)).ToList(),
             TotalItems = result.TotalItems,
             PageSize = result.PageSize,
             CurrentPage = result.CurrentPage,
             TotalPages = result.TotalPages
         };
+    }
+
+    public async Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId)
+    {
+        if (games.Count == 0) return;
+
+        if (games.Count == 1)
+        {
+            await CreateAddGameActivityAsync(games[0], userId);
+            return;
+        }
+
+        var activity = new Activity
+        {
+            Type = ActivityType.Added,
+            GameId = games[0].Id,
+            GameTitle = $"{games.Count} nuovi giochi aggiunti",
+            AdditionalInfo = $"Hai aggiunto {games.Count} giochi alla tua libreria da Steam",
+            Timestamp = DateTime.UtcNow
+        };
+        
+        await SaveActivityEntityAsync(activity);
+    }
+
+    public async Task CreatePlaytimeBulkActivityAsync(List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)> updates, int userId)
+    {
+        if (updates.Count == 0) return;
+
+        if (updates.Count == 1)
+        {
+            var u = updates[0];
+            await CreatePlaytimeActivityAsync(u.Game, u.NewHours, u.PreviousHours, u.WasNotStarted, userId);
+            return;
+        }
+
+        var activity = new Activity
+        {
+            Type = ActivityType.Played,
+            GameId = updates[0].Game.Id,
+            GameTitle = $"{updates.Count} giochi aggiornati",
+            AdditionalInfo = $"Hai aggiornato le ore di gioco per {updates.Count} giochi",
+            Timestamp = DateTime.UtcNow
+        };
+
+        await SaveActivityEntityAsync(activity);
+    }
+    private async Task SaveActivityEntityAsync(Activity activity)
+    {
+        context.Activities.Add(activity);
+        await context.SaveChangesAsync();
     }
 }

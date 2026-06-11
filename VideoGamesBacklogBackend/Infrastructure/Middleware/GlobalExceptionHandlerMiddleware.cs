@@ -39,12 +39,14 @@ public class GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<Glob
         // Mascheriamo i messaggi 500 per sicurezza (in prod), mostriamo gli altri
         var message = statusCode == 500 ? "Si è verificato un errore interno del server." : exception.Message;
 
-        var response = new
+        var problemDetails = new Microsoft.AspNetCore.Mvc.ProblemDetails
         {
-            message,
-            errorType = exception.GetType().Name
+            Status = statusCode,
+            Title = exception.GetType().Name,
+            Detail = message,
+            Instance = context.Request.Path
         };
 
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        return context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
     }
 }

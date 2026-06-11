@@ -20,6 +20,8 @@ public interface IActivityService
     Task CreatePlaytimeActivityAsync(Game game, int newHours, int previousHours, bool wasNotStarted, int userId);
     Task CreateRatingActivityAsync(Game game, decimal newRating, decimal previousRating, int userId);
     Task CreateAddGameActivityAsync(Game game, int userId);
+    Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId);
+    Task CreatePlaytimeBulkActivityAsync(List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)> updates, int userId);
 
     Task<bool> CanViewUserDiary(int targetUserId, int currentUserId);
 }

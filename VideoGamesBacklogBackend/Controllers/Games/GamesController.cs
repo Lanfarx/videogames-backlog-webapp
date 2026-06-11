@@ -5,6 +5,7 @@ using VideoGamesBacklogBackend.Common.Extensions;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.DTOs.Games.Update;
 using VideoGamesBacklogBackend.Interfaces.Games;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VideoGamesBacklogBackend.Controllers.Games;
 
@@ -21,7 +22,7 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
     }
 
     [HttpGet("paginated")]
-    public async Task<ActionResult<PaginatedResult<object>>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
+    public async Task<ActionResult<PaginatedResult<GameDto>>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
     {
         var result = await gameService.GetGamesPaginatedAsync(User.GetUserId(), queryParams);
         return Ok(result);
@@ -43,6 +44,8 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
     }
 
     [HttpGet("public/{id:int}")]
+    [AllowAnonymous]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> GetPublicGameInfo(int id)
     {
         var currentUserId = User.GetOptionalUserId();
@@ -102,7 +105,7 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
 
     // Giochi in corso paginati
     [HttpGet("in-progress")]
-    public async Task<ActionResult<PaginatedResult<object>>> GetInProgressPaginated([FromQuery] PaginationQueryParameters queryParams)
+    public async Task<ActionResult<PaginatedResult<InProgressGameDto>>> GetInProgressPaginated([FromQuery] PaginationQueryParameters queryParams)
     {
         var result = await gameService.GetInProgressGamesPaginatedAsync(User.GetUserId(), queryParams);
         return Ok(result);

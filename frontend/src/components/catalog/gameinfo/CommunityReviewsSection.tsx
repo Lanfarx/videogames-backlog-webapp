@@ -186,6 +186,7 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
                 <ReviewCommentsSection 
                   reviewGameId={review.id} 
                   commentsCount={review.commentsCount || 0} 
+                  ownerId={review.userId}
                 />
               </div>
             ))}

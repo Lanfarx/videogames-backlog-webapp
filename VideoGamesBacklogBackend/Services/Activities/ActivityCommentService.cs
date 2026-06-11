@@ -18,6 +18,7 @@ public class ActivityCommentService(
     public async Task<List<ActivityCommentDto>> GetActivityCommentsAsync(int activityId)
     {
         var comments = await context.ActivityComments
+            .AsNoTracking()
             .Include(ac => ac.Author)
             .Where(ac => ac.ActivityId == activityId)
             .OrderBy(ac => ac.Date)
@@ -76,12 +77,14 @@ public class ActivityCommentService(
     public async Task<bool> DeleteActivityCommentAsync(int commentId, int userId)
     {
         var comment = await context.ActivityComments
+            .Include(ac => ac.Activity)
+            .ThenInclude(a => a!.Game)
             .FirstOrDefaultAsync(ac => ac.Id == commentId);
 
         if (comment == null)
             throw new KeyNotFoundException("Commento non trovato.");
 
-        if (comment.AuthorId != userId)
+        if (comment.AuthorId != userId && (comment.Activity?.Game == null || comment.Activity.Game.UserId != userId))
             throw new UnauthorizedAccessException("Non sei autorizzato ad eliminare questo commento.");
 
         context.ActivityComments.Remove(comment);

@@ -103,6 +103,7 @@ public class ActivityReactionService(
         }
 
         var reactions = await context.ActivityReactions
+            .AsNoTracking()
             .Include(r => r.User)
             .Where(r => r.ActivityId == activityId)
             .OrderBy(r => r.CreatedAt)

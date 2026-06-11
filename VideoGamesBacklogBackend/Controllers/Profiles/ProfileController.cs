@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VideoGamesBacklogBackend.Common.Extensions;
 using VideoGamesBacklogBackend.DTOs.Users;
 using VideoGamesBacklogBackend.Interfaces.Profiles;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VideoGamesBacklogBackend.Controllers.Profiles;
 
@@ -34,6 +35,7 @@ public class ProfileController(IProfileService profileService) : ControllerBase
         
     [HttpGet("avatar/{username}")]
     [AllowAnonymous]
+    [EnableRateLimiting("PublicApi")]
     public async Task<IActionResult> GetUserAvatar(string username)
     {
         var avatar = await profileService.GetUserAvatarAsync(username);

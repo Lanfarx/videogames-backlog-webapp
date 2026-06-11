@@ -20,6 +20,7 @@ interface AddGameModalProps {
   isOpen: boolean;
   onClose: () => void;
   prefillGame?: Partial<Game> | null;
+  onSuccess?: () => void;
 }
 
 // Stato iniziale del form
@@ -33,7 +34,7 @@ const initialGameData: GameFormData = {
   Platform: "",
   Status: "NotStarted",
   HoursPlayed: 0,
-  Metacritic: undefined,
+  Metacritic: null,
   PurchaseDate: new Date().toISOString().split("T")[0],
   Price: undefined,
   Notes: "",
@@ -42,7 +43,8 @@ const initialGameData: GameFormData = {
 const AddGameModal: React.FC<AddGameModalProps> = ({ 
   isOpen, 
   onClose,
-  prefillGame
+  prefillGame,
+  onSuccess
 }) => {
   const dispatch = useAppDispatch();
   const { add } = useGameActions();
@@ -67,7 +69,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   // Prefill da catalogo (o altro) se fornito
   useEffect(() => {
     if (isOpen && prefillGame) {
-      const metacriticValue = prefillGame.Metacritic !== null && prefillGame.Metacritic !== undefined ? prefillGame.Metacritic : undefined;
+      const metacriticValue = prefillGame.Metacritic !== null && prefillGame.Metacritic !== undefined ? prefillGame.Metacritic : null;
       setGameData(prev => ({
         ...prev,
         Title: prefillGame.Title || "",
@@ -88,7 +90,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
   const handleGameSelect = async (game: any) => {
     try {
       const fullData = await getGameDetails(game.id);
-      const metacriticValue = fullData.Metacritic || undefined;
+      const metacriticValue = fullData.Metacritic || null;
       
       // Fetch HowLongToBeat data in parallelo
       const hltbData = await searchHowLongToBeat(fullData.Title);
@@ -218,6 +220,10 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
         // Le attività sono ora create automaticamente dal backend
       // quando il gioco viene aggiunto tramite GameService.AddGameAsync
       
+      if (onSuccess) {
+        onSuccess();
+      }
+
       // Chiudi il modal dopo il salvataggio
       onClose();
     } catch (error) {
@@ -368,7 +374,7 @@ const AddGameModal: React.FC<AddGameModalProps> = ({
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
-                            handleGameDataChange({ Metacritic: undefined });
+                            handleGameDataChange({ Metacritic: null });
                             return;
                           }
                           let numericValue = Number.parseInt(value);

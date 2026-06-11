@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
@@ -8,36 +9,63 @@ using VideoGamesBacklogBackend.Interfaces.Games;
 namespace VideoGamesBacklogBackend.Services.Games;
 
 [UsedImplicitly]
-public class GameStatsService(AppDbContext dbContext) : IGameStatsService
+public class GameStatsService(AppDbContext dbContext, IMemoryCache cache) : IGameStatsService
 {
     public async Task<GameStatsDto> GetGameStatsAsync(int userId) => await GetUserStatsAsync(userId);
 
     public async Task<GameStatsDto> GetUserStatsAsync(int userId)
     {
-        var games = await dbContext.Games.AsNoTracking().Where(g => g.UserId == userId).ToListAsync();
+        var cacheKey = $"UserStats_{userId}";
+        return await cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
 
-        var totalSpent = games.Where(g => g.Price > 0).Sum(g => g.Price ?? 0);
-        var freeGames = games.Count(g => g.Price is 0 or null or -1);
-        var paidGames = games.Where(g => g.Price > 0).ToList();
-        var totalHours = games.Sum(g => g.HoursPlayed);
+            var stats = await dbContext.Games
+            .Where(g => g.UserId == userId)
+            .GroupBy(g => 1)
+            .Select(g => new {
+                Total = g.Count(),
+                InProgress = g.Count(x => x.Status == GameStatus.InProgress),
+                Completed = g.Count(x => x.Status == GameStatus.Completed || x.Status == GameStatus.Platinum),
+                NotStarted = g.Count(x => x.Status == GameStatus.NotStarted),
+                Abandoned = g.Count(x => x.Status == GameStatus.Abandoned),
+                Platinum = g.Count(x => x.Status == GameStatus.Platinum),
+                TotalHours = g.Sum(x => x.HoursPlayed),
+                TotalSpent = g.Sum(x => x.Price > 0 ? x.Price : 0),
+                FreeGames = g.Count(x => x.Price == 0),
+                PaidGamesCount = g.Count(x => x.Price > 0)
+            })
+            .FirstOrDefaultAsync();
 
-        var highestPriceGame = games.Where(g => g.Price.HasValue).OrderByDescending(g => g.Price).FirstOrDefault();
+        if (stats == null) return new GameStatsDto();
+
+        var highestPriceGame = await dbContext.Games
+            .Where(g => g.UserId == userId && g.Price.HasValue)
+            .OrderByDescending(g => g.Price)
+            .Select(g => new { g.Title, g.Price })
+            .FirstOrDefaultAsync();
+
+        var totalSpent = stats.TotalSpent ?? 0;
+        var totalHours = stats.TotalHours;
+        var averagePrice = stats.PaidGamesCount > 0 ? totalSpent / stats.PaidGamesCount : 0;
+        var costPerHour = totalHours > 0 ? totalSpent / totalHours : 0;
 
         return new GameStatsDto
         {
-            Total = games.Count,
-            InProgress = games.Count(g => g.Status == GameStatus.InProgress),
-            Completed = games.Count(g => g.Status is GameStatus.Completed or GameStatus.Platinum),
-            NotStarted = games.Count(g => g.Status == GameStatus.NotStarted),
-            Abandoned = games.Count(g => g.Status == GameStatus.Abandoned),
-            Platinum = games.Count(g => g.Status == GameStatus.Platinum),
+            Total = stats.Total,
+            InProgress = stats.InProgress,
+            Completed = stats.Completed,
+            NotStarted = stats.NotStarted,
+            Abandoned = stats.Abandoned,
+            Platinum = stats.Platinum,
             TotalHours = totalHours,
             TotalSpent = totalSpent,
-            AveragePrice = paidGames.Count > 0 ? paidGames.Average(g => g.Price) ?? 0 : 0,
-            FreeGames = freeGames,
+            AveragePrice = averagePrice,
+            FreeGames = stats.FreeGames,
             HighestPrice = highestPriceGame?.Price ?? 0,
             HighestPriceGameTitle = highestPriceGame?.Title,
-            CostPerHour = totalHours > 0 ? totalSpent / totalHours : 0
+            CostPerHour = costPerHour
         };
+        }) ?? new GameStatsDto();
     }
 }

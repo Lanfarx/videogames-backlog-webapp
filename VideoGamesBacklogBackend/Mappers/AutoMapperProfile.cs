@@ -1,7 +1,6 @@
 using System.Text.Json;
 using AutoMapper;
 using VideoGamesBacklogBackend.Common.DTOs.Auth;
-using VideoGamesBacklogBackend.Common.Helpers;
 using VideoGamesBacklogBackend.DTOs.Activities;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.DTOs.Games.Update;
@@ -17,8 +16,7 @@ public class AutoMapperProfile : Profile
     public AutoMapperProfile()
     {
         CreateMap<Game, GameDto>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-            .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => ImageUrlHelper.DecodeImageUrl(src.CoverImage)));
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
         CreateMap<GameReview, GameReviewDto>().ReverseMap();
         CreateMap<GameComment, GameCommentDto>().ReverseMap();
@@ -52,8 +50,7 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.Data, opt => opt.MapFrom(src => DeserializeNotificationData(src.Data)));
 
         // Wishlist
-        CreateMap<Wishlist, WishlistDto>()
-            .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => ImageUrlHelper.DecodeImageUrl(src.CoverImage)));
+        CreateMap<Wishlist, WishlistDto>();
         CreateMap<WishlistDto, Wishlist>();
         CreateMap<AddToWishlistDto, Wishlist>()
             .ForMember(dest => dest.AddedDate, opt => opt.MapFrom(src => DateOnly.FromDateTime(DateTime.UtcNow)));
@@ -66,7 +63,7 @@ public class AutoMapperProfile : Profile
 
         // Base mapping for Activity -> ActivityDto (Complex parts can be handled with AfterMap or manual mapping)
         CreateMap<Activity, ActivityDto>()
-            .ForMember(dest => dest.GameImageUrl, opt => opt.MapFrom(src => src.Game != null ? ImageUrlHelper.DecodeImageUrl(src.Game.CoverImage) : null))
+            .ForMember(dest => dest.GameImageUrl, opt => opt.MapFrom(src => src.Game != null ? src.Game.CoverImage : null))
             .ForMember(dest => dest.CommentsCount, opt => opt.MapFrom(src => src.ActivityComments.Count))
             .ForMember(dest => dest.ReactionsSummary, opt => opt.MapFrom(src => src.Reactions
                 .GroupBy(r => r.Emoji)

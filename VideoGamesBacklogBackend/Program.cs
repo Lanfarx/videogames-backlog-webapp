@@ -11,8 +11,13 @@ using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Infrastructure.Middleware;
 using VideoGamesBacklogBackend.Mappers;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Carica variabili d'ambiente dal file .env solo se non siamo in Docker
 if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
@@ -47,6 +52,29 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .Select(e => new { Field = e.Key, Errors = e.Value?.Errors.Select(x => x.ErrorMessage).ToList() })
+                .ToList();
+                
+            logger.LogWarning("Validation failed for {Path}. Errors: {@Errors}", context.HttpContext.Request.Path, errors);
+            
+            var problemDetails = new Microsoft.AspNetCore.Mvc.ValidationProblemDetails(context.ModelState)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "One or more validation errors occurred.",
+                Instance = context.HttpContext.Request.Path
+            };
+            
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problemDetails);
+        };
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -158,6 +186,18 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("PublicApi", policy =>
+    {
+        policy.PermitLimit = 100;
+        policy.Window = TimeSpan.FromMinutes(1);
+        policy.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        policy.QueueLimit = 5;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Configurazione Email Settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
@@ -170,6 +210,8 @@ builder.Services.Configure<SteamSettings>(options => {
 
 // Dependency Injection Automatizzata
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 var serviceInterfaces = typeof(Program).Assembly.GetTypes()
     .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace != null && t.Namespace.StartsWith("VideoGamesBacklogBackend.Interfaces"));
 
@@ -184,6 +226,7 @@ foreach (var serviceInterface in serviceInterfaces)
     }
 }
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -224,6 +267,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRateLimiter();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

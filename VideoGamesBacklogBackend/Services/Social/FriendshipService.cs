@@ -8,6 +8,7 @@ using VideoGamesBacklogBackend.Common.Extensions.Query;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Games;
 using VideoGamesBacklogBackend.Interfaces.Social;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace VideoGamesBacklogBackend.Services.Social;
 
@@ -15,7 +16,8 @@ namespace VideoGamesBacklogBackend.Services.Social;
 public class FriendshipService(
     AppDbContext context,
     IGameStatsService gameStatsService,
-    INotificationService notificationService)
+    INotificationService notificationService,
+    IMemoryCache cache)
     : IFriendshipService
 {
     public async Task<bool> SendFriendRequestAsync(int userId, string targetUserName)
@@ -37,9 +39,13 @@ public class FriendshipService(
                 context.Friendships.Remove(existingFriendship);
                 await context.SaveChangesAsync();
             }
+            else if (existingFriendship.Status == FriendshipStatus.Pending && existingFriendship.SenderId == targetUser.Id)
+            {
+                return await AcceptFriendRequestAsync(userId, existingFriendship.Id);
+            }
             else
             {
-                throw new ArgumentException("Richiesta di amicizia già inviata o siete già amici.");
+                throw new ArgumentException("Impossibile inviare la richiesta di amicizia a questo utente.");
             }
         }
 
@@ -62,6 +68,7 @@ public class FriendshipService(
                 senderUser.UserName ?? "",
                 friendship.Id
             );
+            await InvalidateFriendshipCacheAsync(userId, targetUser.Id);
         }
 
         return true;
@@ -87,6 +94,8 @@ public class FriendshipService(
             friendship.Receiver.UserName ?? ""
         );
 
+        await InvalidateFriendshipCacheAsync(friendship.SenderId, friendship.ReceiverId);
+
         return true;
     }
 
@@ -109,6 +118,8 @@ public class FriendshipService(
             friendship.Receiver.UserName ?? ""
         );
 
+        await InvalidateFriendshipCacheAsync(friendship.SenderId, friendship.ReceiverId);
+
         return true;
     }
 
@@ -122,6 +133,9 @@ public class FriendshipService(
 
         context.Friendships.Remove(friendship);
         await context.SaveChangesAsync();
+        
+        await InvalidateFriendshipCacheAsync(userId, friendUserId);
+        
         return true;
     }
 
@@ -153,6 +167,9 @@ public class FriendshipService(
 
         context.Friendships.Add(blockFriendship);
         await context.SaveChangesAsync();
+        
+        await InvalidateFriendshipCacheAsync(userId, targetUserId);
+        
         return true;
     }
 
@@ -238,37 +255,40 @@ public class FriendshipService(
         }
 
         var queryable = context.Users
+            .AsNoTracking()
             .Where(u => u.Id != userId &&
                         (u.UserName!.Contains(searchQuery) ||
                          (u.FullName != null && u.FullName.Contains(searchQuery))));
 
         var result = await queryable.OrderBy(u => u.UserName).PaginateAsync(queryParams);
 
-        var profiles = new List<PublicProfileDto>();
-        foreach (var user in result.Items)
+        var userIds = result.Items.Select(u => u.Id).ToList();
+        var friendships = await context.Friendships
+            .AsNoTracking()
+            .Where(f => (f.SenderId == userId && userIds.Contains(f.ReceiverId)) || 
+                        (f.ReceiverId == userId && userIds.Contains(f.SenderId)))
+            .ToListAsync();
+
+        var profiles = (from user in result.Items
+        let friendship = friendships.FirstOrDefault(f => (f.SenderId == userId && f.ReceiverId == user.Id) || (f.ReceiverId == userId && f.SenderId == user.Id))
+        select new PublicProfileDto
         {
-            var friendship = await context.Friendships
-                .WhereBetweenUsers(userId, user.Id)
-                .FirstOrDefaultAsync();
-            var profile = new PublicProfileDto
-            {
-                UserId = user.Id,
-                UserName = user.UserName ?? "", FullName = user.FullName,
-                Avatar = user.Avatar,
-                Bio = user.Bio,
-                MemberSince = user.MemberSince,
-                Tags = user.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries),
-                IsProfilePrivate = user.PrivacySettings.IsPrivate,
-                CanViewStats = user.PrivacySettings is { IsPrivate: false, ShowStats: true },
-                CanViewDiary = user.PrivacySettings is { IsPrivate: false, ShowDiary: true },
-                AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
-                FriendshipId = friendship?.Id,
-                FriendshipStatus = friendship?.Status.ToString(),
-                IsFriend = friendship?.Status == FriendshipStatus.Accepted,
-                IsRequestSender = friendship?.SenderId == userId
-            };
-            profiles.Add(profile);
-        }
+            UserId = user.Id,
+            UserName = user.UserName ?? "",
+            FullName = user.FullName,
+            Avatar = user.Avatar,
+            Bio = user.Bio,
+            MemberSince = user.MemberSince,
+            Tags = user.Tags?.Split(',', StringSplitOptions.RemoveEmptyEntries),
+            IsProfilePrivate = user.PrivacySettings.IsPrivate,
+            CanViewStats = user.PrivacySettings is { IsPrivate: false, ShowStats: true },
+            CanViewDiary = user.PrivacySettings is { IsPrivate: false, ShowDiary: true },
+            AcceptsFriendRequests = user.PrivacySettings.FriendRequests,
+            FriendshipId = friendship?.Id,
+            FriendshipStatus = friendship?.Status.ToString(),
+            IsFriend = friendship?.Status == FriendshipStatus.Accepted,
+            IsRequestSender = friendship?.SenderId == userId
+        }).ToList();
 
         return new PaginatedResult<PublicProfileDto>
         {
@@ -282,6 +302,12 @@ public class FriendshipService(
 
     public async Task<PublicProfileDto> GetPublicProfileAsync(int userId, string userName)
     {
+        var cacheKey = $"PublicProfile_{userName}_{userId}";
+        if (cache.TryGetValue(cacheKey, out PublicProfileDto? cachedProfile) && cachedProfile != null)
+        {
+            return cachedProfile;
+        }
+
         var user = await context.Users
             .FirstOrDefaultAsync(u => u.UserName == userName);
 
@@ -316,6 +342,7 @@ public class FriendshipService(
             profile.Stats = await gameStatsService.GetUserStatsAsync(user.Id);
         }
 
+        cache.Set(cacheKey, profile, TimeSpan.FromMinutes(5));
         return profile;
     }
 
@@ -324,5 +351,22 @@ public class FriendshipService(
         return await context.Friendships
             .WhereBetweenUsers(userId1, userId2)
             .AnyAsync(f => f.Status == FriendshipStatus.Accepted);
+    }
+
+    private async Task InvalidateFriendshipCacheAsync(int userId1, int userId2)
+    {
+        var users = await context.Users
+            .Where(u => u.Id == userId1 || u.Id == userId2)
+            .Select(u => new { u.Id, u.UserName })
+            .ToListAsync();
+            
+        var user1 = users.FirstOrDefault(u => u.Id == userId1);
+        var user2 = users.FirstOrDefault(u => u.Id == userId2);
+
+        if (user1 != null && user2 != null)
+        {
+            cache.Remove($"PublicProfile_{user1.UserName}_{user2.Id}");
+            cache.Remove($"PublicProfile_{user2.UserName}_{user1.Id}");
+        }
     }
 }

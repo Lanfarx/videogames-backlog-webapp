@@ -321,6 +321,7 @@ const DiaryEntry: React.FC<DiaryEntryProps> = ({
             <ActivityCommentsSection 
               activityId={activity.id}
               commentsCount={('commentsCount' in activity ? activity.commentsCount : 0) || 0}
+              ownerId={game.UserId}
             />
           </div>
         )}

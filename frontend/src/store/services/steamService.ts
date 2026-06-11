@@ -40,16 +40,16 @@ export interface SteamSyncResponse {
   debugInfo?: any; // Per informazioni di debug
 }
 
-export async function syncWithSteam(steamId: string, syncType: 'initial_load' | 'update_hours'): Promise<SteamSyncResponse> {
+export async function syncWithSteam(steamId: string, syncType: 'initial_load' | 'update_hours', signal?: AbortSignal): Promise<SteamSyncResponse> {
   const response = await apiClient.post(`${API_BASE_URL}/sync`, {
     steamId,
     syncType
-  });
+  }, { signal });
 
   return response.data;
 }
 
-export async function getSteamGames(steamId: string): Promise<{ games: SteamGame[] }> {
-  const response = await apiClient.get(`${API_BASE_URL}/games/${steamId}`);
+export async function getSteamGames(steamId: string, signal?: AbortSignal): Promise<{ games: SteamGame[] }> {
+  const response = await apiClient.get(`${API_BASE_URL}/games/${steamId}`, { signal });
   return response.data;
 }

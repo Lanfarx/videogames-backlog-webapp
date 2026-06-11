@@ -8,66 +8,65 @@ using VideoGamesBacklogBackend.DTOs.Social;
 using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
 using VideoGamesBacklogBackend.Interfaces.Social;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace VideoGamesBacklogBackend.Services.Social;
 
 [UsedImplicitly]
 public class CommunityService(
     AppDbContext context,
-    IMapper mapper)
+    IMapper mapper,
+    IMemoryCache cache)
     : ICommunityService
 {
     public async Task<CommunityStatsDto> GetCommunityStatsAsync(string gameTitle)
     {
+        var cacheKey = $"CommunityStats_{gameTitle}";
+        if (cache.TryGetValue(cacheKey, out CommunityStatsDto? cachedStats) && cachedStats != null)
+        {
+            return cachedStats;
+        }
+
         var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
         
         var query = context.Games.AsNoTracking().Where(g => g.NormalizedTitle == normalizedTitle);
 
-        var games = await query
-            .Select(g => new
-            {
-                g.Id,
-                g.Title,
-                g.HoursPlayed,
-                g.Status,
-                g.Rating,
-                HasPublicReview = g.Review != null && g.Review.IsPublic == true
-            })
-            .ToListAsync();
+        var stats = await query.GroupBy(g => 1).Select(group => new
+        {
+            TotalPlayers = group.Count(),
+            AveragePlaytime = group.Average(g => g.HoursPlayed),
+            CompletedCount = group.Count(g => g.Status == GameStatus.Completed || g.Status == GameStatus.Platinum),
+            InProgressCount = group.Count(g => g.Status == GameStatus.InProgress),
+            ReviewsCount = group.Count(g => g.Review != null && g.Review.IsPublic == true),
+            RatingsCount = group.Count(g => g.Rating > 0),
+            TotalRatingSum = group.Sum(g => g.Rating > 0 ? g.Rating : 0)
+        }).FirstOrDefaultAsync();
 
-        if (games.Count == 0)
+        if (stats == null)
         {
             return new CommunityStatsDto();
         }
 
-        var totalPlayers = games.Count;
-        var gamesWithPublicReviews = games.Where(g => g.HasPublicReview).ToList();
-        var totalReviews = gamesWithPublicReviews.Count;
-        var gamesWithRating = games.Where(g => g.Rating > 0).ToList();
-        var averageRating = gamesWithRating.Count > 0
-            ? gamesWithRating.Average(g => g.Rating)
+        var completionRate = stats.TotalPlayers > 0
+            ? Math.Round((decimal)stats.CompletedCount / stats.TotalPlayers * 100, 2)
             : 0;
 
-        var averagePlaytime = games.Count > 0
-            ? (int)Math.Round(games.Average(g => g.HoursPlayed))
+        var averageRating = stats.RatingsCount > 0
+            ? Math.Round((decimal)stats.TotalRatingSum / stats.RatingsCount, 2)
             : 0;
 
-        var completedGames = games.Count(g => g.Status is GameStatus.Completed or GameStatus.Platinum);
-        var completionRate = totalPlayers > 0
-            ? Math.Round((decimal)completedGames / totalPlayers * 100, 2)
-            : 0;
-
-        var currentlyPlaying = games.Count(g => g.Status == GameStatus.InProgress);
-
-        return new CommunityStatsDto
+        var result = new CommunityStatsDto
         {
-            TotalPlayers = totalPlayers,
-            AverageRating = Math.Round(averageRating, 2),
-            TotalReviews = totalReviews,
-            AveragePlaytime = averagePlaytime,
+            TotalPlayers = stats.TotalPlayers,
+            AverageRating = averageRating,
+            TotalReviews = stats.ReviewsCount,
+            AveragePlaytime = (int)Math.Round(stats.AveragePlaytime),
             CompletionRate = completionRate,
-            CurrentlyPlaying = currentlyPlaying
+            CurrentlyPlaying = stats.InProgressCount
         };
+
+        cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+        return result;
     }
 
     public async Task<decimal> GetCommunityRatingAsync(string gameTitle)
@@ -83,6 +82,12 @@ public class CommunityService(
 
     public async Task<CommunityRatingDto> GetCommunityRatingWithCountAsync(string gameTitle)
     {
+        var cacheKey = $"CommunityRatingCount_{gameTitle}";
+        if (cache.TryGetValue(cacheKey, out CommunityRatingDto? cachedRating) && cachedRating != null)
+        {
+            return cachedRating;
+        }
+
         var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(gameTitle);
         
         var query = context.Games.AsNoTracking().Where(g => g.Rating > 0 && g.NormalizedTitle == normalizedTitle);
@@ -90,11 +95,14 @@ public class CommunityService(
         var reviewCount = await query.CountAsync();
         var rating = reviewCount > 0 ? await query.AverageAsync(g => g.Rating) : 0;
 
-        return new CommunityRatingDto
+        var result = new CommunityRatingDto
         {
             Rating = rating,
             ReviewCount = reviewCount
         };
+
+        cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+        return result;
     }
 
     public async Task<Dictionary<string, decimal>> GetCommunityRatingsAsync(List<string> gameTitles)
@@ -184,33 +192,50 @@ public class CommunityService(
 
     public async Task<ReviewStatsDto> GetReviewStatsAsync(string gameTitle)
     {
-        var games = await GetPublicGamesMatchingTitleAsync(gameTitle, includeDetails: false);
+        var cacheKey = $"ReviewStats_{gameTitle}";
+        if (cache.TryGetValue(cacheKey, out ReviewStatsDto? cachedStats) && cachedStats != null)
+        {
+            return cachedStats;
+        }
 
-        if (!(games.Count > 0))
+        var query = GetPublicGamesMatchingTitleQuery(gameTitle);
+        
+        var reviewData = await query.Select(g => new 
+        {
+            g.Rating,
+            g.Review!.Gameplay,
+            g.Review.Graphics,
+            g.Review.Story,
+            g.Review.Sound
+        }).ToListAsync();
+
+        if (!(reviewData.Count > 0))
         {
             return new ReviewStatsDto { GameTitle = gameTitle };
         }
 
-        var reviews = games.Select(g => g.Review!).ToList();
-        var totalReviews = reviews.Count;
+        var totalReviews = reviewData.Count;
 
-        return new ReviewStatsDto
+        var result = new ReviewStatsDto
         {
             GameTitle = gameTitle,
             TotalReviews = totalReviews,
-            AverageGameplay = Math.Round(reviews.Average(r => r.Gameplay), 2),
-            AverageGraphics = Math.Round(reviews.Average(r => r.Graphics), 2),
-            AverageStory = Math.Round(reviews.Average(r => r.Story), 2),
-            AverageSound = Math.Round(reviews.Average(r => r.Sound), 2),
-            OverallAverageRating = Math.Round(games.Average(g => g.Rating), 2),
-            RatingDistribution = games
+            AverageGameplay = Math.Round(reviewData.Average(r => r.Gameplay), 2),
+            AverageGraphics = Math.Round(reviewData.Average(r => r.Graphics), 2),
+            AverageStory = Math.Round(reviewData.Average(r => r.Story), 2),
+            AverageSound = Math.Round(reviewData.Average(r => r.Sound), 2),
+            OverallAverageRating = Math.Round(reviewData.Average(g => g.Rating), 2),
+            RatingDistribution = reviewData
                 .GroupBy(g => (int)Math.Round(g.Rating, MidpointRounding.AwayFromZero))
                 .ToDictionary(g => g.Key, g => g.Count()),
-            GameplayStats = CalculateAspectStats(reviews.Select(r => r.Gameplay)),
-            GraphicsStats = CalculateAspectStats(reviews.Select(r => r.Graphics)),
-            StoryStats = CalculateAspectStats(reviews.Select(r => r.Story)),
-            SoundStats = CalculateAspectStats(reviews.Select(r => r.Sound))
+            GameplayStats = CalculateAspectStats(reviewData.Select(r => r.Gameplay)),
+            GraphicsStats = CalculateAspectStats(reviewData.Select(r => r.Graphics)),
+            StoryStats = CalculateAspectStats(reviewData.Select(r => r.Story)),
+            SoundStats = CalculateAspectStats(reviewData.Select(r => r.Sound))
         };
+
+        cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+        return result;
     }
 
     public async Task<List<CommunityReviewDto>> GetTopReviewsAsync(string gameTitle, int limit,
