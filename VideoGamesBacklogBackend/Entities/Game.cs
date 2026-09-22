@@ -58,10 +58,6 @@ public class Game : IUserOwnedEntity
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
 
-    // HowLongToBeat - Tempi stimati di completamento (in ore)
-    public double? HltbMainExtra { get; set; }
-    public double? HltbCompletionist { get; set; }
-
     public string? Notes { get; set; }
     public GameReview? Review { get; set; }
 

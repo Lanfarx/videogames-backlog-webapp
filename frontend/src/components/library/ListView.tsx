@@ -23,7 +23,7 @@ interface ListViewProps {
   navigationParams?: NavigationParams;
 }
 
-const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusChange, navigationParams }) => {
+export default function ListView({ games, onEdit, onDelete, onStatusChange, navigationParams }: ListViewProps) {
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);  return (
     <div className="overflow-x-auto w-full min-w-0 library-list-view">
       <table className="w-full min-w-[800px] border-collapse">
@@ -176,6 +176,4 @@ const ListView: React.FC<ListViewProps> = ({ games, onEdit, onDelete, onStatusCh
       </table>
     </div>
   );
-};
-
-export default ListView;
+}

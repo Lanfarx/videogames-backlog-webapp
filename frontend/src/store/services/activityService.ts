@@ -195,7 +195,8 @@ export const getPublicActivities = async (
   userIdOrUsername: string,
   filters: ActivityFiltersDto = {},
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
+  signal?: AbortSignal
 ): Promise<PaginatedActivitiesDto> => {
   const params: any = { page, pageSize };
 
@@ -214,7 +215,7 @@ export const getPublicActivities = async (
   if (filters.limit !== undefined) params.Limit = filters.limit;
   if (filters.sortDirection !== undefined) params.SortDirection = filters.sortDirection;
 
-  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/public/${userIdOrUsername}`, { params });
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/public/${userIdOrUsername}`, { params, signal });
   const paginated = mapPaginatedResponse(res.data, mapActivityFromApi);
 
   return {

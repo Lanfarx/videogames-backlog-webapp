@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, ReactNode, useState } from 'react';
+import React, { useRef, useEffect, ReactNode, useState, useMemo } from 'react';
 import { getStatusColor } from '../../constants/gameConstants';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
 interface StatusDistributionChartProps {
     data: {
@@ -12,32 +13,26 @@ interface StatusDistributionChartProps {
     title: string;
 }
 
-const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data, icon, title }) => {
+export default function StatusDistributionChart({ data, icon, title }: StatusDistributionChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     
     // Filtra i dati per rimuovere gli elementi con count = 0
-    const filteredData = data.filter(item => item.count > 0);
-    const total = filteredData.reduce((sum, item) => sum + item.count, 0);
+    const filteredData = useMemo(() => data.filter(item => item.count > 0), [data]);
+    const total = useMemo(() => filteredData.reduce((sum, item) => sum + item.count, 0), [filteredData]);
 
     // Intersection Observer per avviare l'animazione quando il componente è visibile
+    const entry = useIntersectionObserver(canvasRef, {
+        threshold: 0.3,
+        freezeOnceVisible: true
+    });
+
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                }
-            },
-            { threshold: 0.3 }
-        );
-
-        if (canvasRef.current) {
-            observer.observe(canvasRef.current);
+        if (entry?.isIntersecting) {
+            setIsVisible(true);
         }
-
-        return () => observer.disconnect();
-    }, []);
+    }, [entry]);
 
     // Animazione del grafico a torta
     useEffect(() => {
@@ -75,7 +70,8 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
         let startAngle = -Math.PI / 2; // Inizia dall'alto
         const centerX = canvasRef.current.width / 2;
         const centerY = canvasRef.current.height / 2;
-        const radius = Math.min(centerX, centerY) - 15;        
+        const radius = Math.min(centerX, centerY) - 15;
+        
         filteredData.forEach((item, index) => {
             if (item.count === 0) return;
             
@@ -103,8 +99,12 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
             // Reset shadow
             ctx.shadowBlur = 0;
             
-            startAngle += (item.count / total) * 2 * Math.PI * animationProgress;        });        // Grafico completamente pieno senza donut centrale
-    }, [filteredData, total, animationProgress]);    // Calcola percentuali con animazione
+            startAngle += (item.count / total) * 2 * Math.PI * animationProgress;
+        });
+        // Grafico completamente pieno senza donut centrale
+    }, [filteredData, total, animationProgress]);
+
+    // Calcola percentuali con animazione
     const dataWithPercentage = filteredData.map((item, index) => ({
         ...item,
         percentage: total > 0 ? Math.round((item.count / total) * 100) : 0,
@@ -116,7 +116,8 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
             <h2 className="text-xl font-bold text-text-primary mb-6 font-['Montserrat'] flex items-center">
                 {icon}
                 {title}
-            </h2>            <div className="flex">
+            </h2>
+            <div className="flex">
                 <div className="w-1/2 relative flex items-center justify-center">
                     <canvas ref={canvasRef} width={200} height={200} className="drop-shadow-lg" />
                 </div>
@@ -165,13 +166,12 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ data,
                                         {Math.round(item.count * animationProgress)}
                                     </div>
                                 </div>
-                            </div>                        );
+                            </div>
+                        );
                     })}
                     </div>
                 </div>
             </div>
         </div>
     );
-};
-
-export default StatusDistributionChart;
+}

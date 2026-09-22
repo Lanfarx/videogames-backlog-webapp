@@ -5,10 +5,10 @@ interface GenreTagProps {
   small?: boolean;
 }
 
-const GenreTag: React.FC<GenreTagProps> = ({ 
+export default function GenreTag({ 
   genre,
   small = false
-}) => {  return (
+}: GenreTagProps) {  return (
     <span 
       className={`inline-block rounded-full ${
         small 
@@ -19,6 +19,4 @@ const GenreTag: React.FC<GenreTagProps> = ({
       {genre}
     </span>
   );
-};
-
-export default GenreTag;
+}

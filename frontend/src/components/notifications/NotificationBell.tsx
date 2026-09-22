@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,8 +7,9 @@ import {
   fetchUnreadCountThunk 
 } from '../../store/thunks/notificationThunks';
 import NotificationDropdown from './NotificationDropdown';
+import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 
-const NotificationBell: React.FC = () => {
+export default function NotificationBell() {
   const dispatch = useDispatch();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -22,21 +22,11 @@ const NotificationBell: React.FC = () => {
   }, [dispatch]);
 
   // Gestisci il click fuori dal dropdown per chiuderlo
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
+  useOnClickOutside(bellRef, () => {
     if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      setIsDropdownOpen(false);
     }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+  });
 
   const handleBellClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -73,6 +63,4 @@ const NotificationBell: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default NotificationBell;
+}

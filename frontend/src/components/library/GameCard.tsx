@@ -26,7 +26,7 @@ interface GameCardProps {
   navigationParams?: NavigationParams;
 }
 
-const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusChange, navigationParams }) => {
+export default function GameCard({ game, onEdit, onDelete, onStatusChange, navigationParams }: GameCardProps) {
   // Ottieni il gioco aggiornato dallo stato globale Redux
   const currentGame = useGameById(game.id) || game;
   const effectiveRating = currentGame.Rating ?? getGameRating(currentGame);
@@ -64,11 +64,6 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
           <span className="mx-2">|</span>
           <Clock className="h-4 w-4 mr-1" />
           <span className="font-roboto text-xs">{effectiveHours} ore</span>
-          {game.HltbCompletionist && game.HltbCompletionist > 0 && (
-            <span className="font-roboto text-xs text-accent-secondary ml-1" title="Tempo stimato per il 100%">
-              (~{game.HltbCompletionist}h)
-            </span>
-          )}
           <span className="mx-2">|</span>
           <Award className="h-4 w-4 mr-1 text-yellow-500" />
           <span className="font-roboto text-xs">{formatMetacriticScore(game.Metacritic)}</span>
@@ -114,6 +109,4 @@ const GameCard: React.FC<GameCardProps> = ({ game, onEdit, onDelete, onStatusCha
       </div>
     </div>
   );
-};
-
-export default GameCard;
+}

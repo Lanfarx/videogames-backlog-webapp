@@ -12,11 +12,11 @@ interface ReviewCommentsSectionProps {
   ownerId?: number;
 }
 
-const ReviewCommentsSection: React.FC<ReviewCommentsSectionProps> = ({ 
+export default function ReviewCommentsSection({ 
   reviewGameId, 
   commentsCount,
   ownerId
-}) => {
+}: ReviewCommentsSectionProps) {
   const user = useSelector((state: RootState) => state.user.profile);
   const isEntityOwner = user?.id === ownerId;
   // Funzioni wrapper per adattare i tipi ai requisiti di CommentsSection
@@ -56,6 +56,4 @@ const ReviewCommentsSection: React.FC<ReviewCommentsSectionProps> = ({
       }}
     />
   );
-};
-
-export default ReviewCommentsSection;
+}

@@ -5,7 +5,7 @@ interface FormErrorInlineProps {
   className?: string;
 }
 
-const FormErrorInline: React.FC<FormErrorInlineProps> = ({ message, className = "" }) => {
+export default function FormErrorInline({ message, className = "" }: FormErrorInlineProps) {
   if (!message) return null;
   return (
     <div className={`text-accent-danger text-sm font-medium mt-2 flex items-center gap-2 ${className}`}>
@@ -13,6 +13,4 @@ const FormErrorInline: React.FC<FormErrorInlineProps> = ({ message, className = 
       {message}
     </div>
   );
-};
-
-export default FormErrorInline;
+}

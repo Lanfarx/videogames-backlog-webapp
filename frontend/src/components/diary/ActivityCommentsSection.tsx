@@ -12,11 +12,11 @@ interface ActivityCommentsSectionProps {
   ownerId?: number;
 }
 
-const ActivityCommentsSection: React.FC<ActivityCommentsSectionProps> = ({ 
+export default function ActivityCommentsSection({ 
   activityId, 
   commentsCount,
   ownerId
-}) => {
+}: ActivityCommentsSectionProps) {
   const user = useSelector((state: RootState) => state.user.profile);
   const isEntityOwner = user?.id === ownerId;
   // Funzioni wrapper per adattare i tipi ai requisiti di CommentsSection
@@ -54,6 +54,4 @@ const ActivityCommentsSection: React.FC<ActivityCommentsSectionProps> = ({
       }}
     />
   );
-};
-
-export default ActivityCommentsSection;
+}

@@ -1,7 +1,8 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
-const Footer: React.FC = () => {
+const CURRENT_YEAR = new Date().getFullYear();
+
+export default function Footer() {
   return (
     <footer className="h-16 bg-secondary-bg border-t border-border-color">
       <div className="container mx-auto px-6 h-full max-w-[1440px]">
@@ -22,7 +23,7 @@ const Footer: React.FC = () => {
           {/* Sezione centrale - Copyright e Powered by */}
           <div className="text-center">
             <p className="text-xs text-text-disabled font-['Roboto'] mb-1">
-              © {new Date().getFullYear()} GameBacklog. Tutti i diritti riservati.
+              © {CURRENT_YEAR} GameBacklog. Tutti i diritti riservati.
             </p>
             <p className="text-xs text-text-disabled font-['Roboto']">
               <a 
@@ -45,5 +46,3 @@ const Footer: React.FC = () => {
     </footer>
   );
 };
-
-export default Footer;

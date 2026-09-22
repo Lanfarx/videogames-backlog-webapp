@@ -33,7 +33,7 @@ function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: num
     }, [callback, delay]) as T;
 }
 
-const LibraryPage: React.FC = () => {
+export default function LibraryPage() {
     const dispatch = useAppDispatch(); const allGamesFromStore = useAllGames();
     const { remove, update } = useGameActionsWithPagination();    // Hook per la paginazione lato server
     const {
@@ -488,7 +488,7 @@ const LibraryPage: React.FC = () => {
                                         setCurrentPage(1);
                                         localStorage.setItem('libraryCurrentPage', '1');
                                     }}
-                                    className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
+                                    className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity"
                                 >
                                     Reimposta filtri
                                 </button>
@@ -530,6 +530,4 @@ const LibraryPage: React.FC = () => {
             />
         </div>
     );
-};
-
-export default LibraryPage;
+}

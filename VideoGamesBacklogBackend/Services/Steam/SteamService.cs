@@ -67,11 +67,11 @@ public class SteamService(
             .ToListAsync(cancellationToken);
 
         var newGamesCount = 0;
-        var debugInfo = new List<string>();
-        const int gamesWithImages = 0;
-
-        debugInfo.Add($"Steam games to process: {steamGames.Count}");
-        debugInfo.Add($"Existing games in database: {existingGamesTitles.Count}");
+        var debugInfo = new List<string>
+        {
+            $"Steam games to process: {steamGames.Count}",
+            $"Existing games in database: {existingGamesTitles.Count}"
+        };
 
         var newGames = (from steamGame in steamGames 
                  let normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name) 
@@ -93,11 +93,10 @@ public class SteamService(
         }
 
         debugInfo.Add($"New games added: {newGamesCount}");
-        debugInfo.Add($"Games with cover images: {gamesWithImages}");
 
         return new SteamSyncResponse
         {
-            Message = $"{newGamesCount} giochi aggiunti dalla libreria Steam ({gamesWithImages} con immagini)",
+            Message = $"{newGamesCount} giochi aggiunti dalla libreria Steam",
             Count = newGamesCount,
             UpdatedGames = [],
             DebugInfo = string.Join("; ", debugInfo)

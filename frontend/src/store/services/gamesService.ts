@@ -71,7 +71,10 @@ export const getGameById = async (id: number): Promise<Game> => {
 };
 
 // Ottieni informazioni pubbliche di un gioco (per visualizzare giochi di altri utenti)
-export const getGamePublicInfo = async (id: number): Promise<{
+export const getGamePublicInfo = async (
+  id: number,
+  options?: { signal?: AbortSignal }
+): Promise<{
   id: number;
   title: string;
   platform: string;
@@ -92,7 +95,9 @@ export const getGamePublicInfo = async (id: number): Promise<{
 }> => {
   // Utilizza apiClient che include automaticamente il token JWT se l'utente è autenticato
   // Questo permette al backend di identificare l'utente corrente e applicare i controlli di privacy
-  const res = await apiClient.get(`${API_URL}/public/${id}`);
+  const res = await apiClient.get(`${API_URL}/public/${id}`, {
+    signal: options?.signal
+  });
   return res.data;
 };
 

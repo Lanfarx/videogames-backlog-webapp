@@ -149,38 +149,14 @@ export class CommunityService {
     }
   }
   /**
-   * Ottiene le recensioni pubbliche per un gioco con paginazione (senza la recensione dell'utente corrente)
+   * Ottiene le recensioni pubbliche per un gioco con paginazione
    */
   static async getPublicReviews(
     gameTitle: string,
     page: number = 1,
     pageSize: number = 10
   ): Promise<PaginatedReviewsDto> {
-    try {
-      const response = await communityApi.get<BackendPaginatedResponse<CommunityReviewDto>>(
-        `/reviews/${encodeURIComponent(gameTitle)}`,
-        {
-          params: { page, pageSize }
-        }
-      );
-      const paginated = mapPaginatedResponse(response.data);
-      return {
-        reviews: paginated.items,
-        totalCount: paginated.totalItems,
-        page: paginated.currentPage,
-        pageSize: paginated.pageSize,
-        totalPages: paginated.totalPages
-      };
-    } catch (error) {
-      console.error('Errore nel recupero delle recensioni pubbliche:', error);
-      return {
-        reviews: [],
-        totalCount: 0,
-        page: 1,
-        pageSize: 10,
-        totalPages: 0
-      };
-    }
+    return this.getReviews(gameTitle, page, pageSize);
   }
 
   /**

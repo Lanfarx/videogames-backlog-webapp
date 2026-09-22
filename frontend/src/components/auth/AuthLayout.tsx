@@ -5,7 +5,7 @@ import { useLocation, Outlet } from 'react-router-dom';
 
 const widePages = ['/privacy', '/terms', '/contact'];
 
-const AuthLayout: React.FC = () => {
+export default function AuthLayout() {
   const location = useLocation();
   const isWide = widePages.includes(location.pathname);
   return (
@@ -34,6 +34,4 @@ const AuthLayout: React.FC = () => {
       <Footer />
     </div>
   );
-};
-
-export default AuthLayout;
+}

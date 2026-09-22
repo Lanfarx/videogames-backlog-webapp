@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, X, Loader2, Check } from 'lucide-react';
 import { searchGames } from '../../store/services/rawgService';
+import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface SearchResult {
   id: number;
@@ -24,7 +26,7 @@ interface GameSearchBarProps {
   className?: string;
 }
 
-const GameSearchBar: React.FC<GameSearchBarProps> = ({
+export default function GameSearchBar({
   placeholder = "Cerca giochi...",
   onGameSelect,
   onGameAdd,
@@ -33,15 +35,15 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
   maxResults = 8,
   showTooltip = false,
   className = ""
-}) => {
+}: GameSearchBarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [processingGameId, setProcessingGameId] = useState<number | null>(null);
   
   const searchRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Gestisce la ricerca con debounce
   const performSearch = useCallback(async (query: string) => {
@@ -61,38 +63,19 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
   }, [maxResults]);
 
   useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (searchQuery.trim().length < 2) {
+    if (debouncedSearchQuery.trim().length < 2) {
       setSearchResults([]);
       setShowResults(false);
       return;
     }
 
-    searchTimeoutRef.current = setTimeout(async () => {
-      await performSearch(searchQuery.trim());
-    }, 500);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchQuery, performSearch]);
+    performSearch(debouncedSearchQuery.trim());
+  }, [debouncedSearchQuery, performSearch]);
 
   // Chiude i risultati quando si clicca fuori
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useOnClickOutside(searchRef, () => {
+    setShowResults(false);
+  });
 
   const handleGameAction = async (game: SearchResult) => {
     setProcessingGameId(game.id);
@@ -127,7 +110,7 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
     if (buttonVariant === 'cyan') {
       return `${baseClasses} bg-cyan-500 text-white hover:bg-cyan-600`;
     }
-    return `${baseClasses} bg-accent-primary text-white hover:bg-accent-primary/90`;
+    return `${baseClasses} bg-accent-primary text-white hover:opacity-90`;
   };
 
   const getDefaultButtonText = () => {
@@ -242,6 +225,4 @@ const GameSearchBar: React.FC<GameSearchBarProps> = ({
       )}
     </div>
   );
-};
- 
-export default GameSearchBar;
+}

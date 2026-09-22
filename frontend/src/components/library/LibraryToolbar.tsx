@@ -20,7 +20,7 @@ interface LibraryToolbarProps {
   onRefreshGames?: () => void; // Callback per aggiornare la lista giochi dopo la sincronizzazione
 }
 
-const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
+export default function LibraryToolbar({
   viewMode,
   setViewMode,
   onAddGame,
@@ -29,7 +29,7 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
   onSortChange,
   onSearchChange,
   onRefreshGames,
-}) => {
+}: LibraryToolbarProps) {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [search, setSearch] = useState("");
   const [showSteamSync, setShowSteamSync] = useState(false);
@@ -156,6 +156,4 @@ const LibraryToolbar: React.FC<LibraryToolbarProps> = ({
       />
     </div>
   );
-};
-
-export default LibraryToolbar;
+}

@@ -5,7 +5,7 @@ import PrivacySettings from "../../components/settings/tabs/PrivacySettings";
 import ConnectedAccountsSettings from "../../components/settings/tabs/ConnectedAccountsSettings";
 import GeneralSettings from "../../components/settings/tabs/GeneralSettings";
 
-const SettingsPage: React.FC = () => {
+export default function SettingsPage() {
   // Carica la tab attiva dal localStorage, default a "generali"
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('settingsActiveTab') || "generali";
@@ -39,6 +39,4 @@ const SettingsPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default SettingsPage;
+}

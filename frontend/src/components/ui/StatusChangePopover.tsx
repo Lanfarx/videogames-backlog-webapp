@@ -10,12 +10,12 @@ interface StatusChangePopoverProps {
   HoursPlayed: number; // Aggiungiamo le ore di gioco come prop
 }
 
-const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({ 
+export default function StatusChangePopover({ 
   currentStatus, 
   onStatusChange, 
   onCancel,
   HoursPlayed 
-}) => {
+}: StatusChangePopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
   
   // Effetto per gestire i clic fuori dal popover
@@ -91,6 +91,4 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
       </div>
     </div>
   );
-};
-
-export default StatusChangePopover;
+}

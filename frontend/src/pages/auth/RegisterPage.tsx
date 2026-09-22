@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { register } from '../../store/services/authService';
 import { useToast } from '../../contexts/ToastContext';
 
-const RegisterPage: React.FC = () => {
+export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [UserName, setUserName] = useState('');
@@ -179,7 +179,7 @@ const RegisterPage: React.FC = () => {
            <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-primary"
               disabled={!acceptTerms || !UserNameValid || !email || !password || !confirmPassword || !passwordMatch}
             >
               Crea un account
@@ -194,5 +194,3 @@ const RegisterPage: React.FC = () => {
       </>
   );
 };
-
-export default RegisterPage;

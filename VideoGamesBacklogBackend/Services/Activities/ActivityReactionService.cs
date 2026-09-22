@@ -92,7 +92,7 @@ public class ActivityReactionService(
         if (activity == null)
             throw new KeyNotFoundException("Attività non trovata.");
 
-        if (activity.Game!.UserId != userId)
+        if (activity.Game != null && activity.Game.UserId != userId)
         {
             var canViewDiary = await activityService.CanViewUserDiary(activity.Game.UserId, userId);
             if (!canViewDiary)

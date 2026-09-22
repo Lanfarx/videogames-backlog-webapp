@@ -308,8 +308,12 @@ public class FriendshipService(
             return cachedProfile;
         }
 
-        var user = await context.Users
-            .FirstOrDefaultAsync(u => u.UserName == userName);
+        User? user = null;
+        if (int.TryParse(userName, out var targetId))
+        {
+            user = await context.Users.FirstOrDefaultAsync(u => u.Id == targetId);
+        }
+        user ??= await context.Users.FirstOrDefaultAsync(u => u.UserName == userName);
 
         if (user == null) throw new KeyNotFoundException("Utente non trovato.");
 

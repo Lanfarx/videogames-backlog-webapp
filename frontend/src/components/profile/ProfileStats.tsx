@@ -22,13 +22,13 @@ interface ProfileStatsProps {
   title?: string;
 }
 
-const ProfileStats: React.FC<ProfileStatsProps> = ({
+export default function ProfileStats({
   stats,
   userProfile,
   isPrivate,
   showPrivacyIndicator = false,
   title = "Le mie statistiche"
-}) => {  // Se le stats sono private e non è il proprio profilo, mostra messaggio di privacy
+}: ProfileStatsProps) {  // Se le stats sono private e non è il proprio profilo, mostra messaggio di privacy
   if (isPrivate && showPrivacyIndicator) {
     return (
       <div className="mb-10">
@@ -101,6 +101,4 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({
       </div>
     </div>
   );
-};
-
-export default ProfileStats;
+}

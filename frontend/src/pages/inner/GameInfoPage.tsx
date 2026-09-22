@@ -123,7 +123,7 @@ const GameInfoPage: React.FC = () => {  const { id } = useParams<{ id: string }>
               {isDescriptionLong && (
                 <button
                   className="ml-2 text-accent-primary underline text-sm"
-                  onClick={() => setShowFullDescription(v => !v)}
+                  onClick={() => setShowFullDescription((v: boolean) => !v)}
                 >
                   {showFullDescription ? 'Mostra meno' : 'Mostra altro'}
                 </button>

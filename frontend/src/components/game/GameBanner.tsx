@@ -167,7 +167,7 @@ const GameBanner = ({
           <div className="flex space-x-4 mt-5">
             <div className="relative">
               <button 
-                className="flex items-center px-4 py-2 bg-accent-primary text-white rounded-lg font-secondary font-medium text-sm hover:bg-accent-primary/90 transition-colors"
+                className="flex items-center px-4 py-2 bg-accent-primary text-white rounded-lg font-secondary font-medium text-sm hover:opacity-90 transition-opacity"
                 onClick={() => setShowStatusPopover(!showStatusPopover)}
               >
                 Modifica stato: {currentStatusLabel}
@@ -184,7 +184,7 @@ const GameBanner = ({
               )}
             </div>
             <button 
-              className="flex items-center px-4 py-2 bg-accent-success text-white rounded-lg font-secondary font-medium text-sm hover:bg-accent-success/90 transition-colors"
+              className="flex items-center px-4 py-2 bg-accent-success text-white rounded-lg font-secondary font-medium text-sm hover:opacity-90 transition-opacity"
               onClick={handleEditClick}
             >
               <Pencil className="mr-2 w-4 h-4" />

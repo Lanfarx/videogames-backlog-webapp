@@ -11,6 +11,7 @@ export type GamePlatform =
   'PlayStation 4' | 
   'PlayStation 3' | 
   'Xbox' |
+  'Nintendo Switch 2' |
   'Nintendo Switch' | 
   'Steam' | 
   'Epic Games Store' | 
@@ -81,8 +82,6 @@ export interface GamePlayInfo {
   Metacritic: number | null;
   Rating: number;
   Notes?: string;
-  HltbMainExtra?: number; // Tempo stimato Main + Extra (ore)
-  HltbCompletionist?: number; // Tempo stimato Completionist (ore)
 }
 
 /**

@@ -66,7 +66,7 @@ const GameCommentsCard = ({
             rows={1}
             disabled={isCommentLimitReached}
           ></textarea>          <button
-            className={`px-4 ${!commenttext.trim() || isCommentLimitReached ? 'bg-text-disabled text-text-disabled cursor-not-allowed' : 'bg-accent-primary hover:bg-accent-primary/90 text-white'} rounded-r-lg font-secondary font-medium text-sm transition-colors`}
+            className={`px-4 ${!commenttext.trim() || isCommentLimitReached ? 'bg-text-disabled text-text-disabled cursor-not-allowed' : 'bg-accent-primary hover:opacity-90 text-white'} rounded-r-lg font-secondary font-medium text-sm transition-opacity`}
             onClick={handleAddComment}
             disabled={!commenttext.trim() || isCommentLimitReached}
           >
@@ -107,7 +107,7 @@ const GameCommentsCard = ({
                       Annulla
                     </button>
                     <button 
-                      className="flex items-center px-3 py-1 bg-accent-primary text-white rounded-md text-sm hover:bg-accent-primary/90 transition-colors font-secondary"
+                      className="flex items-center px-3 py-1 bg-accent-primary text-white rounded-md text-sm hover:opacity-90 transition-opacity font-secondary"
                       onClick={saveEditComment}
                       disabled={!editingtext.trim()}
                     >

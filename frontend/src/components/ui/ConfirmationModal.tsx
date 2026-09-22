@@ -25,9 +25,9 @@ const ConfirmationModal = ({
 
   // Determina il colore del pulsante di conferma in base al tipo
   const buttonColorClass = {
-    danger: 'bg-accent-danger hover:bg-accent-danger/90',
-    warning: 'bg-accent-secondary hover:bg-accent-secondary/90',
-    info: 'bg-accent-primary hover:bg-accent-primary/90'
+    danger: 'bg-accent-danger hover:opacity-90',
+    warning: 'bg-accent-secondary hover:opacity-90',
+    info: 'bg-accent-primary hover:opacity-90'
   }[type];
 
   return (

@@ -12,14 +12,14 @@ export interface ToastProps {
   onClose: (id: string) => void;
 }
 
-const Toast: React.FC<ToastProps> = ({
+export default function Toast({
   id,
   type,
   title,
   message,
   duration = 4000,
   onClose
-}) => {
+}: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -112,6 +112,4 @@ const Toast: React.FC<ToastProps> = ({
       </div>
     </div>
   );
-};
-
-export default Toast;
+}

@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { syncWithSteam, SteamSyncResponse, UpdatedGameInfo } from '../../store/services/steamService';
+import React from 'react';
+import { useSteamSync } from '../../hooks/useSteamSync';
 
 interface SteamSyncPopupProps {
   show: boolean;
@@ -10,91 +8,19 @@ interface SteamSyncPopupProps {
 }
 
 export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupProps) {
-  const userProfile = useSelector((state: RootState) => state.user.profile);
-  const [syncType, setSyncType] = useState<'initial_load' | 'update_hours'>('update_hours');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [syncResult, setSyncResult] = useState<SteamSyncResponse | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
-
-  const handleSync = async () => {
-    if (!userProfile?.steamId) {
-      setError('Steam ID non trovato nel profilo. Collega il tuo account Steam nelle impostazioni.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setMessage('');
-    setSyncResult(null);
-    setShowDetails(false);
-    
-    abortControllerRef.current = new AbortController();
-  
-    try {
-      const result = await syncWithSteam(userProfile.steamId, syncType, abortControllerRef.current.signal);
-      setMessage(result.message);
-      setSyncResult(result);
-      
-      // Se ci sono giochi aggiornati, mostra il pulsante per i dettagli
-      if (result.updatedGames && result.updatedGames.length > 0) {
-        setShowDetails(false); // Inizialmente non mostrare i dettagli
-      }
-      
-      // Non chiudere automaticamente se ci sono dettagli da mostrare
-      if (!result.updatedGames || result.updatedGames.length === 0) {
-        setTimeout(() => {
-          onSyncComplete();
-          onHide();
-        }, 2000);
-      }    } catch (error: any) {
-      if (error.name === 'CanceledError' || error.message === 'canceled') {
-        console.log('Sincronizzazione annullata');
-        return;
-      }
-      console.error('Errore sincronizzazione Steam:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Errore durante la sincronizzazione';
-      
-      // Gestione specifica per rate limiting
-      if (errorMessage.includes('429') || errorMessage.includes('Too Many Requests') || errorMessage.includes('Limite di richieste') || errorMessage.includes('troppe richieste')) {
-        setError('⚠️ Steam API: Limite di richieste raggiunto. Riprova tra 5-10 minuti. Questo è un limite di Steam per proteggere i loro server.');
-      } else {
-        setError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (loading && abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    if (syncResult) {
-      onSyncComplete();
-    }
-    onHide();
-  };
-
-  // Reset stato quando il popup viene riaperto
-  useEffect(() => {
-    if (show) {
-      setSyncResult(null);
-      setShowDetails(false);
-      setMessage('');
-      setError('');
-    }
-  }, [show]);
+  const {
+    userProfile,
+    syncType,
+    setSyncType,
+    loading,
+    message,
+    error,
+    syncResult,
+    showDetails,
+    setShowDetails,
+    handleSync,
+    handleClose
+  } = useSteamSync(show, onHide, onSyncComplete);
 
   if (!show) return null;
 
@@ -113,8 +39,9 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        </div>        <div className="space-y-4">
-          {/* Mostra lo Steam ID collegato */}
+        </div>
+
+        <div className="space-y-4">
           {userProfile?.steamId ? (
             <div className="bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-3 py-2 rounded-md text-sm">
               <div className="font-medium">Account Steam collegato</div>
@@ -172,28 +99,29 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
                 </div>
               </label>
             </div>
-          </div>          {error && (
+          </div>
+
+          {error ? (
             <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-3 py-2 rounded-md text-sm">
               {error}
             </div>
-          )}
+          ) : null}
 
-          {message && (
+          {message ? (
             <div className="bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-3 py-2 rounded-md text-sm">
               <div className="font-medium">{message}</div>
-              {syncResult && syncResult.updatedGames && syncResult.updatedGames.length > 0 && (
+              {syncResult && syncResult.updatedGames && syncResult.updatedGames.length > 0 ? (
                 <button
-                  onClick={() => setShowDetails(!showDetails)}
+                  onClick={() => setShowDetails(prev => !prev)}
                   className="mt-2 text-xs underline hover:no-underline focus:outline-none"
                 >
                   {showDetails ? 'Nascondi dettagli' : `Mostra dettagli (${syncResult.updatedGames.length} giochi)`}
                 </button>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
 
-          {/* Dettagli giochi aggiornati */}
-          {syncResult && syncResult.updatedGames && showDetails && (
+          {syncResult && syncResult.updatedGames && showDetails ? (
             <div className="bg-blue-50 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-md">
               <div className="px-3 py-2 border-b border-blue-200 dark:border-blue-800">
                 <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -216,26 +144,30 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
                             </span>
                           </span>
                         </div>
-                        {game.statusChanged && (
+                        {game.statusChanged ? (
                           <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                             📈 {game.previousStatus} → {game.newStatus}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>        <div className="flex justify-end space-x-3 mt-6">
+          ) : null}
+        </div>
+
+        <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={handleClose}
             disabled={loading}
             className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
             {syncResult ? 'Chiudi' : 'Annulla'}
-          </button>          {!syncResult && (
+          </button>
+
+          {!syncResult ? (
             <button
               onClick={handleSync}
               disabled={loading || !userProfile?.steamId}
@@ -253,7 +185,7 @@ export function SteamSyncPopup({ show, onHide, onSyncComplete }: SteamSyncPopupP
                 'Sincronizza'
               )}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

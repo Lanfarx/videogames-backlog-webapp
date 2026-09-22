@@ -6,7 +6,7 @@ interface CommunityStatsProps {
   GameTitle: string;
 }
 
-const CommunityStats: React.FC<CommunityStatsProps> = ({ GameTitle }) => {
+export default function CommunityStats({ GameTitle }: CommunityStatsProps) {
   const { data: stats, isLoading } = usePublicCommunityStats(GameTitle);
 
   if (isLoading) {
@@ -69,6 +69,4 @@ const CommunityStats: React.FC<CommunityStatsProps> = ({ GameTitle }) => {
       </div>
     </div>
   );
-};
-
-export default CommunityStats;
+}

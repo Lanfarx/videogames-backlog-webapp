@@ -8,7 +8,7 @@ interface FriendsListProps {
   className?: string;
 }
 
-const FriendsList: React.FC<FriendsListProps> = ({ className = '' }) => {
+export default function FriendsList({ className = '' }: FriendsListProps) {
   const { friends, loading, error, loadFriends, clearError } = useFriends();
   const { removeFriend, removing } = useFriendshipActions();
   const [removingFriendId, setRemovingFriendId] = useState<number | null>(null);
@@ -147,6 +147,4 @@ const FriendsList: React.FC<FriendsListProps> = ({ className = '' }) => {
       )}
     </div>
   );
-};
-
-export default FriendsList;
+}

@@ -75,12 +75,15 @@ public static class GameQueryExtensions
         return sortBy.ToLower() switch
         {
             "title" => isAscending ? query.OrderBy(g => g.Title).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Title).ThenBy(g => g.Id),
-            "releasedate" => isAscending ? query.OrderBy(g => g.ReleaseYear).ThenBy(g => g.Id) : query.OrderByDescending(g => g.ReleaseYear).ThenBy(g => g.Id),
+            "platform" => isAscending ? query.OrderBy(g => g.Platform).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Platform).ThenBy(g => g.Id),
+            "releasedate" or "releaseyear" => isAscending ? query.OrderBy(g => g.ReleaseYear).ThenBy(g => g.Id) : query.OrderByDescending(g => g.ReleaseYear).ThenBy(g => g.Id),
             "hoursplayed" => isAscending ? query.OrderBy(g => g.HoursPlayed).ThenBy(g => g.Id) : query.OrderByDescending(g => g.HoursPlayed).ThenBy(g => g.Id),
             "rating" => isAscending ? query.OrderBy(g => g.Rating).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Rating).ThenBy(g => g.Id),
             "metacritic" => isAscending ? query.OrderBy(g => g.Metacritic).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Metacritic).ThenBy(g => g.Id),
             "price" => isAscending ? query.OrderBy(g => g.Price).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Price).ThenBy(g => g.Id),
             "purchasedate" => isAscending ? query.OrderBy(g => g.PurchaseDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.PurchaseDate).ThenBy(g => g.Id),
+            "completiondate" => isAscending ? query.OrderBy(g => g.CompletionDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.CompletionDate).ThenBy(g => g.Id),
+            "platinumdate" => isAscending ? query.OrderBy(g => g.PlatinumDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.PlatinumDate).ThenBy(g => g.Id),
             _ => query.OrderBy(g => g.Title).ThenBy(g => g.Id)
         };
     }

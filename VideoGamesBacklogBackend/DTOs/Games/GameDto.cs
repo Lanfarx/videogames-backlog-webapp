@@ -20,8 +20,6 @@ public class GameDto
     public int HoursPlayed { get; set; }
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
-    public double? HltbMainExtra { get; set; }
-    public double? HltbCompletionist { get; set; }
     public string? Notes { get; set; }
     public GameReviewDto? Review { get; set; }
     public List<GameCommentDto> Comments { get; set; } = [];

@@ -32,13 +32,13 @@ const AVAILABLE_REACTIONS = [
   { emoji: '💯', label: 'Perfetto' }
 ];
 
-const ReactionBar: React.FC<ReactionBarProps> = ({
+export default function ReactionBar({
   activityId,
   reactions,
   reactionSummary,
   isOwner,
   className = ''
-}) => {
+}: ReactionBarProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector(state => state.user.profile);
@@ -163,6 +163,4 @@ const ReactionBar: React.FC<ReactionBarProps> = ({
       )}
     </div>
   );
-};
-
-export default ReactionBar;
+}

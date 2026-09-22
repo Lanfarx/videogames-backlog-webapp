@@ -8,7 +8,7 @@ interface LayoutProps {
   children?: ReactNode; // Rendiamo children opzionale
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+export default function Layout({ children }: LayoutProps) {
   // Carica i giochi all'avvio dell'applicazione per ottimizzare le performance
   // Questo si attiva solo quando l'utente è loggato ed ha accesso al layout protetto
   useLoadGames();
@@ -25,6 +25,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Footer />
     </div>
   );
-};
-
-export default Layout;
+}

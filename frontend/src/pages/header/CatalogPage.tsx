@@ -20,7 +20,7 @@ const SORT_OPTIONS = [
   { value: "Metacritic", label: "Metacritic" },
 ];
 
-const CatalogPage: React.FC = () => {
+export default function CatalogPage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("Metacritic");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -32,10 +32,13 @@ const CatalogPage: React.FC = () => {
   const [columns, setColumns] = useState(6);
   const [apiGames, setApiGames] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const navigate = useNavigate();
-  const { showToast } = useToast();const userGames = useAllGames();
+  const { showToast } = useToast();
+  const userGames = useAllGames();
+
   // Carica la wishlist dell'utente
   useEffect(() => {
     const loadWishlist = async () => {
@@ -67,6 +70,7 @@ const CatalogPage: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
   useEffect(() => {
     setGamesPerPage(columns * 8);
   }, [columns]);
@@ -81,7 +85,7 @@ const CatalogPage: React.FC = () => {
         : sortBy === 'ReleaseYear' ? (sortOrder === 'asc' ? 'released' : '-released')
         : sortBy === 'Metacritic' ? (sortOrder === 'asc' ? 'metacritic' : '-metacritic')
         : undefined,
-      Platforms: '1,4,7,18,22',
+      platforms: '1,4,7,18,22',
     })
       .then(data => {
         setApiGames(data.results || []);
@@ -92,6 +96,7 @@ const CatalogPage: React.FC = () => {
       })
       .finally(() => setIsLoading(false));
   }, [currentPage, gamesPerPage, search, sortBy, sortOrder, columns]);
+
   // Mappa solo i dati necessari per CatalogGameCard
   const mappedGames = apiGames.map((rawgGame: any) => ({
     id: String(rawgGame.id), // id RAWG come stringa
@@ -101,6 +106,7 @@ const CatalogPage: React.FC = () => {
     Genres: rawgGame.genres?.map((g: any) => g.name) || [],
     Metacritic: rawgGame.metacritic,
   }));
+
   // Ottieni i rating della community per tutti i giochi in una volta
   const gameTitles = mappedGames.map(game => game.Title);
   const { data: communityRatings = {} } = usePublicCommunityRatingsWithCount(gameTitles);
@@ -116,7 +122,9 @@ const CatalogPage: React.FC = () => {
   }, [selectedGameId, navigate]);
 
   // Responsive grid dinamica: 6 colonne su 2xl, 5 su xl, 4 su lg, 3 su md, 2 su sm, 1 su base
-  const gridClass = `grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`;  const handleAddToLibrary = async (game: any) => {
+  const gridClass = `grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6`;
+
+  const handleAddToLibrary = async (game: any) => {
     try {
       setIsLoading(true);
       // Ottieni i dettagli completi del gioco dall'API RAWG
@@ -131,7 +139,9 @@ const CatalogPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };  const handleAddToWishlist = async (game: any) => {
+  };
+
+  const handleAddToWishlist = async (game: any) => {
     try {
       const matchingWishlistItem = findMatchingGame(wishlistItems, game.Title);
 
@@ -174,7 +184,9 @@ const CatalogPage: React.FC = () => {
       console.error('Errore nella rimozione dalla wishlist:', error);
       showToast('error', 'Errore', 'Errore nella rimozione dalla wishlist');
     }
-  };// Applica filtro giochi posseduti se richiesto
+  };
+
+  // Applica filtro giochi posseduti se richiesto
   const filteredGames = hideOwned
     ? mappedGames.filter(game => {
         const isOwned = !!findMatchingGame(userGames, game.Title);
@@ -211,14 +223,17 @@ const CatalogPage: React.FC = () => {
           ) : error ? (
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : (
-            <>              <div className={gridClass}>                {filteredGames.map(game => {
+            <>
+              <div className={gridClass}>
+                {filteredGames.map(game => {
                   const matchingGame = findMatchingGame(userGames, game.Title);
                   const isInLibrary = !!matchingGame;
                   const matchingWishlistItem = findMatchingGame(wishlistItems, game.Title);
                   const isInWishlist = !!matchingWishlistItem;
                   
                   const communityRating = (communityRatings ?? {})[game.Title];
-                  return (                    <CatalogGameCard
+                  return (
+                    <CatalogGameCard
                       key={game.id}
                       game={game}
                       isInLibrary={isInLibrary}
@@ -253,6 +268,4 @@ const CatalogPage: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default CatalogPage;
+}

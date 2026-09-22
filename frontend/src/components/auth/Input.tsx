@@ -8,14 +8,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   iconRight?: React.ReactNode;
 }
 
-const Input: React.FC<InputProps> = ({
+export default function Input({
   label,
   error,
   helpertext,
   valid,
   iconRight,
   ...props
-}) => {
+}: InputProps) {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-text-primary mb-1">{label}</label>
@@ -42,6 +42,4 @@ const Input: React.FC<InputProps> = ({
       )}
     </div>
   );
-};
-
-export default Input;
+}

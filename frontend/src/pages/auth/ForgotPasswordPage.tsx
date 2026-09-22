@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { forgotPassword } from '../../store/services/authService';
 
-const ForgotPasswordPage: React.FC = () => {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -52,7 +52,7 @@ const ForgotPasswordPage: React.FC = () => {
           <div className="flex flex-col gap-4">
             <button
               onClick={() => navigate('/login')}
-              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 py-3 rounded-lg hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-10 py-3 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-primary"
             >
               Torna al login
             </button>
@@ -100,7 +100,7 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 py-3 rounded-lg min-w-[200px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-10 py-3 rounded-lg min-w-[200px] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!email || isLoading}
           >
             {isLoading ? 'Invio in corso...' : 'Invia link di reset'}
@@ -118,6 +118,4 @@ const ForgotPasswordPage: React.FC = () => {
       </div>
     </>
   );
-};
-
-export default ForgotPasswordPage;
+}

@@ -301,12 +301,6 @@ namespace VideoGamesBacklogBackend.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
-                    b.Property<double?>("HltbCompletionist")
-                        .HasColumnType("double precision");
-
-                    b.Property<double?>("HltbMainExtra")
-                        .HasColumnType("double precision");
-
                     b.Property<int>("HoursPlayed")
                         .HasColumnType("integer");
 

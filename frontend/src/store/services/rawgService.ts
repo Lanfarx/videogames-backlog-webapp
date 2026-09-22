@@ -29,17 +29,6 @@ export const mapRawgGameToInternalFormat = (rawgGame: any) => {
   };
 };
 
-// Funzione per ottenere i giochi
-export const getGames = async (params = {}) => {
-  try {
-    const response = await apiClient.get('/games', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Errore nel recupero dei giochi:', error);
-    throw error;
-  }
-};
-
 // Funzione per ottenere i dettagli di un gioco specifico
 export const getGameDetails = async (gameId: string) => {
   try {
@@ -56,13 +45,13 @@ export const searchGames = async (query: string) => {
   try {
     const response = await apiClient.get('/games', {
       params: {
-        search: query,
-        platforms: '1,4,7,18,22' // Corretto il nome del parametro
+        search: query
       }
     });
 
     // Mappa i risultati usando la funzione di mapping
-    const mappedResults = response.data.results.map(mapRawgGameToInternalFormat);
+    const rawResults = response.data?.results || [];
+    const mappedResults = rawResults.map(mapRawgGameToInternalFormat);
 
     // Filtra i risultati per includere solo giochi con un titolo
     const filteredResults = mappedResults.filter((game: any) =>

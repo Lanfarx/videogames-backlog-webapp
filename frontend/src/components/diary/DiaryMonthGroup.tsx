@@ -15,12 +15,12 @@ interface DiaryMonthGroupProps {
   };
 }
 
-const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
+export default function DiaryMonthGroup({
   month,
   year,  activities,
   activeFilters,
   publicProfile
-}) => {
+}: DiaryMonthGroupProps) {
   // Filtra le attività per il mese e l'anno corrente
   const monthActivities = activities.filter(activity => {
     const activityDate = new Date(activity.timestamp);    return activityDate.getMonth() === month && activityDate.getFullYear() === year;
@@ -84,6 +84,4 @@ const DiaryMonthGroup: React.FC<DiaryMonthGroupProps> = ({
       </div>
     </div>
   );
-};
-
-export default DiaryMonthGroup;
+}

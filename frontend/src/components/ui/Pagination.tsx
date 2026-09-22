@@ -7,7 +7,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
+export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   // Genera un array di numeri di pagina da visualizzare
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -88,6 +88,4 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       </div>
     </div>
   );
-};
-
-export default Pagination;
+}

@@ -31,12 +31,15 @@
   --platform-ps4: 0, 48, 135;
   --platform-xbox-series: 16, 124, 16;
   --platform-xbox-one: 93, 194, 30;
+  --platform-switch-2: 230, 0, 18;
   --platform-switch: 230, 0, 18;
   --platform-steam: 27, 40, 56;
   --platform-epic: 42, 42, 42;
   --platform-pc: 0, 173, 239;
   --platform-ios: 162, 170, 173;
   --platform-android: 61, 220, 132;
+  --platform-gog: 92, 45, 145;
+  --platform-amazon-luna: 0, 173, 239;
 
   /* Variabili per status dei giochi */
   --status-notstarted: 156, 163, 175; /* #9CA3AF */
@@ -174,7 +177,7 @@
 }
 
 .hover\:bg-accent-primary\/90:hover {
-  background-color: rgba(var(--accent-primary), 0.9);
+  opacity: 0.9;
 }
 
 .hover\:text-accent-primary:hover {
@@ -232,12 +235,15 @@
 .bg-platform-ps4 { background-color: rgb(var(--platform-ps4)); }
 .bg-platform-xbox-series { background-color: rgb(var(--platform-xbox-series)); }
 .bg-platform-xbox-one { background-color: rgb(var(--platform-xbox-one)); }
-.bg-platform-switch { background-color: rgb(var(--platform-switch)); }
+.bg-platform-switch-2 { background-color: rgb(var(--platform-switch-2)); }
+.bg-platform-switch { background-color: rgb(var(--platform-switch-2)); }
 .bg-platform-steam { background-color: rgb(var(--platform-steam)); }
 .bg-platform-epic { background-color: rgb(var(--platform-epic)); }
 .bg-platform-pc { background-color: rgb(var(--platform-pc)); }
 .bg-platform-ios { background-color: rgb(var(--platform-ios)); }
 .bg-platform-android { background-color: rgb(var(--platform-android)); }
+.bg-platform-gog { background-color: rgb(var(--platform-gog)); }
+.bg-platform-amazon-luna { background-color: rgb(var(--platform-amazon-luna)); }
 
 /* Utility per status */
 .bg-status-NotStarted { background-color: rgb(var(--status-notstarted)); }
@@ -947,4 +953,17 @@ body {
   .library-list-view td {
     padding: 0.5rem !important;
   }
+}
+
+/* Smooth scrolling per ancore della landing page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Pattern a griglia raffinato per sfondi moderni */
+.landing-grid-pattern {
+  background-size: 36px 36px;
+  background-image: 
+    linear-gradient(to right, rgba(var(--border-color), 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--border-color), 0.35) 1px, transparent 1px);
 }

@@ -7,7 +7,7 @@ interface BackButtonProps {
   onClick?: () => void; // Aggiungiamo la prop onClick come opzionale
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ label = 'Indietro', onClick }) => {
+export default function BackButton({ label = 'Indietro', onClick }: BackButtonProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -29,6 +29,4 @@ const BackButton: React.FC<BackButtonProps> = ({ label = 'Indietro', onClick }) 
       {label}
     </button>
   );
-};
-
-export default BackButton;
+}

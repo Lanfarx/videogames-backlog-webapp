@@ -10,14 +10,14 @@ interface DiaryFiltersProps {
   onFilterChange: (filter: string) => void;
 }
 
-const DiaryFilters: React.FC<DiaryFiltersProps> = ({
+export default function DiaryFilters({
   year,
   onYearChange,
   month,
   onMonthChange,
   activeFilters,
   onFilterChange
-}) => {
+}: DiaryFiltersProps) {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
   const months = [
@@ -106,6 +106,4 @@ const DiaryFilters: React.FC<DiaryFiltersProps> = ({
       </div>
     </div>
   );
-};
-
-export default DiaryFilters;
+}

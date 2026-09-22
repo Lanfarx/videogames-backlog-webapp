@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { resetPassword } from '../../store/services/authService';
 
-const ResetPasswordPage: React.FC = () => {
+export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -150,7 +150,7 @@ const ResetPasswordPage: React.FC = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 py-3 rounded-lg min-w-[200px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-10 py-3 rounded-lg min-w-[200px] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!newPassword || !confirmPassword || !passwordMatch || isLoading}
           >
             {isLoading ? 'Aggiornamento...' : 'Reimposta password'}
@@ -167,6 +167,4 @@ const ResetPasswordPage: React.FC = () => {
       </div>
     </>
   );
-};
-
-export default ResetPasswordPage;
+}

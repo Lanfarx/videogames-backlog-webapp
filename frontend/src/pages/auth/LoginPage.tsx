@@ -8,7 +8,7 @@ import { getProfile } from '../../store/services/profileService';
 import { getToken } from '../../utils/getToken';
 import { useToast } from '../../contexts/ToastContext';
 
-const LoginPage: React.FC = () => {
+export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -97,7 +97,7 @@ const LoginPage: React.FC = () => {
           <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:bg-accent-primary/60 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              className="bg-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-10 mb-6 mt-8 rounded-lg h-12 min-w-[180px] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-accent-primary"
               disabled={!identifier || !password}
             >
               Accedi
@@ -111,5 +111,3 @@ const LoginPage: React.FC = () => {
       </>
   );
 }
-export default LoginPage;
-

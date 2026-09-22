@@ -207,7 +207,7 @@ const EditGameDetailsModal = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-white rounded-lg bg-accent-primary hover:bg-accent-primary/90 transition-colors font-secondary"
+                className="px-4 py-2 text-white rounded-lg bg-accent-primary hover:opacity-90 transition-opacity font-secondary"
               >
                 Salva modifiche
               </button>

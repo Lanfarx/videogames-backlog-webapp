@@ -5,7 +5,7 @@ import { RootState } from '../../../store';
 import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
 
-const ConnectedAccountsSettings: React.FC = () => {
+export default function ConnectedAccountsSettings() {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
 
@@ -143,7 +143,7 @@ const ConnectedAccountsSettings: React.FC = () => {
                     </div>
                     <button 
                       onClick={handleConnectSteam}
-                      className="px-3 py-1 bg-accent-primary text-white text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
+                      className="px-3 py-1 bg-accent-primary text-white text-sm rounded-lg hover:opacity-90 transition-opacity"
                     >
                       Collega
                     </button>
@@ -193,5 +193,3 @@ const ConnectedAccountsSettings: React.FC = () => {
     </div>
   );
 }
-
-export default ConnectedAccountsSettings;

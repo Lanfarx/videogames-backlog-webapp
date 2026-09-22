@@ -20,7 +20,7 @@ interface PersonalReviewCardProps {
   personalReview: PersonalReview;
 }
 
-const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview }) => {
+export default function PersonalReviewCard({ personalReview }: PersonalReviewCardProps) {
   const dispatch = useAppDispatch();
   const { game } = useLoadSingleGameByTitle(personalReview.title);
   const IsPublic = game?.Review?.IsPublic ?? false;
@@ -170,6 +170,4 @@ const PersonalReviewCard: React.FC<PersonalReviewCardProps> = ({ personalReview 
       )}
     </div>
   );
-};
-
-export default PersonalReviewCard;
+}

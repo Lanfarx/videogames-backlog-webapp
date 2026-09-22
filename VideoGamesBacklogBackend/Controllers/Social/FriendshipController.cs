@@ -68,6 +68,7 @@ public class FriendshipController(IFriendshipService friendshipService) : Contro
         return Ok(friends);
     }
 
+    [HttpGet("search")]
     public async Task<ActionResult<PaginatedResult<PublicProfileDto>>> SearchUsers([FromQuery] string query, [FromQuery] PaginationQueryParameters queryParams)
     {
         var result = await friendshipService.SearchUsersAsync(User.GetUserId(), query, queryParams);

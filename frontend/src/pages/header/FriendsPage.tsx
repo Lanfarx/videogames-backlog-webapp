@@ -5,9 +5,9 @@ import FriendRequests, { FriendRequestsRef } from '../../components/friends/Frie
 import UserSearch from '../../components/friends/UserSearch';
 import { useFriends, usePendingRequests } from '../../store/hooks/friendshipHooks';
 import { useNavigate } from 'react-router-dom';
-import { FriendsSection, RequestsSubSection } from '../../store/hooks/navigationHooks';
+import { FriendsSection, RequestsSubSection } from '../../hooks/navigationHooks';
 
-const FriendsPage: React.FC = () => {
+export default function FriendsPage() {
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'search'>('friends');
   const [requestsSubSection, setRequestsSubSection] = useState<RequestsSubSection>('received');
   const navigate = useNavigate();
@@ -179,6 +179,4 @@ const FriendsPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default FriendsPage;
+}

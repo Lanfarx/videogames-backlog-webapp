@@ -8,7 +8,7 @@ import { wishlistService, WishlistItem } from '../../store/services/wishlistServ
 import { getGameDetails } from '../../store/services/rawgService';
 import { useToast } from '../../contexts/ToastContext';
 
-const WishlistPage: React.FC = () => {
+export default function WishlistPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);  const [loading, setLoading] = useState(true);
@@ -282,6 +282,4 @@ const WishlistPage: React.FC = () => {
       />
     </div>
   );
-};
-
-export default WishlistPage;
+}

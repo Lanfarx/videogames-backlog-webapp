@@ -5,7 +5,7 @@ interface LoadingSpinnerProps {
   message?: string;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = "Caricamento profilo..." }) => {
+export default function LoadingSpinner({ message = "Caricamento profilo..." }: LoadingSpinnerProps) {
   return (
     <div className="loading-spinner-container">
       <div className="loading-spinner">
@@ -14,6 +14,4 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = "Caricamento 
       </div>
     </div>
   );
-};
-
-export default LoadingSpinner;
+}

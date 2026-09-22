@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Game, GameUpdateInput } from '../../types/game';
+import React from 'react';
+import { Game } from '../../types/game';
 import { GAME_PlatformS } from '../../constants/gameConstants';
-import { useGameActions } from '../../store/hooks/gamesHooks';
+import { useEditGameInfoForm } from '../../hooks/useEditGameInfoForm';
 
 interface EditGameInfoModalProps {
   isOpen: boolean;
@@ -14,111 +14,14 @@ const EditGameInfoModal = ({
   onClose,
   game
 }: EditGameInfoModalProps) => {
-  const { update } = useGameActions();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    Platform: game.Platform || '',
-    Price: game.Price != null ? game.Price.toString() : '',
-    PurchaseDate: game.PurchaseDate || '',
-    HoursPlayed: game.HoursPlayed.toString(),
-    CompletionDate: game.CompletionDate || '',
-    PlatinumDate: game.PlatinumDate || ''
-  });
+  const { formData, isSubmitting, handleChange, handleSubmit } = useEditGameInfoForm(game, isOpen, onClose);
 
-  // Aggiorna lo stato del form quando cambiano i dati del gioco o quando si apre il modale
-  React.useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        Platform: game.Platform || '',
-        Price: game.Price != null ? game.Price.toString() : '',
-        PurchaseDate: game.PurchaseDate || '',
-        HoursPlayed: game.HoursPlayed.toString(),
-        CompletionDate: game.CompletionDate || '',
-        PlatinumDate: game.PlatinumDate || ''
-      });
-    }
-  }, [game, isOpen]);
-
-  // Verifica se il gioco è stato completato o platinato
   const isCompleted = game.Status === "Completed";
   const isPlatinum = game.Status === "Platinum";
   const hasBeenCompleted = isCompleted || isPlatinum;
 
   if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  }; const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Convertiamo le ore in un numero
-    const newHoursPlayed = parseFloat(formData.HoursPlayed) || 0;
-    // Costruiamo l'oggetto di aggiornamento con solo i campi modificati
-    const updateData: GameUpdateInput = {};
-
-    if (formData.Platform && formData.Platform !== game.Platform) {
-      updateData.Platform = formData.Platform;
-    }
-
-    const currentPriceStr = game.Price !== null && game.Price !== undefined ? game.Price.toString() : '';
-    if (formData.Price !== currentPriceStr) {
-      updateData.Price = formData.Price === '' ? -2 : parseFloat(formData.Price);
-    }
-
-    // Aggiorna la data di acquisto se modificata o se viene svuotata (per impostare "Family Share")
-    // Normalizza entrambi i valori per confronto corretto (null/undefined -> '')
-    const currentPurchaseDate = game.PurchaseDate || '';
-    if (formData.PurchaseDate !== currentPurchaseDate) {
-      updateData.PurchaseDate = formData.PurchaseDate === '' ? '0001-01-01' : formData.PurchaseDate;
-    }
-
-    if (newHoursPlayed !== game.HoursPlayed) {
-      updateData.HoursPlayed = newHoursPlayed;
-    }
-
-    // Aggiorna le date se modificate
-    if (hasBeenCompleted && formData.CompletionDate !== (game.CompletionDate || '')) {
-      updateData.CompletionDate = formData.CompletionDate === '' ? '0001-01-01' : formData.CompletionDate;
-    }
-
-    if (isPlatinum && formData.PlatinumDate !== (game.PlatinumDate || '')) {
-      updateData.PlatinumDate = formData.PlatinumDate === '' ? '0001-01-01' : formData.PlatinumDate;
-    }
-
-    // Determiniamo se è necessario cambiare lo stato del gioco
-    // Solo se le ore sono effettivamente cambiate
-    if (newHoursPlayed !== game.HoursPlayed) {
-      // Se le ore vengono impostate a 0 e lo stato non è già "NotStarted",
-      // cambiamo lo stato a "NotStarted"
-      if (newHoursPlayed === 0 && game.Status !== 'NotStarted') {
-        updateData.Status = 'NotStarted';
-      }
-      // Se le ore passano da 0 a un valore maggiore e lo stato è "NotStarted",
-      // cambiamo lo stato a "InProgress"
-      else if (newHoursPlayed > 0 && game.HoursPlayed === 0 && game.Status === 'NotStarted') {
-        updateData.Status = 'InProgress';
-      }
-    }
-
-    // Esegui l'aggiornamento solo se ci sono campi modificati
-    if (Object.keys(updateData).length > 0) {
-      try {
-        await update(game.id, updateData);
-      } catch (error) {
-        console.error("Errore durante l'aggiornamento:", error);
-      }
-    }
-
-    setIsSubmitting(false);
-    onClose();
-  };
-
-  // Utilizziamo le piattaforme centralizzate
   const Platforms = GAME_PlatformS;
 
   return (
@@ -190,7 +93,6 @@ const EditGameInfoModal = ({
                 />
               </div>
 
-              {/* Aggiungiamo il campo per modificare le ore di gioco */}
               <div className="space-y-2">
                 <label htmlFor="HoursPlayed" className="block text-text-primary font-secondary text-sm">
                   Ore di gioco
@@ -212,7 +114,6 @@ const EditGameInfoModal = ({
                 </p>
               </div>
 
-              {/* Data di completamento - mostrata solo se il gioco è stato completato o platinato */}
               {hasBeenCompleted && (
                 <div className="space-y-2">
                   <label htmlFor="CompletionDate" className="block text-text-primary font-secondary text-sm">
@@ -232,7 +133,6 @@ const EditGameInfoModal = ({
                 </div>
               )}
 
-              {/* Data di platino - mostrata solo se il gioco è platinato */}
               {isPlatinum && (
                 <div className="space-y-2">
                   <label htmlFor="PlatinumDate" className="block text-text-primary font-secondary text-sm">
@@ -265,7 +165,7 @@ const EditGameInfoModal = ({
                 type="submit"
                 disabled={isSubmitting}
                 className={`px-4 py-2 text-white rounded-lg transition-colors font-secondary flex items-center justify-center min-w-[150px] ${
-                  isSubmitting ? "bg-accent-primary/70 cursor-not-allowed" : "bg-accent-primary hover:bg-accent-primary/90"
+                  isSubmitting ? "bg-accent-primary/70 cursor-not-allowed" : "bg-accent-primary hover:opacity-90"
                 }`}
               >
                 {isSubmitting ? (

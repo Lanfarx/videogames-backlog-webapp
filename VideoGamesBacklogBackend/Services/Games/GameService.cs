@@ -79,8 +79,6 @@ public class GameService(
             HoursPlayed = g.HoursPlayed,
             Metacritic = g.Metacritic,
             Rating = g.Rating,
-            HltbMainExtra = g.HltbMainExtra,
-            HltbCompletionist = g.HltbCompletionist,
             Notes = g.Notes,
             UserId = g.UserId
         });
@@ -435,7 +433,6 @@ public class GameService(
         if (gamesToProcess.Count == 0) return [];
 
         var games = mapper.Map<List<Game>>(gamesToProcess);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var normalizedTitles = new List<string>();
 
         foreach (var game in games)

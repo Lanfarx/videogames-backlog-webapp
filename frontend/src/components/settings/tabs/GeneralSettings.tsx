@@ -11,7 +11,7 @@ import { updateProfile } from '../../../store/services/profileService';
 const languageOptions = ['It', 'En'];
 const dateFormatOptions = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
 
-const GeneralSettings: React.FC = () => {
+export default function GeneralSettings() {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
 
@@ -147,6 +147,4 @@ const GeneralSettings: React.FC = () => {
       </SettingsSection>
     </div>
   );
-};
-
-export default GeneralSettings;
+}

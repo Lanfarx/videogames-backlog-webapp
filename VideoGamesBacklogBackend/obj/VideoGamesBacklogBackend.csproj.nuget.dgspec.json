@@ -52,7 +52,7 @@
           "dependencies": {
             "AutoMapper": {
               "target": "Package",
-              "version": "[16.1.1, )"
+              "version": "[16.2.0, )"
             },
             "FluentValidation.AspNetCore": {
               "target": "Package",
@@ -64,19 +64,15 @@
             },
             "MailKit": {
               "target": "Package",
-              "version": "[4.16.0, )"
+              "version": "[4.17.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
-              "version": "[8.0.5, )"
-            },
-            "Microsoft.AspNetCore.Identity": {
-              "target": "Package",
-              "version": "[2.3.1, )"
+              "version": "[8.0.13, )"
             },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.5, )"
+              "version": "[8.0.13, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -96,7 +92,7 @@
             },
             "Microsoft.Extensions.Configuration.Json": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[8.0.1, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",

@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
 import { getActivityColor } from '../../constants/gameConstants';
 import ActivityCard from '../ui/ActivityCard';
-import AllActivitiesHistoryPopover from '../ui/AllActivitiesHistoryPopover';
-import {History } from 'lucide-react';
+import { Calendar, History, ArrowRight } from 'lucide-react';
+import ActivitiesHistoryPopover from '../ui/activities/ActivitiesHistoryPopover';
 
 export default function RecentActivitiesSection() {
   const navigate = useNavigate();
   const { activities: recentActivities, loading: recentLoading } = useRecentActivities(5);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showAllActivities, setShowAllActivities] = useState(false);
 
   // Mostra loading se necessario
   if (recentLoading) {
@@ -32,7 +32,7 @@ export default function RecentActivitiesSection() {
         <div className='container mx-auto px-6 py-8'>
           <div className="flex items-baseline justify-between mb-6">
             <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
-            <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+            <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowAllActivities(true)}>
               <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
               <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
             </div>
@@ -53,7 +53,7 @@ export default function RecentActivitiesSection() {
                 </p>
                 <button 
                   onClick={() => navigate('/library')}
-                  className="bg-accent-primary hover:bg-accent-primary/90 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg"
+                  className="bg-accent-primary hover:opacity-90 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-lg"
                 >
                   Vai alla libreria
                 </button>
@@ -61,9 +61,9 @@ export default function RecentActivitiesSection() {
             </div>
           </div>
 
-          {showHistory && (
-            <AllActivitiesHistoryPopover
-              onClose={() => setShowHistory(false)}
+          {showAllActivities && (
+            <ActivitiesHistoryPopover
+              onClose={() => setShowAllActivities(false)}
             />
           )}
         </div>
@@ -77,14 +77,14 @@ export default function RecentActivitiesSection() {
       <div className='container mx-auto px-6 py-8'> 
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-2xl font-semibold text-text-primary font-primary">Attività recenti</h2>
-          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowHistory(true)}>
+          <div className="flex items-center gap-2 cursor-pointer group select-none" onClick={() => setShowAllActivities(true)}>
             <History className="h-6 w-6 text-text-secondary group-hover:text-accent-primary transition-colors" />
             <span className="text-sm text-text-secondary mt-0.5 font-secondary group-hover:text-accent-primary transition-colors">Cronologia completa</span>
           </div>
         </div>        
-        {showHistory && (
-          <AllActivitiesHistoryPopover
-            onClose={() => setShowHistory(false)}
+        {showAllActivities && (
+          <ActivitiesHistoryPopover
+            onClose={() => setShowAllActivities(false)}
           />
         )}
 
