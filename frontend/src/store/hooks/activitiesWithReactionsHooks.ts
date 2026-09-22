@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ActivityWithReactions } from '../../types/activity';
 import { RootState, AppDispatch } from '..';
@@ -22,7 +22,7 @@ export function useActivitiesWithReactions() {
   const shouldRefetch = useSelector((state: RootState) => state.activityReactions.shouldRefetchActivitiesWithReactions);
   
   // Utilizziamo uno stato locale per ora, in futuro si potrebbe integrare nel Redux store
-  const [state, setState] = React.useState<ActivitiesWithReactionsState>({
+  const [state, setState] = useState<ActivitiesWithReactionsState>({
     activities: [],
     loading: false,
     error: null,
@@ -32,18 +32,18 @@ export function useActivitiesWithReactions() {
   const fetchActivities = useCallback(async () => {
     if (state.loading) return; // Evita fetch multipli simultanei
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loading: true, error: null }));
     try {
       // Carichiamo molte più attività per evitare la limitazione a 20
       const activities = await activityReactionService.getUserActivitiesWithReactions(1, 1000);
-      setState(prev => ({ 
+      setState((prev: ActivitiesWithReactionsState) => ({ 
         ...prev, 
         activities, 
         loading: false, 
         loaded: true 
       }));
     } catch (error) {
-      setState(prev => ({ 
+      setState((prev: ActivitiesWithReactionsState) => ({ 
         ...prev, 
         loading: false, 
         error: error instanceof Error ? error.message : 'Errore nel caricamento delle attività' 
@@ -64,12 +64,12 @@ export function useActivitiesWithReactions() {
       // Reset del flag
       dispatch(resetRefetchFlag());
       // Forza il refetch impostando loaded a false
-      setState(prev => ({ ...prev, loaded: false }));
+      setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loaded: false }));
     }
   }, [shouldRefetch, dispatch]);
 
   const refetch = useCallback(() => {
-    setState(prev => ({ ...prev, loaded: false }));
+    setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loaded: false }));
   }, []);
 
   return {
@@ -89,7 +89,7 @@ export function usePublicActivitiesWithReactions(userIdOrUsername: string | numb
   // Monitora il flag di invalidazione dal Redux store
   const shouldRefetch = useSelector((state: RootState) => state.activityReactions.shouldRefetchActivitiesWithReactions);
   
-  const [state, setState] = React.useState<ActivitiesWithReactionsState>({
+  const [state, setState] = useState<ActivitiesWithReactionsState>({
     activities: [],
     loading: false,
     error: null,
@@ -99,21 +99,21 @@ export function usePublicActivitiesWithReactions(userIdOrUsername: string | numb
   const fetchActivities = useCallback(async () => {
     if (!userIdOrUsername || state.loading) return; // Evita fetch multipli simultanei
 
-    setState(prev => ({ ...prev, loading: true, error: null }));
+    setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loading: true, error: null }));
     try {
       const activities = await activityReactionService.getPublicActivitiesWithReactions(
         typeof userIdOrUsername === 'string' ? parseInt(userIdOrUsername) : userIdOrUsername,
         1, // page
         1000 // pageSize aumentato per caricare tutte le attività
       );
-      setState(prev => ({ 
+      setState((prev: ActivitiesWithReactionsState) => ({ 
         ...prev, 
         activities, 
         loading: false, 
         loaded: true 
       }));
     } catch (error) {
-      setState(prev => ({ 
+      setState((prev: ActivitiesWithReactionsState) => ({ 
         ...prev, 
         loading: false, 
         error: error instanceof Error ? error.message : 'Errore nel caricamento delle attività' 
@@ -134,12 +134,12 @@ export function usePublicActivitiesWithReactions(userIdOrUsername: string | numb
       // Reset del flag
       dispatch(resetRefetchFlag());
       // Forza il refetch impostando loaded a false
-      setState(prev => ({ ...prev, loaded: false }));
+      setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loaded: false }));
     }
   }, [shouldRefetch, dispatch, userIdOrUsername]);
 
   const refetch = useCallback(() => {
-    setState(prev => ({ ...prev, loaded: false }));
+    setState((prev: ActivitiesWithReactionsState) => ({ ...prev, loaded: false }));
   }, []);
 
   return {

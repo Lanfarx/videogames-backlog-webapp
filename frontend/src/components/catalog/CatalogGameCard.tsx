@@ -18,7 +18,7 @@ interface CatalogGameCardProps {
   communityRating?: CommunityRatingDto;
 }
 
-const CatalogGameCard: React.FC<CatalogGameCardProps> = ({ 
+export default function CatalogGameCard({ 
   game, 
   isInLibrary, 
   isInWishlist,
@@ -27,7 +27,7 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
   onRemoveFromWishlist,
   onInfoClick, 
   communityRating 
-}) => {
+}: CatalogGameCardProps) {
   const handleInfoClick = () => {
     onInfoClick(game.id);
   };
@@ -54,12 +54,14 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
           ))}
           {game.Genres.length > 3 && (
             <span className="px-2 py-0.5 bg-tertiary-bg text-xs rounded-full text-text-secondary">+{game.Genres.length - 3}</span>
-          )}        </div>       
+          )}
+        </div>       
         <div className="flex items-center gap-2 mb-1">
           <Award className="h-4 w-4 text-yellow-400" />
           <span className="font-semibold text-xs text-text-primary">{formatMetacriticScore(game.Metacritic)}</span>
           <span className="text-xs text-text-secondary">Metacritic</span>
-        </div>        {/* Recensioni utenti aggregate */}
+        </div>
+        {/* Recensioni utenti aggregate */}
         <div className="flex items-center gap-2 mb-1">
           <RatingStars Rating={rating} showValue={false} size="sm" readOnly />
           <span className="text-xs text-text-secondary">
@@ -67,12 +69,13 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
             {reviewCount > 0 && ` (${reviewCount} recensioni)`}
           </span>
         </div>
-        <div className="flex-1" />        {/* Pulsanti azione */}
+        <div className="flex-1" />
+        {/* Pulsanti azione */}
         <div className="flex gap-2 mt-2">
           {/* Bottone Libreria */}
           {!isInLibrary ? (
             <button
-              className="flex-1 flex items-center justify-center py-2 px-3 bg-accent-primary text-white rounded-md font-medium text-sm hover:bg-accent-primary/90 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center py-2 px-3 bg-accent-primary text-white rounded-md font-medium text-sm hover:opacity-90 transition-opacity shadow-sm"
               onClick={onAddToLibrary}
               title="Aggiungi alla libreria"
             >
@@ -87,7 +90,7 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
               <CheckCircle className="h-5 w-5" />
             </button>
           )}
-            {/* Bottone Wishlist - nascosto se già in libreria */}
+          {/* Bottone Wishlist - nascosto se già in libreria */}
           {!isInLibrary && (
             <button
               className={`flex-1 flex items-center justify-center py-2 px-3 rounded-md text-sm transition-colors shadow-sm ${
@@ -116,6 +119,4 @@ const CatalogGameCard: React.FC<CatalogGameCardProps> = ({
       </div>
     </div>
   );
-};
-
-export default CatalogGameCard;
+}

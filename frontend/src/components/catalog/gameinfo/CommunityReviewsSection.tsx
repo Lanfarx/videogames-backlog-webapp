@@ -6,7 +6,7 @@ import ReviewCommentsSection from './ReviewCommentsSection';
 import { CommunityReviewDto } from '../../../types/community';
 import { usePublicCommunityReviews, useReviewStats } from '../../../store/hooks/communityHooks';
 
-const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle }) => {
+export default function CommunityReviewsSection({ GameTitle }: { GameTitle: string }) {
   const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
   const [showAllReviews, setShowAllReviews] = useState(false);
   const navigate = useNavigate();
@@ -186,6 +186,7 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
                 <ReviewCommentsSection 
                   reviewGameId={review.id} 
                   commentsCount={review.commentsCount || 0} 
+                  ownerId={review.userId}
                 />
               </div>
             ))}
@@ -204,6 +205,4 @@ const CommunityReviewsSection: React.FC<{ GameTitle: string }> = ({ GameTitle })
       )}
     </div>
   );
-};
-
-export default CommunityReviewsSection;
+}

@@ -1,25 +1,24 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Search, User, Plus, UserCheck, UserX, Ban, Loader, ArrowLeft, ArrowRight } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Search, Loader } from 'lucide-react';
 import { useFriendshipActions, useUserSearch } from '../../store/hooks/friendshipHooks';
 import { PublicProfile } from '../../store/services/friendshipService';
-import { useNavigate } from 'react-router-dom';
-import { useFriendsNavigation } from '../../store/hooks/navigationHooks';
+import { useFriendsNavigation } from '../../hooks/navigationHooks';
+import { PaginationControls } from '../ui/PaginationControls';
+import { UserSearchCard } from './UserSearchCard';
 
 interface UserSearchProps {
   className?: string;
 }
 
-const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
+export default function UserSearch({ className = '' }: UserSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [hasSearched, setHasSearched] = useState(false);
   
   const { sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, blockUser, searchUsers } = useFriendshipActions();
   const { results: searchResults, loading: searchLoading, error: searchError } = useUserSearch();
-  const { navigateToSentRequests, navigateToFriends } = useFriendsNavigation();
-  const navigate = useNavigate();
+  const { navigateToFriends } = useFriendsNavigation();
   
-  // Derive pagination values from search results
   const searchTotal = searchResults?.totalCount || 0;
   const searchCurrentPage = searchResults?.currentPage || 1;
   const searchTotalPages = searchResults?.totalPages || 1;
@@ -38,7 +37,6 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
     setSearchQuery(query);
     
     if (query.trim()) {
-      // Debounce della ricerca
       const timeoutId = setTimeout(() => {
         handleSearch(query, 1);
       }, 500);
@@ -53,20 +51,19 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
     if (searchQuery.trim()) {
       handleSearch(searchQuery, page);
     }
-  };  const handleAction = async (user: PublicProfile, action: string) => {
+  };
+
+  const handleAction = async (user: PublicProfile, action: string) => {
     try {
       switch (action) {
         case 'sendRequest':
           await sendFriendRequest(user.userName);
-          // Non navigare automaticamente, lascia l'utente vedere il cambiamento
-          // navigateToSentRequests();
           break;
         case 'accept':
           if (user.friendshipId) {
             await acceptFriendRequest(user.friendshipId);
-            // Naviga automaticamente alla sezione "I miei amici"
             navigateToFriends();
-            return; // Non ricaricare la ricerca se navigiamo via
+            return;
           }
           break;
         case 'reject':
@@ -84,11 +81,8 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
           break;
       }
       
-      // Breve pausa per permettere al backend di processare la richiesta
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Dopo qualsiasi azione, ricarica i risultati di ricerca per garantire 
-      // che l'interfaccia rifletta lo stato più aggiornato dal backend
       if (searchQuery.trim()) {
         await handleSearch(searchQuery, currentPage);
       }
@@ -97,141 +91,8 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
     }
   };
 
-  const getActionButton = (user: PublicProfile) => {
-    if (!user.acceptsFriendRequests && !user.isFriend) {
-      return (
-        <div className="text-sm text-text-secondary">
-          Non accetta richieste
-        </div>
-      );
-    }
-
-    switch (user.friendshipStatus) {      case 'Pending':
-        // Se l'utente corrente ha inviato la richiesta, mostra solo messaggio di attesa
-        if (user.isRequestSender) {
-          return (
-            <div className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-300 text-sm">
-              Richiesta inviata
-            </div>
-          );
-        }
-        // Se l'utente corrente ha ricevuto la richiesta, mostra i bottoni accetta/rifiuta
-        return (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAction(user, 'accept')}
-              className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
-            >
-              <UserCheck className="h-4 w-4" />
-              Accetta
-            </button>
-            <button
-              onClick={() => handleAction(user, 'reject')}
-              className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
-            >
-              <UserX className="h-4 w-4" />
-              Rifiuta
-            </button>
-          </div>
-        );
-        case 'Accepted':
-        return (
-          <div className="flex gap-2">
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm">
-              Amici
-            </span>
-            <button
-              onClick={() => handleAction(user, 'remove')}
-              className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
-            >
-              Rimuovi
-            </button>
-          </div>
-        );
-      
-      case 'Rejected':
-        return (
-          <div className="flex gap-2">
-            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-lg text-sm">
-              Richiesta rifiutata
-            </span>
-            <button
-              onClick={() => handleAction(user, 'sendRequest')}
-              className="px-3 py-1 bg-accent-primary text-white rounded-lg text-sm hover:bg-accent-primary/90 transition-colors flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" />
-              Riprova
-            </button>
-          </div>
-        );
-      
-      case 'Blocked':
-        return (
-          <span className="px-3 py-1 bg-gray-500 text-white rounded-lg text-sm">
-            Bloccato
-          </span>
-        );
-      
-      default:
-        return (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAction(user, 'sendRequest')}
-              className="px-3 py-1 bg-accent-primary text-white rounded-lg text-sm hover:bg-accent-primary/90 transition-colors flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" />
-              Aggiungi
-            </button>
-            <button
-              onClick={() => handleAction(user, 'block')}
-              className="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-700 transition-colors flex items-center gap-1"
-            >
-              <Ban className="h-4 w-4" />
-              Blocca
-            </button>
-          </div>
-        );
-    }
-  };
-
-  const paginationControls = useMemo(() => {
-    if (!hasSearched || searchTotalPages <= 1) return null;
-    
-    return (
-      <div className="flex items-center justify-between mt-6">
-        <div className="text-sm text-text-secondary">
-          Mostrando pagina {searchCurrentPage} di {searchTotalPages} ({searchTotal} risultati)
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handlePageChange(searchCurrentPage - 1)}
-            disabled={searchCurrentPage <= 1}
-            className="px-3 py-1 bg-secondary-bg text-text-primary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-hover-color transition-colors flex items-center gap-1"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Precedente
-          </button>
-          
-          <span className="px-3 py-1 bg-accent-primary text-white rounded-lg">
-            {searchCurrentPage}
-          </span>
-          
-          <button
-            onClick={() => handlePageChange(searchCurrentPage + 1)}
-            disabled={searchCurrentPage >= searchTotalPages}
-            className="px-3 py-1 bg-secondary-bg text-text-primary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-hover-color transition-colors flex items-center gap-1"
-          >
-            Successiva
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    );
-  }, [hasSearched, searchTotalPages, searchCurrentPage, searchTotal, handlePageChange]);
-
   return (
     <div className={`bg-primary-bg border border-border-color rounded-xl p-6 ${className}`}>
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Search className="h-6 w-6 text-accent-primary" />
         <h2 className="text-xl font-bold text-text-primary">
@@ -239,7 +100,6 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
         </h2>
       </div>
 
-      {/* Barra di ricerca */}
       <div className="relative mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary" />
@@ -261,7 +121,6 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
         )}
       </div>
 
-      {/* Messaggio di stato */}
       {!hasSearched && (
         <div className="text-center py-12 text-text-secondary">
           <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -269,12 +128,12 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
         </div>
       )}
 
-      {/* Errore */}
       {searchError && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4">
           {searchError}
         </div>
-      )}      {/* Nessun risultato */}
+      )}
+
       {hasSearched && !searchLoading && users.length === 0 && !searchError && (
         <div className="text-center py-8">
           <Search className="h-16 w-16 text-text-secondary mx-auto mb-4 opacity-50" />
@@ -285,92 +144,23 @@ const UserSearch: React.FC<UserSearchProps> = ({ className = '' }) => {
         </div>
       )}
 
-      {/* Lista risultati */}
       {users.length > 0 && (
         <div className="space-y-4">
           {users.map((user: PublicProfile) => (
-            <div
-              key={user.userId}
-              className="flex items-center gap-4 p-4 bg-secondary-bg rounded-lg hover:bg-hover-color transition-colors"
-            >
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.userName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-accent-primary/20 flex items-center justify-center">
-                    <User className="h-6 w-6 text-accent-primary" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info utente */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3
-                    className="font-medium text-text-primary truncate cursor-pointer hover:underline"
-                    title={user.userName}
-                    onClick={() => navigate(`/profile/${user.userName}`)}
-                  >
-                    {user.userName}
-                  </h3>
-                  {user.isProfilePrivate && (
-                    <span className="px-2 py-1 bg-gray-500 text-white text-xs rounded">
-                      Privato
-                    </span>
-                  )}
-                </div>
-                
-                {user.fullName && (
-                  <p className="text-sm text-text-secondary truncate">
-                    {user.fullName}
-                  </p>
-                )}
-                
-                {user.bio && (
-                  <p className="text-sm text-text-secondary truncate mt-1">
-                    {user.bio}
-                  </p>
-                )}
-                
-                <div className="flex items-center gap-4 mt-2 text-xs text-text-secondary">
-                  <span>Membro dal {new Date(user.memberSince).toLocaleDateString()}</span>                  {user.tags && user.tags.length > 0 && (
-                    <div className="flex gap-1">
-                      {user.tags.slice(0, 2).map((tag: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-accent-primary/20 text-accent-primary rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {user.tags.length > 2 && (
-                        <span className="text-text-secondary">
-                          +{user.tags.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Azioni */}
-              <div className="flex-shrink-0">
-                {getActionButton(user)}
-              </div>
-            </div>
+            <UserSearchCard key={user.userId} user={user} onAction={handleAction} />
           ))}
         </div>
       )}
 
-      {/* Paginazione */}
-      {paginationControls}
+      {hasSearched && searchTotalPages > 1 && (
+        <PaginationControls 
+          currentPage={searchCurrentPage}
+          totalPages={searchTotalPages}
+          totalCount={searchTotal}
+          onPageChange={handlePageChange}
+          variant="simple"
+        />
+      )}
     </div>
   );
-};
-
-export default UserSearch;
+}

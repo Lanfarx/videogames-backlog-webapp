@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {useGameComments, useGameActions, useGameByTitle, useLoadSingleGameByTitle } from '../../store/hooks/gamesHooks';
 import { useAllActivitiesByGameId } from '../../store/hooks/activitiesHooks';
-import { useGameNavigation } from '../../store/hooks/useGameNavigation';
+import { useGameNavigation } from '../../hooks/useGameNavigation';
 
 import { Game, GameComment, GameStatus, GameReview } from '../../types/game';
 import GameBanner from '../../components/game/GameBanner';
@@ -70,7 +70,7 @@ export default function GamePage() {
           <p className="text-text-primary font-primary text-xl mb-4">Gioco non trovato</p>
           <p className="text-text-secondary mb-4">Il gioco "{decodedTitle}" non è presente nella tua libreria.</p>          <button 
             onClick={handleBackToLibrary} 
-            className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90"
+            className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Torna alla Libreria
           </button>

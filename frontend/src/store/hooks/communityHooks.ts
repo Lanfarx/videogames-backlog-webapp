@@ -7,7 +7,6 @@ import {
   ReviewStatsDto,
   CommunityRatingsResponse,
   CommunityRatingsWithCountResponse,
-  CreateReviewRequest,
   ReviewCommentDto,
   CreateReviewCommentDto
 } from '../../types/community';
@@ -217,31 +216,6 @@ export const useGameCommunityData = (gameTitle: string, page: number = 1, pageSi
   };
 };
 
-// ============ MUTATION HOOKS ============
-
-/**
- * Hook per aggiungere una recensione
- */
-export const useAddReview = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const mutate = useCallback(async (reviewData: CreateReviewRequest) => {
-    setIsLoading(true);
-    try {
-      const result = await CommunityService.addReview(reviewData);
-      return result;
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return {
-    mutate,
-    isLoading
-  };
-};
 
 // ============ REVIEW COMMENTS HOOKS ============
 

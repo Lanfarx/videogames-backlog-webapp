@@ -12,11 +12,11 @@ interface GamePageHeaderProps {
   parentLabel?: string;
 }
 
-const GamePageHeader: React.FC<GamePageHeaderProps> = ({ 
+export default function GamePageHeader({ 
   title, 
   parentPath = '/library', 
   parentLabel = 'Libreria' 
-}) => {
+}: GamePageHeaderProps) {
   return (
     <header className="h-16 border-b border-border-color flex items-center px-6">
       <div className="flex-1 flex items-center gap-3">
@@ -33,6 +33,4 @@ const GamePageHeader: React.FC<GamePageHeaderProps> = ({
       </div>
     </header>
   );
-};
-
-export default GamePageHeader;
+}

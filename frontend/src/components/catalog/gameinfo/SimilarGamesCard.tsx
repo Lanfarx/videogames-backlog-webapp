@@ -2,7 +2,7 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import type { PublicCatalogGame } from '../../../types/game';
 import { SimilarGameItem } from './SimilarGameItem';
-import { useSimilarGames } from '../../../store/hooks/useSimilarGames';
+import { useSimilarGames } from '../../../hooks/useSimilarGames';
 import { usePublicCommunityRatingsWithCount } from '../../../store/hooks/communityHooks';
 
 interface SimilarGamesCardProps {
@@ -10,7 +10,7 @@ interface SimilarGamesCardProps {
   horizontal?: boolean;
 }
 
-const SimilarGamesCard: React.FC<SimilarGamesCardProps> = ({ currentGame, horizontal = false }) => {
+export default function SimilarGamesCard({ currentGame, horizontal = false }: SimilarGamesCardProps) {
   const recommendedGames = useSimilarGames(currentGame, 4); // Sempre 4 giochi
   
   // Ottieni i rating di tutti i giochi simili in una volta
@@ -46,6 +46,4 @@ const SimilarGamesCard: React.FC<SimilarGamesCardProps> = ({ currentGame, horizo
       </div>
     </div>
   );
-};
-
-export default SimilarGamesCard;
+}

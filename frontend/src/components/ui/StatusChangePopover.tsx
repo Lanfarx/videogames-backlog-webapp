@@ -10,14 +10,12 @@ interface StatusChangePopoverProps {
   HoursPlayed: number; // Aggiungiamo le ore di gioco come prop
 }
 
-const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({ 
-  GameId,
+export default function StatusChangePopover({ 
   currentStatus, 
   onStatusChange, 
   onCancel,
   HoursPlayed 
-}) => {
-  // Ref per il popover
+}: StatusChangePopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
   
   // Effetto per gestire i clic fuori dal popover
@@ -40,10 +38,12 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
     if (onStatusChange) onStatusChange(Status);
     onCancel();
   };
+  
+  // Rimosso createPortal per renderizzare all'interno del menu in posizione relativa
   return (
     <div 
       ref={popoverRef}
-      className="absolute z-10 top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-primary-bg border border-border-color"
+      className="absolute z-[9999] top-0 right-0 w-56 rounded-md shadow-xl bg-primary-bg border border-border-color"
     >
       <div className="rounded-md shadow-xs py-1">
         <div className="px-3 py-2 border-b border-border-color">
@@ -91,6 +91,4 @@ const StatusChangePopover: React.FC<StatusChangePopoverProps> = ({
       </div>
     </div>
   );
-};
-
-export default StatusChangePopover;
+}

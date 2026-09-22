@@ -34,9 +34,9 @@ export function filterGames(games: Game[], searchParams: GameSearchParams): Game
     if (Status && Status.length > 0) filtered = filtered.filter(game => Status.includes(game.Status));
     if (Platform && Platform.length > 0) filtered = filtered.filter(game => Platform.includes(game.Platform));
     if (genre && genre.length > 0) filtered = filtered.filter(game => game.Genres.some(g => genre.includes(g)));
-    if (PriceRange) filtered = filtered.filter(game => game.Price >= PriceRange[0] && game.Price <= PriceRange[1]);
-    if (hoursRange) filtered = filtered.filter(game => game.HoursPlayed >= hoursRange[0] && game.HoursPlayed <= hoursRange[1]);
-    if (MetacriticRange) filtered = filtered.filter(game => game.Metacritic >= MetacriticRange[0] && game.Metacritic <= MetacriticRange[1]);
+    if (PriceRange) filtered = filtered.filter(game => (game.Price ?? 0) >= PriceRange[0] && (game.Price ?? 0) <= PriceRange[1]);
+    if (hoursRange) filtered = filtered.filter(game => (game.HoursPlayed ?? 0) >= hoursRange[0] && (game.HoursPlayed ?? 0) <= hoursRange[1]);
+    if (MetacriticRange) filtered = filtered.filter(game => (game.Metacritic ?? 0) >= MetacriticRange[0] && (game.Metacritic ?? 0) <= MetacriticRange[1]);
     if (PurchaseDate) {
       const purchaseYear = new Date(PurchaseDate).getFullYear();
       filtered = filtered.filter(game => game.PurchaseDate && new Date(game.PurchaseDate).getFullYear() === purchaseYear);
@@ -59,11 +59,11 @@ export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrde
     switch (sortBy) {
       case 'title': return a.Title.localeCompare(b.Title) * sortMultiplier;
       case 'Platform': return a.Platform.localeCompare(b.Platform) * sortMultiplier;
-      case 'ReleaseYear': return (a.ReleaseYear - b.ReleaseYear) * sortMultiplier;
-      case 'Rating': return (a.Rating - b.Rating) * sortMultiplier;
-      case 'HoursPlayed': return (a.HoursPlayed - b.HoursPlayed) * sortMultiplier;
-      case 'Price': return (a.Price - b.Price) * sortMultiplier;
-      case 'Metacritic': return (a.Metacritic - b.Metacritic) * sortMultiplier;
+      case 'ReleaseYear': return ((a.ReleaseYear ?? 0) - (b.ReleaseYear ?? 0)) * sortMultiplier;
+      case 'Rating': return ((a.Rating ?? 0) - (b.Rating ?? 0)) * sortMultiplier;
+      case 'HoursPlayed': return ((a.HoursPlayed ?? 0) - (b.HoursPlayed ?? 0)) * sortMultiplier;
+      case 'Price': return ((a.Price ?? 0) - (b.Price ?? 0)) * sortMultiplier;
+      case 'Metacritic': return ((a.Metacritic ?? 0) - (b.Metacritic ?? 0)) * sortMultiplier;
       case 'PurchaseDate':
         if (!a.PurchaseDate) return sortMultiplier;
         if (!b.PurchaseDate) return -sortMultiplier;
@@ -96,7 +96,7 @@ export function generatePlatformDistributionData(games: Game[]): ChartItem[] {
 
 export function calculateAveragePrice(games: Game[]): number {
   if (games.length === 0) return 0;
-  const totalPrice = games.reduce((sum, game) => sum + game.Price, 0);
+  const totalPrice = games.reduce((sum, game) => sum + (game.Price ?? 0), 0);
   return parseFloat((totalPrice / games.length).toFixed(2));
 }
 

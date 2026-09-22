@@ -8,11 +8,11 @@ interface SectionHeaderProps {
   seeAllLink?: string;
 }
 
-const SectionHeader: React.FC<SectionHeaderProps> = ({ 
+export default function SectionHeader({ 
   title, 
   subtitle, 
   seeAllLink 
-}) => {
+}: SectionHeaderProps) {
   return (
     <div className="flex items-baseline justify-between mb-4">
       <div>
@@ -33,6 +33,4 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
       )}
     </div>
   );
-};
-
-export default SectionHeader;
+}

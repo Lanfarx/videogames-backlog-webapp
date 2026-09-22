@@ -15,7 +15,7 @@ interface GameCardProps {
   Genres: string[];
 }
 
-const InProgressGameCard: React.FC<GameCardProps> = ({ 
+export default function InProgressGameCard({ 
   id,
   title, 
   CoverImage, 
@@ -23,7 +23,7 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
   HoursPlayed, 
   Rating,
   Genres = []
-}) => {
+}: GameCardProps) {
   const navigate = useNavigate();
   // Ottieni il gioco aggiornato dallo stato globale Redux tramite hook custom
   const gameFromStore = useGameById(Number(id));
@@ -87,6 +87,4 @@ const InProgressGameCard: React.FC<GameCardProps> = ({
       </div>
     </div>
   );
-};
-
-export default InProgressGameCard;
+}

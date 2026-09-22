@@ -14,7 +14,10 @@ export const API_CONFIG = {
     COMMUNITY: '/api/community',
     NOTIFICATION: '/api/notification',
     ACTIVITY_REACTIONS: '/api/activity-reactions',
-    STEAM: '/api/steam'
+    ACTIVITY_COMMENTS: '/api/activity-comments',
+    REVIEW_COMMENTS: '/api/review-comments',
+    STEAM: '/api/steam',
+    WISHLIST: '/api/wishlist'
   }
 } as const;
 
@@ -33,5 +36,8 @@ export const API_URLS = {
   COMMUNITY: buildApiUrl(API_CONFIG.ENDPOINTS.COMMUNITY),
   NOTIFICATION: buildApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATION),
   ACTIVITY_REACTIONS: buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_REACTIONS),
-  STEAM: buildApiUrl(API_CONFIG.ENDPOINTS.STEAM)
+  ACTIVITY_COMMENTS: buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_COMMENTS),
+  REVIEW_COMMENTS: buildApiUrl(API_CONFIG.ENDPOINTS.REVIEW_COMMENTS),
+  STEAM: buildApiUrl(API_CONFIG.ENDPOINTS.STEAM),
+  WISHLIST: buildApiUrl(API_CONFIG.ENDPOINTS.WISHLIST)
 } as const;

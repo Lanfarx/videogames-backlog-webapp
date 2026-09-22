@@ -41,10 +41,12 @@ export const Platform_COLORS: Record<string, string> = {
   'PlayStation 4': getCssVarColor('--Platform-ps4', '#003087'),
   'Xbox Series X/S': getCssVarColor('--Platform-xbox-series', '#107c10'),
   'Xbox': getCssVarColor('--Platform-xbox-one', '#5dc21e'),
+  'Nintendo Switch 2': getCssVarColor('--Platform-switch-2', '#e60012'),
   'Nintendo Switch': getCssVarColor('--Platform-switch', '#e60012'),
   'Steam': getCssVarColor('--Platform-steam', '#1b2838'),
   'Epic Games Store': getCssVarColor('--Platform-epic', '#2a2a2a'),
-  'PC': getCssVarColor('--Platform-pc', '#00adef'),
+  'GOG': getCssVarColor('--Platform-gog', '#3b2f1f'),
+  'Amazon Luna': getCssVarColor('--Platform-amazon-luna', '#00adef'),
   'iOS': getCssVarColor('--Platform-ios', '#A2AAAD'),
   'Android': getCssVarColor('--Platform-android', '#3DDC84')
 };
@@ -57,9 +59,11 @@ export const GAME_PlatformS: GamePlatform[] = [
   'PlayStation 4',
   'PlayStation 3',
   'Xbox',
+  'Nintendo Switch 2',
   'Nintendo Switch',
   'Steam',
   'Epic Games Store',
+  'Amazon Luna',
   'GOG',
   'iOS',
   'Android'

@@ -25,7 +25,7 @@ interface ProfileDiaryProps {
   isFriend?: boolean; // Aggiunto per gestire le reazioni
 }
 
-const ProfileDiary: React.FC<ProfileDiaryProps> = ({
+export default function ProfileDiary({
   activities,
   selectedYear,
   activeFilters,
@@ -37,7 +37,8 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
   onFilterChange,
   isOwnProfile = false,
   isFriend = false
-}) => {// Calcola le statistiche dinamicamente in base all'anno selezionato
+}: ProfileDiaryProps) {
+  // Calcola le statistiche dinamicamente in base all'anno selezionato
   const yearFilteredActivities = useMemo(() => {
     return activities.filter(activity => {
       const activityYear = new Date(activity.timestamp).getFullYear();
@@ -66,7 +67,8 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
           <div className="text-center py-10">
             <h3 className="text-xl font-bold text-text-primary font-primary mb-4">
               Diario privato
-            </h3>            <p className="text-text-secondary font-secondary max-w-2xl mx-auto">
+            </h3>
+            <p className="text-text-secondary font-secondary max-w-2xl mx-auto">
               Il diario di questo utente è visibile solo agli amici.
             </p>
           </div>
@@ -97,7 +99,8 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
           )}
         </div>
       </div>
-        <div className="bg-primary-bg rounded-lg shadow-sm p-6">
+      
+      <div className="bg-primary-bg rounded-lg shadow-sm p-6">
         {/* Statistiche del diario */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-secondary-bg p-6 rounded-lg shadow-sm flex items-center">
@@ -128,7 +131,8 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
             </div>
           </div>
         </div>
-          {/* Filtri del diario - sempre visibili se ci sono attività in qualsiasi anno */}
+
+        {/* Filtri del diario - sempre visibili se ci sono attività in qualsiasi anno */}
         {activities.length > 0 && (
           <div className="mb-4">
             <DiaryFilters 
@@ -145,7 +149,8 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
           <div>
             {/* Visualizza solo il mese più recente nel profilo */}
             {yearMonths.length > 0 && (
-              <div className="space-y-6">                  <DiaryMonthGroup 
+              <div className="space-y-6">
+                <DiaryMonthGroup 
                   key={`${selectedYear}-${yearMonths[0]}`}
                   month={yearMonths[0]}
                   year={selectedYear}
@@ -190,7 +195,7 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
             {isOwnProfile && activities.length === 0 && (
               <Link 
                 to="/diario" 
-                className="inline-flex items-center px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/90 transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-accent-primary text-white rounded-lg hover:opacity-90 transition-opacity"
               >
                 Vai al diario completo
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -201,6 +206,4 @@ const ProfileDiary: React.FC<ProfileDiaryProps> = ({
       </div>
     </div>
   );
-};
-
-export default ProfileDiary;
+}

@@ -6,8 +6,6 @@ services:
     build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile.backend
-      cache_from:
-        - videogames-backend-prod:latest
     image: videogames-backend-prod:latest
     container_name: videogames-backend-prod
     environment:
@@ -15,6 +13,7 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - DATABASE_URL=${DATABASE_URL}
       - SteamApiKey=${STEAM_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     ports:
       - "5000:80"
     dns:
@@ -33,8 +32,6 @@ services:
         - REACT_APP_VERSION=1.0.0
         - REACT_APP_ENV=production
         - REACT_APP_RAWG_API_KEY=${REACT_APP_RAWG_API_KEY}
-      cache_from:
-        - videogames-frontend-prod:latest
     image: videogames-frontend-prod:latest
     container_name: videogames-frontend-prod
     ports:

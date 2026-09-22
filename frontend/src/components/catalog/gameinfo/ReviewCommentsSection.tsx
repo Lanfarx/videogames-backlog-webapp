@@ -3,15 +3,22 @@ import CommentsSection from '../../ui/CommentsSection';
 import { CreateReviewCommentDto, ReviewCommentDto } from '../../../types/community';
 import { CommunityService } from '../../../store/services/communityService';
 
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
+
 interface ReviewCommentsSectionProps {
   reviewGameId: number;
   commentsCount: number;
+  ownerId?: number;
 }
 
-const ReviewCommentsSection: React.FC<ReviewCommentsSectionProps> = ({ 
+export default function ReviewCommentsSection({ 
   reviewGameId, 
-  commentsCount 
-}) => {
+  commentsCount,
+  ownerId
+}: ReviewCommentsSectionProps) {
+  const user = useSelector((state: RootState) => state.user.profile);
+  const isEntityOwner = user?.id === ownerId;
   // Funzioni wrapper per adattare i tipi ai requisiti di CommentsSection
   const addComment = async (dto: CreateReviewCommentDto): Promise<ReviewCommentDto> => {
     const result = await CommunityService.addReviewComment(dto);
@@ -40,6 +47,7 @@ const ReviewCommentsSection: React.FC<ReviewCommentsSectionProps> = ({
         text,
         reviewGameId: entityId
       })}
+      isEntityOwner={isEntityOwner}
       texts={{
         addComment: 'Aggiungi un commento',
         firstComment: 'Sii il primo a commentare questa recensione',
@@ -48,6 +56,4 @@ const ReviewCommentsSection: React.FC<ReviewCommentsSectionProps> = ({
       }}
     />
   );
-};
-
-export default ReviewCommentsSection;
+}

@@ -5,7 +5,7 @@ import SectionHeader from '../ui/SectionHeader';
 import InProgressGameCard from '../ui/InProgressGameCard';
 import { getInProgressGamesPaginated } from '../../store/services/gamesService';
 
-const ContinuePlayingSection: React.FC = () => {
+export default function ContinuePlayingSection() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationData, setPaginationData] = useState<{
@@ -96,7 +96,7 @@ const ContinuePlayingSection: React.FC = () => {
               </p>
               <button 
                 onClick={() => navigate('/library')}
-                className="bg-accent-primary hover:bg-accent-primary/90 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:scale-105"
+                className="bg-accent-primary hover:opacity-90 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:scale-105"
               >
                 Esplora la libreria
               </button>
@@ -127,7 +127,7 @@ const ContinuePlayingSection: React.FC = () => {
             disabled={!paginationData.hasPreviousPage}
             className={`absolute left-0 z-10 -ml-5 h-10 w-10 rounded-full flex items-center justify-center transition-all duration-200 ${
               paginationData.hasPreviousPage 
-                ? 'bg-accent-primary hover:bg-accent-primary/90 cursor-pointer' 
+                ? 'bg-accent-primary hover:opacity-90 cursor-pointer' 
                 : 'bg-accent-secondary/30 cursor-not-allowed opacity-50'
             }`}
           >
@@ -157,7 +157,7 @@ const ContinuePlayingSection: React.FC = () => {
             disabled={!paginationData.hasNextPage}
             className={`absolute right-0 z-10 -mr-5 h-10 w-10 rounded-full flex items-center justify-center transition-all duration-200 ${
               paginationData.hasNextPage 
-                ? 'bg-accent-primary hover:bg-accent-primary/90 cursor-pointer' 
+                ? 'bg-accent-primary hover:opacity-90 cursor-pointer' 
                 : 'bg-accent-secondary/30 cursor-not-allowed opacity-50'
             }`}
           >
@@ -176,6 +176,4 @@ const ContinuePlayingSection: React.FC = () => {
       </div>
     </section>
   );
-};
-
-export default ContinuePlayingSection;
+}

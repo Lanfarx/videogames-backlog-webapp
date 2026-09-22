@@ -8,7 +8,7 @@ interface RecentActivitiesListProps {
     title: string;
 }
 
-const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities, icon, title }) => {
+export default function RecentActivitiesList({ activities, icon, title }: RecentActivitiesListProps) {
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -103,6 +103,4 @@ const RecentActivitiesList: React.FC<RecentActivitiesListProps> = ({ activities,
             )}
         </div>
     );
-};
-
-export default RecentActivitiesList;
+}

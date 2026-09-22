@@ -18,7 +18,7 @@ const widthMap: Record<string, string> = {
   '': 'w-0',
 };
 
-const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({ strength }) => (
+export default function PasswordStrengthBar({ strength }: PasswordStrengthBarProps) { return (
   <div className="w-full h-1 rounded bg-gray-200 mt-1 mb-1">
     {strength !== '' && (
       <div
@@ -26,6 +26,4 @@ const PasswordStrengthBar: React.FC<PasswordStrengthBarProps> = ({ strength }) =
       ></div>
     )}
   </div>
-);
-
-export default PasswordStrengthBar;
+); }

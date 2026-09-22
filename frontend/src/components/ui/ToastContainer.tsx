@@ -6,7 +6,7 @@ export interface ToastContainerProps {
   onRemoveToast: (id: string) => void;
 }
 
-const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemoveToast }) => {
+export default function ToastContainer({ toasts, onRemoveToast }: ToastContainerProps) {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.map((toast, index) => (
@@ -25,6 +25,4 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemoveToast }
       ))}
     </div>
   );
-};
-
-export default ToastContainer;
+}

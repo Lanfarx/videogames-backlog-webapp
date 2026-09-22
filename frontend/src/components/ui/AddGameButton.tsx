@@ -5,16 +5,14 @@ interface AddGameButtonProps {
   onClick: () => void;
 }
 
-const AddGameButton: React.FC<AddGameButtonProps> = ({ onClick }) => {
+export default function AddGameButton({ onClick }: AddGameButtonProps) {
   return (
     <button
-      className="flex items-center px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
+      className="flex items-center px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity"
       onClick={onClick}
     >
       <PlusCircle className="w-4 h-4 mr-2" />
       Aggiungi gioco
     </button>
   );
-};
-
-export default AddGameButton;
+}

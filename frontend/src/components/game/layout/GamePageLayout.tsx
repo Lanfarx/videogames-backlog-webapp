@@ -9,12 +9,12 @@ interface GamePageLayoutProps {
   parentLabel?: string;
 }
 
-const GamePageLayout: React.FC<GamePageLayoutProps> = ({ 
+export default function GamePageLayout({ 
   children, 
   title, 
   parentPath = '/library',
   parentLabel = 'Libreria'
-}) => {
+}: GamePageLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-primary-bg">
       <GamePageHeader 
@@ -28,6 +28,4 @@ const GamePageLayout: React.FC<GamePageLayoutProps> = ({
       <Footer />
     </div>
   );
-};
-
-export default GamePageLayout;
+}

@@ -10,13 +10,13 @@ interface WishlistItemCardProps {
   onViewInfo: (rawgId: number) => void;
 }
 
-const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
+export default function WishlistItemCard({
   item,
   onRemove,
   onPurchase,
   onUpdateNotes,
   onViewInfo,
-}) => {
+}: WishlistItemCardProps) {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [editedNotes, setEditedNotes] = useState(item.notes || '');
 
@@ -158,6 +158,4 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
       </div>
     </div>
   );
-};
-
-export default WishlistItemCard;
+}

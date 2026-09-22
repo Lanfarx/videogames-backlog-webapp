@@ -3,15 +3,22 @@ import CommentsSection from '../ui/CommentsSection';
 import { ActivityComment, CreateActivityCommentDto } from '../../types/activity';
 import { CommunityService } from '../../store/services/communityService';
 
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+
 interface ActivityCommentsSectionProps {
   activityId: number;
   commentsCount: number;
+  ownerId?: number;
 }
 
-const ActivityCommentsSection: React.FC<ActivityCommentsSectionProps> = ({ 
+export default function ActivityCommentsSection({ 
   activityId, 
-  commentsCount 
-}) => {
+  commentsCount,
+  ownerId
+}: ActivityCommentsSectionProps) {
+  const user = useSelector((state: RootState) => state.user.profile);
+  const isEntityOwner = user?.id === ownerId;
   // Funzioni wrapper per adattare i tipi ai requisiti di CommentsSection
   const addComment = async (dto: CreateActivityCommentDto): Promise<ActivityComment> => {
     const result = await CommunityService.addActivityComment(dto);
@@ -37,6 +44,7 @@ const ActivityCommentsSection: React.FC<ActivityCommentsSectionProps> = ({
       addComment={addComment}
       deleteComment={deleteComment}
       createCommentDto={(text: string, entityId: number) => ({ text, activityId: entityId })}
+      isEntityOwner={isEntityOwner}
       texts={{
         addComment: 'Aggiungi un commento',
         firstComment: 'Sii il primo a commentare questa attività',
@@ -46,6 +54,4 @@ const ActivityCommentsSection: React.FC<ActivityCommentsSectionProps> = ({
       }}
     />
   );
-};
-
-export default ActivityCommentsSection;
+}

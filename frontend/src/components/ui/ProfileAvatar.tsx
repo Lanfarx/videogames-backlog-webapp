@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
-const ProfileAvatar: React.FC = () => {
+export default function ProfileAvatar() {
   const userProfile = useSelector((state: RootState) => state.user.profile);
 
   return (
@@ -23,6 +23,4 @@ const ProfileAvatar: React.FC = () => {
       </div>
     </NavLink>
   );
-};
-
-export default ProfileAvatar;
+}

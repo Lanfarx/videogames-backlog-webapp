@@ -1,6 +1,5 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
-import { calculateActivityDays } from '../../utils/dateUtils';
 
 interface ProfileHeaderProps {
   userProfile: {
@@ -20,14 +19,15 @@ interface ProfileHeaderProps {
   backButton?: React.ReactNode;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+export default function ProfileHeader({
   userProfile,
   isProfilePrivate,
   isOwnProfile = false,
   onLogout,
   actionButton,
   backButton
-}) => {  return (
+}: ProfileHeaderProps) {
+  return (
     <div className="bg-primary-bg rounded-lg shadow-sm p-6 mb-10 relative">
       {/* Pulsanti di azione per profili pubblici - Layout non sovrapposto */}
       {!isOwnProfile && (backButton || actionButton) && (
@@ -45,7 +45,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       {isOwnProfile && onLogout && (
         <button
           onClick={onLogout}
-          className="absolute top-6 right-6 bg-accent-danger hover:bg-accent-primary/90 focus:ring-2 focus:ring-accent-primary text-white font-secondary text-base shadow-md border-0 transition-colors duration-150 px-8 py-2 rounded-lg h-12 min-w-[140px] z-10"
+          className="absolute top-6 right-6 bg-accent-danger hover:opacity-90 focus:ring-2 focus:ring-accent-primary text-white font-secondary text-base shadow-md border-0 transition-opacity duration-150 px-8 py-2 rounded-lg h-12 min-w-[140px] z-10"
           style={{ minWidth: 0, height: 'auto', fontSize: '1rem' }}
         >
           Logout
@@ -62,7 +62,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 alt="Avatar" 
                 className="w-full h-full object-cover" 
               />
-            ) : (              <span className="text-accent-primary font-bold text-4xl">
+            ) : (
+              <span className="text-accent-primary font-bold text-4xl">
                 {(userProfile.UserName || userProfile.userName) ? (userProfile.UserName || userProfile.userName)!.charAt(0).toUpperCase() : 'U'}
               </span>
             )}
@@ -76,7 +77,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         
         {/* Informazioni profilo */}
         <div className="flex-1">
-          <div className="flex items-center justify-center md:justify-start gap-2 mb-2">            <h1 className="text-3xl font-bold text-text-primary font-primary">
+          <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+            <h1 className="text-3xl font-bold text-text-primary font-primary">
               {userProfile.fullName || userProfile.UserName || userProfile.userName}
             </h1>
             {isProfilePrivate && (
@@ -109,6 +111,4 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       </div>
     </div>
   );
-};
-
-export default ProfileHeader;
+}

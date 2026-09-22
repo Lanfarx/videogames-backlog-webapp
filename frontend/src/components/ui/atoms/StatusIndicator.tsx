@@ -4,7 +4,7 @@ interface StatusIndicatorProps {
   Status?: string;
 }
 
-const StatusIndicator: React.FC<StatusIndicatorProps> = ({ Status }) => {
+export default function StatusIndicator({ Status }: StatusIndicatorProps) {
   if (!Status) {
     return (
       <div className="h-1 bg-border-color rounded-t-xl overflow-hidden">
@@ -22,6 +22,4 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ Status }) => {
       ></div>
     </div>
   );
-};
-
-export default StatusIndicator;
+}

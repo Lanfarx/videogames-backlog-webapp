@@ -44,11 +44,39 @@ export function calculateTotalPlaytime(activities: Activity[]): number {
  * Calcola il tempo di gioco nelle ultime due settimane
  */
 export function calculateRecentPlaytime(activities: Activity[]): number {
-  return activities
-    .filter(a => a.type === 'Played' && a.additionalInfo && isInLastTwoWeeks(new Date(a.timestamp)))
-    .reduce((total, activity) => {
-      return total + extractHoursFromString(activity.additionalInfo);
-    }, 0);
+  const recentActivities = activities.filter(
+    a => a.type === 'Played' && a.additionalInfo && isInLastTwoWeeks(new Date(a.timestamp))
+  );
+
+  const syncBatches = new Map<string, number>();
+  recentActivities.forEach(a => {
+    const date = new Date(a.timestamp);
+    const minuteKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`;
+    syncBatches.set(minuteKey, (syncBatches.get(minuteKey) || 0) + 1);
+  });
+
+  const recentPlaytime = recentActivities.reduce((total, activity) => {
+    if (activity.additionalInfo?.startsWith("-")) {
+      return total;
+    }
+    
+    const date = new Date(activity.timestamp);
+    const minuteKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`;
+    
+    if ((syncBatches.get(minuteKey) || 0) > 3) {
+      return total;
+    }
+      
+    const hours = extractHoursFromString(activity.additionalInfo);
+    
+    if (hours > 168) {
+      return total;
+    }
+      
+    return total + hours;
+  }, 0);
+  
+  return recentPlaytime;
 }
 
 /**

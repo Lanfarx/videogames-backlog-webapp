@@ -1,80 +1,108 @@
 @echo off
+setlocal
+
 echo ==========================================
-echo   AVVIO WEBAPP BACKLOG VIDEOLUDICO
+echo   STARTING VIDEO GAMES BACKLOG WEBAPP
 echo ==========================================
+echo.
 
 cd /d "%~dp0"
 
-:: Controlli preliminari
 docker info >nul 2>&1
-if errorlevel 1 (
-    echo [ERRORE] Docker non e' in esecuzione.
-    echo          Avvia Docker Desktop e riprova.
-    pause
-    exit /b 1
-)
+if not errorlevel 1 goto docker_ok
+echo [ERROR] Docker is not running or not installed.
+echo         Please start Docker Desktop and try again.
+echo.
+pause
+exit /b 1
 
-if not exist "..\\..\.env" (
-    echo [ERRORE] File .env non trovato.
-    echo          Copia .env.example in .env e configuralo.
-    pause
-    exit /b 1
-)
+:docker_ok
+set DOCKER_COMPOSE=docker compose
+docker compose version >nul 2>&1
+if not errorlevel 1 goto compose_ok
 
-:: Controlla se le immagini Docker esistono
-echo Controllo immagini Docker...
+set DOCKER_COMPOSE=docker-compose
+docker-compose version >nul 2>&1
+if not errorlevel 1 goto compose_ok
+
+echo [ERROR] Docker Compose not found. Please verify your Docker Desktop installation.
+pause
+exit /b 1
+
+:compose_ok
+if exist "..\..\.env" goto env_ok
+if not exist "..\..\.env.example" goto env_err
+
+echo [INFO] .env file not found. Creating automatically from .env.example...
+copy "..\..\.env.example" "..\..\.env" >nul
+echo [INFO] .env file created successfully.
+goto env_ok
+
+:env_err
+echo [ERROR] Neither .env nor .env.example was found.
+pause
+exit /b 1
+
+:env_ok
+echo [INFO] Checking Docker images...
 docker image inspect videogames-backend-prod:latest >nul 2>&1
-set backend_exists=%errorlevel%
+set BACKEND_EXISTS=%errorlevel%
 
 docker image inspect videogames-frontend-prod:latest >nul 2>&1
-set frontend_exists=%errorlevel%
+set FRONTEND_EXISTS=%errorlevel%
 
-:: Vai alla root del progetto
 cd ..\..\
 
-:: Se almeno una immagine non esiste, forza il build
-if %backend_exists% neq 0 (
-    echo [INFO] Backend non trovato, build necessario...
-    goto build
-)
-if %frontend_exists% neq 0 (
-    echo [INFO] Frontend non trovato, build necessario...
-    goto build
-)
+if not "%BACKEND_EXISTS%"=="0" goto do_build
+if not "%FRONTEND_EXISTS%"=="0" goto do_build
 
-:: Se entrambe esistono, avvio rapido
-echo [INFO] Immagini trovate, avvio rapido...
-docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d
-goto success
+echo [INFO] Docker images already exist, starting containers...
+goto do_up
 
-:build
-echo [INFO] Costruzione immagini in corso...
-docker-compose --env-file .env -f deployment/docker/docker-compose.prod.yml up -d --build
+:do_build
+echo [INFO] Building Docker images (Safety timeout: 500s)...
+powershell -NoProfile -Command "$p = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', '%DOCKER_COMPOSE% --env-file .env -f deployment/docker/docker-compose.prod.yml build' -PassThru -NoNewWindow; if (-not $p.WaitForExit(500000)) { $p.Kill(); Write-Host '[ERROR] 500-second timeout exceeded during build!' -ForegroundColor Red; exit 124 } else { exit $p.ExitCode }"
 
-:success
-if errorlevel 1 (
-    echo [ERRORE] Errore durante l'avvio.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto build_err
+goto do_up
+
+:build_err
+echo.
+echo [ERROR] Image build failed or timed out.
+echo         Tip: restart Docker Desktop and try again.
+cd /d "%~dp0"
+pause
+exit /b 1
+
+:do_up
+echo [INFO] Starting containers in background...
+%DOCKER_COMPOSE% --env-file .env -f deployment/docker/docker-compose.prod.yml up -d
+if errorlevel 1 goto up_err
 
 echo.
 echo ==========================================
-echo   WEBAPP AVVIATA CORRETTAMENTE!
+echo   WEBAPP STARTED SUCCESSFULLY!
 echo ==========================================
 echo   Frontend: http://localhost:3000
 echo   Backend:  http://localhost:5000
 echo ==========================================
+echo.
 
-:: Attendi che i servizi siano pronti
-echo Attesa avvio servizi...
-timeout /t 8 /nobreak >nul
+echo Waiting for services to initialize (6 seconds)...
+powershell -NoProfile -Command "Start-Sleep -Seconds 6"
 
-:: Apri il browser
-echo Apertura browser...
+echo Opening browser at http://localhost:3000/landing...
 start http://localhost:3000/landing
 
-cd deployment\windows
+cd /d "%~dp0"
 echo.
-echo Premi un tasto per continuare...
+echo WebApp is active. You may now close this window.
+echo.
+exit /b 0
+
+:up_err
+echo.
+echo [ERROR] Failed to start Docker containers.
+cd /d "%~dp0"
 pause
+exit /b 1

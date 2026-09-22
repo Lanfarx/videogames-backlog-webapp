@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Game, GameInput, GameUpdateInput, GameComment } from '../../types/game';
+import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
 
@@ -70,7 +71,10 @@ export const getGameById = async (id: number): Promise<Game> => {
 };
 
 // Ottieni informazioni pubbliche di un gioco (per visualizzare giochi di altri utenti)
-export const getGamePublicInfo = async (id: number): Promise<{
+export const getGamePublicInfo = async (
+  id: number,
+  options?: { signal?: AbortSignal }
+): Promise<{
   id: number;
   title: string;
   platform: string;
@@ -91,7 +95,9 @@ export const getGamePublicInfo = async (id: number): Promise<{
 }> => {
   // Utilizza apiClient che include automaticamente il token JWT se l'utente è autenticato
   // Questo permette al backend di identificare l'utente corrente e applicare i controlli di privacy
-  const res = await apiClient.get(`${API_URL}/public/${id}`);
+  const res = await apiClient.get(`${API_URL}/public/${id}`, {
+    signal: options?.signal
+  });
   return res.data;
 };
 
@@ -103,7 +109,7 @@ export const getGameByTitle = async (title: string): Promise<Game> => {
 };
 
 export const createGame = async (game: GameInput): Promise<Game> => {
-  const res = await apiClient.post<Game>(API_URL, game );
+  const res = await apiClient.post<Game>(API_URL, game);
   return mapGameFromApi(res.data);
 };
 
@@ -187,7 +193,7 @@ export const getGameStats = async (): Promise<{
 };
 
 // Giochi in corso paginati
-export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number = 6): Promise<{
+export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number): Promise<{
   games: any[];
   currentPage: number;
   totalPages: number;
@@ -196,25 +202,26 @@ export const getInProgressGamesPaginated = async (page: number = 1, pageSize: nu
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }> => {
-  const res = await apiClient.get(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/in-progress?page=${page}&pageSize=${pageSize}`);
+  const paginated = mapPaginatedResponse(res.data);
   return {
-    games: res.data.games,
-    currentPage: res.data.currentPage,
-    totalPages: res.data.totalPages,
-    totalItems: res.data.totalItems,
-    pageSize: res.data.pageSize,
-    hasNextPage: res.data.hasNextPage,
-    hasPreviousPage: res.data.hasPreviousPage
+    games: paginated.items,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages,
+    totalItems: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    hasNextPage: paginated.hasNextPage,
+    hasPreviousPage: paginated.hasPreviousPage
   };
 };
 
 // Tutti i giochi paginati
 export const getGamesPaginated = async (
-  page: number = 1, 
-  pageSize: number = 12, 
-  filters?: string, 
-  sortBy?: string, 
-  sortOrder?: string, 
+  page: number = 1,
+  pageSize: number,
+  filters?: string,
+  sortBy?: string,
+  sortOrder?: string,
   search?: string
 ): Promise<{
   games: Game[];
@@ -229,20 +236,21 @@ export const getGamesPaginated = async (
     page: page.toString(),
     pageSize: pageSize.toString(),
   });
-  
+
   if (filters) params.append('filters', filters);
   if (sortBy) params.append('sortBy', sortBy);
   if (sortOrder) params.append('sortOrder', sortOrder);
   if (search) params.append('search', search);
 
-  const res = await apiClient.get(`${API_URL}/paginated?${params.toString()}`);
+  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/paginated?${params.toString()}`);
+  const paginated = mapPaginatedResponse(res.data, mapGameFromApi);
   return {
-    games: res.data.games.map(mapGameFromApi),
-    currentPage: res.data.currentPage,
-    totalPages: res.data.totalPages,
-    totalItems: res.data.totalItems,
-    pageSize: res.data.pageSize,
-    hasNextPage: res.data.hasNextPage,
-    hasPreviousPage: res.data.hasPreviousPage
+    games: paginated.items,
+    currentPage: paginated.currentPage,
+    totalPages: paginated.totalPages,
+    totalItems: paginated.totalItems,
+    pageSize: paginated.pageSize,
+    hasNextPage: paginated.hasNextPage,
+    hasPreviousPage: paginated.hasPreviousPage
   };
 };

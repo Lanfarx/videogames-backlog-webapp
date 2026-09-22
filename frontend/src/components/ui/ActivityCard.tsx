@@ -31,13 +31,13 @@ const parseActivityText = (activity: Activity) => {
   return { prefix, suffix };
 };
 
-const ActivityCard: React.FC<ActivityCardProps> = ({ 
+export default function ActivityCard({ 
   activity, 
   position = 'left', 
   showIcon = true, 
   compact = false,
   className = ''
-}) => {  // Recupera i dati dell'attività
+}: ActivityCardProps) {  // Recupera i dati dell'attività
   const formattedTime = formatRelativeTime(activity.timestamp);
   const icon = showIcon ? getActivityIcon(activity.type) : null;
   const { prefix, suffix } = parseActivityText(activity);
@@ -76,6 +76,4 @@ const ActivityCard: React.FC<ActivityCardProps> = ({
       <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-accent-primary via-accent-secondary to-accent-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-full"></div>
     </div>
   );
-};
-
-export default ActivityCard;
+}

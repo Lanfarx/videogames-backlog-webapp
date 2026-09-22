@@ -18,8 +18,8 @@ services:
   # Backend .NET
   backend:
     build:
-      context: ..
-      dockerfile: deployment/Dockerfile.backend
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.backend
     container_name: videogames-backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -34,8 +34,8 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ..
-      dockerfile: deployment/Dockerfile.frontend
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.frontend
     container_name: videogames-frontend
     ports:
       - "3000:80"

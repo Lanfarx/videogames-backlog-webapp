@@ -7,7 +7,7 @@ import { RootState } from '../../../store';
 import { setUserProfile } from '../../../store/slice/userSlice';
 import { updateProfile } from '../../../store/services/profileService';
 
-const PrivacySettings: React.FC = () => {
+export default function PrivacySettings() {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: RootState) => state.user.profile);
 
@@ -162,6 +162,4 @@ const PrivacySettings: React.FC = () => {
       </SettingsSection>
     </div>
   );
-};
-
-export default PrivacySettings;
+}

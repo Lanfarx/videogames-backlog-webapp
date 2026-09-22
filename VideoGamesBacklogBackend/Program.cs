@@ -1,19 +1,23 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
-using VideoGamesBacklogBackend.Data;
-using VideoGamesBacklogBackend.Helpers;
-using VideoGamesBacklogBackend.Interfaces;
-using VideoGamesBacklogBackend.Models;
-using VideoGamesBacklogBackend.Services;
+using VideoGamesBacklogBackend.Common.Configuration;
+using VideoGamesBacklogBackend.Entities;
+using VideoGamesBacklogBackend.Infrastructure.Data;
+using VideoGamesBacklogBackend.Infrastructure.Middleware;
+using VideoGamesBacklogBackend.Mappers;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Carica variabili d'ambiente dal file .env solo se non siamo in Docker
 if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
@@ -23,7 +27,7 @@ if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
     {
         foreach (var line in File.ReadAllLines(envFile))
         {
-            if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith('#') || string.IsNullOrWhiteSpace(line)) continue;
             
             var parts = line.Split('=', 2);
             if (parts.Length == 2)
@@ -47,7 +51,30 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .Select(e => new { Field = e.Key, Errors = e.Value?.Errors.Select(x => x.ErrorMessage).ToList() })
+                .ToList();
+                
+            logger.LogWarning("Validation failed for {Path}. Errors: {@Errors}", context.HttpContext.Request.Path, errors);
+            
+            var problemDetails = new Microsoft.AspNetCore.Mvc.ValidationProblemDetails(context.ModelState)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "One or more validation errors occurred.",
+                Instance = context.HttpContext.Request.Path
+            };
+            
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(problemDetails);
+        };
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -159,21 +186,47 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("PublicApi", policy =>
+    {
+        policy.PermitLimit = 100;
+        policy.Window = TimeSpan.FromMinutes(1);
+        policy.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        policy.QueueLimit = 5;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // Configurazione Email Settings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-// Dependency Injection
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<IActivityService, ActivityService>();
-builder.Services.AddScoped<IFriendshipService, FriendshipService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<ISteamService, SteamService>();
-builder.Services.AddScoped<ICommunityService, CommunityService>();
-builder.Services.AddScoped<IWishlistService, WishlistService>();
+// Configurazione Steam Settings
+builder.Services.Configure<SteamSettings>(options => {
+    options.ApiKey = builder.Configuration["SteamApiKey"] 
+                   ?? Environment.GetEnvironmentVariable("STEAM_API_KEY") 
+                   ?? string.Empty;
+});
+
+// Dependency Injection Automatizzata
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+var serviceInterfaces = typeof(Program).Assembly.GetTypes()
+    .Where(t => t.IsInterface && t.Name.EndsWith("Service") && t.Namespace != null && t.Namespace.StartsWith("VideoGamesBacklogBackend.Interfaces"));
+
+foreach (var serviceInterface in serviceInterfaces)
+{
+    var implementation = typeof(Program).Assembly.GetTypes()
+        .FirstOrDefault(t => t is { IsClass: true, IsAbstract: false } && serviceInterface.IsAssignableFrom(t));
+
+    if (implementation != null)
+    {
+        builder.Services.AddScoped(serviceInterface, implementation);
+    }
+}
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -187,7 +240,11 @@ builder.Services.Configure<JsonOptions>(options =>
 
 var app = builder.Build();
 
+// Aggiunta del Global Exception Handler Middleware
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+
 // TEST CONNESSIONE DATABASE ALL'AVVIO (solo un test basico)
+
 try
 {
     using var scope = app.Services.CreateScope();
@@ -195,35 +252,28 @@ try
     
     var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     var canConnect = await context.Database.CanConnectAsync(cts.Token);
-    
-    if (canConnect)
-    {
-        Console.WriteLine("✅ Database connection successful!");
-    }
-    else
-    {
-        Console.WriteLine("❌ Database connection failed");
-    }
+
+    Console.WriteLine(canConnect ? "Database connection successful!" : "Database connection failed");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"❌ Database connection error: {ex.Message}");
-    Console.WriteLine("⚠️ Continuing startup - connection will be retried on first request");
+    Console.WriteLine($"Database connection error: {ex.Message}");
+    Console.WriteLine("Continuing startup - connection will be retried on first request");
 }
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseRateLimiter();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-Console.WriteLine("🚀 Application started successfully!");
-Console.WriteLine($"🌍 Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine("Application started successfully!");
+Console.WriteLine($"Environment: {app.Environment.EnvironmentName}");
 
 app.Run();

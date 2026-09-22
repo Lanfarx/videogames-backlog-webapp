@@ -24,7 +24,7 @@ interface NavigationParams {
 // Hook personalizzato per il debouncing di funzioni
 function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number): T {
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     return useCallback((...args: Parameters<T>) => {
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
@@ -33,15 +33,15 @@ function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: num
     }, [callback, delay]) as T;
 }
 
-const LibraryPage: React.FC = () => {
-    const dispatch = useAppDispatch();    const allGamesFromStore = useAllGames();
+export default function LibraryPage() {
+    const dispatch = useAppDispatch(); const allGamesFromStore = useAllGames();
     const { remove, update } = useGameActionsWithPagination();    // Hook per la paginazione lato server
-    const { 
-        paginatedGames, 
-        paginationData, 
-        paginationLoading, 
+    const {
+        paginatedGames,
+        paginationData,
+        paginationLoading,
         fetchPaginatedGames
-    } = usePaginatedGames();const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    } = usePaginatedGames(); const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
         const saved = localStorage.getItem('libraryViewMode');
         return (saved as "grid" | "list") || "grid";
     });
@@ -53,7 +53,7 @@ const LibraryPage: React.FC = () => {
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [gameToDelete, setGameToDelete] = useState<string | null>(null); 
+    const [gameToDelete, setGameToDelete] = useState<string | null>(null);
 
     // Funzione per caricare i filtri salvati da localStorage
     const loadSavedFilters = useCallback((): GameFilters => {
@@ -88,7 +88,7 @@ const LibraryPage: React.FC = () => {
     }, []);
 
     const [filters, setFilters] = useState<GameFilters>(loadSavedFilters);
-    
+
     // Filtri separati per il debouncing (solo range sliders)
     const [debouncedFilters, setDebouncedFilters] = useState<GameFilters>(loadSavedFilters);    // Flag per evitare chiamate API prima che i massimali siano calcolati
     const [filtersInitialized, setFiltersInitialized] = useState(false);    // Stato per l'ordinamento con persistenza localStorage
@@ -100,11 +100,34 @@ const LibraryPage: React.FC = () => {
         const savedSortOrder = localStorage.getItem('librarySortOrder');
         return (savedSortOrder as SortOrder) || "asc";
     });
-    const [gamesPerPage, setGamesPerPage] = useState(0);
+    // Calcola le colonne iniziali una sola volta
+    const calculateInitialColumns = () => {
+        const width = window.innerWidth;
+        if (width >= 1536) return 5;
+        if (width >= 1280) return 4;
+        if (width >= 1024) return 3;
+        if (width >= 640) return 2;
+        return 1;
+    };
+
+    const [columns, setColumns] = useState(calculateInitialColumns);
+
+    const [gamesPerPage, setGamesPerPage] = useState(() => {
+        // Calcola gamesPerPage iniziale in base alla vista salvata
+        const savedViewMode = localStorage.getItem('libraryViewMode');
+        const viewMode = (savedViewMode as "grid" | "list") || "grid";
+        const initialColumns = calculateInitialColumns();
+        if (viewMode === "grid") {
+            const rows = 3;
+            return initialColumns * rows;
+        } else {
+            return 14;
+        }
+    });
+
     const [searchQuery, setSearchQuery] = useState(() => {
         return localStorage.getItem('librarySearchQuery') || "";
     });
-    const [columns, setColumns] = useState(4);
     const gridContainerRef = useRef<HTMLDivElement>(null);    // Funzione debounced per aggiornare i filtri di range
     const updateDebouncedFilters = useDebounce((newFilters: GameFilters) => {
         setDebouncedFilters(newFilters);
@@ -119,7 +142,7 @@ const LibraryPage: React.FC = () => {
     useEffect(() => {
         if (allGamesFromStore.length > 0) {
             const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(allGamesFromStore);
-            
+
             // Mantieni i filtri salvati ma aggiorna i range massimi se necessario
             const savedFilters = loadSavedFilters();
             const newFilters = {
@@ -127,7 +150,7 @@ const LibraryPage: React.FC = () => {
                 Platform: savedFilters.Platform,
                 genre: savedFilters.genre,
                 PriceRange: [
-                    savedFilters.PriceRange[0], 
+                    savedFilters.PriceRange[0],
                     Math.min(savedFilters.PriceRange[1], PriceRange[1])
                 ] as [number, number],
                 hoursRange: [
@@ -140,14 +163,14 @@ const LibraryPage: React.FC = () => {
                 ] as [number, number],
                 PurchaseDate: savedFilters.PurchaseDate,
             };
-            
+
             // Se non ci sono filtri salvati, usa i valori di default con i range massimi
             if (!localStorage.getItem('libraryFilters')) {
                 newFilters.PriceRange = [0, PriceRange[1]];
                 newFilters.hoursRange = [0, hoursRange[1]];
                 newFilters.MetacriticRange = [0, MetacriticRange[1]];
             }
-            
+
             setFilters(newFilters);
             setDebouncedFilters(newFilters);
             setFiltersInitialized(true);
@@ -157,13 +180,13 @@ const LibraryPage: React.FC = () => {
     // Sincronizza i filtri per il debouncing
     useEffect(() => {
         // Aggiorna immediatamente i filtri non-range (Status, Platform, genre, PurchaseDate)
-        const hasNonRangeChange = 
+        const hasNonRangeChange =
             JSON.stringify(filters.Status) !== JSON.stringify(debouncedFilters.Status) ||
             JSON.stringify(filters.Platform) !== JSON.stringify(debouncedFilters.Platform) ||
             JSON.stringify(filters.genre) !== JSON.stringify(debouncedFilters.genre) ||
             filters.PurchaseDate !== debouncedFilters.PurchaseDate;
-            
-        const hasRangeChange = 
+
+        const hasRangeChange =
             JSON.stringify(filters.PriceRange) !== JSON.stringify(debouncedFilters.PriceRange) ||
             JSON.stringify(filters.hoursRange) !== JSON.stringify(debouncedFilters.hoursRange) ||
             JSON.stringify(filters.MetacriticRange) !== JSON.stringify(debouncedFilters.MetacriticRange);
@@ -175,29 +198,50 @@ const LibraryPage: React.FC = () => {
             // Usa debouncing per i range sliders
             updateDebouncedFilters(filters);
         }
-    }, [filters, updateDebouncedFilters]);    // Reset alla prima pagina quando cambiano filtri, ricerca o ordinamento
-    // ESCLUSO: reset automatico per i range che si aggiornano quando cambiano i massimali
+    }, [filters, updateDebouncedFilters]);    // Refs per tracciare i valori precedenti ed evitare reset su cambi di reference
+    const prevSearchQuery = useRef(searchQuery);
+    const prevSortBy = useRef(sortBy);
+    const prevSortOrder = useRef(sortOrder);
+    const prevStatus = useRef(JSON.stringify(debouncedFilters.Status));
+    const prevPlatform = useRef(JSON.stringify(debouncedFilters.Platform));
+    const prevGenre = useRef(JSON.stringify(debouncedFilters.genre));
+    const prevPurchaseDate = useRef(debouncedFilters.PurchaseDate);
+
+    // Reset alla prima pagina quando cambiano EFFETTIVAMENTE filtri, ricerca o ordinamento
     useEffect(() => {
         if (!filtersInitialized) return;
-        
-        // Solo reset per filtri espliciti dell'utente, NON per i range automatici
-        const hasUserFilterChanges = 
-            debouncedFilters.Status.length > 0 ||
-            debouncedFilters.Platform.length > 0 ||
-            debouncedFilters.genre.length > 0 ||
-            debouncedFilters.PurchaseDate !== "";
-            
-        // Reset solo se ci sono filtri utente attivi, ricerca o ordinamento
-        if (hasUserFilterChanges || searchQuery.trim() !== "" || sortBy !== "title" || sortOrder !== "asc") {
+
+        const statusStr = JSON.stringify(debouncedFilters.Status);
+        const platformStr = JSON.stringify(debouncedFilters.Platform);
+        const genreStr = JSON.stringify(debouncedFilters.genre);
+
+        const hasActuallyChanged =
+            prevSearchQuery.current !== searchQuery ||
+            prevSortBy.current !== sortBy ||
+            prevSortOrder.current !== sortOrder ||
+            prevStatus.current !== statusStr ||
+            prevPlatform.current !== platformStr ||
+            prevGenre.current !== genreStr ||
+            prevPurchaseDate.current !== debouncedFilters.PurchaseDate;
+
+        if (hasActuallyChanged) {
             setCurrentPage(1);
             localStorage.setItem('libraryCurrentPage', '1');
+
+            prevSearchQuery.current = searchQuery;
+            prevSortBy.current = sortBy;
+            prevSortOrder.current = sortOrder;
+            prevStatus.current = statusStr;
+            prevPlatform.current = platformStr;
+            prevGenre.current = genreStr;
+            prevPurchaseDate.current = debouncedFilters.PurchaseDate;
         }
-    }, [searchQuery, sortBy, sortOrder, filtersInitialized, 
+    }, [searchQuery, sortBy, sortOrder, filtersInitialized,
         debouncedFilters.Status, debouncedFilters.Platform, debouncedFilters.genre, debouncedFilters.PurchaseDate]);    // Carica i giochi paginati quando cambiano i parametri
     useEffect(() => {
-        // Non fare chiamate API finché i filtri non sono inizializzati
-        if (!filtersInitialized) return;
-        
+        // Non fare chiamate API finché i filtri non sono inizializzati o gamesPerPage è 0
+        if (!filtersInitialized || gamesPerPage === 0) return;
+
         const loadPaginatedGames = async () => {
             const filtersParam = {
                 Status: debouncedFilters.Status,
@@ -217,7 +261,7 @@ const LibraryPage: React.FC = () => {
                 sortOrder,
                 search: searchQuery.trim() || undefined
             });
-        };        loadPaginatedGames();
+        }; loadPaginatedGames();
     }, [currentPage, gamesPerPage, debouncedFilters, sortBy, sortOrder, searchQuery, fetchPaginatedGames, filtersInitialized]);
 
     // Gestione responsive delle colonne
@@ -236,7 +280,9 @@ const LibraryPage: React.FC = () => {
         setColumns(calculateColumns());
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);    // Calcola gamesPerPage in base alla vista
+    }, []);
+
+    // Calcola gamesPerPage in base alla vista
     useEffect(() => {
         if (viewMode === "grid") {
             const rows = 3;
@@ -244,24 +290,22 @@ const LibraryPage: React.FC = () => {
         } else {
             setGamesPerPage(14);
         }
-    }, [viewMode, columns]);    // Reset alla prima pagina quando cambia gamesPerPage
-    useEffect(() => {
-        setCurrentPage(1);
-        localStorage.setItem('libraryCurrentPage', '1');
-    }, [gamesPerPage]);const handleSortChange = (newSortBy: SortOption) => {
+    }, [viewMode, columns]);
+
+    const handleSortChange = (newSortBy: SortOption) => {
         if (sortBy === newSortBy) {
             setSortOrder(sortOrder === "asc" ? "desc" : "asc");
         } else {
             setSortBy(newSortBy);
             setSortOrder("asc");
         }
-    };const handleFiltersChange = (newFilters: GameFilters | ((prev: GameFilters) => GameFilters)) => {
-        if (typeof newFilters === 'function') {            setFilters(newFilters);        } else {
+    }; const handleFiltersChange = (newFilters: GameFilters | ((prev: GameFilters) => GameFilters)) => {
+        if (typeof newFilters === 'function') { setFilters(newFilters); } else {
             setFilters(newFilters);
         }
-    };    const handleSearchChange = (query: string) => {
+    }; const handleSearchChange = (query: string) => {
         setSearchQuery(query);
-    };    const handlePageChange = (page: number) => {
+    }; const handlePageChange = (page: number) => {
         setCurrentPage(page);
         localStorage.setItem('libraryCurrentPage', page.toString());
     };// Funzione helper per resettare alla prima pagina
@@ -294,7 +338,7 @@ const LibraryPage: React.FC = () => {
         // Logica per mantenere la posizione della pagina dopo l'eliminazione
         const totalGamesAfterDelete = paginationData.totalItems - 1;
         const maxPossiblePage = Math.ceil(totalGamesAfterDelete / paginationData.pageSize);
-          // Se la pagina corrente è ancora valida, mantienila
+        // Se la pagina corrente è ancora valida, mantienila
         // Altrimenti, vai alla pagina precedente
         if (currentPage > maxPossiblePage && maxPossiblePage > 0) {
             setCurrentPage(maxPossiblePage);
@@ -316,7 +360,7 @@ const LibraryPage: React.FC = () => {
             MetacriticRange: debouncedFilters.MetacriticRange,
             PurchaseDate: debouncedFilters.PurchaseDate
         };
-        
+
         fetchPaginatedGames({
             page: currentPage,
             pageSize: gamesPerPage,
@@ -356,7 +400,7 @@ const LibraryPage: React.FC = () => {
     // Effetto per salvare la query di ricerca nel localStorage
     useEffect(() => {
         localStorage.setItem('librarySearchQuery', searchQuery);
-    }, [searchQuery]);    return (
+    }, [searchQuery]); return (
         <div className="flex flex-col bg-secondary-bg min-h-screen w-full overflow-x-hidden library-container">
             <main className="flex-grow flex flex-col md:flex-row min-w-0 overflow-hidden library-main">
                 <SidebarFilter
@@ -383,45 +427,45 @@ const LibraryPage: React.FC = () => {
                             <div className="flex justify-center items-center py-12">
                                 <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
                                 <span className="ml-3 text-text-secondary">Caricamento giochi...</span>
-                            </div>                        ) : paginatedGames.length > 0 ? (
-                            <>
-                                {/* Creiamo i parametri di navigazione da passare ai componenti */}
-                                {(() => {
-                                    const navigationParams: NavigationParams = {
-                                        filters: debouncedFilters,
-                                        sortBy,
-                                        sortOrder,
-                                        search: searchQuery
-                                    };
-                                    
-                                    return viewMode === "grid" ? (
-                                        <GridView 
-                                            games={paginatedGames} 
-                                            onEdit={handleEditGame}
-                                            onDelete={handleDeleteConfirmation}
-                                            onStatusChange={handleStatusChange}
-                                            columns={columns}
-                                            navigationParams={navigationParams}
+                            </div>) : paginatedGames.length > 0 ? (
+                                <>
+                                    {/* Creiamo i parametri di navigazione da passare ai componenti */}
+                                    {(() => {
+                                        const navigationParams: NavigationParams = {
+                                            filters: debouncedFilters,
+                                            sortBy,
+                                            sortOrder,
+                                            search: searchQuery
+                                        };
+
+                                        return viewMode === "grid" ? (
+                                            <GridView
+                                                games={paginatedGames}
+                                                onEdit={handleEditGame}
+                                                onDelete={handleDeleteConfirmation}
+                                                onStatusChange={handleStatusChange}
+                                                columns={columns}
+                                                navigationParams={navigationParams}
+                                            />
+                                        ) : (
+                                            <ListView
+                                                games={paginatedGames}
+                                                onEdit={handleEditGame}
+                                                onDelete={handleDeleteConfirmation}
+                                                onStatusChange={handleStatusChange}
+                                                navigationParams={navigationParams}
+                                            />
+                                        );
+                                    })()}
+                                    {paginationData && (
+                                        <Pagination
+                                            currentPage={paginationData.currentPage}
+                                            totalPages={paginationData.totalPages}
+                                            onPageChange={handlePageChange}
                                         />
-                                    ) : (
-                                        <ListView 
-                                            games={paginatedGames} 
-                                            onEdit={handleEditGame}
-                                            onDelete={handleDeleteConfirmation}
-                                            onStatusChange={handleStatusChange}
-                                            navigationParams={navigationParams}
-                                        />
-                                    );
-                                })()}
-                                {paginationData && (
-                                    <Pagination 
-                                        currentPage={paginationData.currentPage} 
-                                        totalPages={paginationData.totalPages} 
-                                        onPageChange={handlePageChange} 
-                                    />
-                                )}
-                            </>
-                        ) : (
+                                    )}
+                                </>
+                            ) : (
                             <div className="flex flex-col items-center justify-center py-12">
                                 <p className="text-text-secondary text-lg mb-4">Nessun gioco trovato con i filtri selezionati</p>
                                 <button
@@ -444,7 +488,7 @@ const LibraryPage: React.FC = () => {
                                         setCurrentPage(1);
                                         localStorage.setItem('libraryCurrentPage', '1');
                                     }}
-                                    className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 transition-colors"
+                                    className="px-4 py-2 bg-accent-primary text-white font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity"
                                 >
                                     Reimposta filtri
                                 </button>
@@ -455,10 +499,10 @@ const LibraryPage: React.FC = () => {
             </main>
 
             {/* Modali */}
-            <AddGameModal 
-                isOpen={isAddGameModalOpen} 
-                onClose={() => setIsAddGameModalOpen(false)} 
-                // Rimosso onSave perché ora il modal gestisce Redux internamente
+            <AddGameModal
+                isOpen={isAddGameModalOpen}
+                onClose={() => setIsAddGameModalOpen(false)}
+            // Rimosso onSave perché ora il modal gestisce Redux internamente
             />
 
             {selectedGame && (
@@ -486,6 +530,4 @@ const LibraryPage: React.FC = () => {
             />
         </div>
     );
-};
-
-export default LibraryPage;
+}

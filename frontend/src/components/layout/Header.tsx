@@ -5,7 +5,7 @@ import AppLogo from '../ui/atoms/AppLogo';
 import ProfileAvatar from '../ui/ProfileAvatar';
 import NotificationBell from '../notifications/NotificationBell';
 
-const Header: React.FC = () => {  const navItems = [
+export default function Header() {  const navItems = [
     { name: 'Home', path: '/' },
     { name: 'I miei giochi', path: '/library' },
     { name: 'Dashboard', path: '/dashboard' },
@@ -64,6 +64,4 @@ const Header: React.FC = () => {  const navItems = [
       <div className="w-full h-px bg-border-color" />
     </>
   );
-};
-
-export default Header;
+}

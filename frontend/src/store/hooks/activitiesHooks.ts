@@ -1,14 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import { Activity, ActivityFilters } from '../../types/activity';
+import { Activity } from '../../types/activity';
 import {
   fetchActivities,
   fetchRecentActivities,
   fetchActivitiesByGame,
-  fetchActivityStats,
-  createActivity as createActivityThunk,
-  updateActivity as updateActivityThunk,
-  deleteActivity as deleteActivityThunk
+  fetchActivityStats
 } from '../thunks/activityThunks';
 import { RootState, AppDispatch } from '..';
 

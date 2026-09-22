@@ -11,7 +11,7 @@ interface GenreBarChartProps {
     title: string;
 }
 
-const GenreBarChart: React.FC<GenreBarChartProps> = ({ data, icon, title }) => {
+export default function GenreBarChart({ data, icon, title }: GenreBarChartProps) {
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -159,6 +159,4 @@ const GenreBarChart: React.FC<GenreBarChartProps> = ({ data, icon, title }) => {
             </div>
         </div>
     );
-};
-
-export default GenreBarChart;
+}

@@ -91,7 +91,7 @@ const PlaytimePopover = ({ GameId, currentHours, onSave, onCancel }: PlaytimePop
         </button>
         
         <button 
-          className="flex items-center px-4 py-1.5 bg-accent-primary text-white rounded-md text-sm hover:bg-accent-primary/90 transition-colors font-secondary"
+          className="flex items-center px-4 py-1.5 bg-accent-primary text-white rounded-md text-sm hover:opacity-90 transition-opacity font-secondary"
           onClick={handleSave}
         >
           <Save className="w-3.5 h-3.5 mr-1.5" />

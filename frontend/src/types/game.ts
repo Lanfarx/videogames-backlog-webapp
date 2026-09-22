@@ -11,9 +11,11 @@ export type GamePlatform =
   'PlayStation 4' | 
   'PlayStation 3' | 
   'Xbox' |
+  'Nintendo Switch 2' |
   'Nintendo Switch' | 
   'Steam' | 
   'Epic Games Store' | 
+  'Amazon Luna' |
   'GOG' | 
   'iOS' | 
   'Android';
@@ -52,8 +54,8 @@ export interface GameBasicInfo {
  * Informazioni finanziarie del gioco
  */
 export interface GameFinancialInfo {
-  Price: number;
-  PurchaseDate?: string;
+  Price: number | null;
+  PurchaseDate?: string | null;
 }
 
 /**
@@ -77,7 +79,7 @@ export interface GameCompletionInfo {
  */
 export interface GamePlayInfo {
   HoursPlayed: number;
-  Metacritic: number;
+  Metacritic: number | null;
   Rating: number;
   Notes?: string;
 }

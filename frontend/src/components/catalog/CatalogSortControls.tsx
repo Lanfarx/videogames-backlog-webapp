@@ -10,7 +10,7 @@ interface CatalogSortControlsProps {
   sortOptions: { value: string; label: string }[];
 }
 
-const CatalogSortControls: React.FC<CatalogSortControlsProps> = ({
+export default function CatalogSortControls({
   sortBy,
   setSortBy,
   sortOrder,
@@ -18,7 +18,7 @@ const CatalogSortControls: React.FC<CatalogSortControlsProps> = ({
   hideOwned,
   setHideOwned,
   sortOptions,
-}) => (
+}: CatalogSortControlsProps) { return (
   <div className="flex items-center gap-2 ml-auto">
     <label className="text-sm text-text-secondary mr-2">Ordina per:</label>
     <select
@@ -50,6 +50,4 @@ const CatalogSortControls: React.FC<CatalogSortControlsProps> = ({
       <span className="text-xs text-text-secondary">Nascondi giochi già in libreria</span>
     </label>
   </div>
-);
-
-export default CatalogSortControls;
+); }

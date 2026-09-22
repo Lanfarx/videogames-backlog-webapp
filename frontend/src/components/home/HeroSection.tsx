@@ -7,7 +7,7 @@ interface HeroSectionProps {
   UserName: string;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
+export default function HeroSection({ UserName }: HeroSectionProps) {
   const stats = useGamesStats();
   
   // Calcola statistiche aggiuntive
@@ -86,6 +86,4 @@ const HeroSection: React.FC<HeroSectionProps> = ({ UserName }) => {
       </div>
     </section>
   );
-};
-
-export default HeroSection;
+}

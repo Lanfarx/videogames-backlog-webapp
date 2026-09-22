@@ -1,76 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Calendar, Award, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Award, Trash2 } from 'lucide-react';
 import { GameFilters, GameStatus } from '../../../types/game';
 import { Status_OPTIONS } from '../../../constants/gameConstants';
 import { calculateCounts, calculateMaxValues } from '../../../utils/gamesUtils';
 import { useGameActions } from '../../../store/hooks/gamesHooks';
 import ConfirmationModal from '../../ui/ConfirmationModal';
+import { useSidebarFilterState } from '../../../hooks/useSidebarFilterState';
+import { FilterAccordion } from './FilterAccordion';
+import { FilterCheckboxGroup, CheckboxOption } from './FilterCheckboxGroup';
+import { FilterRangeSlider } from './FilterRangeSlider';
 
-// Interfaccia per i props del componente
 interface SidebarFilterProps {
   filters: GameFilters;
   setFilters: React.Dispatch<React.SetStateAction<GameFilters>>;
   gamesCount: number;
-  games: any[]; // Aggiunto per accedere ai dati di games
+  games: any[];
 }
 
-const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, gamesCount, games }) => {
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('librarySidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
-  });
-  const [showAllGenres, setShowAllGenres] = useState(() => {
-    const saved = localStorage.getItem('libraryShowAllGenres');
-    return saved ? JSON.parse(saved) : false;
-  });
+export default function SidebarFilter({ filters, setFilters, gamesCount, games }: SidebarFilterProps) {
+  const {
+    isCollapsed,
+    setIsCollapsed,
+    showAllGenres,
+    setShowAllGenres,
+    expandedSections,
+    toggleSection
+  } = useSidebarFilterState();
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [expandedSections, setExpandedSections] = useState(() => {
-    try {
-      const savedExpandedSections = localStorage.getItem('libraryExpandedSections');
-      if (savedExpandedSections) {
-        return JSON.parse(savedExpandedSections);
-      }
-    } catch (error) {
-      console.warn('Errore nel caricamento degli stati espansi delle sezioni:', error);
-    }
-    // Valori di default
-    return {
-      Status: true,
-      Platform: true,
-      genre: true,
-      Price: true,
-      hours: true,
-      Metacritic: true,
-      date: true,
-    };
-  });
-  // Hook per azioni sui giochi
   const { removeAll } = useGameActions();
 
-  // Calcola i conteggi per ogni filtro
   const [StatusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [PlatformCounts, setPlatformCounts] = useState<Record<string, number>>({});
   const [genreCounts, setGenreCounts] = useState<Record<string, number>>({});
 
-  // Calcola i valori massimi per i range
   const [maxPrice, setMaxPrice] = useState(70);
   const [maxHours, setMaxHours] = useState(100);
   const [maxMetacritic, setMaxMetacritic] = useState(100);
 
   useEffect(() => {
-    // Calcola i conteggi reali dai dati di games
     const { StatusCountsTemp, PlatformCountsTemp, genreCountsTemp } = calculateCounts(games);
     setStatusCounts(StatusCountsTemp);
     setPlatformCounts(PlatformCountsTemp);
     setGenreCounts(genreCountsTemp);
 
-    // Calcola i valori massimi per i range
     const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(games);
     setMaxPrice(PriceRange[1]);
     setMaxHours(hoursRange[1]);
-    setMaxMetacritic(MetacriticRange[1] || 100); // Fallback a 100 se non ci sono giochi con Metacritic
+    setMaxMetacritic(MetacriticRange[1] || 100);
 
-    // Imposta i valori iniziali dei filtri di prezzo, ore e Metacritic
     setFilters((prev) => ({
       ...prev,
       PriceRange: [0, PriceRange[1]],
@@ -79,33 +57,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     }));
   }, [games]);
 
-  // Salva gli stati espansi delle sezioni nel localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('libraryExpandedSections', JSON.stringify(expandedSections));
-    } catch (error) {
-      console.warn('Errore nel salvare gli stati espansi delle sezioni:', error);
-    }
-  }, [expandedSections]);
-
-  // Salva lo stato di collasso della sidebar
-  useEffect(() => {
-    localStorage.setItem('librarySidebarCollapsed', JSON.stringify(isCollapsed));
-  }, [isCollapsed]);
-
-  // Salva lo stato "mostra tutti i generi"
-  useEffect(() => {
-    localStorage.setItem('libraryShowAllGenres', JSON.stringify(showAllGenres));
-  }, [showAllGenres]);
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev: typeof expandedSections) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Gestisce il toggle dei filtri di stato
   const handleStatusToggle = (Status: GameStatus) => {
     setFilters((prev) => {
       const newStatus = prev.Status.includes(Status)
@@ -115,7 +66,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
-  // Gestisce il toggle dei filtri di piattaforma
   const handlePlatformToggle = (Platform: string) => {
     setFilters((prev) => {
       const newPlatform = prev.Platform.includes(Platform)
@@ -125,7 +75,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
-  // Gestisce il toggle dei filtri di genere
   const handleGenreToggle = (genre: string) => {
     setFilters((prev) => {
       const newGenre = prev.genre.includes(genre)
@@ -133,7 +82,8 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
         : [...prev.genre, genre];
       return { ...prev, genre: newGenre };
     });
-  };  // Gestisce il cambio del range di prezzo
+  };
+
   const handlePriceRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
       const newPriceRange = [...prev.PriceRange] as [number, number];
@@ -142,7 +92,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
-  // Gestisce il cambio del range di ore
   const handleHoursRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
       const newHoursRange = [...prev.hoursRange] as [number, number];
@@ -151,7 +100,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
-  // Gestisce il cambio del range di Metacritic
   const handleMetacriticRangeChange = (value: number, index: number) => {
     setFilters((prev) => {
       const newMetacriticRange = [...prev.MetacriticRange] as [number, number];
@@ -160,11 +108,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     });
   };
 
-  // Gestisce il cambio della data di acquisto
   const handlePurchaseDateChange = (date: string) => {
     setFilters((prev) => ({ ...prev, PurchaseDate: date }));
   };
-  // Reimposta tutti i filtri
+
   const resetFilters = () => {
     const newFilters = {
       Status: [] as GameStatus[],
@@ -176,15 +123,12 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       PurchaseDate: "",
     };
     setFilters(newFilters);
-    // Pulisci anche i filtri salvati nel localStorage
     localStorage.removeItem('libraryFilters');
   };
-  // Funzione per eliminare tutti i giochi
+
   const handleDeleteAllGames = async () => {
     try {
-      // Usa l'endpoint ottimizzato per eliminare tutti i giochi in una sola chiamata
       await removeAll();
-      // Chiudi il modal e reimposta i filtri
       setShowDeleteModal(false);
       resetFilters();
     } catch (error) {
@@ -193,19 +137,35 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
     }
   };
 
-  // Estrai le piattaforme uniche dai dati aggiornati
   const Platforms = Object.keys(PlatformCounts).sort();
-
-  // Estrai i generi unici dai dati aggiornati
   const Genres = Object.keys(genreCounts).sort();
   const visibleGenres = showAllGenres ? Genres : Genres.slice(0, 5);
 
-  return (    <aside
+  const statusOptions: CheckboxOption[] = Status_OPTIONS.map(opt => ({
+    value: opt.value,
+    label: opt.label,
+    count: StatusCounts[opt.value] || 0,
+    color: opt.color
+  }));
+
+  const platformOptions: CheckboxOption[] = Platforms.map(p => ({
+    value: p,
+    label: p,
+    count: PlatformCounts[p] || 0
+  }));
+
+  const genreOptions: CheckboxOption[] = visibleGenres.map(g => ({
+    value: g,
+    label: g,
+    count: genreCounts[g] || 0
+  }));
+
+  return (
+    <aside
       className={`transition-all duration-300 ${
         isCollapsed ? 'w-10' : 'w-full md:w-[240px] lg:w-[260px] max-w-[280px]'
       } shrink-0 bg-secondary-bg border-r border-border-color relative min-w-0 overflow-visible library-sidebar`}
     >
-      {/* Pulsante per comprimere/espandere */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={`absolute top-4 -right-4 bg-secondary-bg border border-border-color rounded-full p-1 shadow-md hover:bg-secondary-bg/80 transition-colors z-50`}
@@ -220,250 +180,136 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
             <span className="text-sm text-text-secondary">{gamesCount} giochi</span>
           </div>
 
-          {/* Filtri di stato */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("Status")}
-            >
-              Stato
-              {expandedSections.Status ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.Status ? "block" : "hidden"}`}>
-              {Status_OPTIONS.map((filter) => (
-                <div key={filter.value} className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`Status-${filter.value}`}
-                        checked={filters.Status.includes(filter.value as GameStatus)}
-                        onChange={() => handleStatusToggle(filter.value as GameStatus)}
-                        className="peer h-4 w-4 appearance-none rounded border border-border-color checked:border-0 focus:outline-none focus:ring-2 focus:ring-accent-primary/30 cursor-pointer"
-                        style={{ backgroundColor: filters.Status.includes(filter.value as GameStatus) ? filter.color : "transparent" }}
-                      />
-                      <svg
-                        className="pointer-events-none absolute h-4 w-4 opacity-0 peer-checked:opacity-100"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-                    <label
-                      htmlFor={`Status-${filter.value}`}
-                      className="ml-2 font-roboto text-sm text-text-primary cursor-pointer"
-                    >
-                      {filter.label}
-                    </label>
-                  </div>
-                  <span className="font-roboto text-xs text-text-secondary">({StatusCounts[filter.value] || 0})</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FilterAccordion 
+            title="Stato" 
+            isExpanded={expandedSections.Status} 
+            onToggle={() => toggleSection("Status")}
+          >
+            <FilterCheckboxGroup 
+              options={statusOptions} 
+              selectedValues={filters.Status} 
+              onToggle={(val) => handleStatusToggle(val as GameStatus)} 
+              prefixId="Status" 
+            />
+          </FilterAccordion>
 
-          {/* Filtri piattaforma */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("Platform")}
-            >
-              Piattaforma
-              {expandedSections.Platform ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.Platform ? "block" : "hidden"}`}>
-              {Platforms.map((Platform) => (
-                <div key={Platform} className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`Platform-${Platform}`}
-                      checked={filters.Platform.includes(Platform)}
-                      onChange={() => handlePlatformToggle(Platform)}
-                      className="h-4 w-4 rounded border-border-color text-accent-primary focus:ring-accent-primary/30 cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`Platform-${Platform}`}
-                      className="ml-2 font-roboto text-sm text-text-primary cursor-pointer"
-                    >
-                      {Platform}
-                    </label>
-                  </div>
-                  <span className="font-roboto text-xs text-text-secondary">({PlatformCounts[Platform] || 0})</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <FilterAccordion 
+            title="Piattaforma" 
+            isExpanded={expandedSections.Platform} 
+            onToggle={() => toggleSection("Platform")}
+          >
+            <FilterCheckboxGroup 
+              options={platformOptions} 
+              selectedValues={filters.Platform} 
+              onToggle={handlePlatformToggle} 
+              prefixId="Platform" 
+            />
+          </FilterAccordion>
 
-          {/* Filtri genere */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("genre")}
-            >
-              Genere
-              {expandedSections.genre ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.genre ? "block" : "hidden"}`}>
-              {visibleGenres.map((genre) => (
-                <div key={genre} className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`genre-${genre}`}
-                      checked={filters.genre.includes(genre)}
-                      onChange={() => handleGenreToggle(genre)}
-                      className="h-4 w-4 rounded border-border-color text-accent-primary focus:ring-accent-primary/30 cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`genre-${genre}`}
-                      className="ml-2 font-roboto text-sm text-text-primary cursor-pointer"
-                    >
-                      {genre}
-                    </label>
-                  </div>
-                  <span className="font-roboto text-xs text-text-secondary">({genreCounts[genre] || 0})</span>
-                </div>
-              ))}
-              {!showAllGenres && Genres.length > 5 && (
-                <button
-                  className="font-roboto text-sm text-accent-primary hover:text-accent-primary/80 mt-2"
-                  onClick={() => setShowAllGenres(true)}
-                >
-                  Mostra altri ({Genres.length - 5})
-                </button>
-              )}
-              {showAllGenres && (
-                <button
-                  className="font-roboto text-sm text-accent-primary hover:text-accent-primary/80 mt-2"
-                  onClick={() => setShowAllGenres(false)}
-                >
-                  Mostra meno
-                </button>
-              )}
-            </div>
-          </div>
+          <FilterAccordion 
+            title="Genere" 
+            isExpanded={expandedSections.genre} 
+            onToggle={() => toggleSection("genre")}
+          >
+            <FilterCheckboxGroup 
+              options={genreOptions} 
+              selectedValues={filters.genre} 
+              onToggle={handleGenreToggle} 
+              prefixId="genre" 
+            />
+            {!showAllGenres && Genres.length > 5 && (
+              <button
+                className="font-roboto text-sm text-accent-primary hover:text-accent-primary/80 mt-2"
+                onClick={() => setShowAllGenres(true)}
+              >
+                Mostra altri ({Genres.length - 5})
+              </button>
+            )}
+            {showAllGenres && (
+              <button
+                className="font-roboto text-sm text-accent-primary hover:text-accent-primary/80 mt-2"
+                onClick={() => setShowAllGenres(false)}
+              >
+                Mostra meno
+              </button>
+            )}
+          </FilterAccordion>
 
-          {/* Range slider prezzo */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("Price")}
-            >
-              Prezzo
-              {expandedSections.Price ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.Price ? "block" : "hidden"}`}>
-              <div className="px-1">                  <input
-                  type="range"
-                  min="0"
-                  max={maxPrice}
-                  value={filters.PriceRange[1]}
-                  onChange={(e) => handlePriceRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="filter-range-slider w-full h-2"
-                />
-                <div className="flex justify-between mt-2">
-                  <span className="font-roboto text-xs text-text-secondary">{filters.PriceRange[0]}€</span>
-                  <span className="font-roboto text-xs text-text-secondary">{filters.PriceRange[1]}€</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <FilterAccordion 
+            title="Prezzo" 
+            isExpanded={expandedSections.Price} 
+            onToggle={() => toggleSection("Price")}
+          >
+            <FilterRangeSlider
+              min={0}
+              max={maxPrice}
+              currentValue={filters.PriceRange[1]}
+              onChange={(val) => handlePriceRangeChange(val, 1)}
+              formatValue={(val) => `${val}€`}
+            />
+          </FilterAccordion>
 
-          {/* Range slider ore di gioco */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("hours")}
-            >
-              Ore di gioco
-              {expandedSections.hours ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.hours ? "block" : "hidden"}`}>
-              <div className="px-1">                  <input
-                  type="range"
-                  min="0" 
-                  max={maxHours}
-                  value={filters.hoursRange[1]}
-                  onChange={(e) => handleHoursRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="filter-range-slider w-full h-2"
-                />
-                <div className="flex justify-between mt-2">
-                  <span className="font-roboto text-xs text-text-secondary">{filters.hoursRange[0]}h</span>
-                  <span className="font-roboto text-xs text-text-secondary">{filters.hoursRange[1]}h</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <FilterAccordion 
+            title="Ore di gioco" 
+            isExpanded={expandedSections.hours} 
+            onToggle={() => toggleSection("hours")}
+          >
+            <FilterRangeSlider
+              min={0}
+              max={maxHours}
+              currentValue={filters.hoursRange[1]}
+              onChange={(val) => handleHoursRangeChange(val, 1)}
+              formatValue={(val) => `${val}h`}
+            />
+          </FilterAccordion>
 
-          {/* Range slider Metacritic */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("Metacritic")}
-            >
+          <FilterAccordion 
+            title={
               <div className="flex items-center">
                 <Award className="h-4 w-4 mr-2 text-yellow-500" />
                 Metacritic
               </div>
-              {expandedSections.Metacritic ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.Metacritic ? "block" : "hidden"}`}>
-              <div className="px-1">                <input
-                  type="range"
-                  min="0" 
-                  max={maxMetacritic}
-                  value={filters.MetacriticRange[1]}
-                  onChange={(e) => handleMetacriticRangeChange(Number.parseInt(e.target.value), 1)}
-                  className="filter-range-slider metacritic-slider w-full h-2"
-                />
-                <div className="flex justify-between mt-2">
-                  <span className="font-roboto text-xs text-text-secondary">{filters.MetacriticRange[0]}</span>
-                  <span className="font-roboto text-xs text-text-secondary">{filters.MetacriticRange[1]}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            } 
+            isExpanded={expandedSections.Metacritic} 
+            onToggle={() => toggleSection("Metacritic")}
+          >
+            <FilterRangeSlider
+              min={0}
+              max={maxMetacritic}
+              currentValue={filters.MetacriticRange[1]}
+              onChange={(val) => handleMetacriticRangeChange(val, 1)}
+              formatValue={(val) => `${val}`}
+              sliderClassName="filter-range-slider metacritic-slider"
+            />
+          </FilterAccordion>
 
-          {/* Date picker */}
-          <div className="mb-6">
-            <button
-              className="flex items-center justify-between w-full font-roboto text-sm text-text-primary mb-2"
-              onClick={() => toggleSection("date")}
-            >
-              Data di acquisto
-              {expandedSections.date ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-            <div className={`border-t border-border-color pt-4 ${expandedSections.date ? "block" : "hidden"}`}>
-              <div className="relative">                
-                <input
-                  type="date"
-                  value={filters.PurchaseDate}
-                  onChange={(e) => handlePurchaseDateChange(e.target.value)}
-                  className="filter-date-input w-full p-2 font-roboto text-sm text-text-primary bg-primary-bg border border-border-color rounded focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 transition-colors"
-                />
-              </div>
+          <FilterAccordion 
+            title="Data di acquisto" 
+            isExpanded={expandedSections.date} 
+            onToggle={() => toggleSection("date")}
+          >
+            <div className="relative">                
+              <input
+                type="date"
+                value={filters.PurchaseDate}
+                onChange={(e) => handlePurchaseDateChange(e.target.value)}
+                className="filter-date-input w-full p-2 font-roboto text-sm text-text-primary bg-primary-bg border border-border-color rounded focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/30 transition-colors"
+              />
             </div>
-          </div>          {/* Pulsanti azione */}
+          </FilterAccordion>
+
           <div className="flex flex-col space-y-3 mt-8">
             <button
               onClick={resetFilters}
-              className="w-full py-2 px-4 bg-accent-primary text-white border border-accent-primary font-roboto font-medium text-sm rounded-lg hover:bg-accent-primary/90 hover:border-accent-primary/90 transition-colors"
+              className="w-full py-2 px-4 bg-accent-primary text-white border border-accent-primary font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity"
             >
               Reimposta filtri
             </button>
             
-            {/* Bottone per eliminare tutti i giochi */}
             {gamesCount > 0 && (
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full py-2 px-4 bg-accent-danger text-white border border-accent-danger font-roboto font-medium text-sm rounded-lg hover:bg-accent-danger/90 hover:border-accent-danger/90 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 px-4 bg-accent-danger text-white border border-accent-danger font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 <Trash2 className="h-4 w-4" />
                 Elimina tutti i giochi
@@ -473,7 +319,6 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
         </div>
       )}
       
-      {/* Modal di conferma per eliminazione di tutti i giochi */}
       <ConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -486,6 +331,4 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({ filters, setFilters, game
       />
     </aside>
   );
-};
-
-export default SidebarFilter;
+}

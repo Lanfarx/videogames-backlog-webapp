@@ -9,7 +9,7 @@ interface ColorSelectorProps {
   onChange?: (color: AccentColor) => void;
 }
 
-const ColorSelector: React.FC<ColorSelectorProps> = ({ accentColor: propAccentColor, onChange }) => {
+export default function ColorSelector({ accentColor: propAccentColor, onChange }: ColorSelectorProps) {
   const dispatch = useDispatch();
   const userProfile = useSelector((state: any) => state.user.profile);
   const currentAccentColor = propAccentColor || userProfile?.appPreferences?.accentColor || 'arancione';
@@ -68,6 +68,4 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({ accentColor: propAccentCo
       })}
     </div>
   );
-};
-
-export default ColorSelector;
+}

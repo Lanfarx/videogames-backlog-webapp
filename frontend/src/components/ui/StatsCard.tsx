@@ -8,7 +8,7 @@ interface StatsCardProps {
     variant?: 'default' | 'hero';
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, variant = 'default' }) => {
+export default function StatsCard({ label, value, subtitle, icon, variant = 'default' }: StatsCardProps) {
     // Formatta il valore con separatori per le migliaia solo se è un numero puro
     const formattedValue = (() => {
         if (value.includes('%') || value.includes('€') || value.includes('...')) {
@@ -28,7 +28,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, var
                     {formattedValue}
                 </div>
                 {subtitle && (
-                    <div className="text-xs text-text-secondary/70 font-secondary mb-1">
+                    <div className="text-xs text-text-secondary font-secondary mb-1">
                         {subtitle}
                     </div>
                 )}
@@ -49,12 +49,10 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, subtitle, icon, var
             </div>
             <div className="text-4xl font-bold text-accent-primary font-primary">{formattedValue}</div>
             {subtitle && (
-                <div className="text-xs text-text-secondary/70 font-secondary mt-1">
+                <div className="text-xs text-text-secondary font-secondary mt-1">
                     {subtitle}
                 </div>
             )}
         </div>
     );
-};
-
-export default StatsCard;
+}

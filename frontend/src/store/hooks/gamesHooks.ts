@@ -203,8 +203,16 @@ export function useGameComments(GameId: number) {
   const Comments = game?.Comments || [];
   
   const loadComments = useCallback(() => {
-    dispatch(fetchComments(GameId));
+    if (GameId > 0) {
+      dispatch(fetchComments(GameId));
+    }
   }, [dispatch, GameId]);
+
+  useEffect(() => {
+    if (GameId > 0) {
+      loadComments();
+    }
+  }, [GameId, loadComments]);
   
   const addComment = useCallback(async (comment: GameComment) => {
     const result = await dispatch(addCommentThunk({ GameId, comment }));

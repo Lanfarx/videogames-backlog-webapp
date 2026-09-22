@@ -17,7 +17,7 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) => {
+export default function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   const dispatch = useDispatch();
   const { notifications, unreadCount, loading } = useSelector((state: RootState) => state.notification);
   const handleMarkAsRead = (notificationId: number) => {
@@ -185,6 +185,4 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) 
       </div>
     </div>
   );
-};
-
-export default NotificationDropdown;
+}

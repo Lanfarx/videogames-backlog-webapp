@@ -19,7 +19,7 @@ interface StatusCardProps {
   borderColor: string;
 }
 
-const StatusCard: React.FC<StatusCardProps> = ({ label, value, icon, bgColor, iconColor, borderColor }) => {
+function StatusCard({ label, value, icon, bgColor, iconColor, borderColor }: StatusCardProps) {
   const formattedValue = value.toLocaleString('it-IT');
   
   return (
@@ -39,7 +39,7 @@ const StatusCard: React.FC<StatusCardProps> = ({ label, value, icon, bgColor, ic
   );
 };
 
-const StatusStatsGrid: React.FC<StatusStatsGridProps> = ({ statusStats }) => {
+export default function StatusStatsGrid({ statusStats }: StatusStatsGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">      <StatusCard 
         label="Da iniziare" 
@@ -75,6 +75,4 @@ const StatusStatsGrid: React.FC<StatusStatsGridProps> = ({ statusStats }) => {
       />
     </div>
   );
-};
-
-export default StatusStatsGrid;
+}

@@ -8,11 +8,11 @@ interface GenreTagListProps {
   small?: boolean;
 }
 
-const GenreTagList: React.FC<GenreTagListProps> = ({ 
+export default function GenreTagList({ 
   Genres, 
   maxDisplay = 2,
   small = false
-}) => {
+}: GenreTagListProps) {
   // Se non ci sono generi passati, non renderizziamo nulla
   if (!Genres || Genres.length === 0) {
     return null;
@@ -29,6 +29,4 @@ const GenreTagList: React.FC<GenreTagListProps> = ({
       ))}
     </div>
   );
-};
-
-export default GenreTagList;
+}

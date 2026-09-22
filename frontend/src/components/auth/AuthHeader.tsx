@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import AppLogo from '../ui/atoms/AppLogo';
 
-const AuthHeader: React.FC = () => (
+export default function AuthHeader() { return (
   <header className="h-20 flex flex-col items-center justify-center bg-secondary-bg shadow-sm border-b border-border-color relative">
     <Link 
       to="/landing" 
@@ -15,6 +15,4 @@ const AuthHeader: React.FC = () => (
       <span className="text-xs text-text-secondary font-roboto mt-1 mb-4">Organizza la tua libreria di giochi</span>
     </div>
   </header>
-);
-
-export default AuthHeader;
+); }

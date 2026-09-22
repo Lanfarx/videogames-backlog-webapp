@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Edit, Trash2, MoreVertical, Clock, Settings } from 'lucide-react'; // Aggiunto Settings per "Modifica stato"
+import { Edit, Trash2, Clock, Settings } from 'lucide-react'; // Aggiunto Settings per "Modifica stato"
 import type { Game, GameStatus } from '../../types/game';
 import StatusChangePopover from '../ui/StatusChangePopover';
 import PlaytimePopover from '../ui/PlaytimePopover';
+import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 
 interface ThreeDotsModalProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ interface ThreeDotsModalProps {
   onStatusChange?: (GameId: string, Status: GameStatus) => void;
 }
 
-const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({ 
+export default function ThreeDotsModal({ 
   isOpen, 
   onClose, 
   game, 
@@ -22,27 +23,17 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
   onEdit,
   onDelete,
   onStatusChange
-}) => {
+}: ThreeDotsModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   // Gestisce click fuori dal modale per chiuderlo
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        setActiveActionMenu(null); // Resetta il contesto della sezione attiva
-        onClose();
-      }
-    };
-
+  useOnClickOutside(modalRef, () => {
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      setActiveActionMenu(null);
+      onClose();
     }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
+  });
 
   // Determina la posizione del modale
   const getPositionClasses = () => {
@@ -152,6 +143,4 @@ const ThreeDotsModal: React.FC<ThreeDotsModalProps> = ({
       </ul>
     </div>
   );
-};
-
-export default ThreeDotsModal;
+}

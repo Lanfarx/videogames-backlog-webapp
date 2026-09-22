@@ -6,7 +6,7 @@ const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.AUTH);
 export const register = (data: {
   email: string;
   password: string;
-  UserName: string;
+  username: string;
   tags: string;
 }) => axios.post(`${API_URL}/register`, data);
 

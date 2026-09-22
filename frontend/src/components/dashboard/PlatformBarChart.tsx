@@ -11,7 +11,7 @@ interface PlatformBarChartProps {
     title: string;
 }
 
-const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data, icon, title }) => {
+export default function PlatformBarChart({ data, icon, title }: PlatformBarChartProps) {
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -141,6 +141,4 @@ const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data, icon, title }
             </div>
         </div>
     );
-};
-
-export default PlatformBarChart;
+}
