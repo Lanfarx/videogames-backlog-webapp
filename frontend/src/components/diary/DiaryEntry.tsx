@@ -59,6 +59,8 @@ export default function DiaryEntry({
             <img 
               src={game.CoverImage} 
               alt={game.Title} 
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           ) : (

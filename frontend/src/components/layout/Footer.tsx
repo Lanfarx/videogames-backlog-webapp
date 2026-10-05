@@ -39,7 +39,7 @@ export default function Footer() {
           
           {/* Sezione destra - Versione */}
           <div className="text-xs text-text-disabled font-['Roboto'] text-right">
-            Versione 1.1.1
+            Versione 1.2
           </div>
         </div>
       </div>

@@ -24,6 +24,8 @@ export default function GamePreviewCard({ gameData }: GamePreviewCardProps) {
             <img
               src={gameData.CoverImage || "/placeholder.svg"}
               alt={gameData.Title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           ) : (

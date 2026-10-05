@@ -40,7 +40,7 @@ export default function NotificationBell() {
     <div ref={bellRef} className="relative">
       <button
         onClick={handleBellClick}
-        className={`relative p-2 rounded-lg transition-colors ${
+        className={`relative min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary ${
           isDropdownOpen 
             ? 'text-accent-primary bg-accent-primary/10' 
             : 'text-text-secondary hover:text-accent-primary hover:bg-accent-primary/5'

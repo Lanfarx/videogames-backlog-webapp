@@ -53,7 +53,7 @@ export default function LoginPage() {
         <h2 className="font-montserrat font-semibold text-2xl text-text-primary mb-1">Accedi al tuo account</h2>
         <p className="text-base text-text-secondary font-roboto mb-8">Bentornato nella tua libreria</p>
         {error && (
-          <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+          <div className="mb-4 text-center text-sm text-accent-danger bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-3 font-medium">
             {error}
           </div>
         )}

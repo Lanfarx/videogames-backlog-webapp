@@ -555,23 +555,12 @@ public class ActivityService(
     {
         if (updates.Count == 0) return;
 
-        if (updates.Count == 1)
+        // Crea attività individuali per ciascun gioco aggiornato,
+        // così da mostrare il titolo reale, la copertina e il link corretto alla pagina della libreria
+        foreach (var u in updates)
         {
-            var u = updates[0];
             await CreatePlaytimeActivityAsync(u.Game, u.NewHours, u.PreviousHours, u.WasNotStarted, userId);
-            return;
         }
-
-        var activity = new Activity
-        {
-            Type = ActivityType.Played,
-            GameId = updates[0].Game.Id,
-            GameTitle = $"{updates.Count} giochi aggiornati",
-            AdditionalInfo = $"Hai aggiornato le ore di gioco per {updates.Count} giochi",
-            Timestamp = DateTime.UtcNow
-        };
-
-        await SaveActivityEntityAsync(activity);
     }
     private async Task SaveActivityEntityAsync(Activity activity)
     {

@@ -25,6 +25,8 @@ const GameCover = ({ CoverImage, title, Status = 'NotStarted', size = 'md' }: Ga
       <img 
         src={CoverImage || "/placeholder.svg"} 
         alt={title} 
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover"
       />
       <div 

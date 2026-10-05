@@ -255,7 +255,33 @@ export function getActivityIcon(type: ActivityType): React.ReactNode {
   }
 }
 
+export function isBulkActivity(activity: Activity): boolean {
+  if (!activity) return false;
+  const title = (activity.gameTitle || '').toLowerCase();
+  const info = (activity.additionalInfo || '').toLowerCase();
+  return (
+    title.includes('giochi aggiornati') ||
+    title.includes('giochi aggiunti') ||
+    title.includes('nuovi giochi') ||
+    info.startsWith('hai aggiornato') ||
+    info.startsWith('hai aggiunto')
+  );
+}
+
 export function getActivitytext(activity: Activity): string {
+  if (isBulkActivity(activity)) {
+    if (activity.additionalInfo && activity.additionalInfo.trim()) {
+      return activity.additionalInfo;
+    }
+    if (activity.type === 'Played') {
+      return `Hai aggiornato le ore di gioco per ${activity.gameTitle}`;
+    }
+    if (activity.type === 'Added') {
+      return `Hai aggiunto ${activity.gameTitle} alla tua libreria`;
+    }
+    return activity.gameTitle;
+  }
+
   switch(activity.type) {
     case "Completed":
       return `Hai completato ${activity.gameTitle}`;    
@@ -292,6 +318,3 @@ export function getActivitytext(activity: Activity): string {
   }
 }
 
-// Le funzioni di creazione attività locali sono state rimosse in favore della creazione automatica lato backend
-// Quando si eseguono operazioni sui giochi (aggiungere, modificare stato, ore, rating), 
-// il backend crea automaticamente le attività corrispondenti tramite ActivityService

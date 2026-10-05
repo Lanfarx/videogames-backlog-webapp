@@ -24,11 +24,6 @@ export default function LandingBentoFeatures() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-secondary-bg border border-border-color text-xs font-semibold text-accent-primary uppercase tracking-wider mb-4 font-secondary">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Esperienza Completa</span>
-          </div>
-
           <h2 className="text-3xl sm:text-4xl font-extrabold font-primary text-text-primary tracking-tight mb-4 [text-wrap:balance]">
             Tutto ciò che serve per padroneggiare la tua libreria
           </h2>
@@ -41,7 +36,7 @@ export default function LandingBentoFeatures() {
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Bento Card 1: Large Span 2 - Status Pipeline */}
-          <div className="lg:col-span-2 rounded-2xl p-7 sm:p-8 bg-secondary-bg/90 border border-border-color/80 hover:border-accent-primary/60 transition-all duration-300 hover:shadow-xl flex flex-col justify-between group">
+          <div className="lg:col-span-2 rounded-2xl p-7 sm:p-8 bg-secondary-bg/90 border border-border-color hover:border-accent-primary/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col justify-between group">
             <div>
               <div className="w-12 h-12 rounded-xl bg-accent-primary/10 text-accent-primary flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
                 <Layers className="w-6 h-6" />
@@ -52,27 +47,24 @@ export default function LandingBentoFeatures() {
               </h3>
 
               <p className="text-sm sm:text-base text-text-secondary font-secondary leading-relaxed max-w-xl mb-6">
-                Organizza in modo chiaro ogni singolo titolo. Trascina i tuoi giochi attraverso ogni fase: dalla wishlist al download, dall’avventura in corso, all’abbandono o fino al trofeo di platino definitivo.
+                Organizza in modo chiaro ogni singolo titolo. Sposta i tuoi giochi attraverso ogni fase: dalla wishlist alla partita in corso, fino al completamento e al trofeo di platino definitivo.
               </p>
             </div>
 
             {/* Visual interactive workflow preview inside the card */}
             <div className="p-5 rounded-xl bg-primary-bg/70 border border-border-color/60 mt-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                {statuses.map((st, idx) => (
+                {statuses.map((st) => (
                   <div
                     key={st.key}
-                    className="p-3 rounded-lg bg-secondary-bg border border-border-color/50 text-center flex flex-col items-center space-y-2 hover:border-accent-primary/40 transition-colors"
+                    className="p-3 rounded-lg bg-secondary-bg border border-border-color/50 text-center flex flex-col items-center space-y-1.5 hover:border-accent-primary/40 transition-colors"
                   >
                     <span
-                      className="w-3 h-3 rounded-full"
+                      className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: st.color }}
                     />
                     <span className="text-xs font-semibold text-text-primary font-primary">
                       {st.label}
-                    </span>
-                    <span className="text-[10px] text-text-secondary font-mono">
-                      Fase 0{idx + 1}
                     </span>
                   </div>
                 ))}
@@ -163,11 +155,11 @@ export default function LandingBentoFeatures() {
               </div>
 
               <h3 className="text-xl sm:text-2xl font-bold text-text-primary font-primary mb-3">
-                Feed Social & Rete Amici
+                Feed Attività & Rete Amici
               </h3>
 
               <p className="text-sm sm:text-base text-text-secondary font-secondary leading-relaxed max-w-xl mb-6">
-                Scopri a cosa stanno giocando i tuoi amici in questo momento. Condividi recensioni, confronta i voti e celebra i platini appena conquistati.
+                Scopri a cosa stanno giocando i tuoi amici in tempo reale. Condividi sessioni, confronta le recensioni personali e commenta i giochi completati.
               </p>
             </div>
 
@@ -179,18 +171,18 @@ export default function LandingBentoFeatures() {
                 </div>
                 <div>
                   <div className="text-xs font-semibold text-text-primary">
-                    Marco ha platinato <span className="text-accent-primary">Elden Ring</span>!
+                    Marco ha completato <span className="text-accent-primary">Elden Ring</span>!
                   </div>
                   <div className="text-[11px] text-text-secondary flex items-center space-x-1 mt-0.5">
                     <Clock className="w-3 h-3" />
-                    <span>2 ore fa • PlayStation 5</span>
+                    <span>2 ore fa • PlayStation 5 • 84 ore giocate</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-semibold self-end sm:self-auto">
-                <Trophy className="w-3.5 h-3.5" />
-                <span>Trofeo Platino</span>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Stato: Platinato</span>
               </div>
             </div>
           </div>

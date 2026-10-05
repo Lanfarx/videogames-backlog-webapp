@@ -38,16 +38,18 @@ export default function WishlistItemCard({
   return (
     <div className="bg-primary-bg border border-border-color rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
       {/* Immagine di copertina */}
-      <div className="aspect-video bg-gray-200 relative">
+      <div className="aspect-video bg-tertiary-bg relative">
         {item.coverImage ? (
           <img
             src={item.coverImage}
             alt={item.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-300">
-            <span className="text-gray-500 text-sm">Nessuna immagine</span>
+          <div className="w-full h-full flex items-center justify-center bg-tertiary-bg">
+            <span className="text-text-secondary text-sm">Nessuna immagine</span>
           </div>
         )}
       </div>
@@ -144,13 +146,15 @@ export default function WishlistItemCard({
           </button>
           <button
             onClick={() => onViewInfo(item.rawgId)}
-            className="px-3 py-2 border border-border-color rounded text-sm hover:bg-secondary-bg transition-colors flex items-center justify-center"
+            aria-label="Visualizza dettagli gioco"
+            className="px-3 py-2 border border-border-color rounded-lg text-sm hover:bg-secondary-bg transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
           >
             <Info size={16} />
           </button>
           <button
             onClick={() => onRemove(item.id)}
-            className="px-3 py-2 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50 transition-colors flex items-center justify-center"
+            aria-label="Rimuovi dalla wishlist"
+            className="px-3 py-2 border border-accent-danger/30 text-accent-danger rounded-lg text-sm hover:bg-accent-danger/10 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-danger"
           >
             <Trash2 size={16} />
           </button>

@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
       </p>
       
       {error && (
-        <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+        <div className="mb-4 text-center text-sm text-accent-danger bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-3 font-medium">
           {error}
         </div>
       )}
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
             }
           />
           {confirmPassword.length > 0 && !passwordMatch && (
-            <p className="text-xs text-red-600 mt-1">Le password non coincidono</p>
+            <p className="text-xs text-accent-danger mt-1 font-medium">Le password non coincidono</p>
           )}
         </div>
 

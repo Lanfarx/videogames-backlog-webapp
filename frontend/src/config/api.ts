@@ -17,7 +17,8 @@ export const API_CONFIG = {
     ACTIVITY_COMMENTS: '/api/activity-comments',
     REVIEW_COMMENTS: '/api/review-comments',
     STEAM: '/api/steam',
-    WISHLIST: '/api/wishlist'
+    WISHLIST: '/api/wishlist',
+    CATALOG: '/api/catalog'
   }
 } as const;
 
@@ -39,5 +40,6 @@ export const API_URLS = {
   ACTIVITY_COMMENTS: buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_COMMENTS),
   REVIEW_COMMENTS: buildApiUrl(API_CONFIG.ENDPOINTS.REVIEW_COMMENTS),
   STEAM: buildApiUrl(API_CONFIG.ENDPOINTS.STEAM),
-  WISHLIST: buildApiUrl(API_CONFIG.ENDPOINTS.WISHLIST)
+  WISHLIST: buildApiUrl(API_CONFIG.ENDPOINTS.WISHLIST),
+  CATALOG: buildApiUrl(API_CONFIG.ENDPOINTS.CATALOG)
 } as const;

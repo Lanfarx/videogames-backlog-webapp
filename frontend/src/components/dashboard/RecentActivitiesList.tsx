@@ -59,7 +59,7 @@ export default function RecentActivitiesList({ activities, icon, title }: Recent
                             {icon}
                         </div>
                     )}                    {title && (
-                        <h3 className="font-bold text-xl font-secondary bg-gradient-to-r from-text-primary via-accent-primary to-text-primary bg-clip-text text-transparent bg-[size:200%] animate-gradient-x">
+                        <h3 className="font-montserrat font-semibold text-xl text-text-primary">
                             {title}
                         </h3>
                     )}
@@ -69,22 +69,22 @@ export default function RecentActivitiesList({ activities, icon, title }: Recent
             {/* Lista delle attività */}
             {activities.length === 0 ? (
                 <div className="p-8 text-center">
-                    <div className="text-text-secondary text-sm animate-pulse">Nessuna attività recente</div>
+                    <div className="text-text-secondary text-sm">Nessuna attività recente</div>
                 </div>
             ) : (
                 <>
                     {activities.map((activity, index) => {
                         // Calcola il delay per l'animazione staggered
-                        const delay = index * 100;
+                        const delay = index * 80;
                         const shouldShow = animationProgress >= (index / activities.length);
                         
-                        // Stili per l'animazione
+                        // Stili per l'animazione fluida (senza rimbalzo)
                         const animationStyle = {
                             opacity: shouldShow ? 1 : 0,
                             transform: shouldShow 
-                                ? 'translateY(0) scale(1)' 
-                                : 'translateY(20px) scale(0.95)',
-                            transition: `all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
+                                ? 'translateY(0)' 
+                                : 'translateY(12px)',
+                            transition: `opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
                         };                        return (
                             <div
                                 key={`${activity.gameTitle}-${activity.timestamp}-${index}`}

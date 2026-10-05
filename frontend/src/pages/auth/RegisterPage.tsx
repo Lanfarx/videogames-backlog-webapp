@@ -76,7 +76,7 @@ export default function RegisterPage() {
       <>        <h2 className="font-montserrat font-semibold text-2xl text-text-primary mb-1">Crea il tuo account</h2>
         <p className="text-base text-text-secondary font-roboto mb-8">Inizia a organizzare la tua libreria di giochi</p>
         {error && (
-          <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+          <div className="mb-4 text-center text-sm text-accent-danger bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-3 font-medium">
             {error}
           </div>
         )}
@@ -128,7 +128,7 @@ export default function RegisterPage() {
             <p className="text-xs text-text-secondary mt-1">Minimo 8 caratteri, una maiuscola, un numero</p>
           </div>
           {confirmPassword.length > 0 && !passwordMatch && (
-            <p className="text-xs text-red-600">Le password non coincidono</p>
+            <p className="text-xs text-accent-danger mb-2 font-medium">Le password non coincidono</p>
           )}
           <Input
             label="Conferma password"

@@ -41,6 +41,8 @@ export default function CatalogGameCard({
       <img
         src={game.CoverImage || "/placeholder.svg"}
         alt={game.Title}
+        loading="lazy"
+        decoding="async"
         className="w-full h-36 object-cover rounded-lg mb-2"
       />
       <div className="flex-1 flex flex-col gap-1">

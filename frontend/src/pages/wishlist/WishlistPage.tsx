@@ -236,7 +236,7 @@ export default function WishlistPage() {
         {/* Lista wishlist */}
         {filteredItems.length === 0 ? (
           <div className="text-center py-16">
-            <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <Heart className="h-16 w-16 text-text-disabled mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-text-primary mb-2">
               {wishlistItems.length === 0 ? 'La tua wishlist è vuota' : 'Nessun gioco trovato'}
             </h3>

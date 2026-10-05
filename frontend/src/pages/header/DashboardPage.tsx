@@ -18,7 +18,7 @@ import { History } from 'lucide-react';
 export default function DashboardPage() {
     const { stats, loading, error } = useGamesStats();
     const allGames = useAllGames();
-    const { activities: recentActivities, loading: recentLoading } = useRecentActivities(5);
+    const { activities: recentActivities, loading: recentLoading } = useRecentActivities(4);
     const StatusData = useStatusData();
     const [showAllActivities, setShowAllActivities] = React.useState(false);
 
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                           />
                         )}
                         <RecentActivitiesList 
-                          activities={recentActivities} 
+                          activities={recentActivities.slice(0, 4)} 
                           icon={undefined}
                           title={''}
                         />

@@ -10,12 +10,6 @@ export default function LandingCTA() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-accent-primary/15 rounded-full blur-[100px] pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl mx-auto">
-            {/* Small pill */}
-            <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-primary-bg/70 border border-border-color/80 text-xs font-semibold text-accent-primary mb-6 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Inizia la tua nuova avventura</span>
-            </div>
-
             {/* Headline */}
             <h2 className="text-3xl sm:text-5xl font-extrabold font-primary text-text-primary tracking-tight mb-5 [text-wrap:balance]">
               Pronto a mettere ordine nella tua passione per i videogiochi?
@@ -23,7 +17,7 @@ export default function LandingCTA() {
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-text-secondary font-secondary leading-relaxed mb-10 [text-wrap:pretty]">
-              Unisciti a GameBacklog. Configura la tua libreria in pochi istanti e inizia a tracciare ore, progressi e trofei su ogni piattaforma.
+              Unisciti a GameBacklog. Configura la tua libreria in pochi istanti e inizia a organizzare stati, ore giocate e recensioni su ogni piattaforma.
             </p>
 
             {/* Actions */}

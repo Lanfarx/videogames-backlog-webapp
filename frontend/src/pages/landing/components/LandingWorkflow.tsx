@@ -13,10 +13,7 @@ export default function LandingWorkflow() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Heading */}
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-semibold text-accent-primary uppercase tracking-wider font-secondary">
-            Passo dopo passo
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold font-primary text-text-primary tracking-tight mt-2 mb-4 [text-wrap:balance]">
+          <h2 className="text-3xl sm:text-4xl font-extrabold font-primary text-text-primary tracking-tight mb-4 [text-wrap:balance]">
             Inizia a organizzare in 3 semplici mosse
           </h2>
           <p className="text-base text-text-secondary font-secondary [text-wrap:pretty]">
@@ -29,7 +26,7 @@ export default function LandingWorkflow() {
           {WORKFLOW_STEPS.map((step, index) => (
             <div
               key={step.stepNumber}
-              className="relative p-7 rounded-2xl bg-secondary-bg/80 border border-border-color/80 hover:border-accent-primary/60 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              className="relative p-7 rounded-2xl bg-secondary-bg/80 border border-border-color hover:border-accent-primary/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg flex flex-col justify-between"
             >
               <div>
                 {/* Header of step: Number and Icon */}

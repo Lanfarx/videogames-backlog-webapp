@@ -1,38 +1,52 @@
 import axios from 'axios';
+import { API_CONFIG, buildApiUrl } from '../../config/api';
+import { getToken } from '../../utils/getToken';
 
-// Base URL per le API RAWG
-const BASE_URL = 'https://api.rawg.io/api';
+// Base URL verso il backend per il catalogo giochi
+const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.CATALOG);
 
-// Crea un'istanza di axios configurata
-const apiClient = axios.create({
-  baseURL: BASE_URL,
-  params: {
-    key: process.env.REACT_APP_RAWG_API_KEY
+// Istanza axios configurata con intercettore per token JWT
+const apiClient = axios.create();
+
+apiClient.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
+  return config;
 });
 
-// Funzione per mappare i dati dell'API RAWG al formato interno
-export const mapRawgGameToInternalFormat = (rawgGame: any) => {
+// Funzione per mappare i dati dell'API al formato interno
+export const mapRawgGameToInternalFormat = (game: any) => {
+  if (!game) return null;
+
   return {
-    id: rawgGame.id,
-    Title: rawgGame.name,
-    Description: rawgGame.description_raw || rawgGame.description || "Nessuna descrizione disponibile.",
-    CoverImage: rawgGame.background_image || "/placeholder.svg",
-    Developer: rawgGame.developers?.[0]?.name || "Sconosciuto",
-    Publisher: rawgGame.publishers?.[0]?.name || "Sconosciuto",
-    ReleaseYear: rawgGame.released ? new Date(rawgGame.released).getFullYear() : null,
-    Genres: rawgGame.genres?.map((g: any) => g.name) || [],
-    Metacritic: (rawgGame.metacritic && typeof rawgGame.metacritic === 'number' && rawgGame.metacritic > 0) ? rawgGame.metacritic : 0,
-    Rating: rawgGame.rating || 0,
-    Platforms: rawgGame.platforms?.map((p: any) => p.platform.name) || [],
-    RatingsCount: rawgGame.ratings_count || 0,
+    id: game.id,
+    Title: game.Title || game.name || game.title || '',
+    Description: game.Description || game.description_raw || game.description || "Nessuna descrizione disponibile.",
+    CoverImage: game.CoverImage || game.background_image || game.coverImage || "/placeholder.svg",
+    Developer: game.Developer || game.developers?.[0]?.name || game.developer || "Sconosciuto",
+    Publisher: game.Publisher || game.publishers?.[0]?.name || game.publisher || "Sconosciuto",
+    ReleaseYear: game.ReleaseYear ?? (game.releaseYear ?? (game.released ? new Date(game.released).getFullYear() : null)),
+    Genres: Array.isArray(game.Genres)
+      ? game.Genres
+      : (Array.isArray(game.genres) ? game.genres.map((g: any) => typeof g === 'string' ? g : g.name) : []),
+    Metacritic: typeof game.Metacritic === 'number'
+      ? game.Metacritic
+      : (typeof game.metacritic === 'number' && game.metacritic > 0 ? game.metacritic : 0),
+    Rating: game.Rating || game.rating || 0,
+    Platforms: Array.isArray(game.Platforms)
+      ? game.Platforms
+      : (Array.isArray(game.platforms) ? game.platforms.map((p: any) => typeof p === 'string' ? p : p.platform?.name || p.name) : []),
+    RatingsCount: game.RatingsCount || game.ratings_count || 0,
   };
 };
 
 // Funzione per ottenere i dettagli di un gioco specifico
 export const getGameDetails = async (gameId: string) => {
   try {
-    const response = await apiClient.get(`/games/${gameId}`);
+    const response = await apiClient.get(`${API_URL}/games/${encodeURIComponent(gameId)}`);
     return mapRawgGameToInternalFormat(response.data);
   } catch (error) {
     console.error(`Errore nel recupero dei dettagli del gioco ${gameId}:`, error);
@@ -43,25 +57,21 @@ export const getGameDetails = async (gameId: string) => {
 // Funzione per cercare giochi
 export const searchGames = async (query: string) => {
   try {
-    const response = await apiClient.get('/games', {
+    const response = await apiClient.get(`${API_URL}/search`, {
       params: {
-        search: query
+        query
       }
     });
 
-    // Mappa i risultati usando la funzione di mapping
     const rawResults = response.data?.results || [];
     const mappedResults = rawResults.map(mapRawgGameToInternalFormat);
 
-    // Filtra i risultati per includere solo giochi con un titolo
     const filteredResults = mappedResults.filter((game: any) =>
-      game.Title
-      // Abbiamo rimosso i filtri su ReleaseYear e RatingsCount > 3 perché 
-      // bloccavano l'aggiunta di giochi indie, appena usciti o in accesso anticipato
+      game && game.Title
     );
 
     return {
-      ...response.data,
+      count: response.data?.count || filteredResults.length,
       results: filteredResults
     };
   } catch (error) {
@@ -70,14 +80,16 @@ export const searchGames = async (query: string) => {
   }
 };
 
-// Funzione per ottenere i giochi con paginazione
-export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {}) => {
+// Funzione per ottenere i giochi con paginazione dal catalogo
+export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams: any = {}) => {
   try {
-    const response = await apiClient.get('/games', {
+    const response = await apiClient.get(`${API_URL}/games`, {
       params: {
         page,
-        page_size: pageSize,
-        ...extraParams
+        pageSize,
+        search: extraParams.search || undefined,
+        ordering: extraParams.ordering || undefined,
+        platforms: extraParams.platforms || undefined
       }
     });
     return response.data;
@@ -87,87 +99,21 @@ export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams = {
   }
 };
 
+// Funzione per ottenere giochi simili
 export const getSimilarGames = async (genreIds: number[], excludeId: number, count: number = 4, Metacritic?: number) => {
   try {
-    const params: any = {
-      genres: genreIds.join(','),
-      exclude_additions: true,
-      ordering: '-rating,-metacritic,-released', // Ordina per rating, poi Metacritic, poi data
-      page_size: Math.min(40, count * 3), // Ottieni più risultati per filtrare meglio
-      platforms: '1,4,7,18,22,186,187', // Aggiunte console moderne
-      dates: '2000-01-01,' + new Date().toISOString().slice(0, 10), // Giochi dal 2000 in poi
-    };
+    const response = await apiClient.get(`${API_URL}/similar`, {
+      params: {
+        genres: Array.isArray(genreIds) ? genreIds.join(',') : genreIds,
+        excludeId,
+        count,
+        metacritic: Metacritic
+      }
+    });
 
-    // Filtro Metacritic più intelligente
-    if (typeof Metacritic === 'number' && Metacritic > 0) {
-      // Range dinamico basato sul punteggio
-      const range = Metacritic > 80 ? 15 : Metacritic > 60 ? 20 : 25;
-      params.metacritic = `${Math.max(0, Metacritic - range)},${Math.min(100, Metacritic + range)}`;
-    } else {
-      // Se non c'è Metacritic, filtra per giochi decenti
-      params.metacritic = '60,100';
-    }
-
-    const response = await apiClient.get('/games', { params });
-
-    // Filtro e ordinamento più sofisticato
-    const results = response.data.results
-      .filter((g: any) =>
-        g.id !== excludeId &&
-        g.name &&
-        g.background_image &&
-        g.released &&
-        g.rating >= 3.5 && // Rating minimo più alto
-        g.ratings_count >= 10 && // Più recensioni per affidabilità
-        !g.name.toLowerCase().includes('dlc') &&
-        !g.name.toLowerCase().includes('expansion') &&
-        !g.name.toLowerCase().includes('season pass')
-      )
-      // Ordinamento personalizzato per rilevanza
-      .sort((a: any, b: any) => {
-        // Calcola score di similarità
-        const scoreA = calculateSimilarityScore(a, Metacritic);
-        const scoreB = calculateSimilarityScore(b, Metacritic);
-        return scoreB - scoreA;
-      })
-      .slice(0, count);
-
-    return results;
+    return response.data || [];
   } catch (error) {
     console.error('Errore nel recupero di giochi simili:', error);
     throw error;
   }
 };
-
-// Funzione helper per calcolare score di similarità
-const calculateSimilarityScore = (game: any, originalMetacritic?: number): number => {
-  let score = 0;
-
-  // Base score dal rating
-  score += game.rating * 10;
-
-  // Bonus per numero di recensioni (logaritmico per evitare bias)
-  score += Math.log10(game.ratings_count + 1) * 5;
-
-  // Bonus per Metacritic se simile al gioco originale
-  if (originalMetacritic && game.metacritic) {
-    const metacriticDiff = Math.abs(game.metacritic - originalMetacritic);
-    score += Math.max(0, 20 - metacriticDiff);
-  } else if (game.metacritic) {
-    score += game.metacritic * 0.2;
-  }
-
-  // Penalità per giochi troppo vecchi o troppo nuovi
-  if (game.released) {
-    const year = new Date(game.released).getFullYear();
-    const currentYear = new Date().getFullYear();
-    const yearDiff = Math.abs(currentYear - year);
-
-    if (yearDiff <= 3) score += 10; // Bonus per giochi recenti
-    else if (yearDiff > 10) score -= 5; // Penalità per giochi molto vecchi
-  }
-
-  return score;
-};
-
-// Altre funzioni API possono essere aggiunte qui

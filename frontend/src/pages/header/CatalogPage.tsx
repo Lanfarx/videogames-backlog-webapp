@@ -221,7 +221,7 @@ export default function CatalogPage() {
           {isLoading ? (
             <div className="text-center py-12 text-text-secondary">Caricamento giochi...</div>
           ) : error ? (
-            <div className="text-center py-12 text-red-500">{error}</div>
+            <div className="text-center py-12 text-accent-danger font-medium">{error}</div>
           ) : (
             <>
               <div className={gridClass}>

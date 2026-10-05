@@ -44,7 +44,13 @@ export default function GameCard({ game, onEdit, onDelete, onStatusChange, navig
       >
         <div className="relative h-[180px] overflow-hidden">
           <div className="absolute inset-0 bg-accent-secondary/20 z-10"></div>
-          <img src={game.CoverImage || "/placeholder.svg"} alt={game.Title} className="w-full h-full object-cover" />
+          <img
+            src={game.CoverImage || "/placeholder.svg"}
+            alt={game.Title}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
         </div>
       </Link>
 
@@ -102,7 +108,8 @@ export default function GameCard({ game, onEdit, onDelete, onStatusChange, navig
             e.stopPropagation();
             setActiveActionMenu(activeActionMenu === game.id.toString() ? null : game.id.toString());
           }}
-          className="p-1 rounded-full text-text-secondary hover:text-accent-primary transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-full text-text-secondary hover:text-accent-primary hover:bg-primary-bg/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+          aria-label={`Opzioni per ${game.Title}`}
         >
           <MoreVertical className="h-5 w-5" />
         </button>

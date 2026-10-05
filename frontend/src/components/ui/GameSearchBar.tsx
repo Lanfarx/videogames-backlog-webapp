@@ -161,6 +161,8 @@ export default function GameSearchBar({
                 <img
                   src={game.CoverImage}
                   alt={game.Title}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/placeholder.svg';

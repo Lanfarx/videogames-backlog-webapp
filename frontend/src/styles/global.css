@@ -352,11 +352,11 @@
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
-    filter: drop-shadow(0 0 5px currentColor);
+    box-shadow: 0 0 6px currentColor;
   }
   50% {
-    opacity: 0.8;
-    filter: drop-shadow(0 0 15px currentColor);
+    opacity: 0.85;
+    box-shadow: 0 0 16px currentColor;
   }
 }
 
@@ -405,10 +405,6 @@
   animation: rotate-slow 20s linear infinite;
 }
 
-.animate-bounce-gentle {
-  animation: bounce-gentle 2s infinite;
-}
-
 /* Effetti specifici per i chart */
 .chart-animation-delay-1 {
   animation-delay: 0.1s;
@@ -430,37 +426,37 @@
   animation-delay: 0.5s;
 }
 
-/* Classi per le transizioni avanzate */
+/* Classi per transizioni fluide e naturali */
 .transition-spring {
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .transition-bounce {
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Hover effects migliorati per dashboard */
+/* Hover effects migliorati per dashboard (The Tactile Lift Rule) */
 .hover-lift {
-  transition: all 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive hover effects */
 @media (hover: hover) and (pointer: fine) {
   .hover-scale:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
   
   .hover-rotate:hover {
-    transform: rotate(5deg);
+    transform: rotate(3deg);
   }
   
   .hover-glow:hover {
-    filter: drop-shadow(0 0 10px currentColor);
+    box-shadow: 0 0 12px currentColor;
   }
 }
 
@@ -506,115 +502,28 @@
 
 /* Animazioni specifiche per ActivityCard */
 .activity-card-enter {
-  animation: activitySlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: activitySlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes activitySlideIn {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
-}
-
-.activity-card-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.activity-card-shimmer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(var(--accent-primary), 0.1),
-    transparent
-  );
-  transition: left 0.8s;
-}
-
-.activity-card-shimmer:hover::before {
-  left: 100%;
 }
 
 /* Enhanced hover effects for activity cards */
 .activity-card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .activity-card-hover:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 
-    0 10px 25px rgba(var(--accent-primary), 0.15),
-    0 0 20px rgba(var(--accent-primary), 0.1);
-}
-
-/* Glow effects for activity types */
-.activity-glow-played {
-  box-shadow: 0 0 15px rgba(var(--status-inprogress), 0.3);
-}
-
-.activity-glow-completed {
-  box-shadow: 0 0 15px rgba(var(--status-completed), 0.3);
-}
-
-.activity-glow-added {
-  box-shadow: 0 0 15px rgba(var(--status-notstarted), 0.3);
-}
-
-.activity-glow-rated {
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
-}
-
-/* Micro-interactions */
-.activity-icon-bounce {
-  animation: iconBounce 2s infinite;
-}
-
-@keyframes iconBounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  40% {
-    transform: translateY(-3px) scale(1.1);
-  }
-  60% {
-    transform: translateY(-1px) scale(1.05);
-  }
-}
-
-.activity-text-gradient {
-  background: linear-gradient(
-    45deg,
-    rgb(var(--text-primary)),
-    rgb(var(--accent-primary)),
-    rgb(var(--accent-secondary))
-  );
-  background-size: 200% 200%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientShift 3s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Gradient text animations */
@@ -964,6 +873,39 @@ html {
 .landing-grid-pattern {
   background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(var(--border-color), 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(var(--border-color), 0.35) 1px, transparent 1px);
+    linear-gradient(to right, rgba(var(--border-color), 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(var(--border-color), 0.15) 1px, transparent 1px);
 }
+
+/* Accessibilità: supporto completo per preferenze di movimento ridotto (prefers-reduced-motion) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .animate-spin,
+  .animate-spin-slow,
+  .animate-pulse,
+  .animate-pulse-glow,
+  .animate-shimmer,
+  .animate-float,
+  .animate-bounce,
+  .animate-bounce-gentle,
+  .animate-rotate-slow,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
+
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}
+

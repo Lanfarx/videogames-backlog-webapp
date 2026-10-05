@@ -40,12 +40,37 @@ if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy => policy
-            .WithOrigins(Environment.GetEnvironmentVariable("CORS_ORIGINS") ?? "https://videogames-backlog-webapp.vercel.app")
+    options.AddPolicy("AllowAll", policy =>
+    {
+        var rawOrigins = Environment.GetEnvironmentVariable("CORS_ORIGINS") ?? "";
+        var configuredOrigins = rawOrigins
+            .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        configuredOrigins.Add("https://videogames-backlog-webapp.vercel.app");
+        configuredOrigins.Add("http://localhost:3000");
+        configuredOrigins.Add("http://localhost:5173");
+
+        policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+
+                if (configuredOrigins.Contains(origin)) return true;
+
+                if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                {
+                    if (uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                    if (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+
+                return false;
+            })
             .AllowAnyHeader()
             .AllowAnyMethod()
-    );
+            .AllowCredentials();
+    });
 });
 
 builder.Services.AddControllers()
@@ -208,6 +233,14 @@ builder.Services.Configure<SteamSettings>(options => {
                    ?? string.Empty;
 });
 
+// Configurazione RAWG Settings
+builder.Services.Configure<RawgSettings>(options => {
+    options.ApiKey = builder.Configuration["RawgApiKey"] 
+                   ?? Environment.GetEnvironmentVariable("RAWG_API_KEY") 
+                   ?? Environment.GetEnvironmentVariable("REACT_APP_RAWG_API_KEY") 
+                   ?? string.Empty;
+});
+
 // Dependency Injection Automatizzata
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 builder.Services.AddFluentValidationAutoValidation();
@@ -240,6 +273,9 @@ builder.Services.Configure<JsonOptions>(options =>
 
 var app = builder.Build();
 
+// CORS abilitato come primissimo middleware per gestire le richieste preflight OPTIONS
+app.UseCors("AllowAll");
+
 // Aggiunta del Global Exception Handler Middleware
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
@@ -268,7 +304,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRateLimiter();
-app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

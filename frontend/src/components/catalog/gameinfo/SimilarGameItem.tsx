@@ -29,6 +29,8 @@ export function SimilarGameItem({ game, communityRating, horizontal = false }: S
             <img 
               src={game.CoverImage || "/placeholder.svg"} 
               alt={game.title}
+              loading="lazy"
+              decoding="async"
               className="w-full h-32 object-cover rounded-lg shadow-sm"
             />
           </div>
@@ -68,6 +70,8 @@ export function SimilarGameItem({ game, communityRating, horizontal = false }: S
           <img 
             src={game.CoverImage || "/placeholder.svg"} 
             alt={game.title}
+            loading="lazy"
+            decoding="async"
             className="w-16 h-20 object-cover rounded-lg shadow-sm"
           />
         </div>

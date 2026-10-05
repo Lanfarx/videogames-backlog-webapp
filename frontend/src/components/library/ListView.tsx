@@ -79,6 +79,8 @@ export default function ListView({ games, onEdit, onDelete, onStatusChange, navi
                     <img
                       src={game.CoverImage || "/placeholder.svg"}
                       alt={game.Title}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover"
                     />
                   </div>                  <Link 

@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <>
         <div className="text-center">
           <div className="mb-6">
-            <svg className="mx-auto h-16 w-16 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mx-auto h-16 w-16 text-accent-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
       </p>
       
       {error && (
-        <div className="mb-4 text-center text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+        <div className="mb-4 text-center text-sm text-accent-danger bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-3 font-medium">
           {error}
         </div>
       )}

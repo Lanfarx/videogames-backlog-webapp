@@ -41,6 +41,8 @@ export default function InProgressGameCard({
         <img 
           src={CoverImage || "/placeholder.svg"} 
           alt={title} 
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover transition-transform hover:scale-105" 
           onError={(e) => {
             const target = e.target as HTMLImageElement;

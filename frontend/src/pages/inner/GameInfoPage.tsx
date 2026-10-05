@@ -100,6 +100,7 @@ const GameInfoPage: React.FC = () => {  const { id } = useParams<{ id: string }>
               <img 
                 src={game.CoverImage || "/placeholder.svg"} 
                 alt={game.title} 
+                decoding="async"
                 className="w-full max-w-[420px] h-[520px] object-cover rounded-xl shadow-lg"
               />
             </div>

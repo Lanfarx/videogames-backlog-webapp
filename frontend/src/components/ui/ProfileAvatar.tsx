@@ -7,7 +7,11 @@ export default function ProfileAvatar() {
   const userProfile = useSelector((state: RootState) => state.user.profile);
 
   return (
-    <NavLink to="/profile">
+    <NavLink
+      to="/profile"
+      aria-label="Profilo utente"
+      className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+    >
       <div className="h-11 w-11 rounded-full bg-tertiary-bg border-2 border-accent-primary cursor-pointer flex items-center justify-center overflow-hidden">
         {userProfile && userProfile.avatar ? (
           <img 
