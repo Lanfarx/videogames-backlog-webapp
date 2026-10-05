@@ -13,6 +13,8 @@ services:
       - ASPNETCORE_URLS=http://+:80
       - DATABASE_URL=${DATABASE_URL}
       - SteamApiKey=${STEAM_API_KEY}
+      - RAWG_API_KEY=${RAWG_API_KEY}
+      - RawgApiKey=${RAWG_API_KEY}
       - CORS_ORIGINS=${CORS_ORIGINS}
     ports:
       - "5000:80"
@@ -31,7 +33,7 @@ services:
         - REACT_APP_API_URL=http://localhost:5000
         - REACT_APP_VERSION=1.0.0
         - REACT_APP_ENV=production
-        - REACT_APP_RAWG_API_KEY=${REACT_APP_RAWG_API_KEY}
+        - RAWG_API_KEY=${RAWG_API_KEY}
     image: videogames-frontend-prod:latest
     container_name: videogames-frontend-prod
     ports:

@@ -236,7 +236,9 @@ builder.Services.Configure<SteamSettings>(options => {
 // Configurazione RAWG Settings
 builder.Services.Configure<RawgSettings>(options => {
     options.ApiKey = builder.Configuration["RawgApiKey"] 
+                   ?? builder.Configuration["RAWG_API_KEY"]
                    ?? Environment.GetEnvironmentVariable("RAWG_API_KEY") 
+                   ?? Environment.GetEnvironmentVariable("RawgApiKey") 
                    ?? Environment.GetEnvironmentVariable("REACT_APP_RAWG_API_KEY") 
                    ?? string.Empty;
 });

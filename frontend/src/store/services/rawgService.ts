@@ -17,29 +17,73 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Funzione per mappare i dati dell'API al formato interno
+// Funzione per mappare i dati dell'API al formato interno arricchito
 export const mapRawgGameToInternalFormat = (game: any) => {
   if (!game) return null;
 
+  const id = game.id ?? game.Id;
+  const title = game.title ?? game.Title ?? game.name ?? '';
+  const description = game.description ?? game.Description ?? game.description_raw ?? "Nessuna descrizione disponibile.";
+  const coverImage = game.coverImage ?? game.CoverImage ?? game.background_image ?? "/placeholder.svg";
+  const developer = game.developer ?? game.Developer ?? game.developers?.[0]?.name ?? "Sconosciuto";
+  const publisher = game.publisher ?? game.Publisher ?? game.publishers?.[0]?.name ?? "Sconosciuto";
+  const releaseYear = game.releaseYear ?? game.ReleaseYear ?? (game.released ? new Date(game.released).getFullYear() : null);
+
+  let genres: string[] = [];
+  if (Array.isArray(game.genres)) {
+    genres = game.genres.map((g: any) => typeof g === 'string' ? g : g.name);
+  } else if (Array.isArray(game.Genres)) {
+    genres = game.Genres.map((g: any) => typeof g === 'string' ? g : g.name);
+  }
+
+  const metacritic = typeof game.metacritic === 'number'
+    ? game.metacritic
+    : (typeof game.Metacritic === 'number' && game.Metacritic > 0 ? game.Metacritic : 0);
+
+  const rating = typeof game.rating === 'number'
+    ? game.rating
+    : (typeof game.Rating === 'number' ? game.Rating : 0);
+
+  let platforms: string[] = [];
+  if (Array.isArray(game.platforms)) {
+    platforms = game.platforms.map((p: any) => typeof p === 'string' ? p : p.platform?.name || p.name);
+  } else if (Array.isArray(game.Platforms)) {
+    platforms = game.Platforms.map((p: any) => typeof p === 'string' ? p : p.platform?.name || p.name);
+  }
+
+  const ratingsCount = typeof game.ratingsCount === 'number'
+    ? game.ratingsCount
+    : (typeof game.RatingsCount === 'number' ? game.RatingsCount : (typeof game.ratings_count === 'number' ? game.ratings_count : 0));
+
   return {
-    id: game.id,
-    Title: game.Title || game.name || game.title || '',
-    Description: game.Description || game.description_raw || game.description || "Nessuna descrizione disponibile.",
-    CoverImage: game.CoverImage || game.background_image || game.coverImage || "/placeholder.svg",
-    Developer: game.Developer || game.developers?.[0]?.name || game.developer || "Sconosciuto",
-    Publisher: game.Publisher || game.publishers?.[0]?.name || game.publisher || "Sconosciuto",
-    ReleaseYear: game.ReleaseYear ?? (game.releaseYear ?? (game.released ? new Date(game.released).getFullYear() : null)),
-    Genres: Array.isArray(game.Genres)
-      ? game.Genres
-      : (Array.isArray(game.genres) ? game.genres.map((g: any) => typeof g === 'string' ? g : g.name) : []),
-    Metacritic: typeof game.Metacritic === 'number'
-      ? game.Metacritic
-      : (typeof game.metacritic === 'number' && game.metacritic > 0 ? game.metacritic : 0),
-    Rating: game.Rating || game.rating || 0,
-    Platforms: Array.isArray(game.Platforms)
-      ? game.Platforms
-      : (Array.isArray(game.platforms) ? game.platforms.map((p: any) => typeof p === 'string' ? p : p.platform?.name || p.name) : []),
-    RatingsCount: game.RatingsCount || game.ratings_count || 0,
+    id,
+    Title: title,
+    title,
+    name: title,
+    Description: description,
+    description,
+    description_raw: description,
+    CoverImage: coverImage,
+    coverImage,
+    background_image: coverImage,
+    Developer: developer,
+    developer,
+    Publisher: publisher,
+    publisher,
+    ReleaseYear: releaseYear,
+    releaseYear,
+    released: releaseYear ? `${releaseYear}-01-01` : null,
+    Genres: genres,
+    genres,
+    Metacritic: metacritic,
+    metacritic,
+    Rating: rating,
+    rating,
+    Platforms: platforms,
+    platforms,
+    RatingsCount: ratingsCount,
+    ratingsCount,
+    ratings_count: ratingsCount,
   };
 };
 
@@ -92,7 +136,14 @@ export const getPaginatedGames = async (page = 1, pageSize = 20, extraParams: an
         platforms: extraParams.platforms || undefined
       }
     });
-    return response.data;
+
+    const rawResults = response.data?.results || [];
+    const mappedResults = rawResults.map(mapRawgGameToInternalFormat);
+
+    return {
+      count: response.data?.count || 0,
+      results: mappedResults
+    };
   } catch (error) {
     console.error('Errore nel recupero dei giochi paginati:', error);
     throw error;
@@ -111,7 +162,8 @@ export const getSimilarGames = async (genreIds: number[], excludeId: number, cou
       }
     });
 
-    return response.data || [];
+    const rawResults = Array.isArray(response.data) ? response.data : [];
+    return rawResults.map(mapRawgGameToInternalFormat);
   } catch (error) {
     console.error('Errore nel recupero di giochi simili:', error);
     throw error;
