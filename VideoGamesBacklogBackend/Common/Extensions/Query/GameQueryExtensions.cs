@@ -82,8 +82,9 @@ public static class GameQueryExtensions
             "metacritic" => isAscending ? query.OrderBy(g => g.Metacritic).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Metacritic).ThenBy(g => g.Id),
             "price" => isAscending ? query.OrderBy(g => g.Price).ThenBy(g => g.Id) : query.OrderByDescending(g => g.Price).ThenBy(g => g.Id),
             "purchasedate" => isAscending ? query.OrderBy(g => g.PurchaseDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.PurchaseDate).ThenBy(g => g.Id),
-            "completiondate" => isAscending ? query.OrderBy(g => g.CompletionDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.CompletionDate).ThenBy(g => g.Id),
-            "platinumdate" => isAscending ? query.OrderBy(g => g.PlatinumDate).ThenBy(g => g.Id) : query.OrderByDescending(g => g.PlatinumDate).ThenBy(g => g.Id),
+            // Giochi senza data in fondo in entrambe le direzioni (PostgreSQL in DESC metterebbe i NULL in cima)
+            "completiondate" => isAscending ? query.OrderBy(g => g.CompletionDate == null).ThenBy(g => g.CompletionDate).ThenBy(g => g.Id) : query.OrderBy(g => g.CompletionDate == null).ThenByDescending(g => g.CompletionDate).ThenBy(g => g.Id),
+            "platinumdate" => isAscending ? query.OrderBy(g => g.PlatinumDate == null).ThenBy(g => g.PlatinumDate).ThenBy(g => g.Id) : query.OrderBy(g => g.PlatinumDate == null).ThenByDescending(g => g.PlatinumDate).ThenBy(g => g.Id),
             _ => query.OrderBy(g => g.Title).ThenBy(g => g.Id)
         };
     }

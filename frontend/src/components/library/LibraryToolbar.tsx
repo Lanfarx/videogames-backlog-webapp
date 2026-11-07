@@ -14,6 +14,7 @@ interface LibraryToolbarProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (sortBy: SortOption) => void;
+  searchQuery: string;
   onSearchChange?: (query: string) => void;
   columns?: number;
   onColumnsChange?: (columns: number) => void;
@@ -27,11 +28,11 @@ export default function LibraryToolbar({
   sortBy,
   sortOrder,
   onSortChange,
+  searchQuery,
   onSearchChange,
   onRefreshGames,
 }: LibraryToolbarProps) {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [search, setSearch] = useState("");
   const [showSteamSync, setShowSteamSync] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
@@ -67,11 +68,8 @@ export default function LibraryToolbar({
         <AddGameButton onClick={onAddGame} />
         <input
           type="text"
-          value={search}
-          onChange={e => {
-            setSearch(e.target.value);
-            onSearchChange && onSearchChange(e.target.value);
-          }}
+          value={searchQuery}
+          onChange={e => onSearchChange && onSearchChange(e.target.value)}
           placeholder="Cerca nella libreria..."
           className="ml-2 px-3 py-1.5 rounded-md border border-border-color bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm w-96"
         />

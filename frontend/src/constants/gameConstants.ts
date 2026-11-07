@@ -96,6 +96,7 @@ export const Genres = [
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'title', label: 'Titolo' },
   { value: 'Platform', label: 'Piattaforma' },
+  { value: 'ReleaseYear', label: 'Anno di uscita' },
   { value: 'HoursPlayed', label: 'Ore giocate' },
   { value: 'Metacritic', label: 'Metacritic' },
   { value: 'Rating', label: 'Valutazione' },

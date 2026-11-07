@@ -17,6 +17,7 @@ public class CreateGameDto
     public DateOnly? CompletionDate { get; set; }
     public DateOnly? PlatinumDate { get; set; }
     public int HoursPlayed { get; set; }
+    public int? SteamAppId { get; set; }
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
     public string? Notes { get; set; }

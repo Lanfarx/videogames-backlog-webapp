@@ -306,7 +306,7 @@ export default function SidebarFilter({ filters, setFilters, gamesCount, games }
               Reimposta filtri
             </button>
             
-            {gamesCount > 0 && (
+            {games.length > 0 && (
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="w-full py-2 px-4 bg-accent-danger text-white border border-accent-danger font-roboto font-medium text-sm rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
@@ -324,7 +324,7 @@ export default function SidebarFilter({ filters, setFilters, gamesCount, games }
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteAllGames}
         title="Eliminare tutti i giochi?"
-        message={`Sei sicuro di voler eliminare tutti i ${gamesCount} giochi dalla libreria? Questa azione non può essere annullata.`}
+        message={`Sei sicuro di voler eliminare tutti i ${games.length} giochi dalla libreria? Questa azione non può essere annullata.`}
         confirmButtontext="Elimina tutto"
         cancelButtontext="Annulla"
         type="danger"

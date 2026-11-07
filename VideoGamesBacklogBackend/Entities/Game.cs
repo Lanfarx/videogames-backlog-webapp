@@ -55,6 +55,8 @@ public class Game : IUserOwnedEntity
     public DateOnly? PlatinumDate { get; set; }
 
     public int HoursPlayed { get; set; }
+    // AppID Steam: chiave stabile per la sincronizzazione, null per i giochi aggiunti a mano
+    public int? SteamAppId { get; set; }
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
 

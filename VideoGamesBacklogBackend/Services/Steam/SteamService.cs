@@ -6,6 +6,7 @@ using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.DTOs.Steam;
 using VideoGamesBacklogBackend.Entities;
 using VideoGamesBacklogBackend.Infrastructure.Data;
+using VideoGamesBacklogBackend.Interfaces.Catalog;
 using VideoGamesBacklogBackend.Interfaces.Games;
 using VideoGamesBacklogBackend.Interfaces.Steam;
 using GameTitleMatcher = VideoGamesBacklogBackend.Common.Helpers.GameTitleMatcher;
@@ -17,10 +18,14 @@ public class SteamService(
     AppDbContext context,
     IOptions<SteamSettings> steamSettings,
     IGameService gameService,
+    ICatalogService catalogService,
     ILogger<SteamService> logger)
     : ISteamService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    // shortcut: massimo giochi arricchiti da RAWG per sync (fino a 2 chiamate ciascuno), alzare se la sync resta veloce
+    private const int MaxRawgEnrichPerSync = 10;
 
     private readonly string _steamApiKey = steamSettings.Value.ApiKey;
 
@@ -60,37 +65,36 @@ public class SteamService(
 
     private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId, CancellationToken cancellationToken)
     {
-        var existingGamesTitles = await context.Games
-            .AsNoTracking()
+        // Tracciati: ai giochi già presenti abbinati per titolo viene associato l'AppID
+        var existingGames = await context.Games
             .Where(g => g.UserId == userId)
-            .Select(g => g.NormalizedTitle)
             .ToListAsync(cancellationToken);
 
-        var newGamesCount = 0;
         var debugInfo = new List<string>
         {
             $"Steam games to process: {steamGames.Count}",
-            $"Existing games in database: {existingGamesTitles.Count}"
+            $"Existing games in database: {existingGames.Count}"
         };
 
-        var newGames = (from steamGame in steamGames 
-                 let normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name) 
-                 where !existingGamesTitles.Contains(normalizedTitle) 
-                 let hoursPlayed = (int)Math.Round(steamGame.PlaytimeForever / 60.0) 
-                 select new CreateGameDto
-                 {
-                     Title = steamGame.Name,
-                     Platform = "Steam",
-                     HoursPlayed = hoursPlayed,
-                     Status = hoursPlayed > 0 ? "InProgress" : "NotStarted",
-                     PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
-                 }).ToList();
-
-        if (newGames.Count > 0)
+        var newGames = new List<CreateGameDto>();
+        foreach (var steamGame in steamGames)
         {
-            await gameService.AddGamesBulkAsync(userId, newGames);
-            newGamesCount = newGames.Count;
+            var existingGame = FindMatchingGame(existingGames, steamGame);
+            if (existingGame != null)
+            {
+                existingGame.SteamAppId ??= steamGame.Appid;
+            }
+            else
+            {
+                newGames.Add(NewSteamGameDto(steamGame));
+            }
         }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        var newGamesCount = newGames.Count > 0
+            ? (await gameService.AddGamesBulkAsync(userId, newGames)).Count
+            : 0;
 
         debugInfo.Add($"New games added: {newGamesCount}");
 
@@ -138,19 +142,21 @@ public class SteamService(
         var normalizedTitles = recentlyPlayedGames
             .Select(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name))
             .ToList();
+        var appIds = recentlyPlayedGames.Select(g => (int?)g.Appid).ToList();
 
         var existingGames = await context.Games
-            .Where(g => g.UserId == userId && g.Platform == "Steam" && normalizedTitles.Contains(g.NormalizedTitle))
+            .Where(g => g.UserId == userId && g.Platform == "Steam" &&
+                        (appIds.Contains(g.SteamAppId) || normalizedTitles.Contains(g.NormalizedTitle)))
             .ToListAsync(cancellationToken);
 
         // Elabora SOLO i giochi giocati di recente
         foreach (var recentGame in recentlyPlayedGames)
         {
-            var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(recentGame.Name);
-            var existingGame = existingGames.FirstOrDefault(g => g.NormalizedTitle == normalizedTitle);
+            var existingGame = FindMatchingGame(existingGames, recentGame);
 
             if (existingGame != null)
             {
+                existingGame.SteamAppId ??= recentGame.Appid;
                 ProcessExistingGame(syncContext, existingGame, recentGame);
             }
             else
@@ -168,6 +174,9 @@ public class SteamService(
         {
             await gameService.AddGamesBulkAsync(userId, syncContext.GamesToAdd);
         }
+
+        var enrichedCount = await EnrichMissingDataAsync(userId, syncContext.DebugInfo, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken); // AppID associati e dati RAWG
 
         syncContext.DebugInfo.Add($"Recently played games processed: {recentlyPlayedGames.Count}");
         syncContext.DebugInfo.Add($"Games matched and updated: {syncContext.UpdatedCount}");
@@ -188,6 +197,11 @@ public class SteamService(
         if (syncContext.StatusChangedCount > 0)
         {
             message += $" ({syncContext.StatusChangedCount} cambiati a 'In corso')";
+        }
+
+        if (enrichedCount > 0)
+        {
+            message += $", dati mancanti completati per {enrichedCount} giochi";
         }
 
         return new SteamSyncResponse
@@ -259,14 +273,7 @@ public class SteamService(
 
             try
             {
-                var newGame = new CreateGameDto
-                {
-                    Title = recentGame.Name,
-                    Platform = "Steam",
-                    HoursPlayed = totalHours,
-                    Status = totalHours > 0 ? "InProgress" : "NotStarted",
-                    PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
-                };
+                var newGame = NewSteamGameDto(recentGame);
 
                 syncContext.GamesToAdd.Add(newGame);
 
@@ -300,6 +307,70 @@ public class SteamService(
             syncContext.DebugInfo.Add(
                 $"{recentGame.Name} IGNORATO (probabilmente free-to-play): Ore totali: {totalHours}, Ore recenti: {recentHours}h");
         }
+    }
+
+    // Prima l'AppID; il titolo solo per i giochi non ancora associati a Steam
+    private static Game? FindMatchingGame(List<Game> games, SteamGame steamGame)
+    {
+        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name);
+        return games.FirstOrDefault(g => g.SteamAppId == steamGame.Appid)
+            ?? games.FirstOrDefault(g => g.SteamAppId == null && g.NormalizedTitle == normalizedTitle);
+    }
+
+    private static CreateGameDto NewSteamGameDto(SteamGame steamGame)
+    {
+        var hours = (int)Math.Round(steamGame.PlaytimeForever / 60.0);
+        return new CreateGameDto
+        {
+            Title = steamGame.Name,
+            Platform = "Steam",
+            SteamAppId = steamGame.Appid,
+            CoverImage = $"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{steamGame.Appid}/header.jpg",
+            HoursPlayed = hours,
+            Status = hours > 0 ? "InProgress" : "NotStarted",
+            PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
+        };
+    }
+
+    /// <summary>
+    /// Come il pulsante "Aggiorna dati mancanti" della pagina gioco, ma solo sui giochi Steam mai arricchiti
+    /// (Developer vuoto) e solo con un risultato RAWG dallo stesso titolo normalizzato: senza conferma umana
+    /// un dato sbagliato è peggio di uno mancante.
+    /// </summary>
+    private async Task<int> EnrichMissingDataAsync(int userId, List<string> debugInfo, CancellationToken cancellationToken)
+    {
+        var games = await context.Games
+            .Where(g => g.UserId == userId && g.Platform == "Steam" && (g.Developer == null || g.Developer == ""))
+            .OrderBy(g => g.Id)
+            .Take(MaxRawgEnrichPerSync)
+            .ToListAsync(cancellationToken);
+
+        var enriched = 0;
+        foreach (var game in games)
+        {
+            var search = await catalogService.SearchGamesAsync(game.Title, cancellationToken);
+            var match = search.Results.FirstOrDefault(r => GameTitleMatcher.GetFullyNormalizedTitle(r.Title) == game.NormalizedTitle);
+            if (match == null)
+            {
+                // Non riprovare a ogni sync: resta il pulsante manuale nella pagina del gioco
+                game.Developer = "Sconosciuto";
+                debugInfo.Add($"{game.Title}: nessuna corrispondenza RAWG");
+                continue;
+            }
+
+            var details = await catalogService.GetGameDetailsAsync(match.Id.ToString(), cancellationToken);
+            if (details == null) continue; // errore RAWG temporaneo: si riprova alla prossima sync
+
+            game.Developer = details.Developer;
+            if (string.IsNullOrEmpty(game.Publisher)) game.Publisher = details.Publisher;
+            if (string.IsNullOrEmpty(game.CoverImage) && details.CoverImage != "/placeholder.svg") game.CoverImage = details.CoverImage;
+            if (game.ReleaseYear == 0 && details.ReleaseYear is > 0) game.ReleaseYear = details.ReleaseYear.Value;
+            if (game.Genres.Length == 0) game.Genres = [.. details.Genres];
+            if ((game.Metacritic is null or 0) && details.Metacritic > 0) game.Metacritic = details.Metacritic;
+            enriched++;
+        }
+
+        return enriched;
     }
 
     /// <summary>

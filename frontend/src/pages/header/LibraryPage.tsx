@@ -141,35 +141,30 @@ export default function LibraryPage() {
     }, [dispatch, allGamesFromStore.length]);    // Calcola i massimali per i filtri quando i giochi sono caricati
     useEffect(() => {
         if (allGamesFromStore.length > 0) {
-            const { PriceRange, hoursRange, MetacriticRange } = calculateMaxValues(allGamesFromStore);
-
-            // Mantieni i filtri salvati ma aggiorna i range massimi se necessario
+            const maxes = calculateMaxValues(allGamesFromStore);
             const savedFilters = loadSavedFilters();
-            const newFilters = {
-                Status: savedFilters.Status,
-                Platform: savedFilters.Platform,
-                genre: savedFilters.genre,
-                PriceRange: [
-                    savedFilters.PriceRange[0],
-                    Math.min(savedFilters.PriceRange[1], PriceRange[1])
-                ] as [number, number],
-                hoursRange: [
-                    savedFilters.hoursRange[0],
-                    Math.min(savedFilters.hoursRange[1], hoursRange[1])
-                ] as [number, number],
-                MetacriticRange: [
-                    savedFilters.MetacriticRange[0],
-                    Math.min(savedFilters.MetacriticRange[1], MetacriticRange[1])
-                ] as [number, number],
-                PurchaseDate: savedFilters.PurchaseDate,
+            let savedMaxes: ReturnType<typeof calculateMaxValues> | null = null;
+            try {
+                savedMaxes = JSON.parse(localStorage.getItem('libraryFilterMaxes') || 'null');
+            } catch {
+                savedMaxes = null;
+            }
+
+            // Un limite superiore lasciato al massimo segue il nuovo massimo (es. ore aumentate dopo una sync Steam)
+            const adjustRange = (key: 'PriceRange' | 'hoursRange' | 'MetacriticRange'): [number, number] => {
+                const [savedMin, savedMax] = savedFilters[key];
+                const newMax = maxes[key][1];
+                const wasAtMax = !savedMaxes || savedMax >= savedMaxes[key][1];
+                return [savedMin, wasAtMax ? newMax : Math.min(savedMax, newMax)];
             };
 
-            // Se non ci sono filtri salvati, usa i valori di default con i range massimi
-            if (!localStorage.getItem('libraryFilters')) {
-                newFilters.PriceRange = [0, PriceRange[1]];
-                newFilters.hoursRange = [0, hoursRange[1]];
-                newFilters.MetacriticRange = [0, MetacriticRange[1]];
-            }
+            const newFilters: GameFilters = {
+                ...savedFilters,
+                PriceRange: adjustRange('PriceRange'),
+                hoursRange: adjustRange('hoursRange'),
+                MetacriticRange: adjustRange('MetacriticRange'),
+            };
+            localStorage.setItem('libraryFilterMaxes', JSON.stringify(maxes));
 
             setFilters(newFilters);
             setDebouncedFilters(newFilters);
@@ -418,6 +413,7 @@ export default function LibraryPage() {
                         sortBy={sortBy}
                         sortOrder={sortOrder}
                         onSortChange={handleSortChange}
+                        searchQuery={searchQuery}
                         onSearchChange={handleSearchChange}
                         onRefreshGames={handleRefreshGames}
                     />

@@ -339,6 +339,9 @@ namespace VideoGamesBacklogBackend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(20)");
 
+                    b.Property<int?>("SteamAppId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
