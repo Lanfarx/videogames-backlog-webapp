@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
+import type { GameStatus } from '../../types/game';
 
 const API_BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.STEAM);
 
@@ -14,14 +15,6 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export interface SteamGame {
-  appid: number;
-  name: string;
-  playtime_forever: number;
-  img_icon_url?: string;
-  img_logo_url?: string;
-}
 
 export interface UpdatedGameInfo {
   gameTitle: string;
@@ -37,19 +30,36 @@ export interface SteamSyncResponse {
   message: string;
   count: number;
   updatedGames: UpdatedGameInfo[];
-  debugInfo?: any; // Per informazioni di debug
+  pendingCount: number;
+  warning?: string | null;
 }
 
-export async function syncWithSteam(steamId: string, syncType: 'initial_load' | 'update_hours', signal?: AbortSignal): Promise<SteamSyncResponse> {
-  const response = await apiClient.post(`${API_BASE_URL}/sync`, {
-    steamId,
-    syncType
-  }, { signal });
+export interface SteamCandidate {
+  appId: number;
+  name: string;
+  coverImage: string;
+  hoursPlayed: number;
+  lastPlayedAt: string | null;
+  suggestedStatus: GameStatus;
+}
 
+// Aggiorna ore, stati e achievement dei giochi Steam già in libreria (lo Steam ID è quello del profilo)
+export async function syncWithSteam(): Promise<SteamSyncResponse> {
+  const response = await apiClient.post(`${API_BASE_URL}/sync`);
   return response.data;
 }
 
-export async function getSteamGames(steamId: string, signal?: AbortSignal): Promise<{ games: SteamGame[] }> {
-  const response = await apiClient.get(`${API_BASE_URL}/games/${steamId}`, { signal });
+// Giochi posseduti su Steam non in libreria; con ignored = true quelli ignorati
+export async function getSteamCandidates(ignored: boolean): Promise<SteamCandidate[]> {
+  const response = await apiClient.get(`${API_BASE_URL}/candidates`, { params: { ignored } });
   return response.data;
+}
+
+export async function importSteamGames(items: { appId: number; status: GameStatus }[]): Promise<number> {
+  const response = await apiClient.post(`${API_BASE_URL}/import`, items);
+  return response.data.count;
+}
+
+export async function setSteamGamesIgnored(appIds: number[], ignored: boolean): Promise<void> {
+  await apiClient.post(`${API_BASE_URL}/${ignored ? 'ignore' : 'restore'}`, appIds);
 }

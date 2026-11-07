@@ -107,6 +107,7 @@ const gamesSlice = createSlice({
         state.games = action.payload;
         state.loading = false;
         state.gamesLoaded = true; // Imposta il flag quando i giochi sono caricati
+        state.stats = null; // la libreria può essere cambiata lato server (sync Steam): la dashboard le ricarica
       })      .addCase(fetchGames.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Errore caricamento giochi';

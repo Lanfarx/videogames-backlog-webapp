@@ -57,6 +57,12 @@ public class Game : IUserOwnedEntity
     public int HoursPlayed { get; set; }
     // AppID Steam: chiave stabile per la sincronizzazione, null per i giochi aggiunti a mano
     public int? SteamAppId { get; set; }
+    // Ultima sessione su Steam (rtime_last_played): guida le regole di stato automatiche
+    public DateTime? LastPlayedAt { get; set; }
+    // null = mai controllati; Total 0 = il gioco non ha achievement
+    public int? AchievementsUnlocked { get; set; }
+    public int? AchievementsTotal { get; set; }
+    public DateTime AddedAt { get; set; } = DateTime.UtcNow;
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
 

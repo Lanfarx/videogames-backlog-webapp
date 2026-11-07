@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Monitor, Clock, MoreVertical, Award } from 'lucide-react';
+import { Monitor, Clock, MoreVertical, Award, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Game, GameStatus, GameFilters, SortOption, SortOrder } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import { useGameById } from '../../store/hooks/index';
-import { getGameRating } from '../../utils/gamesUtils';
+import { getGameRating, formatAchievements } from '../../utils/gamesUtils';
 import ThreeDotsModal from '../ui/ThreeDotsModal';
 import StatusIndicator from '../ui/atoms/StatusIndicator';
 import { formatPrice, formatPurchaseDate, formatPurchaseDateWithLabel, formatMetacriticScore } from '../../utils/gameDisplayUtils';
@@ -31,6 +31,7 @@ export default function GameCard({ game, onEdit, onDelete, onStatusChange, navig
   const currentGame = useGameById(game.id) || game;
   const effectiveRating = currentGame.Rating ?? getGameRating(currentGame);
   const effectiveHours = currentGame.HoursPlayed;
+  const achievements = formatAchievements(currentGame);
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
 
   return (
@@ -85,6 +86,11 @@ export default function GameCard({ game, onEdit, onDelete, onStatusChange, navig
         {/* Stato e Valutazione */}
         <div className="mt-2 flex items-center justify-between">
           <StatusBadge Status={currentGame.Status} />
+          {achievements && (
+            <span className="flex items-center font-roboto text-xs text-text-secondary" title="Achievement Steam sbloccati">
+              <Trophy className="h-3.5 w-3.5 mr-1" />{achievements}
+            </span>
+          )}
           {effectiveRating > 0 && (
             <RatingStars Rating={effectiveRating} showValue={false} size="sm" />
           )}

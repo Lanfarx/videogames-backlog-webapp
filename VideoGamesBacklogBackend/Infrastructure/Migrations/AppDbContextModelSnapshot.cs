@@ -288,6 +288,15 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AchievementsTotal")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("AchievementsUnlocked")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateOnly?>("CompletionDate")
                         .HasColumnType("date");
 
@@ -303,6 +312,9 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<int>("HoursPlayed")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("LastPlayedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("Metacritic")
                         .HasColumnType("integer");
@@ -489,6 +501,9 @@ namespace VideoGamesBacklogBackend.Migrations
 
                     b.Property<string>("FullName")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastSteamSyncAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");

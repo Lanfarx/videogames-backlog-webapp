@@ -5,12 +5,14 @@ interface UserState {
   profile: UserProfile | null;
   isProfileLoading: boolean;
   profileLoadError: string | null;
+  steamPendingCount: number; // giochi Steam da importare giocati di recente: badge della libreria
 }
 
 const initialState: UserState = {
   profile: null,
   isProfileLoading: false,
   profileLoadError: null,
+  steamPendingCount: Number(localStorage.getItem('steamPendingCount')) || 0,
 };
 
 const userSlice = createSlice({
@@ -32,6 +34,12 @@ const userSlice = createSlice({
       state.profileLoadError = action.payload;
       state.isProfileLoading = false;
     },
+    setSteamSynced(state, action: PayloadAction<string>) {
+      if (state.profile) state.profile.lastSteamSyncAt = action.payload;
+    },
+    setSteamPendingCount(state, action: PayloadAction<number>) {
+      state.steamPendingCount = action.payload;
+    },
     clearUserProfile(state) {
       state.profile = null;
       state.isProfileLoading = false;
@@ -40,5 +48,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setProfileLoading, setUserProfile, setProfileLoadError, clearUserProfile } = userSlice.actions;
+export const { setProfileLoading, setUserProfile, setProfileLoadError, setSteamSynced, setSteamPendingCount, clearUserProfile } = userSlice.actions;
 export default userSlice.reducer;

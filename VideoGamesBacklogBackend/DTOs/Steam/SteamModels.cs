@@ -11,6 +11,10 @@ public class SteamGame
     [JsonPropertyName("playtime_forever")]
     public int PlaytimeForever { get; set; }
     
+    // Unix time dell'ultima sessione, 0 se mai giocato (solo GetOwnedGames lo valorizza)
+    [JsonPropertyName("rtime_last_played")]
+    public long RtimeLastPlayed { get; set; }
+
     [JsonPropertyName("img_icon_url")]
     public string? ImgIconUrl { get; set; }
     
@@ -41,11 +45,43 @@ public class SteamGameData
     public List<SteamGame> Games { get; set; } = [];
 }
 
+/// <summary>
+/// Gioco posseduto su Steam che non è in libreria: da importare o ignorare.
+/// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-public class SteamSyncRequest
+public class SteamCandidateDto
 {
-    public string SteamId { get; set; } = string.Empty;
-    public string SyncType { get; set; } = string.Empty; // "initial_load" o "update_hours"
+    public int AppId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string CoverImage { get; set; } = string.Empty;
+    public int HoursPlayed { get; set; }
+    public DateTime? LastPlayedAt { get; set; }
+    public string SuggestedStatus { get; set; } = string.Empty;
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class SteamImportItem
+{
+    public int AppId { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class PlayerAchievementsResponse
+{
+    public PlayerStats Playerstats { get; set; } = new();
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class PlayerStats
+{
+    public List<PlayerAchievement> Achievements { get; set; } = [];
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class PlayerAchievement
+{
+    public int Achieved { get; set; }
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
@@ -66,7 +102,9 @@ public class SteamSyncResponse
     public string Message { get; set; } = string.Empty;
     public int Count { get; set; }
     public List<UpdatedGameInfo> UpdatedGames { get; set; } = [];
-    public object? DebugInfo { get; set; }
+    // Giochi posseduti, non in libreria e giocati di recente: il badge "nuovi" della libreria
+    public int PendingCount { get; set; }
+    public string? Warning { get; set; }
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]

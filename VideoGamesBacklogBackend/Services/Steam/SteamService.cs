@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Text.Json;
 using VideoGamesBacklogBackend.Common.Configuration;
 using VideoGamesBacklogBackend.DTOs.Games;
@@ -25,6 +26,10 @@ public class SteamService(
 
     // shortcut: massimo giochi arricchiti da RAWG per sync (fino a 2 chiamate ciascuno), alzare se la sync resta veloce
     private const int MaxRawgEnrichPerSync = 10;
+    // shortcut: massimo giochi mai controllati per achievement a sync (1 chiamata ciascuno), alzare se la sync resta veloce
+    private const int MaxNewAchievementChecksPerSync = 20;
+    private const int AbandonAfterDays = 30;
+    private const int RecentlyPlayedDays = 14;
 
     private readonly string _steamApiKey = steamSettings.Value.ApiKey;
 
@@ -42,283 +47,251 @@ public class SteamService(
             "count=0",
             r => r?.Response.Games ?? [], cancellationToken);
 
-    public async Task<SteamSyncResponse> SyncSteamGamesAsync(string steamId, string syncType, int userId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Aggiorna ore, ultima sessione, stato e achievement dei giochi Steam già in libreria. Non aggiunge giochi:
+    /// quelli nuovi passano dalla lista "Da importare".
+    /// </summary>
+    public async Task<SteamSyncResponse> SyncSteamGamesAsync(int userId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var steamGames = await GetSteamGamesAsync(steamId, cancellationToken);
+        var user = await GetUserWithSteamIdAsync(userId, cancellationToken);
+        var owned = await GetSteamGamesAsync(user.SteamId!, cancellationToken);
+        // I posseduti escludono i F2P: i giocati di recente coprono quelli già in libreria
+        var recent = await GetRecentlyPlayedGamesAsync(user.SteamId!, cancellationToken);
+        var ownedIds = owned.Select(o => o.Appid).ToHashSet();
+        var steamGames = owned.Concat(recent.Where(r => !ownedIds.Contains(r.Appid))).ToList();
+        var byAppId = steamGames.ToDictionary(g => g.Appid);
+        var byTitle = steamGames.GroupBy(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name)).ToDictionary(g => g.Key, g => g.First());
 
-            return syncType switch
-            {
-                "initial_load" => await InitialLoadSteamGames(steamGames, userId, cancellationToken),
-                "update_hours" => await UpdateGameHours(steamGames, userId, steamId, cancellationToken),
-                _ => throw new ArgumentException("Tipo di sincronizzazione non valido")
-            };
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("Limite di richieste Steam raggiunto"))
-        {
-            throw new Exception(
-                "Steam API: troppe richieste. Riprova tra 5-10 minuti. Questo limite protegge i server Steam da sovraccarico.", ex);
-        }
-    }
-
-    private async Task<SteamSyncResponse> InitialLoadSteamGames(List<SteamGame> steamGames, int userId, CancellationToken cancellationToken)
-    {
-        // Tracciati: ai giochi già presenti abbinati per titolo viene associato l'AppID
-        var existingGames = await context.Games
-            .Where(g => g.UserId == userId)
+        var library = await context.Games
+            .Where(g => g.UserId == userId && g.Platform == "Steam")
             .ToListAsync(cancellationToken);
 
-        var debugInfo = new List<string>
-        {
-            $"Steam games to process: {steamGames.Count}",
-            $"Existing games in database: {existingGames.Count}"
-        };
+        var now = DateTime.UtcNow;
+        // Stato di partenza di ogni gioco abbinato: il riepilogo si calcola alla fine confrontandolo con lo stato finale
+        var tracked = new List<(Game Game, int PreviousHours, GameStatus PreviousStatus, bool Played)>();
+        var hourUpdates = new List<(int GameId, int HoursPlayed)>();
 
-        var excludedAppIds = await GetExcludedAppIdsAsync(userId, cancellationToken);
-        var newGames = new List<CreateGameDto>();
-        foreach (var steamGame in steamGames)
+        foreach (var game in library)
         {
-            var existingGame = FindMatchingGame(existingGames, steamGame);
-            if (existingGame != null)
-            {
-                existingGame.SteamAppId ??= steamGame.Appid;
-            }
-            else if (!excludedAppIds.Contains(steamGame.Appid))
-            {
-                newGames.Add(NewSteamGameDto(steamGame));
-            }
+            var steamGame = game.SteamAppId is int appId
+                ? byAppId.GetValueOrDefault(appId)
+                : byTitle.GetValueOrDefault(game.NormalizedTitle);
+            if (steamGame == null) continue;
+
+            var hours = ToHours(steamGame.PlaytimeForever);
+            var played = hours > game.HoursPlayed;
+            tracked.Add((game, game.HoursPlayed, game.Status, played));
+            game.SteamAppId ??= steamGame.Appid;
+            // I giochi solo nei "giocati di recente" non hanno rtime: se le ore sono salite, la sessione è recente
+            game.LastPlayedAt = ToDate(steamGame.RtimeLastPlayed) ?? (played ? now : game.LastPlayedAt);
+            if (hours != game.HoursPlayed) hourUpdates.Add((game.Id, hours));
         }
 
+        if (hourUpdates.Count > 0)
+        {
+            // Salva anche AppID e ultima sessione: stesso DbContext
+            await gameService.UpdateGamesPlaytimeBulkAsync(userId, hourUpdates);
+        }
+
+        var warning = await UpdateAchievementsAsync(user.SteamId!, tracked.Select(t => (t.Game, t.Played)).ToList(), cancellationToken);
+        foreach (var t in tracked)
+        {
+            var next = NextStatus(t.Game, t.Played, now);
+            if (next != null && next != t.Game.Status)
+                await gameService.UpdateGameStatusAsync(userId, t.Game.Id, next.Value.ToString());
+        }
+
+        var updatedGames = tracked
+            .Where(t => t.Game.HoursPlayed != t.PreviousHours || t.Game.Status != t.PreviousStatus)
+            .Select(t => new UpdatedGameInfo
+            {
+                GameTitle = t.Game.Title,
+                PreviousHours = t.PreviousHours,
+                NewHours = t.Game.HoursPlayed,
+                HoursAdded = t.Game.HoursPlayed - t.PreviousHours,
+                StatusChanged = t.Game.Status != t.PreviousStatus,
+                PreviousStatus = t.PreviousStatus.ToString(),
+                NewStatus = t.Game.Status.ToString()
+            })
+            .ToList();
+        var statusChangesCount = updatedGames.Count(u => u.StatusChanged);
+
+        var enrichedCount = await EnrichMissingDataAsync(userId, cancellationToken);
+        user.LastSteamSyncAt = now;
         await context.SaveChangesAsync(cancellationToken);
 
-        var newGamesCount = newGames.Count > 0
-            ? (await gameService.AddGamesBulkAsync(userId, newGames)).Count
-            : 0;
+        var pendingCount = (await BuildCandidatesAsync(owned, userId, false, cancellationToken))
+            .Count(c => c.LastPlayedAt >= now.AddDays(-RecentlyPlayedDays));
 
-        debugInfo.Add($"New games added: {newGamesCount}");
-
-        return new SteamSyncResponse
-        {
-            Message = $"{newGamesCount} giochi aggiunti dalla libreria Steam",
-            Count = newGamesCount,
-            UpdatedGames = [],
-            DebugInfo = string.Join("; ", debugInfo)
-        };
-    }
-
-    private class SyncContext
-    {
-        public int UserId { get; init; }
-        public int UpdatedCount { get; set; }
-        public int StatusChangedCount { get; set; }
-        public int NewGamesAdded { get; set; }
-        public List<string> MatchedGames { get; } = [];
-        public List<UpdatedGameInfo> UpdatedGamesInfo { get; } = [];
-        public List<string> DebugInfo { get; init; } = [];
-        public List<CreateGameDto> GamesToAdd { get; } = [];
-        public List<(int GameId, int HoursPlayed)> GamesToUpdate { get; } = [];
-        public HashSet<int> ExcludedAppIds { get; init; } = [];
-    }
-
-    private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId, CancellationToken cancellationToken)
-    {
-        var existingGamesCount = await context.Games
-            .Where(g => g.UserId == userId && g.Platform == "Steam")
-            .CountAsync(cancellationToken);
-
-        var recentlyPlayedGames = await GetRecentlyPlayedGamesAsync(steamId, cancellationToken);
-        
-        var syncContext = new SyncContext
-        {
-            UserId = userId,
-            ExcludedAppIds = [.. await GetExcludedAppIdsAsync(userId, cancellationToken)],
-            DebugInfo =
-            [
-                $"Steam games found: {steamGames.Count}",
-                $"Recently played games found: {recentlyPlayedGames.Count}",
-                $"Existing database games: {existingGamesCount}"
-            ]
-        };
-
-        var normalizedTitles = recentlyPlayedGames
-            .Select(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name))
-            .ToList();
-        var appIds = recentlyPlayedGames.Select(g => (int?)g.Appid).ToList();
-
-        var existingGames = await context.Games
-            .Where(g => g.UserId == userId && g.Platform == "Steam" &&
-                        (appIds.Contains(g.SteamAppId) || normalizedTitles.Contains(g.NormalizedTitle)))
-            .ToListAsync(cancellationToken);
-
-        // Elabora SOLO i giochi giocati di recente
-        foreach (var recentGame in recentlyPlayedGames)
-        {
-            var existingGame = FindMatchingGame(existingGames, recentGame);
-
-            if (existingGame != null)
-            {
-                existingGame.SteamAppId ??= recentGame.Appid;
-                ProcessExistingGame(syncContext, existingGame, recentGame);
-            }
-            else
-            {
-                ProcessNewGame(syncContext, recentGame);
-            }
-        }
-
-        if (syncContext.GamesToUpdate.Count > 0)
-        {
-            await gameService.UpdateGamesPlaytimeBulkAsync(userId, syncContext.GamesToUpdate);
-        }
-
-        if (syncContext.GamesToAdd.Count > 0)
-        {
-            await gameService.AddGamesBulkAsync(userId, syncContext.GamesToAdd);
-        }
-
-        var enrichedCount = await EnrichMissingDataAsync(userId, syncContext.DebugInfo, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken); // AppID associati e dati RAWG
-
-        syncContext.DebugInfo.Add($"Recently played games processed: {recentlyPlayedGames.Count}");
-        syncContext.DebugInfo.Add($"Games matched and updated: {syncContext.UpdatedCount}");
-        syncContext.DebugInfo.Add($"New recently played games added: {syncContext.NewGamesAdded}");
-        syncContext.DebugInfo.Add($"Status changes (NotStarted → InProgress): {syncContext.StatusChangedCount}");
-        syncContext.DebugInfo.Add("Only recently played games are processed - owned games ignored unless recently played");
-
-        syncContext.DebugInfo.AddRange(syncContext.MatchedGames);
-
-        var totalProcessed = syncContext.UpdatedCount + syncContext.NewGamesAdded + enrichedCount;
-        var message = $"{syncContext.UpdatedCount} giochi aggiornati con le ore di Steam";
-
-        if (syncContext.NewGamesAdded > 0)
-        {
-            message += $", {syncContext.NewGamesAdded} nuovi giochi aggiunti dai recently played";
-        }
-
-        if (syncContext.StatusChangedCount > 0)
-        {
-            message += $" ({syncContext.StatusChangedCount} cambiati a 'In corso')";
-        }
-
-        if (enrichedCount > 0)
-        {
-            message += $", dati mancanti completati per {enrichedCount} giochi";
-        }
+        var message = $"{hourUpdates.Count} giochi aggiornati con le ore di Steam";
+        if (statusChangesCount > 0) message += $", {statusChangesCount} cambi di stato";
+        if (enrichedCount > 0) message += $", dati mancanti completati per {enrichedCount} giochi";
 
         return new SteamSyncResponse
         {
             Message = message,
-            Count = totalProcessed,
-            UpdatedGames = syncContext.UpdatedGamesInfo,
-            DebugInfo = string.Join("; ", syncContext.DebugInfo)
+            Count = updatedGames.Count + enrichedCount,
+            UpdatedGames = updatedGames,
+            PendingCount = pendingCount,
+            Warning = warning
         };
     }
 
-    private void ProcessExistingGame(SyncContext syncContext, Game existingGame, RecentlyPlayedGame recentGame)
+    public async Task<List<SteamCandidateDto>> GetCandidatesAsync(int userId, bool ignored, CancellationToken cancellationToken = default)
     {
-        var totalHours = (int)Math.Round(recentGame.PlaytimeForever / 60.0);
-        var recentHours = (int)Math.Round(recentGame.Playtime2Weeks / 60.0);
-        var wasNotStarted = existingGame.Status == GameStatus.NotStarted;
+        var user = await GetUserWithSteamIdAsync(userId, cancellationToken);
+        var owned = await GetSteamGamesAsync(user.SteamId!, cancellationToken);
+        return await BuildCandidatesAsync(owned, userId, ignored, cancellationToken);
+    }
 
-        if (existingGame.HoursPlayed != totalHours)
-        {
-            var hoursDifference = totalHours - existingGame.HoursPlayed;
-            var previousHours = existingGame.HoursPlayed;
-            var previousStatus = existingGame.Status.ToString();
-
-            syncContext.DebugInfo.Add(
-                $"{recentGame.Name}: Ore totali: {totalHours}, Incremento: {hoursDifference}h, Ore recenti: {recentHours}h");
-
-            syncContext.GamesToUpdate.Add((existingGame.Id, totalHours));
-
-            var statusChanged = wasNotStarted && totalHours > 0;
-            if (statusChanged)
+    public async Task<int> ImportGamesAsync(int userId, List<SteamImportItem> items, CancellationToken cancellationToken = default)
+    {
+        // Nome, ore e ultima sessione vengono da Steam, non dal client: si importano solo candidati veri
+        var candidates = (await GetCandidatesAsync(userId, false, cancellationToken)).ToDictionary(c => c.AppId);
+        var games = items
+            .Where(i => candidates.ContainsKey(i.AppId))
+            .Select(i =>
             {
-                syncContext.StatusChangedCount++;
+                var c = candidates[i.AppId];
+                return new CreateGameDto
+                {
+                    Title = c.Name,
+                    Platform = "Steam",
+                    SteamAppId = c.AppId,
+                    CoverImage = c.CoverImage,
+                    HoursPlayed = c.HoursPlayed,
+                    LastPlayedAt = c.LastPlayedAt,
+                    Status = Enum.TryParse<GameStatus>(i.Status, out var status) && Enum.IsDefined(status) ? status.ToString() : c.SuggestedStatus,
+                    PurchaseDate = null // Steam non espone la data d'acquisto
+                };
+            })
+            .ToList();
+
+        return games.Count > 0 ? (await gameService.AddGamesBulkAsync(userId, games)).Count : 0;
+    }
+
+    public async Task SetIgnoredAsync(int userId, List<int> appIds, bool ignored, CancellationToken cancellationToken = default)
+    {
+        var user = await context.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+        user.ExcludedSteamAppIds = ignored
+            ? [.. user.ExcludedSteamAppIds.Union(appIds)]
+            : [.. user.ExcludedSteamAppIds.Except(appIds)];
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    // Posseduti meno libreria (per AppID o titolo, come la deduplica di AddGamesBulkAsync), separati tra ignorati e no
+    private async Task<List<SteamCandidateDto>> BuildCandidatesAsync(List<SteamGame> owned, int userId, bool ignored, CancellationToken cancellationToken)
+    {
+        var library = await context.Games
+            .Where(g => g.UserId == userId)
+            .Select(g => new { g.SteamAppId, g.NormalizedTitle })
+            .ToListAsync(cancellationToken);
+        var appIds = library.Select(g => g.SteamAppId).ToHashSet();
+        var titles = library.Select(g => g.NormalizedTitle).ToHashSet();
+        var excluded = (await context.Users.Where(u => u.Id == userId).Select(u => u.ExcludedSteamAppIds).FirstAsync(cancellationToken)).ToHashSet();
+        var now = DateTime.UtcNow;
+
+        return owned
+            .Where(s => excluded.Contains(s.Appid) == ignored
+                        && !appIds.Contains(s.Appid)
+                        && !titles.Contains(GameTitleMatcher.GetFullyNormalizedTitle(s.Name)))
+            .Select(s =>
+            {
+                var hours = ToHours(s.PlaytimeForever);
+                var lastPlayed = ToDate(s.RtimeLastPlayed);
+                return new SteamCandidateDto
+                {
+                    AppId = s.Appid,
+                    Name = s.Name,
+                    CoverImage = $"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{s.Appid}/header.jpg",
+                    HoursPlayed = hours,
+                    LastPlayedAt = lastPlayed,
+                    SuggestedStatus = (hours == 0 ? GameStatus.NotStarted
+                        : lastPlayed >= now.AddDays(-AbandonAfterDays) ? GameStatus.InProgress
+                        : GameStatus.Abandoned).ToString()
+                };
+            })
+            .OrderByDescending(c => c.LastPlayedAt)
+            .ThenBy(c => c.Name)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Regole di stato automatiche dei giochi Steam: Platino al 100% degli achievement ha la precedenza,
+    /// poi abbandono dopo 30 giorni senza sessioni e ripresa alla sessione successiva. Completato non si tocca.
+    /// </summary>
+    internal static GameStatus? NextStatus(Game game, bool playedSinceLastSync, DateTime now)
+    {
+        if (game.AchievementsTotal > 0 && game.AchievementsUnlocked == game.AchievementsTotal)
+            return GameStatus.Platinum;
+        return game.Status switch
+        {
+            GameStatus.Abandoned when playedSinceLastSync => GameStatus.InProgress,
+            GameStatus.InProgress when game.LastPlayedAt < now.AddDays(-AbandonAfterDays) => GameStatus.Abandoned,
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Achievement dei giochi appena giocati, più qualche gioco mai controllato. Restituisce un avviso se Steam rifiuta
+    /// (dettagli di gioco del profilo privati o limite di richieste): si riprova alla prossima sync.
+    /// </summary>
+    // Sequenziale di proposito: poche chiamate a sync, e in parallelo si rischia il limite di richieste Steam
+    private async Task<string?> UpdateAchievementsAsync(string steamId, List<(Game Game, bool Played)> games, CancellationToken cancellationToken)
+    {
+        var toCheck = games
+            .Where(g => g.Game.AchievementsTotal == null && !g.Played)
+            .Take(MaxNewAchievementChecksPerSync)
+            .Concat(games.Where(g => g.Played && g.Game.AchievementsTotal != 0))
+            .Select(g => g.Game);
+
+        foreach (var game in toCheck)
+        {
+            var url = $"https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={_steamApiKey}&steamid={steamId}&appid={game.SteamAppId}";
+            using var response = await httpClient.GetAsync(url, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                // "Requested app has no stats": il gioco non ha achievement, non si richiede più
+                game.AchievementsUnlocked = game.AchievementsTotal = 0;
+                continue;
             }
 
-            syncContext.UpdatedGamesInfo.Add(new UpdatedGameInfo
+            if (!response.IsSuccessStatusCode)
             {
-                GameTitle = existingGame.Title,
-                PreviousHours = previousHours,
-                NewHours = totalHours,
-                HoursAdded = hoursDifference,
-                StatusChanged = statusChanged,
-                PreviousStatus = previousStatus,
-                NewStatus = statusChanged ? GameStatus.InProgress.ToString() : previousStatus
-            });
+                return response.StatusCode == HttpStatusCode.Forbidden
+                    ? "Achievement non letti: rendi pubblici i dettagli di gioco del profilo Steam"
+                    : $"Achievement non letti (Steam ha risposto {(int)response.StatusCode}), si riprova alla prossima sincronizzazione";
+            }
 
-            syncContext.UpdatedCount++;
-            syncContext.MatchedGames.Add($"{recentGame.Name} -> {existingGame.Title} (Ore: {totalHours})" +
-                             (statusChanged ? " [STATO: Da iniziare → In corso]" : ""));
-        }
-        else
-        {
-            syncContext.DebugInfo.Add($"{recentGame.Name} già aggiornato con le ore corrette: {totalHours}");
-            syncContext.MatchedGames.Add(
-                $"{recentGame.Name} -> {existingGame.Title} (Ore: {totalHours}) [NESSUN CAMBIAMENTO]");
-        }
-    }
-
-    private static void ProcessNewGame(SyncContext syncContext, RecentlyPlayedGame recentGame)
-    {
-        if (syncContext.ExcludedAppIds.Contains(recentGame.Appid))
-        {
-            syncContext.DebugInfo.Add($"{recentGame.Name} IGNORATO (eliminato in passato dalla libreria)");
-            return;
+            var stats = JsonSerializer.Deserialize<PlayerAchievementsResponse>(
+                await response.Content.ReadAsStringAsync(cancellationToken), JsonOptions);
+            var achievements = stats?.Playerstats.Achievements ?? [];
+            game.AchievementsTotal = achievements.Count;
+            game.AchievementsUnlocked = achievements.Count(a => a.Achieved == 1);
         }
 
-        var newGame = NewSteamGameDto(recentGame);
-        syncContext.GamesToAdd.Add(newGame);
-        syncContext.NewGamesAdded++;
-
-        syncContext.UpdatedGamesInfo.Add(new UpdatedGameInfo
-        {
-            GameTitle = newGame.Title,
-            PreviousHours = 0,
-            NewHours = newGame.HoursPlayed,
-            HoursAdded = newGame.HoursPlayed,
-            StatusChanged = newGame.HoursPlayed > 0,
-            PreviousStatus = "Non presente",
-            NewStatus = newGame.Status
-        });
-
-        syncContext.MatchedGames.Add($"{recentGame.Name} [NUOVO GIOCO AGGIUNTO] (Ore: {newGame.HoursPlayed})");
+        return null;
     }
 
-    private Task<int[]> GetExcludedAppIdsAsync(int userId, CancellationToken cancellationToken) =>
-        context.Users.Where(u => u.Id == userId).Select(u => u.ExcludedSteamAppIds).FirstAsync(cancellationToken);
-
-    // Prima l'AppID; il titolo solo per i giochi non ancora associati a Steam
-    private static Game? FindMatchingGame(List<Game> games, SteamGame steamGame)
+    private async Task<User> GetUserWithSteamIdAsync(int userId, CancellationToken cancellationToken)
     {
-        var normalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(steamGame.Name);
-        return games.FirstOrDefault(g => g.SteamAppId == steamGame.Appid)
-            ?? games.FirstOrDefault(g => g.SteamAppId == null && g.NormalizedTitle == normalizedTitle);
+        var user = await context.Users.FirstAsync(u => u.Id == userId, cancellationToken);
+        return string.IsNullOrEmpty(user.SteamId)
+            ? throw new ArgumentException("Collega il tuo account Steam nelle impostazioni.")
+            : user;
     }
 
-    private static CreateGameDto NewSteamGameDto(SteamGame steamGame)
-    {
-        var hours = (int)Math.Round(steamGame.PlaytimeForever / 60.0);
-        return new CreateGameDto
-        {
-            Title = steamGame.Name,
-            Platform = "Steam",
-            SteamAppId = steamGame.Appid,
-            CoverImage = $"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{steamGame.Appid}/header.jpg",
-            HoursPlayed = hours,
-            Status = hours > 0 ? "InProgress" : "NotStarted",
-            PurchaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
-        };
-    }
+    private static int ToHours(int minutes) => (int)Math.Round(minutes / 60.0);
+
+    private static DateTime? ToDate(long unixSeconds) =>
+        unixSeconds > 0 ? DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime : null;
 
     /// <summary>
     /// Come il pulsante "Aggiorna dati mancanti" della pagina gioco, ma solo sui giochi Steam mai arricchiti
     /// (Developer vuoto) e solo con un risultato RAWG dallo stesso titolo normalizzato: senza conferma umana
     /// un dato sbagliato è peggio di uno mancante.
     /// </summary>
-    private async Task<int> EnrichMissingDataAsync(int userId, List<string> debugInfo, CancellationToken cancellationToken)
+    private async Task<int> EnrichMissingDataAsync(int userId, CancellationToken cancellationToken)
     {
         var games = await context.Games
             .Where(g => g.UserId == userId && g.Platform == "Steam" && (g.Developer == null || g.Developer == ""))
@@ -335,7 +308,6 @@ public class SteamService(
             {
                 // Non riprovare a ogni sync: resta il pulsante manuale nella pagina del gioco
                 game.Developer = "Sconosciuto";
-                debugInfo.Add($"{game.Title}: nessuna corrispondenza RAWG");
                 continue;
             }
 
@@ -361,25 +333,15 @@ public class SteamService(
         string method, string steamId, string extraParams, Func<TResponse?, TResult> extractor, CancellationToken cancellationToken)
     {
         var url = $"https://api.steampowered.com/IPlayerService/{method}/v1/?key={_steamApiKey}&steamid={steamId}&{extraParams}";
-        return await FetchSteamApiAsync(url, extractor, cancellationToken);
-    }
-
-    /// <summary>
-    /// Centralizza le chiamate HTTP alla Steam API con gestione errori e rate limiting.
-    /// </summary>
-    private async Task<TResult> FetchSteamApiAsync<TResponse, TResult>(
-        string url, Func<TResponse?, TResult> extractor, CancellationToken cancellationToken)
-    {
         try
         {
             var response = await httpClient.GetStringAsync(url, cancellationToken);
-            var steamResponse = JsonSerializer.Deserialize<TResponse>(response, JsonOptions);
-            return extractor(steamResponse);
+            return extractor(JsonSerializer.Deserialize<TResponse>(response, JsonOptions));
         }
-        catch (HttpRequestException ex) when (ex.Message.Contains("429") || ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
         {
             throw new InvalidOperationException(
-                "Limite di richieste Steam raggiunto. Riprova tra qualche minuto.", ex);
+                "Steam API: troppe richieste. Riprova tra 5-10 minuti. Questo limite protegge i server Steam da sovraccarico.", ex);
         }
     }
 }

@@ -15,6 +15,7 @@ public class UserProfileDto
     public DateTime MemberSince { get; set; }
     public string? Tags { get; set; }
     public string? SteamId { get; set; }
+    public DateTime? LastSteamSyncAt { get; set; }
     public PrivacySettings PrivacySettings { get; set; } = new();
     public AppPreferences AppPreferences { get; set; } = new();
 }

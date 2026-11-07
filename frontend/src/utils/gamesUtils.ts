@@ -150,6 +150,15 @@ export function calculateCounts(games: Game[]) {
   return { StatusCountsTemp, PlatformCountsTemp, genreCountsTemp };
 }
 
+/**
+ * "34/50 · 68%" per i giochi Steam con achievement, null altrimenti
+ */
+export function formatAchievements(game: Game): string | null {
+  const { AchievementsUnlocked: unlocked, AchievementsTotal: total } = game;
+  if (!total || unlocked == null) return null;
+  return `${unlocked}/${total} · ${Math.floor((unlocked / total) * 100)}%`;
+}
+
 export function generateGenreDistributionData(games: Game[]): { genre: string; count: number }[] {
   const genreCounts: Record<string, number> = {};
   games.forEach((game) => {

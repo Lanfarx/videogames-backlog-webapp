@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Grid, List, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { Grid, List, ChevronDown, ChevronUp, Check, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { SORT_OPTIONS } from '../../constants/gameConstants'; // Importa le opzioni di ordinamento
 import AddGameButton from '../ui/AddGameButton';
 import { SortOption } from '../../types/game';
-import { useAppDispatch } from '../../store/hooks';
-import { useGameActions } from '../../store/hooks/gamesHooks';
-import { SteamSyncPopup } from '../catalog/SteamSyncPopup';
+import { useAppSelector } from '../../store/hooks';
+import SteamImportPanel from './SteamImportPanel';
+import { useSteamSyncNow } from '../../hooks/useSteamAutoSync';
+import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface LibraryToolbarProps {
   viewMode: "grid" | "list";
@@ -18,7 +20,6 @@ interface LibraryToolbarProps {
   onSearchChange?: (query: string) => void;
   columns?: number;
   onColumnsChange?: (columns: number) => void;
-  onRefreshGames?: () => void; // Callback per aggiornare la lista giochi dopo la sincronizzazione
 }
 
 export default function LibraryToolbar({
@@ -30,13 +31,14 @@ export default function LibraryToolbar({
   onSortChange,
   searchQuery,
   onSearchChange,
-  onRefreshGames,
 }: LibraryToolbarProps) {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [showSteamSync, setShowSteamSync] = useState(false);
+  const [showSteamImport, setShowSteamImport] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const dispatch = useAppDispatch();
-  const { add } = useGameActions();
+  const steamId = useAppSelector(state => state.user.profile?.steamId);
+  const lastSteamSync = useAppSelector(state => state.user.profile?.lastSteamSyncAt);
+  const steamPendingCount = useAppSelector(state => state.user.steamPendingCount);
+  const { sync, syncing } = useSteamSyncNow();
 
   // Chiudi il dropdown quando si clicca fuori
   useEffect(() => {
@@ -74,19 +76,34 @@ export default function LibraryToolbar({
           className="ml-2 px-3 py-1.5 rounded-md border border-border-color bg-primary-bg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm w-96"
         />
       </div>      <div className="flex items-center space-x-6">
-        {/* Pulsante Steam Sync */}
-        <button
-          type="button"
-          className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary text-sm"
-          onClick={() => setShowSteamSync(true)}
-          aria-label="Sincronizza con Steam"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-            <path fill="var(--color-accent-primary, #60a5fa)" d="M12 16.5a1 1 0 0 1-1-1V9.91l-2.29 2.3a1 1 0 1 1-1.42-1.42l4-4a1 1 0 0 1 1.42 0l4 4a1 1 0 1 1-1.42 1.42L13 9.91v5.59a1 1 0 0 1-1 1Z"/>
-            <path fill="var(--color-accent-primary, #60a5fa)" d="M6 18a1 1 0 1 1 0-2h12a1 1 0 1 1 0 2H6Z"/>
-          </svg>
-          <span className="text-text-primary font-medium">Steam</span>
-        </button>
+        {steamId ? (
+          <div className="flex items-center gap-1 text-sm">
+            <button
+              type="button"
+              className="relative flex items-center gap-2 p-2 rounded-md hover:bg-accent-primary/10 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary"
+              onClick={() => setShowSteamImport(true)}
+              title="Giochi Steam da importare"
+            >
+              <span className="text-text-primary font-medium">Steam</span>
+              <span className="text-text-secondary">· {lastSteamSync ? formatRelativeTime(lastSteamSync) : 'mai sincronizzato'}</span>
+              {steamPendingCount > 0 && (
+                <span className="ml-1 px-1.5 rounded-full bg-accent-primary text-white text-xs">{steamPendingCount} nuovi</span>
+              )}
+            </button>
+            <button
+              type="button"
+              className="p-2 rounded-md text-text-secondary hover:text-accent-primary hover:bg-accent-primary/10 transition-colors disabled:opacity-50"
+              onClick={() => sync(false)}
+              disabled={syncing}
+              aria-label="Sincronizza ora con Steam"
+              title="Sincronizza ora"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        ) : (
+          <Link to="/settings" className="text-sm text-text-secondary hover:text-accent-primary">Collega Steam</Link>
+        )}
 
         <div className="flex items-center space-x-2">
           {/* Visualizzazione griglia/lista */}
@@ -143,15 +160,7 @@ export default function LibraryToolbar({
             </div>)}
         </div>
       </div>
-        {/* Steam Sync Popup */}
-      <SteamSyncPopup
-        show={showSteamSync}
-        onHide={() => setShowSteamSync(false)}
-        onSyncComplete={() => {
-          setShowSteamSync(false);
-          onRefreshGames && onRefreshGames();
-        }}
-      />
+      <SteamImportPanel isOpen={showSteamImport} onClose={() => setShowSteamImport(false)} />
     </div>
   );
 }

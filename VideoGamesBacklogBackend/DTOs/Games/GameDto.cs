@@ -18,6 +18,9 @@ public class GameDto
     public DateOnly? CompletionDate { get; set; }
     public DateOnly? PlatinumDate { get; set; }
     public int HoursPlayed { get; set; }
+    public DateTime? LastPlayedAt { get; set; }
+    public int? AchievementsUnlocked { get; set; }
+    public int? AchievementsTotal { get; set; }
     public int? Metacritic { get; set; }
     public decimal Rating { get; set; }
     public string? Notes { get; set; }

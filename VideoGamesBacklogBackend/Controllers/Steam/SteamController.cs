@@ -26,15 +26,28 @@ public class SteamController(ISteamService steamService) : ControllerBase
     }
 
     [HttpPost("sync")]
-    public async Task<ActionResult<SteamSyncResponse>> SyncSteamGames([FromBody] SteamSyncRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<SteamSyncResponse>> SyncSteamGames(CancellationToken cancellationToken) =>
+        Ok(await steamService.SyncSteamGamesAsync(User.GetUserId(), cancellationToken));
+
+    [HttpGet("candidates")]
+    public async Task<ActionResult<List<SteamCandidateDto>>> GetCandidates([FromQuery] bool ignored, CancellationToken cancellationToken) =>
+        Ok(await steamService.GetCandidatesAsync(User.GetUserId(), ignored, cancellationToken));
+
+    [HttpPost("import")]
+    public async Task<ActionResult> ImportGames([FromBody] List<SteamImportItem> items, CancellationToken cancellationToken) =>
+        Ok(new { count = await steamService.ImportGamesAsync(User.GetUserId(), items, cancellationToken) });
+
+    [HttpPost("ignore")]
+    public async Task<ActionResult> IgnoreGames([FromBody] List<int> appIds, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(request.SteamId))
-            throw new ArgumentException("Steam ID richiesto.");
+        await steamService.SetIgnoredAsync(User.GetUserId(), appIds, true, cancellationToken);
+        return NoContent();
+    }
 
-        if (request.SyncType is not ("initial_load" or "update_hours"))
-            throw new ArgumentException("Tipo di sincronizzazione non valido. Usa 'initial_load' o 'update_hours'.");
-
-        var result = await steamService.SyncSteamGamesAsync(request.SteamId, request.SyncType, User.GetUserId(), cancellationToken);
-        return Ok(result);
+    [HttpPost("restore")]
+    public async Task<ActionResult> RestoreGames([FromBody] List<int> appIds, CancellationToken cancellationToken)
+    {
+        await steamService.SetIgnoredAsync(User.GetUserId(), appIds, false, cancellationToken);
+        return NoContent();
     }
 }

@@ -28,6 +28,7 @@ import PublicProfileView from './components/friends/PublicProfileView';
 import LandingPage from './pages/landing/LandingPage';
 import WishlistPage from './pages/wishlist/WishlistPage';
 import { ToastProvider } from './contexts/ToastContext';
+import { SteamAutoSync } from './hooks/useSteamAutoSync';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -92,6 +93,7 @@ function App() {
     return <Outlet />;
   };  return (
     <ToastProvider>
+      <SteamAutoSync />
       <div className="App">
         <Routes>
         {/* Landing page */}

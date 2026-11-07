@@ -79,6 +79,9 @@ export interface GameCompletionInfo {
  */
 export interface GamePlayInfo {
   HoursPlayed: number;
+  LastPlayedAt?: string | null;
+  AchievementsUnlocked?: number | null; // solo giochi Steam; null = mai controllati
+  AchievementsTotal?: number | null;
   Metacritic: number | null;
   Rating: number;
   Notes?: string;

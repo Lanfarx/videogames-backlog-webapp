@@ -17,6 +17,7 @@ export interface UserProfile {
   tags?: string[];             // Tag/interessi dell'utente
   privacySettings: PrivacySettings;
   steamId?: string;          // ID Steam (opzionale)
+  lastSteamSyncAt?: string | null; // Ultima sincronizzazione Steam
   appPreferences: AppPreferences;
   library: Game[];             // Libreria giochi dell'utente
 }

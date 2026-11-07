@@ -11,7 +11,6 @@ import ActiveFilterChips from '../../components/library/ActiveFilterChips';
 import { calculateMaxValues } from '../../utils/gamesUtils';
 import { useAllGames, usePaginatedGames, useGameActionsWithPagination } from '../../store/hooks/gamesHooks';
 import { useAppDispatch } from '../../store/hooks';
-import { useSteamAutoSync } from '../../hooks/useSteamAutoSync';
 import { fetchGames } from '../../store/thunks/gamesThunks';
 import type { GameFilters, SortOption, SortOrder, Game, GameStatus } from '../../types/game';
 
@@ -134,8 +133,6 @@ export default function LibraryPage() {
     const updateDebouncedFilters = useDebounce((newFilters: GameFilters) => {
         setDebouncedFilters(newFilters);
     }, 500); // 500ms di delay
-
-    useSteamAutoSync();
 
     const filterMaxes = useMemo(() => calculateMaxValues(allGamesFromStore), [allGamesFromStore]);
 
@@ -348,28 +345,6 @@ export default function LibraryPage() {
 
         setIsDeleteModalOpen(false);
         setGameToDelete(null);
-    };// Gestisce il refresh dei giochi
-    const handleRefreshGames = () => {
-        dispatch(fetchGames());
-        // Ricarica anche la pagina corrente
-        const filtersParam = {
-            Status: debouncedFilters.Status,
-            Platform: debouncedFilters.Platform,
-            genre: debouncedFilters.genre,
-            PriceRange: debouncedFilters.PriceRange,
-            hoursRange: debouncedFilters.hoursRange,
-            MetacriticRange: debouncedFilters.MetacriticRange,
-            PurchaseDate: debouncedFilters.PurchaseDate
-        };
-
-        fetchPaginatedGames({
-            page: currentPage,
-            pageSize: gamesPerPage,
-            filters: JSON.stringify(filtersParam),
-            sortBy,
-            sortOrder,
-            search: searchQuery.trim() || undefined
-        });
     };
 
     // Gestisce il cambio di stato di un gioco
@@ -421,7 +396,6 @@ export default function LibraryPage() {
                         onSortChange={handleSortChange}
                         searchQuery={searchQuery}
                         onSearchChange={handleSearchChange}
-                        onRefreshGames={handleRefreshGames}
                     />
 
                     <div className="flex-1 p-4 md:p-6 min-w-0 overflow-hidden bg-secondary-bg" ref={gridContainerRef}>

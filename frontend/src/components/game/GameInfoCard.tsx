@@ -6,7 +6,7 @@ import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from '../ui/PlaytimePopover';
 import EditGameInfoModal from './EditGameInfoModal';
 import { useGameById } from '../../store/hooks/gamesHooks';
-import { getGameRating } from '../../utils/gamesUtils';
+import { getGameRating, formatAchievements } from '../../utils/gamesUtils';
 import { formatPrice, formatPurchaseDate } from '../../utils/gameDisplayUtils';
 import { useRAWGUpdate } from '../../hooks/useRAWGUpdate';
 
@@ -23,6 +23,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
   const currentGame = useGameById(game.id) || game;
   const calculatedRating = currentGame.Rating ?? getGameRating(currentGame);
   const disPlayedHours = currentGame.HoursPlayed;
+  const achievements = formatAchievements(currentGame);
   
   const prevRatingRef = useRef(calculatedRating);
   
@@ -136,6 +137,13 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
         </div>
       </div>
 
+
+      {achievements && (
+        <div className="flex justify-between items-center py-3 border-b border-border-color">
+          <span className="font-secondary font-medium text-sm text-text-secondary">Achievement Steam</span>
+          <span className="font-secondary text-base text-text-primary">{achievements}</span>
+        </div>
+      )}
 
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">
