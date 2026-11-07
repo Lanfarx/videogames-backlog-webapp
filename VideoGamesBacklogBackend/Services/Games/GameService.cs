@@ -341,7 +341,14 @@ public class GameService(
     public async Task<bool> DeleteGameAsync(int userId, int gameId)
     {
         var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
-            
+
+        if (game.SteamAppId is int appId)
+        {
+            var user = await dbContext.Users.FirstAsync(u => u.Id == userId);
+            if (!user.ExcludedSteamAppIds.Contains(appId))
+                user.ExcludedSteamAppIds = [.. user.ExcludedSteamAppIds, appId];
+        }
+
         dbContext.Games.Remove(game);
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);

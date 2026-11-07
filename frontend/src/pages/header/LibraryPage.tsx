@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import SidebarFilter from '../../components/library/filter/SidebarFilter';
 import LibraryToolbar from '../../components/library/LibraryToolbar';
 import GridView from '../../components/library/GridView';
@@ -7,9 +7,11 @@ import Pagination from '../../components/ui/Pagination';
 import AddGameModal from '../../components/game/AddGameModal';
 import EditGameInfoModal from '../../components/game/EditGameInfoModal';
 import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import ActiveFilterChips from '../../components/library/ActiveFilterChips';
 import { calculateMaxValues } from '../../utils/gamesUtils';
 import { useAllGames, usePaginatedGames, useGameActionsWithPagination } from '../../store/hooks/gamesHooks';
 import { useAppDispatch } from '../../store/hooks';
+import { useSteamAutoSync } from '../../hooks/useSteamAutoSync';
 import { fetchGames } from '../../store/thunks/gamesThunks';
 import type { GameFilters, SortOption, SortOrder, Game, GameStatus } from '../../types/game';
 
@@ -132,6 +134,10 @@ export default function LibraryPage() {
     const updateDebouncedFilters = useDebounce((newFilters: GameFilters) => {
         setDebouncedFilters(newFilters);
     }, 500); // 500ms di delay
+
+    useSteamAutoSync();
+
+    const filterMaxes = useMemo(() => calculateMaxValues(allGamesFromStore), [allGamesFromStore]);
 
     // Carica tutti i giochi per i filtri sidebar (solo se non ancora caricati)
     useEffect(() => {
@@ -419,6 +425,13 @@ export default function LibraryPage() {
                     />
 
                     <div className="flex-1 p-4 md:p-6 min-w-0 overflow-hidden bg-secondary-bg" ref={gridContainerRef}>
+                        <ActiveFilterChips
+                            filters={filters}
+                            setFilters={setFilters}
+                            maxes={filterMaxes}
+                            searchQuery={searchQuery}
+                            onClearSearch={() => setSearchQuery("")}
+                        />
                         {paginationLoading ? (
                             <div className="flex justify-center items-center py-12">
                                 <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin"></div>
@@ -521,7 +534,7 @@ export default function LibraryPage() {
                 }}
                 onConfirm={handleDeleteGame}
                 title="Elimina gioco"
-                message="Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata."
+                message="Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata. Se viene da Steam, la sincronizzazione non lo reimporterà."
                 confirmButtontext="Elimina"
             />
         </div>

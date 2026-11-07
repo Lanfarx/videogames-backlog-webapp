@@ -18,8 +18,7 @@ public class SteamService(
     AppDbContext context,
     IOptions<SteamSettings> steamSettings,
     IGameService gameService,
-    ICatalogService catalogService,
-    ILogger<SteamService> logger)
+    ICatalogService catalogService)
     : ISteamService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -76,6 +75,7 @@ public class SteamService(
             $"Existing games in database: {existingGames.Count}"
         };
 
+        var excludedAppIds = await GetExcludedAppIdsAsync(userId, cancellationToken);
         var newGames = new List<CreateGameDto>();
         foreach (var steamGame in steamGames)
         {
@@ -84,7 +84,7 @@ public class SteamService(
             {
                 existingGame.SteamAppId ??= steamGame.Appid;
             }
-            else
+            else if (!excludedAppIds.Contains(steamGame.Appid))
             {
                 newGames.Add(NewSteamGameDto(steamGame));
             }
@@ -118,6 +118,7 @@ public class SteamService(
         public List<string> DebugInfo { get; init; } = [];
         public List<CreateGameDto> GamesToAdd { get; } = [];
         public List<(int GameId, int HoursPlayed)> GamesToUpdate { get; } = [];
+        public HashSet<int> ExcludedAppIds { get; init; } = [];
     }
 
     private async Task<SteamSyncResponse> UpdateGameHours(List<SteamGame> steamGames, int userId, string steamId, CancellationToken cancellationToken)
@@ -131,6 +132,7 @@ public class SteamService(
         var syncContext = new SyncContext
         {
             UserId = userId,
+            ExcludedAppIds = [.. await GetExcludedAppIdsAsync(userId, cancellationToken)],
             DebugInfo =
             [
                 $"Steam games found: {steamGames.Count}",
@@ -186,7 +188,7 @@ public class SteamService(
 
         syncContext.DebugInfo.AddRange(syncContext.MatchedGames);
 
-        var totalProcessed = syncContext.UpdatedCount + syncContext.NewGamesAdded;
+        var totalProcessed = syncContext.UpdatedCount + syncContext.NewGamesAdded + enrichedCount;
         var message = $"{syncContext.UpdatedCount} giochi aggiornati con le ore di Steam";
 
         if (syncContext.NewGamesAdded > 0)
@@ -259,55 +261,34 @@ public class SteamService(
         }
     }
 
-    private void ProcessNewGame(SyncContext syncContext, RecentlyPlayedGame recentGame)
+    private static void ProcessNewGame(SyncContext syncContext, RecentlyPlayedGame recentGame)
     {
-        var totalHours = (int)Math.Round(recentGame.PlaytimeForever / 60.0);
-        var recentHours = (int)Math.Round(recentGame.Playtime2Weeks / 60.0);
-
-        var isProbablyFreeToPlay = totalHours == 0 && recentHours > 0;
-
-        if (!isProbablyFreeToPlay)
+        if (syncContext.ExcludedAppIds.Contains(recentGame.Appid))
         {
-            syncContext.DebugInfo.Add(
-                $"{recentGame.Name} (Owned/Family Share): Ore totali: {totalHours}, Ore recenti: {recentHours}h - AGGIUNTO");
-
-            try
-            {
-                var newGame = NewSteamGameDto(recentGame);
-
-                syncContext.GamesToAdd.Add(newGame);
-
-                syncContext.NewGamesAdded++;
-                syncContext.DebugInfo.Add($"{recentGame.Name} AGGIUNTO ALLA CODA BULK");
-
-                syncContext.UpdatedGamesInfo.Add(new UpdatedGameInfo
-                {
-                    GameTitle = newGame.Title,
-                    PreviousHours = 0,
-                    NewHours = totalHours,
-                    HoursAdded = totalHours,
-                    StatusChanged = totalHours > 0,
-                    PreviousStatus = "Non presente",
-                    NewStatus = newGame.Status
-                });
-
-                syncContext.MatchedGames.Add($"{recentGame.Name} [NUOVO GIOCO AGGIUNTO] (Ore: {totalHours})" +
-                                 (totalHours > 0
-                                     ? " [STATO: Nuovo → In corso]"
-                                     : " [STATO: Nuovo → Da iniziare]"));
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Errore nell'aggiunta del gioco Steam {GameName}", recentGame.Name);
-                syncContext.DebugInfo.Add($"{recentGame.Name} ERRORE nell'aggiunta: {ex.Message}");
-            }
+            syncContext.DebugInfo.Add($"{recentGame.Name} IGNORATO (eliminato in passato dalla libreria)");
+            return;
         }
-        else
+
+        var newGame = NewSteamGameDto(recentGame);
+        syncContext.GamesToAdd.Add(newGame);
+        syncContext.NewGamesAdded++;
+
+        syncContext.UpdatedGamesInfo.Add(new UpdatedGameInfo
         {
-            syncContext.DebugInfo.Add(
-                $"{recentGame.Name} IGNORATO (probabilmente free-to-play): Ore totali: {totalHours}, Ore recenti: {recentHours}h");
-        }
+            GameTitle = newGame.Title,
+            PreviousHours = 0,
+            NewHours = newGame.HoursPlayed,
+            HoursAdded = newGame.HoursPlayed,
+            StatusChanged = newGame.HoursPlayed > 0,
+            PreviousStatus = "Non presente",
+            NewStatus = newGame.Status
+        });
+
+        syncContext.MatchedGames.Add($"{recentGame.Name} [NUOVO GIOCO AGGIUNTO] (Ore: {newGame.HoursPlayed})");
     }
+
+    private Task<int[]> GetExcludedAppIdsAsync(int userId, CancellationToken cancellationToken) =>
+        context.Users.Where(u => u.Id == userId).Select(u => u.ExcludedSteamAppIds).FirstAsync(cancellationToken);
 
     // Prima l'AppID; il titolo solo per i giochi non ancora associati a Steam
     private static Game? FindMatchingGame(List<Game> games, SteamGame steamGame)

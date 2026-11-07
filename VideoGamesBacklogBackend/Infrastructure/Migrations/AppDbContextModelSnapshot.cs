@@ -483,6 +483,10 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.PrimitiveCollection<int[]>("ExcludedSteamAppIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<string>("FullName")
                         .HasColumnType("text");
 

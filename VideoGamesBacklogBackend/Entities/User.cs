@@ -18,6 +18,8 @@ public class User : IdentityUser<int>
     public PrivacySettings PrivacySettings { get; set; } = new();
     [Column("steamId")]
     public string? SteamId { get; set; }
+    // Giochi Steam eliminati dalla libreria: la sync non li reimporta
+    public int[] ExcludedSteamAppIds { get; set; } = [];
     public AppPreferences AppPreferences { get; set; } = new();
 
     // Relazione uno-a-molti: un utente ha molti giochi nella sua libreria
