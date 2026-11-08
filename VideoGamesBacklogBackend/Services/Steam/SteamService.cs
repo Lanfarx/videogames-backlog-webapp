@@ -27,7 +27,9 @@ public class SteamService(
     // shortcut: massimo giochi arricchiti da RAWG per sync (fino a 2 chiamate ciascuno), alzare se la sync resta veloce
     private const int MaxRawgEnrichPerSync = 10;
     // shortcut: massimo giochi mai controllati per achievement a sync (1 chiamata ciascuno), alzare se la sync resta veloce
-    private const int MaxNewAchievementChecksPerSync = 20;
+    private const int MaxNewAchievementChecksPerSync = 100;
+    // shortcut: massimo giochi senza AppID cercati sullo store per sync (1 chiamata ciascuno)
+    private const int MaxAppIdLookupsPerSync = 100;
     private const int AbandonAfterDays = 30;
     private const int RecentlyPlayedDays = 14;
 
@@ -69,8 +71,9 @@ public class SteamService(
             .ToListAsync(cancellationToken);
 
         var now = DateTime.UtcNow;
-        // Stato di partenza di ogni gioco abbinato: il riepilogo si calcola alla fine confrontandolo con lo stato finale
-        var tracked = new List<(Game Game, int PreviousHours, GameStatus PreviousStatus, bool Played)>();
+        // Stato di partenza di ogni gioco: il riepilogo si calcola alla fine confrontandolo con lo stato finale.
+        // Matched = trovato tra posseduti o recenti; gli altri (es. Family Sharing non recente) ricevono solo gli achievement
+        var tracked = new List<(Game Game, int PreviousHours, GameStatus PreviousStatus, bool Played, bool Matched)>();
         var hourUpdates = new List<(int GameId, int HoursPlayed)>();
 
         foreach (var game in library)
@@ -78,7 +81,11 @@ public class SteamService(
             // Il titolo esatto vince anche sull'AppID salvato: corregge gli AppID associati per errore da un titolo normalizzato ambiguo
             var steamGame = byExactTitle.GetValueOrDefault(game.Title)
                 ?? (game.SteamAppId is int appId ? byAppId.GetValueOrDefault(appId) : byUniqueTitle.GetValueOrDefault(game.NormalizedTitle));
-            if (steamGame == null) continue;
+            if (steamGame == null)
+            {
+                tracked.Add((game, game.HoursPlayed, game.Status, false, false));
+                continue;
+            }
             if (game.SteamAppId is int oldAppId && oldAppId != steamGame.Appid)
             {
                 game.AchievementsUnlocked = game.AchievementsTotal = null; // erano quelli dell'altro gioco: si ricontrollano
@@ -86,7 +93,7 @@ public class SteamService(
 
             var hours = ToHours(steamGame.PlaytimeForever);
             var played = hours > game.HoursPlayed;
-            tracked.Add((game, game.HoursPlayed, game.Status, played));
+            tracked.Add((game, game.HoursPlayed, game.Status, played, true));
             game.SteamAppId = steamGame.Appid;
             // I giochi solo nei "giocati di recente" non hanno rtime: se le ore sono salite, la sessione è recente
             game.LastPlayedAt = ToDate(steamGame.RtimeLastPlayed) ?? (played ? now : game.LastPlayedAt);
@@ -99,10 +106,14 @@ public class SteamService(
             await gameService.UpdateGamesPlaytimeBulkAsync(userId, hourUpdates);
         }
 
-        var warning = await UpdateAchievementsAsync(user.SteamId!, tracked.Select(t => (t.Game, t.Played)).ToList(), cancellationToken);
+        await FindMissingAppIdsAsync(library, cancellationToken);
+        var warning = await UpdateAchievementsAsync(user.SteamId!,
+            tracked.Where(t => t.Game.SteamAppId != null).Select(t => (t.Game, t.Played)).ToList(), cancellationToken);
         foreach (var t in tracked)
         {
             var next = NextStatus(t.Game, t.Played, now);
+            // Dei giochi non trovati Steam non dice né ore né ultima sessione: per loro vale solo il Platino
+            if (!t.Matched && next != GameStatus.Platinum) continue;
             if (next != null && next != t.Game.Status)
                 await gameService.UpdateGameStatusAsync(userId, t.Game.Id, next.Value.ToString());
         }
@@ -278,6 +289,31 @@ public class SteamService(
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// AppID dei giochi Steam in libreria che la sync non trova (es. Family Sharing non giocati di recente), cercati per
+    /// titolo esatto sullo store, così se ne leggono gli achievement.
+    /// </summary>
+    private async Task FindMissingAppIdsAsync(List<Game> games, CancellationToken cancellationToken)
+    {
+        foreach (var game in games.Where(g => g.SteamAppId == null && g.AchievementsTotal == null).Take(MaxAppIdLookupsPerSync))
+        {
+            // shortcut: storesearch è l'endpoint della ricerca dello store, non documentato; se smette di funzionare resta il gioco senza AppID
+            var url = $"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(game.Title)}&l=english&cc=US";
+            using var response = await httpClient.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode) return; // si riprova alla prossima sync
+
+            var search = JsonSerializer.Deserialize<StoreSearchResponse>(await response.Content.ReadAsStringAsync(cancellationToken), JsonOptions);
+            var items = search?.Items ?? [];
+            // Titolo esatto, altrimenti il normalizzato solo se non è ambiguo (stessa regola dell'abbinamento della sync)
+            var sameNormalized = items.Where(i => GameTitleMatcher.GetFullyNormalizedTitle(i.Name) == game.NormalizedTitle).ToList();
+            var match = items.FirstOrDefault(i => string.Equals(i.Name, game.Title, StringComparison.OrdinalIgnoreCase))
+                ?? (sameNormalized.Count == 1 ? sameNormalized[0] : null);
+            if (match != null) game.SteamAppId = match.Id;
+            // Nessuna corrispondenza sicura: come un gioco senza achievement, non si ritenta a ogni sync
+            else game.AchievementsUnlocked = game.AchievementsTotal = 0;
+        }
     }
 
     private async Task<User> GetUserWithSteamIdAsync(int userId, CancellationToken cancellationToken)

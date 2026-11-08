@@ -119,3 +119,15 @@ public class RecentlyPlayedGameData
     public int TotalCount { get; set; }
     public List<RecentlyPlayedGame> Games { get; set; } = [];
 }
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class StoreSearchResponse
+{
+    public List<StoreSearchItem> Items { get; set; } = [];
+}
+
+[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+public class StoreSearchItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
