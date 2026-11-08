@@ -1,12 +1,9 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using AutoMapper;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using VideoGamesBacklogBackend.Common.DTOs.Pagination;
 using VideoGamesBacklogBackend.Common.Extensions;
-using VideoGamesBacklogBackend.Common.Extensions.Query;
 using VideoGamesBacklogBackend.DTOs.Games;
 using VideoGamesBacklogBackend.DTOs.Games.Update;
 using VideoGamesBacklogBackend.Entities;
@@ -32,70 +29,6 @@ public class GameService(
     {
         var games = await dbContext.Games.AsNoTracking().AsSplitQuery().Where(g => g.UserId == userId).ToListAsync();
         return mapper.Map<List<GameDto>>(games);
-    }
-
-    public async Task<PaginatedResult<GameDto>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams)
-    {
-        var query = dbContext.Games.AsNoTracking().Where(g => g.UserId == userId);
-
-        query = query.ApplySearch(queryParams.Search);
-
-        if (!string.IsNullOrEmpty(queryParams.Filters))
-        {
-            try
-            {
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                };
-                var gameFilters = JsonSerializer.Deserialize<GameFiltersDto>(queryParams.Filters, options);
-                query = query.ApplyFilters(gameFilters);
-            }
-            catch (JsonException ex) 
-            { 
-                logger.LogWarning(ex, "Impossibile parsare i filtri di ricerca JSON: {Filters}", queryParams.Filters);
-                throw new ArgumentException("Formato filtri JSON non valido", nameof(queryParams.Filters), ex);
-            }
-        }
-
-        query = query.ApplySorting(queryParams.SortBy, queryParams.SortOrder);
-
-        var projectedQuery = query.Select(g => new GameDto
-        {
-            Id = g.Id,
-            Title = g.Title,
-            Platform = g.Platform,
-            ReleaseYear = g.ReleaseYear,
-            Genres = g.Genres,
-            Status = g.Status.ToString(),
-            CoverImage = g.CoverImage,
-            Price = g.Price,
-            PurchaseDate = g.PurchaseDate,
-            Developer = g.Developer,
-            Publisher = g.Publisher,
-            CompletionDate = g.CompletionDate,
-            PlatinumDate = g.PlatinumDate,
-            HoursPlayed = g.HoursPlayed,
-            LastPlayedAt = g.LastPlayedAt,
-            AchievementsUnlocked = g.AchievementsUnlocked,
-            AchievementsTotal = g.AchievementsTotal,
-            Metacritic = g.Metacritic,
-            Rating = g.Rating,
-            Notes = g.Notes,
-            UserId = g.UserId
-        });
-
-        var paginatedGames = await projectedQuery.PaginateAsync(queryParams.Page, queryParams.PageSize);
-
-        return new PaginatedResult<GameDto>
-        {
-            Items = paginatedGames.Items.ToList(),
-            TotalItems = paginatedGames.TotalItems,
-            TotalPages = paginatedGames.TotalPages,
-            CurrentPage = paginatedGames.CurrentPage,
-            PageSize = paginatedGames.PageSize
-        };
     }
 
     public async Task<GameDto?> GetGameByIdAsync(int userId, int gameId)
@@ -345,17 +278,51 @@ public class GameService(
     {
         var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
-        if (game.SteamAppId is int appId)
-        {
-            var user = await dbContext.Users.FirstAsync(u => u.Id == userId);
-            if (!user.ExcludedSteamAppIds.Contains(appId))
-                user.ExcludedSteamAppIds = [.. user.ExcludedSteamAppIds, appId];
-        }
-
+        await ExcludeSteamAppIdsAsync(userId, [game]);
         dbContext.Games.Remove(game);
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);
         return true;
+    }
+
+    public async Task<int> DeleteGamesBulkAsync(int userId, List<int> gameIds)
+    {
+        var games = await dbContext.Games.Where(g => g.UserId == userId && gameIds.Contains(g.Id)).ToListAsync();
+        if (games.Count == 0) return 0;
+
+        await ExcludeSteamAppIdsAsync(userId, games);
+        dbContext.Games.RemoveRange(games);
+        await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
+        return games.Count;
+    }
+
+    // Giochi Steam eliminati: la sync non li reimporta più
+    private async Task ExcludeSteamAppIdsAsync(int userId, List<Game> games)
+    {
+        var appIds = games.Where(g => g.SteamAppId != null).Select(g => g.SteamAppId!.Value).ToList();
+        if (appIds.Count == 0) return;
+
+        var user = await dbContext.Users.FirstAsync(u => u.Id == userId);
+        user.ExcludedSteamAppIds = [.. user.ExcludedSteamAppIds.Union(appIds)];
+    }
+
+    public async Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status)
+    {
+        if (!Enum.TryParse<GameStatus>(status, out var newStatus) || !Enum.IsDefined(newStatus))
+            throw new ArgumentException("Stato non valido.");
+
+        // Chi ha già lo stato richiesto si salta: richiederlo di nuovo riscriverebbe le date di completamento
+        var games = await dbContext.Games
+            .Where(g => g.UserId == userId && gameIds.Contains(g.Id) && g.Status != newStatus)
+            .ToListAsync();
+
+        foreach (var game in games)
+            await StatusChangeFunctionAsync(status, game, userId);
+
+        await dbContext.SaveChangesAsync();
+        InvalidateUserStatsCache(userId);
+        return mapper.Map<List<GameDto>>(games);
     }
 
 

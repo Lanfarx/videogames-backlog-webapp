@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 import type { Game, GameReview, GameComment } from '../../types/game';
 import {
   fetchGames,
@@ -15,7 +15,8 @@ import {
   deleteCommentThunk,
   updateCommentThunk,
   fetchGameStats,
-  fetchGamesPaginated
+  bulkUpdateStatusThunk,
+  bulkDeleteThunk
 } from '../thunks/gamesThunks';
 
 interface GamesState {
@@ -25,15 +26,7 @@ interface GamesState {
   gamesLoaded: boolean;
   loadedGameTitles: string[];
   // Aggiungiamo il tracking dei commenti caricati
-  loadedCommentGameIds: number[];  // Paginazione
-  paginatedGames: Game[];
-  paginationData: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    pageSize: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;  } | null;  paginationLoading: boolean;  // Statistiche
+  loadedCommentGameIds: number[];  // Statistiche
   stats: {
     total: number;
     inProgress: number;
@@ -60,8 +53,7 @@ const initialState: GamesState = {
   error: null,
   gamesLoaded: false,
   loadedGameTitles: [],
-  loadedCommentGameIds: [],  paginatedGames: [],
-  paginationData: null,  paginationLoading: false,
+  loadedCommentGameIds: [],
   stats: null,
   statsLoading: false,
   statsError: null
@@ -81,21 +73,6 @@ const gamesSlice = createSlice({
     },    // Azione per invalidare le statistiche quando i giochi cambiano
     invalidateStats: (state) => {
       state.stats = null;
-    },
-    // Azioni per aggiornare i giochi paginati localmente
-    updatePaginatedGame: (state, action: PayloadAction<Game>) => {
-      const gameIndex = state.paginatedGames.findIndex(g => g.id === action.payload.id);
-      if (gameIndex !== -1) {
-        state.paginatedGames[gameIndex] = action.payload;
-      }
-    },
-    removePaginatedGame: (state, action: PayloadAction<number>) => {
-      state.paginatedGames = state.paginatedGames.filter(g => g.id !== action.payload);
-      // Aggiorna anche i dati di paginazione
-      if (state.paginationData) {
-        state.paginationData.totalItems = Math.max(0, state.paginationData.totalItems - 1);
-        state.paginationData.totalPages = Math.ceil(state.paginationData.totalItems / state.paginationData.pageSize);
-      }
     }
   },
   extraReducers: (builder) => {
@@ -112,27 +89,6 @@ const gamesSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Errore caricamento giochi';
         state.gamesLoaded = true; // Imposta il flag anche in caso di errore per evitare richieste infinite
-      })
-      // Paginazione lato server
-      .addCase(fetchGamesPaginated.pending, (state) => {
-        state.paginationLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchGamesPaginated.fulfilled, (state, action) => {
-        state.paginationLoading = false;
-        state.paginatedGames = action.payload.games;
-        state.paginationData = {
-          currentPage: action.payload.currentPage,
-          totalPages: action.payload.totalPages,
-          totalItems: action.payload.totalItems,
-          pageSize: action.payload.pageSize,
-          hasNextPage: action.payload.hasNextPage,
-          hasPreviousPage: action.payload.hasPreviousPage
-        };
-      })
-      .addCase(fetchGamesPaginated.rejected, (state, action) => {
-        state.paginationLoading = false;
-        state.error = action.error.message || 'Errore caricamento giochi paginati';
       })
       .addCase(fetchGameById.pending, (state) => {
         state.loading = true;
@@ -182,23 +138,11 @@ const gamesSlice = createSlice({
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
         
-        // Aggiorna anche i giochi paginati se il gioco è presente
-        const paginatedIdx = state.paginatedGames.findIndex(g => g.id === action.payload.id);
-        if (paginatedIdx !== -1) {
-          state.paginatedGames[paginatedIdx] = action.payload;
-        }
-        
         // Invalida le statistiche quando viene aggiornato un gioco
         state.stats = null;
       })      .addCase(updateGameStatusThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
-        
-        // Aggiorna anche i giochi paginati se il gioco è presente
-        const paginatedIdx = state.paginatedGames.findIndex(g => g.id === action.payload.id);
-        if (paginatedIdx !== -1) {
-          state.paginatedGames[paginatedIdx] = action.payload;
-        }
         
         // Invalida le statistiche quando viene cambiato lo status
         state.stats = null;
@@ -206,17 +150,22 @@ const gamesSlice = createSlice({
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
         
-        // Aggiorna anche i giochi paginati se il gioco è presente
-        const paginatedIdx = state.paginatedGames.findIndex(g => g.id === action.payload.id);
-        if (paginatedIdx !== -1) {
-          state.paginatedGames[paginatedIdx] = action.payload;
-        }
-        
         // Invalida le statistiche quando vengono aggiornate le ore
         state.stats = null;
       }).addCase(deleteGameThunk.fulfilled, (state, action) => {
         state.games = state.games.filter(g => g.id !== action.payload);
         // Invalida le statistiche quando viene eliminato un gioco
+        state.stats = null;
+      })
+      .addCase(bulkUpdateStatusThunk.fulfilled, (state, action) => {
+        action.payload.forEach(updated => {
+          const idx = state.games.findIndex(g => g.id === updated.id);
+          if (idx !== -1) state.games[idx] = updated;
+        });
+        state.stats = null;
+      })
+      .addCase(bulkDeleteThunk.fulfilled, (state, action) => {
+        state.games = state.games.filter(g => !action.payload.includes(g.id));
         state.stats = null;
       })
       .addCase(deleteAllGamesThunk.pending, (state) => {
@@ -274,10 +223,5 @@ const gamesSlice = createSlice({
   }
 });
 
-export const { 
-  resetGamesState, 
-  invalidateStats, 
-  updatePaginatedGame,
-  removePaginatedGame
-} = gamesSlice.actions;
+export const { resetGamesState, invalidateStats } = gamesSlice.actions;
 export default gamesSlice.reducer;

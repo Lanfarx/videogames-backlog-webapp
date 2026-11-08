@@ -24,7 +24,7 @@ export type GamePlatform =
  * Definizione delle opzioni di ordinamento
  */
 export type SortOption = 'title' | 'Platform' | 'ReleaseYear' | 'Rating' | 
-'HoursPlayed' | 'Price' | 'PurchaseDate' | 'CompletionDate' | 'PlatinumDate' | 'Metacritic';
+'HoursPlayed' | 'Price' | 'PurchaseDate' | 'CompletionDate' | 'PlatinumDate' | 'Metacritic' | 'Achievements';
 
 /**
  * Definizione dell'ordine di ordinamento
@@ -171,7 +171,7 @@ export interface GameUpdateInput extends Partial<Omit<Game, 'Review'>> {
 /**
  * Opzioni di visualizzazione per i giochi
  */
-export type GameViewMode = 'grid' | 'list';
+export type GameViewMode = 'grid' | 'list' | 'complete'; // complete = tabella dei giochi con dati mancanti
 
 /**
  * Tipo per i giochi di esempio usati nella ricerca automatica (sample games)

@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Grid, List, ChevronDown, ChevronUp, Check, RefreshCw } from 'lucide-react';
+import { Grid, List, ChevronDown, ChevronUp, Check, RefreshCw, Dices, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SORT_OPTIONS } from '../../constants/gameConstants'; // Importa le opzioni di ordinamento
 import AddGameButton from '../ui/AddGameButton';
-import { SortOption } from '../../types/game';
+import { SortOption, GameViewMode } from '../../types/game';
 import { useAppSelector } from '../../store/hooks';
 import SteamImportPanel from './SteamImportPanel';
 import { useSteamSyncNow } from '../../hooks/useSteamAutoSync';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
 interface LibraryToolbarProps {
-  viewMode: "grid" | "list";
-  setViewMode: (mode: "grid" | "list") => void;
+  viewMode: GameViewMode;
+  setViewMode: (mode: GameViewMode) => void;
+  missingCount: number; // giochi con dati da completare, mostrati sull'icona della tabella
+  onRandomGame: () => void;
   onAddGame: () => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
@@ -25,6 +27,8 @@ interface LibraryToolbarProps {
 export default function LibraryToolbar({
   viewMode,
   setViewMode,
+  missingCount,
+  onRandomGame,
   onAddGame,
   sortBy,
   sortOrder,
@@ -124,6 +128,27 @@ export default function LibraryToolbar({
             aria-label="Visualizzazione a lista"
           >
             <List className="h-5 w-5" />
+          </button>
+          <button
+            className={`relative p-1.5 rounded-md transition-colors ${
+              viewMode === "complete" ? "text-accent-primary" : "text-text-secondary hover:text-accent-primary"
+            }`}
+            onClick={() => setViewMode("complete")}
+            aria-label={`Giochi da completare (${missingCount})`}
+            title={`Da completare: ${missingCount}`}
+          >
+            <ClipboardList className="h-5 w-5" />
+            {missingCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-accent-primary text-white text-[10px] leading-4 text-center">{missingCount}</span>
+            )}
+          </button>
+          <button
+            className="p-1.5 rounded-md text-text-secondary hover:text-accent-primary transition-colors"
+            onClick={onRandomGame}
+            aria-label="Scegli un gioco a caso"
+            title="Scegli a caso"
+          >
+            <Dices className="h-5 w-5" />
           </button>
         </div>
 

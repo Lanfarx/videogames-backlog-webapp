@@ -6,7 +6,6 @@ namespace VideoGamesBacklogBackend.Interfaces.Games;
 
 public interface IGameService
 {        Task<List<GameDto>> GetAllGamesAsync(int userId);
-    Task<PaginatedResult<GameDto>> GetGamesPaginatedAsync(int userId, GameQueryParameters queryParams);
     Task<GameDto?> GetGameByIdAsync(int userId, int gameId);
     Task<GameDto?> GetGameByTitleAsync(int userId, string title);
     Task<GamePublicInfoDto?> GetGamePublicInfoByIdAsync(int gameId, int? currentUserId = null);
@@ -17,6 +16,8 @@ public interface IGameService
     Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status);
     Task<GameDto?> UpdateGamePlaytimeAsync(int userId, int gameId, int hoursPlayed);
     Task<bool> DeleteGameAsync(int userId, int gameId);
+    Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status);
+    Task<int> DeleteGamesBulkAsync(int userId, List<int> gameIds);
     Task<int> DeleteAllGamesAsync(int userId);
     Task<PaginatedResult<InProgressGameDto>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams);
 

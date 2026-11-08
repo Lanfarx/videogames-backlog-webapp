@@ -48,13 +48,6 @@ export default function SidebarFilter({ filters, setFilters, gamesCount, games }
     setMaxPrice(PriceRange[1]);
     setMaxHours(hoursRange[1]);
     setMaxMetacritic(MetacriticRange[1] || 100);
-
-    setFilters((prev) => ({
-      ...prev,
-      PriceRange: [0, PriceRange[1]],
-      hoursRange: [0, hoursRange[1]],
-      MetacriticRange: [0, MetacriticRange[1] || 100],
-    }));
   }, [games]);
 
   const handleStatusToggle = (Status: GameStatus) => {

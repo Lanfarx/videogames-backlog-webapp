@@ -35,6 +35,15 @@ export const deleteGameThunk = createAsyncThunk('games/delete', async (id: numbe
   return id;
 });
 
+export const bulkUpdateStatusThunk = createAsyncThunk('games/bulkUpdateStatus', async ({ ids, status }: { ids: number[], status: string }) => {
+  return await gamesService.bulkUpdateGamesStatus(ids, status);
+});
+
+export const bulkDeleteThunk = createAsyncThunk('games/bulkDelete', async (ids: number[]) => {
+  await gamesService.bulkDeleteGames(ids);
+  return ids;
+});
+
 export const deleteAllGamesThunk = createAsyncThunk('games/deleteAll', async () => {
   return await gamesService.deleteAllGames();
 });
@@ -60,23 +69,4 @@ export const updateCommentThunk = createAsyncThunk('games/updateComment', async 
 // Statistiche
 export const fetchGameStats = createAsyncThunk('games/fetchStats', async () => {
   return await gamesService.getGameStats();
-});
-
-// Nuovo thunk per la paginazione lato server
-export const fetchGamesPaginated = createAsyncThunk('games/fetchPaginated', async (params: {
-  page: number;
-  pageSize: number;
-  filters?: any;
-  sortBy?: string;
-  sortOrder?: string;
-  search?: string;
-}) => {
-  return await gamesService.getGamesPaginated(
-    params.page, 
-    params.pageSize, 
-    params.filters, 
-    params.sortBy, 
-    params.sortOrder, 
-    params.search
-  );
 });

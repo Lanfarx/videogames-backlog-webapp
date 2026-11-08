@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Monitor, Clock, MoreVertical, Award, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Game, GameStatus, GameFilters, SortOption, SortOrder } from '../../types/game';
+import type { LibrarySelection } from './librarySelection';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import { useGameById } from '../../store/hooks/index';
@@ -24,18 +25,20 @@ interface GameCardProps {
   onDelete?: (GameId: string) => void;
   onStatusChange?: (GameId: string, Status: GameStatus) => void;
   navigationParams?: NavigationParams;
+  selection?: LibrarySelection;
 }
 
-export default function GameCard({ game, onEdit, onDelete, onStatusChange, navigationParams }: GameCardProps) {
+export default function GameCard({ game, onEdit, onDelete, onStatusChange, navigationParams, selection }: GameCardProps) {
   // Ottieni il gioco aggiornato dallo stato globale Redux
   const currentGame = useGameById(game.id) || game;
   const effectiveRating = currentGame.Rating ?? getGameRating(currentGame);
   const effectiveHours = currentGame.HoursPlayed;
   const achievements = formatAchievements(currentGame);
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
+  const isSelected = selection?.selectedIds.has(game.id) ?? false;
 
   return (
-    <div className="bg-primary-bg border border-border-color rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative">
+    <div className={`group bg-primary-bg border rounded-xl shadow-sm hover:shadow-md hover:border-accent-primary hover:translate-y-[-2px] transition-all h-[360px] relative ${isSelected ? 'border-accent-primary ring-2 ring-accent-primary' : 'border-border-color'}`}>
       {/* Indicatore di stato */}
       <StatusIndicator Status={currentGame.Status} />      {/* Copertina con link */}
       <Link 
@@ -96,6 +99,16 @@ export default function GameCard({ game, onEdit, onDelete, onStatusChange, navig
           )}
         </div>
       </div>
+
+      {selection && (
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => selection.onToggle(game.id)}
+          aria-label={`Seleziona ${game.Title}`}
+          className={`absolute top-4 left-3 z-20 h-5 w-5 cursor-pointer accent-accent-primary ${selection.selectedIds.size > 0 ? '' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'}`}
+        />
+      )}
 
       {/* Menu azioni */}
       <div className="absolute top-2 right-2 z-20">

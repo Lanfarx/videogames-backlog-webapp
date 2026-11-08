@@ -21,13 +21,6 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
         return Ok(games);
     }
 
-    [HttpGet("paginated")]
-    public async Task<ActionResult<PaginatedResult<GameDto>>> GetGamesPaginated([FromQuery] GameQueryParameters queryParams)
-    {
-        var result = await gameService.GetGamesPaginatedAsync(User.GetUserId(), queryParams);
-        return Ok(result);
-    }
-
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GameDto>> GetById(int id)
     {
@@ -87,6 +80,14 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
         await gameService.DeleteGameAsync(User.GetUserId(), id);
         return NoContent();
     }
+
+    [HttpPatch("bulk/status")]
+    public async Task<ActionResult<List<GameDto>>> UpdateStatusBulk([FromBody] BulkGamesStatusDto dto) =>
+        Ok(await gameService.UpdateGamesStatusBulkAsync(User.GetUserId(), dto.GameIds, dto.Status));
+
+    [HttpDelete("bulk")]
+    public async Task<IActionResult> DeleteBulk([FromBody] BulkGamesDto dto) =>
+        Ok(new { DeletedCount = await gameService.DeleteGamesBulkAsync(User.GetUserId(), dto.GameIds) });
 
     [HttpDelete("all")]
     public async Task<IActionResult> DeleteAll()

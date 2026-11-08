@@ -18,8 +18,9 @@ export function getGameRating(game: Game): number {
   return game.Review ? calculateRatingFromReview(game.Review) : 0;
 }
 
+// Stessa semantica del filtro lato server (GameQueryExtensions): prezzo e Metacritic assenti passano sempre
 export function filterGames(games: Game[], searchParams: GameSearchParams): Game[] {
-  let filtered = [...games];
+  let filtered = games;
   if (searchParams.query) {
     const query = searchParams.query.toLowerCase();
     filtered = filtered.filter(game =>
@@ -34,13 +35,10 @@ export function filterGames(games: Game[], searchParams: GameSearchParams): Game
     if (Status && Status.length > 0) filtered = filtered.filter(game => Status.includes(game.Status));
     if (Platform && Platform.length > 0) filtered = filtered.filter(game => Platform.includes(game.Platform));
     if (genre && genre.length > 0) filtered = filtered.filter(game => game.Genres.some(g => genre.includes(g)));
-    if (PriceRange) filtered = filtered.filter(game => (game.Price ?? 0) >= PriceRange[0] && (game.Price ?? 0) <= PriceRange[1]);
+    if (PriceRange) filtered = filtered.filter(game => game.Price == null || game.Price === -1 || (game.Price >= PriceRange[0] && game.Price <= PriceRange[1]));
     if (hoursRange) filtered = filtered.filter(game => (game.HoursPlayed ?? 0) >= hoursRange[0] && (game.HoursPlayed ?? 0) <= hoursRange[1]);
-    if (MetacriticRange) filtered = filtered.filter(game => (game.Metacritic ?? 0) >= MetacriticRange[0] && (game.Metacritic ?? 0) <= MetacriticRange[1]);
-    if (PurchaseDate) {
-      const purchaseYear = new Date(PurchaseDate).getFullYear();
-      filtered = filtered.filter(game => game.PurchaseDate && new Date(game.PurchaseDate).getFullYear() === purchaseYear);
-    }
+    if (MetacriticRange) filtered = filtered.filter(game => game.Metacritic == null || (game.Metacritic >= MetacriticRange[0] && game.Metacritic <= MetacriticRange[1]));
+    if (PurchaseDate) filtered = filtered.filter(game => game.PurchaseDate?.slice(0, 10) === PurchaseDate);
   }
   if (searchParams.sortBy) {
     filtered = sortGames(filtered, searchParams.sortBy, searchParams.sortOrder || 'asc');
@@ -53,31 +51,42 @@ export function filterGames(games: Game[], searchParams: GameSearchParams): Game
   return filtered;
 }
 
+// Percentuale di achievement sbloccati, null per i giochi senza achievement (o mai controllati)
+export function achievementPercent(game: Game): number | null {
+  const { AchievementsUnlocked: unlocked, AchievementsTotal: total } = game;
+  return total && unlocked != null ? Math.floor((unlocked / total) * 100) : null;
+}
+
+// Dati che l'utente può dover completare a mano: prezzo non specificato, generi o anno di uscita mancanti
+export function isMissingData(game: Game): boolean {
+  return game.Price == null || game.Genres.length === 0 || !game.ReleaseYear;
+}
+
+// Valore su cui ordina ogni opzione; null = dato assente
+const SORT_KEYS: Record<SortOption, (game: Game) => string | number | null | undefined> = {
+  title: g => g.Title,
+  Platform: g => g.Platform,
+  ReleaseYear: g => g.ReleaseYear || null,
+  Rating: g => g.Rating ?? 0,
+  HoursPlayed: g => g.HoursPlayed ?? 0,
+  Price: g => (g.Price === -1 ? null : g.Price),
+  Metacritic: g => g.Metacritic || null,
+  PurchaseDate: g => g.PurchaseDate,
+  CompletionDate: g => g.CompletionDate,
+  PlatinumDate: g => g.PlatinumDate,
+  Achievements: achievementPercent,
+};
+
+// I giochi senza il dato ordinato vanno sempre in fondo, in entrambe le direzioni; a parità conta l'id
 export function sortGames(games: Game[], sortBy: SortOption, sortOrder: SortOrder = 'asc'): Game[] {
-  const sortMultiplier = sortOrder === 'asc' ? 1 : -1;
+  const key = SORT_KEYS[sortBy];
+  const direction = sortOrder === 'asc' ? 1 : -1;
   return [...games].sort((a, b) => {
-    switch (sortBy) {
-      case 'title': return a.Title.localeCompare(b.Title) * sortMultiplier;
-      case 'Platform': return a.Platform.localeCompare(b.Platform) * sortMultiplier;
-      case 'ReleaseYear': return ((a.ReleaseYear ?? 0) - (b.ReleaseYear ?? 0)) * sortMultiplier;
-      case 'Rating': return ((a.Rating ?? 0) - (b.Rating ?? 0)) * sortMultiplier;
-      case 'HoursPlayed': return ((a.HoursPlayed ?? 0) - (b.HoursPlayed ?? 0)) * sortMultiplier;
-      case 'Price': return ((a.Price ?? 0) - (b.Price ?? 0)) * sortMultiplier;
-      case 'Metacritic': return ((a.Metacritic ?? 0) - (b.Metacritic ?? 0)) * sortMultiplier;
-      case 'PurchaseDate':
-        if (!a.PurchaseDate) return sortMultiplier;
-        if (!b.PurchaseDate) return -sortMultiplier;
-        return (new Date(a.PurchaseDate).getTime() - new Date(b.PurchaseDate).getTime()) * sortMultiplier;
-      case 'CompletionDate':
-        if (!a.CompletionDate) return sortMultiplier;
-        if (!b.CompletionDate) return -sortMultiplier;
-        return (new Date(a.CompletionDate).getTime() - new Date(b.CompletionDate).getTime()) * sortMultiplier;
-      case 'PlatinumDate':
-        if (!a.PlatinumDate) return sortMultiplier;
-        if (!b.PlatinumDate) return -sortMultiplier;
-        return (new Date(a.PlatinumDate).getTime() - new Date(b.PlatinumDate).getTime()) * sortMultiplier;
-      default: return 0;
-    }
+    const x = key(a);
+    const y = key(b);
+    if (x == null || y == null) return Number(x == null) - Number(y == null) || a.id - b.id;
+    const order = typeof x === 'string' ? x.localeCompare(y as string) : x - (y as number);
+    return order * direction || a.id - b.id;
   });
 }
 
@@ -154,9 +163,8 @@ export function calculateCounts(games: Game[]) {
  * "34/50 · 68%" per i giochi Steam con achievement, null altrimenti
  */
 export function formatAchievements(game: Game): string | null {
-  const { AchievementsUnlocked: unlocked, AchievementsTotal: total } = game;
-  if (!total || unlocked == null) return null;
-  return `${unlocked}/${total} · ${Math.floor((unlocked / total) * 100)}%`;
+  const percent = achievementPercent(game);
+  return percent == null ? null : `${game.AchievementsUnlocked}/${game.AchievementsTotal} · ${percent}%`;
 }
 
 export function generateGenreDistributionData(games: Game[]): { genre: string; count: number }[] {

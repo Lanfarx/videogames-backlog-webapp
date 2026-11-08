@@ -1,6 +1,7 @@
 import React from 'react';
 import GameCard from './GameCard';
 import type { Game, GameStatus, GameFilters, SortOption, SortOrder } from '../../types/game';
+import type { LibrarySelection } from './librarySelection';
 
 // Interfaccia per i parametri di navigazione
 interface NavigationParams {
@@ -17,9 +18,10 @@ interface GridViewProps {
   onStatusChange?: (GameId: string, Status: GameStatus) => void;
   columns?: number;
   navigationParams?: NavigationParams;
+  selection?: LibrarySelection;
 }
 
-export default function GridView({ games, onEdit, onDelete, onStatusChange, columns = 4, navigationParams }: GridViewProps) {
+export default function GridView({ games, onEdit, onDelete, onStatusChange, columns = 4, navigationParams, selection }: GridViewProps) {
   return (
     <div className={`grid gap-4 md:gap-6 w-full min-w-0 grid-cols-1 ${columns >= 2 ? `sm:grid-cols-2` : ''} ${columns >= 3 ? `lg:grid-cols-3` : ''} ${columns >= 4 ? `xl:grid-cols-4` : ''} ${columns === 5 ? `2xl:grid-cols-5` : ''}`}>
       {games.map((game) => (
@@ -30,6 +32,7 @@ export default function GridView({ games, onEdit, onDelete, onStatusChange, colu
           onDelete={onDelete}
           onStatusChange={onStatusChange}
           navigationParams={navigationParams}
+          selection={selection}
         />
       ))}
     </div>

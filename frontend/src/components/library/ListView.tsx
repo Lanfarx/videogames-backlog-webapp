@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Monitor, Clock, Calendar, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Game, GameStatus, GameFilters, SortOption, SortOrder } from '../../types/game';
+import type { LibrarySelection } from './librarySelection';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import ThreeDotsModal from '../ui/ThreeDotsModal';
@@ -21,14 +22,16 @@ interface ListViewProps {
   onDelete?: (GameId: string) => void;
   onStatusChange?: (GameId: string, Status: GameStatus) => void;
   navigationParams?: NavigationParams;
+  selection?: LibrarySelection;
 }
 
-export default function ListView({ games, onEdit, onDelete, onStatusChange, navigationParams }: ListViewProps) {
+export default function ListView({ games, onEdit, onDelete, onStatusChange, navigationParams, selection }: ListViewProps) {
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);  return (
     <div className="overflow-x-auto w-full min-w-0 library-list-view">
       <table className="w-full min-w-[800px] border-collapse">
         <thead>
           <tr className="bg-secondary-bg">
+            {selection && <th className="p-3 w-10 border-b border-border-color" />}
             <th className="text-left p-3 font-roboto font-medium text-sm text-text-secondary border-b border-border-color">
               Titolo
             </th>
@@ -72,6 +75,17 @@ export default function ListView({ games, onEdit, onDelete, onStatusChange, navi
                 index % 2 === 0 ? "bg-primary-bg" : "bg-secondary-bg/30"
               }`}
             >
+              {selection && (
+                <td className="p-3 border-b border-border-color">
+                  <input
+                    type="checkbox"
+                    checked={selection.selectedIds.has(game.id)}
+                    onChange={() => selection.onToggle(game.id)}
+                    aria-label={`Seleziona ${game.Title}`}
+                    className="h-4 w-4 cursor-pointer accent-accent-primary"
+                  />
+                </td>
+              )}
               <td className="p-3 border-b border-border-color">
                 <div className="flex items-center">
                   <div className="h-12 w-12 mr-3 overflow-hidden rounded relative">

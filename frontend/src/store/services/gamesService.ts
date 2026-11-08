@@ -218,42 +218,11 @@ export const getInProgressGamesPaginated = async (page: number = 1, pageSize: nu
   };
 };
 
-// Tutti i giochi paginati
-export const getGamesPaginated = async (
-  page: number = 1,
-  pageSize: number,
-  filters?: string,
-  sortBy?: string,
-  sortOrder?: string,
-  search?: string
-): Promise<{
-  games: Game[];
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  pageSize: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}> => {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    pageSize: pageSize.toString(),
-  });
+export const bulkUpdateGamesStatus = async (gameIds: number[], status: string): Promise<Game[]> => {
+  const res = await apiClient.patch<Game[]>(`${API_URL}/bulk/status`, { gameIds, status });
+  return res.data.map(mapGameFromApi);
+};
 
-  if (filters) params.append('filters', filters);
-  if (sortBy) params.append('sortBy', sortBy);
-  if (sortOrder) params.append('sortOrder', sortOrder);
-  if (search) params.append('search', search);
-
-  const res = await apiClient.get<BackendPaginatedResponse<any>>(`${API_URL}/paginated?${params.toString()}`);
-  const paginated = mapPaginatedResponse(res.data, mapGameFromApi);
-  return {
-    games: paginated.items,
-    currentPage: paginated.currentPage,
-    totalPages: paginated.totalPages,
-    totalItems: paginated.totalItems,
-    pageSize: paginated.pageSize,
-    hasNextPage: paginated.hasNextPage,
-    hasPreviousPage: paginated.hasPreviousPage
-  };
+export const bulkDeleteGames = async (gameIds: number[]): Promise<void> => {
+  await apiClient.delete(`${API_URL}/bulk`, { data: { gameIds } });
 };

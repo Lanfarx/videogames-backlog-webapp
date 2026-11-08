@@ -104,6 +104,7 @@ export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'PurchaseDate', label: 'Data di acquisto' },
   { value: 'CompletionDate', label: 'Data di completamento' },
   { value: 'PlatinumDate', label: 'Data platino' },
+  { value: 'Achievements', label: 'Achievement' },
 ];
 
 /**
