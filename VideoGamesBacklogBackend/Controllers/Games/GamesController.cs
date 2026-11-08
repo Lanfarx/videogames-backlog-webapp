@@ -12,7 +12,7 @@ namespace VideoGamesBacklogBackend.Controllers.Games;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class GamesController(IGameService gameService, IGameStatsService gameStatsService, IDashboardService dashboardService) : ControllerBase
+public class GamesController(IGameService gameService, IDashboardService dashboardService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<GameDto>>> GetAll()
@@ -98,14 +98,6 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
         var deletedCount = await gameService.DeleteAllGamesAsync(User.GetUserId());
         return Ok(new { DeletedCount = deletedCount, Message = $"Eliminati {deletedCount} giochi" });
     } 
-
-    // Statistiche
-    [HttpGet("stats")]
-    public async Task<ActionResult<GameStatsDto>> GetStats()
-    {
-        var stats = await gameStatsService.GetGameStatsAsync(User.GetUserId());
-        return Ok(stats);
-    }
 
     // Giochi in corso paginati
     [HttpGet("in-progress")]

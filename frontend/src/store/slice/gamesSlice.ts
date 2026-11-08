@@ -14,7 +14,6 @@ import {
   addCommentThunk,
   deleteCommentThunk,
   updateCommentThunk,
-  fetchGameStats,
   bulkUpdateStatusThunk,
   bulkDeleteThunk
 } from '../thunks/gamesThunks';
@@ -26,25 +25,7 @@ interface GamesState {
   gamesLoaded: boolean;
   loadedGameTitles: string[];
   // Aggiungiamo il tracking dei commenti caricati
-  loadedCommentGameIds: number[];  // Statistiche
-  stats: {
-    total: number;
-    inProgress: number;
-    completed: number;
-    notStarted: number;
-    abandoned: number;
-    platinum: number;
-    totalHours: number;
-    // Statistiche sui prezzi
-    totalSpent: number;
-    averagePrice: number;
-    freeGames: number;
-    highestPrice: number;
-    highestPriceGameTitle?: string;
-    costPerHour: number;
-  } | null;
-  statsLoading: boolean;
-  statsError: string | null;
+  loadedCommentGameIds: number[];
 }
 
 const initialState: GamesState = {
@@ -54,9 +35,6 @@ const initialState: GamesState = {
   gamesLoaded: false,
   loadedGameTitles: [],
   loadedCommentGameIds: [],
-  stats: null,
-  statsLoading: false,
-  statsError: null
 };
 
 const gamesSlice = createSlice({
@@ -67,13 +45,8 @@ const gamesSlice = createSlice({
       state.games = [];
       state.loading = false;
       state.error = null;
-      state.gamesLoaded = false;      state.stats = null;
-      state.statsLoading = false;
-      state.statsError = null;
-    },    // Azione per invalidare le statistiche quando i giochi cambiano
-    invalidateStats: (state) => {
-      state.stats = null;
-    }
+      state.gamesLoaded = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -84,7 +57,6 @@ const gamesSlice = createSlice({
         state.games = action.payload;
         state.loading = false;
         state.gamesLoaded = true; // Imposta il flag quando i giochi sono caricati
-        state.stats = null; // la libreria può essere cambiata lato server (sync Steam): la dashboard le ricarica
       })      .addCase(fetchGames.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Errore caricamento giochi';
@@ -132,41 +104,26 @@ const gamesSlice = createSlice({
         state.error = action.error.message || 'Errore nel caricamento';
       })      .addCase(addGame.fulfilled, (state, action) => {
         state.games.push(action.payload);
-        // Invalida le statistiche quando viene aggiunto un gioco
-        state.stats = null;
       })        .addCase(updateGameThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
-        
-        // Invalida le statistiche quando viene aggiornato un gioco
-        state.stats = null;
       })      .addCase(updateGameStatusThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
-        
-        // Invalida le statistiche quando viene cambiato lo status
-        state.stats = null;
       })      .addCase(updateGamePlaytimeThunk.fulfilled, (state, action) => {
         const idx = state.games.findIndex(g => g.id === action.payload.id);
         if (idx !== -1) state.games[idx] = action.payload;
-        
-        // Invalida le statistiche quando vengono aggiornate le ore
-        state.stats = null;
       }).addCase(deleteGameThunk.fulfilled, (state, action) => {
         state.games = state.games.filter(g => g.id !== action.payload);
-        // Invalida le statistiche quando viene eliminato un gioco
-        state.stats = null;
       })
       .addCase(bulkUpdateStatusThunk.fulfilled, (state, action) => {
         action.payload.forEach(updated => {
           const idx = state.games.findIndex(g => g.id === updated.id);
           if (idx !== -1) state.games[idx] = updated;
         });
-        state.stats = null;
       })
       .addCase(bulkDeleteThunk.fulfilled, (state, action) => {
         state.games = state.games.filter(g => !action.payload.includes(g.id));
-        state.stats = null;
       })
       .addCase(deleteAllGamesThunk.pending, (state) => {
         state.loading = true;
@@ -174,8 +131,6 @@ const gamesSlice = createSlice({
       })      .addCase(deleteAllGamesThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.games = [];
-        // Invalida le statistiche quando vengono eliminati tutti i giochi
-        state.stats = null;
       })
       .addCase(deleteAllGamesThunk.rejected, (state, action) => {
         state.loading = false;
@@ -206,22 +161,9 @@ const gamesSlice = createSlice({
             game.Comments[commentIndex] = action.payload.comment;
           }
         }
-      })
-      // Statistiche
-      .addCase(fetchGameStats.pending, (state) => {
-        state.statsLoading = true;
-        state.statsError = null;
-      })
-      .addCase(fetchGameStats.fulfilled, (state, action) => {
-        state.statsLoading = false;
-        state.stats = action.payload;
-      })
-      .addCase(fetchGameStats.rejected, (state, action) => {
-        state.statsLoading = false;
-        state.statsError = action.error.message || 'Errore nel caricamento delle statistiche';
       });
   }
 });
 
-export const { resetGamesState, invalidateStats } = gamesSlice.actions;
+export const { resetGamesState } = gamesSlice.actions;
 export default gamesSlice.reducer;

@@ -15,12 +15,12 @@ public interface IActivityService
     Task<Dictionary<string, int>> GetActivityStatsByTypeAsync(int userId, int? year = null);
     Task<PaginatedResult<ActivityDto>> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId, ActivityQueryParameters queryParams);
 
-    // Metodi helper per la creazione di attività specifiche
+    // Creazione di attività specifiche: non salvano, il SaveChanges è del chiamante (insieme alle modifiche al gioco)
     Task CreateStatusChangeActivityAsync(Game game, GameStatus newStatus, string previousStatus, int userId, ActivitySource source = ActivitySource.Manual);
     Task CreatePlaytimeActivityAsync(Game game, int newHours, int previousHours, bool wasNotStarted, int userId, ActivitySource source = ActivitySource.Manual);
     Task CreateRatingActivityAsync(Game game, decimal newRating, decimal previousRating, int userId);
-    Task CreateAddGameActivityAsync(Game game, int userId, ActivitySource source = ActivitySource.Manual);
-    Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId, ActivitySource source = ActivitySource.Manual);
+    void CreateAddGameActivity(Game game, int userId, ActivitySource source = ActivitySource.Manual);
+    void CreateAddGamesBulkActivity(List<Game> games, int userId, ActivitySource source = ActivitySource.Manual);
     Task CreatePlaytimeBulkActivityAsync(List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)> updates, int userId, ActivitySource source = ActivitySource.Manual);
 
     Task<bool> CanViewUserDiary(int targetUserId, int currentUserId);

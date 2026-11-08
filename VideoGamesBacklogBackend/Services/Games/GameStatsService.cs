@@ -11,8 +11,7 @@ namespace VideoGamesBacklogBackend.Services.Games;
 [UsedImplicitly]
 public class GameStatsService(AppDbContext dbContext, IMemoryCache cache) : IGameStatsService
 {
-    public async Task<GameStatsDto> GetGameStatsAsync(int userId) => await GetUserStatsAsync(userId);
-
+    // Statistiche mostrate nei profili degli amici: le proprie le calcola il client dai giochi caricati
     public async Task<GameStatsDto> GetUserStatsAsync(int userId)
     {
         var cacheKey = $"UserStats_{userId}";

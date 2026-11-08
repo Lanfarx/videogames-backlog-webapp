@@ -111,14 +111,13 @@ public class SteamService(
         await FindMissingAppIdsAsync(library, cancellationToken);
         var warning = await UpdateAchievementsAsync(user.SteamId!,
             tracked.Where(t => t.Game.SteamAppId != null).Select(t => (t.Game, t.Played)).ToList(), cancellationToken);
-        foreach (var t in tracked)
-        {
-            var next = NextStatus(t.Game, t.Played, now);
+        var statusChanges = tracked
+            .Select(t => (t.Game, Next: NextStatus(t.Game, t.Played, now), t.Matched))
             // Dei giochi non trovati Steam non dice né ore né ultima sessione: per loro vale solo il Platino
-            if (!t.Matched && next != GameStatus.Platinum) continue;
-            if (next != null && next != t.Game.Status)
-                await gameService.UpdateGameStatusAsync(userId, t.Game.Id, next.Value.ToString(), ActivitySource.Steam);
-        }
+            .Where(c => c.Next != null && c.Next != c.Game.Status && (c.Matched || c.Next == GameStatus.Platinum))
+            .GroupBy(c => c.Next!.Value);
+        foreach (var group in statusChanges) // al più uno per stato: un salvataggio ciascuno, non uno per gioco
+            await gameService.UpdateGamesStatusBulkAsync(userId, [.. group.Select(c => c.Game.Id)], group.Key.ToString(), ActivitySource.Steam);
 
         var updatedGames = tracked
             .Where(t => t.Game.HoursPlayed != t.PreviousHours || t.Game.Status != t.PreviousStatus)
@@ -288,6 +287,10 @@ public class SteamService(
             var achievements = stats?.Playerstats.Achievements ?? [];
             game.AchievementsTotal = achievements.Count;
             game.AchievementsUnlocked = achievements.Count(a => a.Achieved == 1);
+            // Platino: la data è quella dell'ultimo sblocco, non quella della sync (il cambio di stato la conserva)
+            if (game.AchievementsTotal > 0 && game.AchievementsUnlocked == game.AchievementsTotal
+                && ToDate(achievements.Max(a => a.Unlocktime)) is DateTime lastUnlock)
+                game.PlatinumDate ??= DateOnly.FromDateTime(lastUnlock);
         }
 
         return null;

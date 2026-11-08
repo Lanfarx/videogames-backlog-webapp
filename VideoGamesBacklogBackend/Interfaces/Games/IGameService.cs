@@ -14,10 +14,10 @@ public interface IGameService
     Task<List<GameDto>> AddGamesBulkAsync(int userId, List<CreateGameDto> gamesDto, ActivitySource source = ActivitySource.Manual);
     Task<GameDto?> UpdateGameAsync(int userId, int gameId, UpdateGameDto updateDto);
     Task UpdateGamesPlaytimeBulkAsync(int userId, List<(int GameId, int HoursPlayed)> updates, ActivitySource source = ActivitySource.Manual);
-    Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status, ActivitySource source = ActivitySource.Manual);
+    Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status);
     Task<GameDto?> UpdateGamePlaytimeAsync(int userId, int gameId, int hoursPlayed);
     Task<bool> DeleteGameAsync(int userId, int gameId);
-    Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status);
+    Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status, ActivitySource source = ActivitySource.Manual);
     Task<int> DeleteGamesBulkAsync(int userId, List<int> gameIds);
     Task<int> DeleteAllGamesAsync(int userId);
     Task<PaginatedResult<InProgressGameDto>> GetInProgressGamesPaginatedAsync(int userId, PaginationQueryParameters queryParams);

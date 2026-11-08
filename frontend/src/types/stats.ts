@@ -27,16 +27,22 @@ export interface MonthlyStats {
 }
 
 /**
- * Statistiche complessive dei giochi
+ * Statistiche complessive della libreria (stessa forma del GameStatsDto del server)
  */
 export interface GameStats {
-  total: number;               // Totale giochi
-  inProgress: number;          // Giochi in corso
-  Completed: number;           // Giochi completati
-  notStarted: number;          // Giochi non iniziati
-  Abandoned: number;           // Giochi abbandonati
-  Platinum: number;            // Giochi platinati
-  totalHours: number;          // Ore totali giocate
+  total: number;
+  inProgress: number;
+  completed: number;           // Completati + platinati
+  notStarted: number;
+  abandoned: number;
+  platinum: number;
+  totalHours: number;
+  totalSpent: number;
+  averagePrice: number;        // Sui soli giochi a pagamento
+  freeGames: number;
+  highestPrice: number;
+  highestPriceGameTitle?: string;
+  costPerHour: number;
 }
 
 /**

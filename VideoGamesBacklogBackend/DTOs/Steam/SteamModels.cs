@@ -82,6 +82,7 @@ public class PlayerStats
 public class PlayerAchievement
 {
     public int Achieved { get; set; }
+    public long Unlocktime { get; set; } // secondi Unix, 0 se non sbloccato
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]

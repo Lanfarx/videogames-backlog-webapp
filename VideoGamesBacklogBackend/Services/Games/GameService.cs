@@ -131,6 +131,7 @@ public class GameService(
         SetInitialGameStatusAndDates(game);
 
         dbContext.Games.Add(game);
+        activityService.CreateAddGameActivity(game, userId);
 
         var wishlistItem = await dbContext.Wishlists
             .FirstOrDefaultAsync(w => w.UserId == userId && w.NormalizedTitle == game.NormalizedTitle);
@@ -140,8 +141,6 @@ public class GameService(
         }
 
         await dbContext.SaveChangesAsync();
-
-        await activityService.CreateAddGameActivityAsync(game, userId);
 
         InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
@@ -209,11 +208,11 @@ public class GameService(
         return mapper.Map<GameDto>(game);
     }
 
-    public async Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status, ActivitySource source = ActivitySource.Manual)
+    public async Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status)
     {
         var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
-        await StatusChangeFunctionAsync(status, game, userId, source);
+        await StatusChangeFunctionAsync(status, game, userId);
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
@@ -236,8 +235,8 @@ public class GameService(
                     game.PlatinumDate = null;
                     break;
                 case GameStatus.Platinum:
-                    game.PlatinumDate = today;
-                    game.CompletionDate ??= today;
+                    game.PlatinumDate ??= today; // già impostata solo dalla sync Steam (ultimo achievement) o dall'utente nella stessa modifica
+                    game.CompletionDate ??= game.PlatinumDate;
                     break;
                 case GameStatus.NotStarted:
                 case GameStatus.InProgress:
@@ -309,7 +308,7 @@ public class GameService(
         user.ExcludedSteamAppIds = [.. user.ExcludedSteamAppIds.Union(appIds)];
     }
 
-    public async Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status)
+    public async Task<List<GameDto>> UpdateGamesStatusBulkAsync(int userId, List<int> gameIds, string status, ActivitySource source = ActivitySource.Manual)
     {
         if (!Enum.TryParse<GameStatus>(status, out var newStatus) || !Enum.IsDefined(newStatus))
             throw new ArgumentException("Stato non valido.");
@@ -320,7 +319,7 @@ public class GameService(
             .ToListAsync();
 
         foreach (var game in games)
-            await StatusChangeFunctionAsync(status, game, userId);
+            await StatusChangeFunctionAsync(status, game, userId, source);
 
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);
@@ -429,13 +428,12 @@ public class GameService(
         }
 
         dbContext.Games.AddRange(games);
+        activityService.CreateAddGamesBulkActivity(games, userId, source);
         await dbContext.SaveChangesAsync();
 
         await dbContext.Wishlists
             .Where(w => w.UserId == userId && normalizedTitles.Contains(w.NormalizedTitle))
             .ExecuteDeleteAsync();
-
-        await activityService.CreateAddGamesBulkActivityAsync(games, userId, source);
 
         InvalidateUserStatsCache(userId);
         return mapper.Map<List<GameDto>>(games);
@@ -457,9 +455,8 @@ public class GameService(
             activityUpdates.Add(result);
         }
 
-        await dbContext.SaveChangesAsync();
-
         await activityService.CreatePlaytimeBulkActivityAsync(activityUpdates, userId, source);
+        await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);
     }
     private void SetInitialGameStatusAndDates(Game game)

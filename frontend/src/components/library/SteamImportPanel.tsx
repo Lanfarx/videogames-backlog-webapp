@@ -5,7 +5,7 @@ import { Status_OPTIONS } from '../../constants/gameConstants';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { useAppDispatch } from '../../store/hooks';
 import { fetchGames } from '../../store/thunks/gamesThunks';
-import { storeSteamPendingCount } from '../../hooks/useSteamAutoSync';
+import { storeSteamPendingCount, useSteamSyncNow } from '../../hooks/useSteamAutoSync';
 import { useToast } from '../../contexts/ToastContext';
 import type { GameStatus } from '../../types/game';
 
@@ -20,6 +20,7 @@ interface SteamImportPanelProps {
 export default function SteamImportPanel({ isOpen, onClose }: SteamImportPanelProps) {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  const { sync } = useSteamSyncNow();
   const [showIgnored, setShowIgnored] = useState(false);
   const [onlyWithHours, setOnlyWithHours] = useState(true);
   const [candidates, setCandidates] = useState<SteamCandidate[]>([]);
@@ -73,6 +74,7 @@ export default function SteamImportPanel({ isOpen, onClose }: SteamImportPanelPr
       if (action === 'import') {
         const count = await importSteamGames(appIds.map(appId => ({ appId, status: statuses[appId] })));
         dispatch(fetchGames());
+        sync(true); // in background: achievement e Platino dei nuovi giochi subito, non alla prossima sync automatica
         showToast('success', 'Giochi aggiunti', `${count} giochi aggiunti dalla libreria Steam`);
       } else {
         await setSteamGamesIgnored(appIds, action === 'ignore');

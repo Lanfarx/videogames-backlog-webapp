@@ -1,6 +1,6 @@
 import { Game, GameStatus, GamePlatform, GameReview } from '../types/game';
 import { GameSearchParams, SortOption, SortOrder, NumericRange, GameBasicInfo } from '../types/game';
-import { ChartItem } from '../types/stats';
+import { ChartItem, GameStats } from '../types/stats';
 import { getPlatformColor } from '../constants/gameConstants';
 
 // Tutte le use* relative ai giochi sono ora in store/hooks/gamesHooks.ts
@@ -85,6 +85,30 @@ export function countCompletedInYear(games: Game[], year: number): number {
     const date = game.CompletionDate ?? game.PlatinumDate;
     return (game.Status === 'Completed' || game.Status === 'Platinum') && date && new Date(date).getFullYear() === year;
   }).length;
+}
+
+// Statistiche della libreria calcolate dai giochi già in memoria (stessa semantica di GameStatsService)
+export function calculateGameStats(games: Game[]): GameStats {
+  const count = (status: GameStatus) => games.filter(game => game.Status === status).length;
+  const paid = games.filter(game => (game.Price ?? 0) > 0);
+  const totalSpent = paid.reduce((sum, game) => sum + game.Price!, 0);
+  const totalHours = games.reduce((sum, game) => sum + (game.HoursPlayed ?? 0), 0);
+  const priciest = paid.reduce<Game | undefined>((max, game) => (!max || game.Price! > max.Price! ? game : max), undefined);
+  return {
+    total: games.length,
+    inProgress: count('InProgress'),
+    completed: count('Completed') + count('Platinum'),
+    notStarted: count('NotStarted'),
+    abandoned: count('Abandoned'),
+    platinum: count('Platinum'),
+    totalHours,
+    totalSpent,
+    averagePrice: paid.length > 0 ? totalSpent / paid.length : 0,
+    freeGames: games.filter(game => game.Price === 0).length,
+    highestPrice: priciest?.Price ?? 0,
+    highestPriceGameTitle: priciest?.Title,
+    costPerHour: totalHours > 0 ? totalSpent / totalHours : 0,
+  };
 }
 
 // Dati che l'utente può dover completare a mano: prezzo non specificato, generi o anno di uscita mancanti

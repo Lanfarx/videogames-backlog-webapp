@@ -16,12 +16,13 @@ import {
   addCommentThunk,
   deleteCommentThunk,
   updateCommentThunk,
-  fetchGameStats,
   bulkUpdateStatusThunk,
   bulkDeleteThunk
 } from '../thunks/gamesThunks';
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
+import { calculateGameStats } from '../../utils/gamesUtils';
 import { useAppDispatch } from '../hooks';
+import type { GameStats } from '../../types/stats';
 
 export function useLoadGames() {
   const dispatch = useAppDispatch();
@@ -140,42 +141,13 @@ export function usePlatinumGames(): Game[] {
   return useGamesByStatus('Platinum');
 }
 
+// Calcolate dai giochi in memoria: restano sempre allineate alla libreria senza chiamate in più
 export function useGamesStats() {
-  const dispatch = useAppDispatch();
-  const stats = useSelector((state: RootState) => state.games.stats);
-  const loading = useSelector((state: RootState) => state.games.statsLoading);
-  const error = useSelector((state: RootState) => state.games.statsError);
-
-  const loadStats = useCallback(() => {
-    dispatch(fetchGameStats());
-  }, [dispatch]);
-
-  // Carica automaticamente le statistiche se non sono presenti
-  useEffect(() => {
-    if (!stats && !loading) {
-      loadStats();
-    }
-  }, [stats, loading, loadStats]);
-  return { 
-    stats: stats || { 
-      total: 0, 
-      inProgress: 0, 
-      completed: 0, 
-      notStarted: 0, 
-      abandoned: 0, 
-      platinum: 0, 
-      totalHours: 0,
-      totalSpent: 0,
-      averagePrice: 0,
-      freeGames: 0,
-      highestPrice: 0,
-      highestPriceGameTitle: undefined,
-      costPerHour: 0
-    }, 
-    loading, 
-    error, 
-    loadStats 
-  };
+  const games = useAllGames();
+  const loading = useSelector((state: RootState) => state.games.loading);
+  const error = useSelector((state: RootState) => state.games.error);
+  const stats = useMemo(() => calculateGameStats(games), [games]);
+  return { stats, loading, error };
 }
 
 export function useAllPlatforms(): GamePlatform[] {
@@ -318,7 +290,7 @@ export function useStatusData(): StatusItem[] {
   }));
 }
 
-function getCountForStatus(stats: any, Status: GameStatus): number {
+function getCountForStatus(stats: GameStats, Status: GameStatus): number {
   switch (Status) {
     case 'InProgress': return stats.inProgress;
     case 'NotStarted': return stats.notStarted;

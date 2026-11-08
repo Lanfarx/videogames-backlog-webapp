@@ -66,7 +66,3 @@ export const updateCommentThunk = createAsyncThunk('games/updateComment', async 
   return { GameId, comment: await gamesService.updateComment(GameId, commentId, comment) };
 });
 
-// Statistiche
-export const fetchGameStats = createAsyncThunk('games/fetchStats', async () => {
-  return await gamesService.getGameStats();
-});

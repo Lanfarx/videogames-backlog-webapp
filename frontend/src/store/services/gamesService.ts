@@ -161,40 +161,6 @@ export const updateComment = async (GameId: number, commentId: number, comment: 
   return mapCommentFromApi(res.data);
 };
 
-// Statistiche
-export const getGameStats = async (): Promise<{
-  total: number;
-  inProgress: number;
-  completed: number;
-  notStarted: number;
-  abandoned: number;
-  platinum: number;
-  totalHours: number;
-  totalSpent: number;
-  averagePrice: number;
-  freeGames: number;
-  highestPrice: number;
-  highestPriceGameTitle?: string;
-  costPerHour: number;
-}> => {
-  const res = await apiClient.get(`${API_URL}/stats`);
-  return {
-    total: res.data.total,
-    inProgress: res.data.inProgress,
-    completed: res.data.completed,
-    notStarted: res.data.notStarted,
-    abandoned: res.data.abandoned,
-    platinum: res.data.platinum,
-    totalHours: res.data.totalHours,
-    totalSpent: res.data.totalSpent,
-    averagePrice: res.data.averagePrice,
-    freeGames: res.data.freeGames,
-    highestPrice: res.data.highestPrice,
-    highestPriceGameTitle: res.data.highestPriceGameTitle,
-    costPerHour: res.data.costPerHour
-  };
-};
-
 // Giochi in corso paginati
 export const getInProgressGamesPaginated = async (page: number = 1, pageSize: number): Promise<{
   games: any[];

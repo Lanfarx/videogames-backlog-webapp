@@ -47,7 +47,8 @@ public class ActivityService(
         if (game == null)
             throw new UnauthorizedAccessException("Gioco non trovato o non autorizzato");
 
-        var activity = await AddActivityAsync(game, userId, createActivityDto.Type, createActivityDto.AdditionalInfo, ActivitySource.Manual);
+        var activity = AddActivity(game, userId, createActivityDto.Type, createActivityDto.AdditionalInfo, ActivitySource.Manual);
+        await context.SaveChangesAsync();
 
         return mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId);
     }
@@ -183,11 +184,10 @@ public class ActivityService(
         if (recentActivity != null)
         {
             recentActivity.Timestamp = DateTime.UtcNow;
-            await context.SaveChangesAsync();
             return;
         }
 
-        await AddActivityAsync(game, userId, activityType, additionalInfo, source);
+        AddActivity(game, userId, activityType, additionalInfo, source);
     }
 
 
@@ -208,7 +208,6 @@ public class ActivityService(
             if (totalDifference == 0)
             {
                 context.Activities.Remove(recentActivity);
-                await context.SaveChangesAsync();
                 return;
             }
 
@@ -216,13 +215,12 @@ public class ActivityService(
             recentActivity.AdditionalInfo = FormatPlaytimeDelta(totalDifference, wasInitiated);
             recentActivity.HoursDelta = totalDifference;
             recentActivity.Timestamp = DateTime.UtcNow;
-            await context.SaveChangesAsync();
             return;
         }
 
         if (hoursDifference == 0) return;
 
-        await AddActivityAsync(game, userId, ActivityType.Played, FormatPlaytimeDelta(hoursDifference, wasNotStarted), source, hoursDifference);
+        AddActivity(game, userId, ActivityType.Played, FormatPlaytimeDelta(hoursDifference, wasNotStarted), source, hoursDifference);
     }
 
     private static string FormatPlaytimeDelta(int delta, bool wasInitiated)
@@ -252,14 +250,13 @@ public class ActivityService(
         {
             recentActivity.AdditionalInfo = additionalInfo;
             recentActivity.Timestamp = DateTime.UtcNow;
-            await context.SaveChangesAsync();
             return;
         }
 
-        await AddActivityAsync(game, userId, ActivityType.Rated, additionalInfo, ActivitySource.Manual);
+        AddActivity(game, userId, ActivityType.Rated, additionalInfo, ActivitySource.Manual);
     }
 
-    public async Task CreateAddGameActivityAsync(Game game, int userId, ActivitySource source = ActivitySource.Manual)
+    public void CreateAddGameActivity(Game game, int userId, ActivitySource source = ActivitySource.Manual)
     {
         var additionalInfoParts = new List<string>();
 
@@ -300,7 +297,7 @@ public class ActivityService(
             ? string.Join(" • ", additionalInfoParts)
             : null;
 
-        await AddActivityAsync(game, userId, ActivityType.Added, additionalInfo, source);
+        AddActivity(game, userId, ActivityType.Added, additionalInfo, source);
     }
 
     public async Task<PaginatedResult<ActivityDto>> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId,
@@ -498,17 +495,17 @@ public class ActivityService(
         };
     }
 
-    public async Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId, ActivitySource source = ActivitySource.Manual)
+    public void CreateAddGamesBulkActivity(List<Game> games, int userId, ActivitySource source = ActivitySource.Manual)
     {
         if (games.Count == 0) return;
 
         if (games.Count == 1)
         {
-            await CreateAddGameActivityAsync(games[0], userId, source);
+            CreateAddGameActivity(games[0], userId, source);
             return;
         }
 
-        await AddActivityAsync(games[0], userId, ActivityType.Added, $"Hai aggiunto {games.Count} giochi alla tua libreria", source,
+        AddActivity(games[0], userId, ActivityType.Added, $"Hai aggiunto {games.Count} giochi alla tua libreria", source,
             title: $"{games.Count} nuovi giochi aggiunti");
     }
 
@@ -523,15 +520,16 @@ public class ActivityService(
             await CreatePlaytimeActivityAsync(u.Game, u.NewHours, u.PreviousHours, u.WasNotStarted, userId, source);
         }
     }
-    // Unico punto di creazione: l'attività porta con sé utente e titolo, così sopravvive all'eliminazione del gioco
-    private async Task<Activity> AddActivityAsync(Game game, int userId, ActivityType type, string? additionalInfo,
+    // Unico punto di creazione: l'attività porta con sé utente e titolo, così sopravvive all'eliminazione del gioco.
+    // Non salva: lo fa il chiamante insieme al gioco, così una sync intera è un solo SaveChanges (e il GameId di un
+    // gioco appena aggiunto arriva dalla navigazione)
+    private Activity AddActivity(Game game, int userId, ActivityType type, string? additionalInfo,
         ActivitySource source, int hoursDelta = 0, string? title = null)
     {
         var activity = new Activity
         {
             Type = type,
             UserId = userId,
-            GameId = game.Id,
             Game = game,
             GameTitle = title ?? game.Title,
             AdditionalInfo = additionalInfo,
@@ -540,7 +538,6 @@ public class ActivityService(
             Timestamp = DateTime.UtcNow
         };
         context.Activities.Add(activity);
-        await context.SaveChangesAsync();
         return activity;
     }
 }
