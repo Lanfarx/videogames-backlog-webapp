@@ -12,7 +12,7 @@ namespace VideoGamesBacklogBackend.Controllers.Games;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class GamesController(IGameService gameService, IGameStatsService gameStatsService) : ControllerBase
+public class GamesController(IGameService gameService, IGameStatsService gameStatsService, IDashboardService dashboardService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<GameDto>>> GetAll()
@@ -20,6 +20,9 @@ public class GamesController(IGameService gameService, IGameStatsService gameSta
         var games = await gameService.GetAllGamesAsync(User.GetUserId());
         return Ok(games);
     }
+
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<DashboardDto>> GetDashboard() => Ok(await dashboardService.GetDashboardAsync(User.GetUserId()));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GameDto>> GetById(int id)

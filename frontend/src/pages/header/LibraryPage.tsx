@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import SidebarFilter from '../../components/library/filter/SidebarFilter';
 import LibraryToolbar from '../../components/library/LibraryToolbar';
 import GridView from '../../components/library/GridView';
@@ -38,6 +39,13 @@ const EMPTY_FILTERS: GameFilters = {
     PurchaseDate: "",
 };
 
+// Filtri scelti cliccando un grafico della dashboard: sostituiscono quelli salvati, con gli intervalli al massimo
+// (l'effetto sui massimali li porta ai valori reali appena i giochi sono caricati)
+function filtersFromDashboard(selected: Partial<GameFilters>): GameFilters {
+    const fullRange: [number, number] = [0, Number.POSITIVE_INFINITY];
+    return { ...EMPTY_FILTERS, PriceRange: fullRange, hoursRange: fullRange, MetacriticRange: fullRange, ...selected };
+}
+
 function loadSavedFilters(): GameFilters {
     try {
         const parsed = JSON.parse(localStorage.getItem('libraryFilters') || 'null');
@@ -59,6 +67,7 @@ function loadSavedFilters(): GameFilters {
 }
 
 export default function LibraryPage() {
+    const dashboardFilters = (useLocation().state as { filters?: Partial<GameFilters> } | null)?.filters;
     const { loading, gamesLoaded } = useLoadGames();
     const allGames = useAllGames();
     const { update, remove, removeBulk, updateStatusBulk } = useGameActions();
@@ -67,7 +76,7 @@ export default function LibraryPage() {
     // La modalità "da completare" non si ricorda: riaprendo la libreria si torna a griglia o lista
     const [viewMode, setViewMode] = useState<GameViewMode>(() =>
         localStorage.getItem('libraryViewMode') === 'list' ? 'list' : 'grid');
-    const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem('libraryCurrentPage')) || 1);
+    const [currentPage, setCurrentPage] = useState(() => dashboardFilters ? 1 : Number(localStorage.getItem('libraryCurrentPage')) || 1);
     const [columns, setColumns] = useState(getColumns);
     const [isAddGameModalOpen, setIsAddGameModalOpen] = useState(false);
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
@@ -79,12 +88,12 @@ export default function LibraryPage() {
     // Giochi modificati dalla tabella "da completare": restano in elenco anche se ora hanno i dati
     const [editedIds, setEditedIds] = useState<Set<number>>(new Set());
 
-    const [filters, setFilters] = useState<GameFilters>(loadSavedFilters);
+    const [filters, setFilters] = useState<GameFilters>(() => dashboardFilters ? filtersFromDashboard(dashboardFilters) : loadSavedFilters());
     // I massimali dei filtri a intervallo si calcolano quando i giochi sono caricati: fino ad allora l'elenco resta vuoto
     const [filtersInitialized, setFiltersInitialized] = useState(false);
     const [sortBy, setSortBy] = useState<SortOption>(() => (localStorage.getItem('librarySortBy') as SortOption) || "title");
     const [sortOrder, setSortOrder] = useState<SortOrder>(() => (localStorage.getItem('librarySortOrder') as SortOrder) || "asc");
-    const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('librarySearchQuery') || "");
+    const [searchQuery, setSearchQuery] = useState(() => dashboardFilters ? "" : localStorage.getItem('librarySearchQuery') || "");
 
     const filterMaxes = useMemo(() => calculateMaxValues(allGames), [allGames]);
 

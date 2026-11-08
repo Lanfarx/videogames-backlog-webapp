@@ -260,7 +260,10 @@ public class GameService(
     {
         var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
+        var hoursBefore = game.HoursPlayed;
         await PlaytimeChangeFunctionAsync(hoursPlayed, game, userId);
+        // Ore inserite a mano: l'ultima sessione è adesso (con Steam la imposta la sync)
+        if (hoursPlayed > hoursBefore) game.LastPlayedAt = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);

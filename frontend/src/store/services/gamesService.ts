@@ -226,3 +226,18 @@ export const bulkUpdateGamesStatus = async (gameIds: number[], status: string): 
 export const bulkDeleteGames = async (gameIds: number[]): Promise<void> => {
   await apiClient.delete(`${API_URL}/bulk`, { data: { gameIds } });
 };
+
+export interface MonthValue {
+  month: string; // yyyy-MM
+  value: number;
+}
+
+export interface DashboardSeries {
+  hoursPerMonth: MonthValue[];
+  backlogTrend: MonthValue[];
+}
+
+export const getDashboardSeries = async (): Promise<DashboardSeries> => {
+  const res = await apiClient.get<DashboardSeries>(`${API_URL}/dashboard`);
+  return res.data;
+};

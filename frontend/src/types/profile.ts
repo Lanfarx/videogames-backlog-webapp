@@ -41,6 +41,7 @@ export interface AppPreferences {
   accentColor: AccentColor;
   dateFormat: string;
   notifications: boolean;
+  yearlyGoal?: number | null;  // giochi da completare nell'anno
 }
 
 import type { Game } from './game';import { AccentColor } from './theme';

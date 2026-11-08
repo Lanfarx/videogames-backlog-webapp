@@ -49,4 +49,6 @@ public class AppPreferences
     public string AccentColor { get; set; } = "arancione";
     public string DateFormat { get; set; } = "dd/MM/yyyy";
     public bool Notifications { get; set; }
+    // Obiettivo annuale di giochi completati, null = nessun obiettivo
+    public int? YearlyGoal { get; set; }
 }

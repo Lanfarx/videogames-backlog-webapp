@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, ReactNode, useState, useMemo } from 'react';
 import { getStatusColor } from '../../constants/gameConstants';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import { selectableProps } from './selectableProps';
 
 interface StatusDistributionChartProps {
     data: {
@@ -11,9 +12,10 @@ interface StatusDistributionChartProps {
     }[];
     icon?: ReactNode;
     title: string;
+    onSelect?: (status: string) => void;
 }
 
-export default function StatusDistributionChart({ data, icon, title }: StatusDistributionChartProps) {
+export default function StatusDistributionChart({ data, icon, title, onSelect }: StatusDistributionChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
@@ -139,7 +141,8 @@ export default function StatusDistributionChart({ data, icon, title }: StatusDis
                         return (
                             <div 
                                 key={index} 
-                                className="flex items-center justify-between mb-3 transform transition-all duration-300 hover:scale-105"
+                                className={`flex items-center justify-between mb-3 transform transition-all duration-300 hover:scale-105 ${onSelect ? 'cursor-pointer' : ''}`}
+                                {...selectableProps(onSelect && (() => onSelect(item.Status)))}
                                 style={{ 
                                     animationDelay: `${delay}ms`,
                                     opacity: animationProgress > 0.5 ? 1 : 0,

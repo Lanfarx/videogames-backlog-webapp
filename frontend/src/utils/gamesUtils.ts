@@ -57,6 +57,36 @@ export function achievementPercent(game: Game): number | null {
   return total && unlocked != null ? Math.floor((unlocked / total) * 100) : null;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const STALLED_AFTER_DAYS = 7;
+export const NEAR_PLATINUM_COUNT = 5;
+
+// Giochi in corso non giocati da almeno `days` giorni, i più fermi per primi. Senza ultima sessione nota non si può dire
+export function findStalledGames(games: Game[], now: number = Date.now(), days: number = STALLED_AFTER_DAYS): { game: Game; daysIdle: number }[] {
+  return games
+    .filter(game => game.Status === 'InProgress' && game.LastPlayedAt)
+    .map(game => ({ game, daysIdle: Math.floor((now - Date.parse(game.LastPlayedAt!)) / DAY_MS) }))
+    .filter(({ daysIdle }) => daysIdle >= days)
+    .sort((a, b) => b.daysIdle - a.daysIdle);
+}
+
+// I giochi non ancora platinati con più achievement sbloccati (quelli al 100% sono già platino)
+export function findNearPlatinum(games: Game[], count: number = NEAR_PLATINUM_COUNT): { game: Game; percent: number }[] {
+  return games
+    .filter(game => game.Status !== 'Platinum' && (game.AchievementsUnlocked ?? 0) < (game.AchievementsTotal ?? 0))
+    .map(game => ({ game, percent: achievementPercent(game) ?? 0 }))
+    .sort((a, b) => b.percent - a.percent || a.game.id - b.game.id)
+    .slice(0, count);
+}
+
+// Giochi finiti nell'anno: si contano solo quelli con una data di completamento o platino
+export function countCompletedInYear(games: Game[], year: number): number {
+  return games.filter(game => {
+    const date = game.CompletionDate ?? game.PlatinumDate;
+    return (game.Status === 'Completed' || game.Status === 'Platinum') && date && new Date(date).getFullYear() === year;
+  }).length;
+}
+
 // Dati che l'utente può dover completare a mano: prezzo non specificato, generi o anno di uscita mancanti
 export function isMissingData(game: Game): boolean {
   return game.Price == null || game.Genres.length === 0 || !game.ReleaseYear;

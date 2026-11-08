@@ -224,6 +224,7 @@ public class ActivityService(
 
             var wasInitiated = (recentActivity.AdditionalInfo ?? "").Contains("iniziato");
             recentActivity.AdditionalInfo = FormatPlaytimeDelta(totalDifference, wasInitiated);
+            recentActivity.HoursDelta = totalDifference;
             recentActivity.Timestamp = DateTime.UtcNow;
             await context.SaveChangesAsync();
             return;
@@ -231,14 +232,15 @@ public class ActivityService(
 
         if (hoursDifference == 0) return;
 
-        var createActivityDto = new CreateActivityDto
+        await SaveActivityEntityAsync(new Activity
         {
             Type = ActivityType.Played,
             GameId = game.Id,
-            AdditionalInfo = FormatPlaytimeDelta(hoursDifference, wasNotStarted)
-        };
-
-        await CreateActivityAsync(userId, createActivityDto);
+            GameTitle = game.Title,
+            AdditionalInfo = FormatPlaytimeDelta(hoursDifference, wasNotStarted),
+            HoursDelta = hoursDifference,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     private static int ExtractPlaytimeDelta(string? additionalInfo)

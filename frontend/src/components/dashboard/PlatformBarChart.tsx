@@ -1,4 +1,5 @@
 import React, { ReactNode, useState, useEffect } from 'react';
+import { selectableProps } from './selectableProps';
 
 interface PlatformData {
     Platform: string;
@@ -9,9 +10,10 @@ interface PlatformBarChartProps {
     data: PlatformData[];
     icon?: ReactNode;
     title: string;
+    onSelect?: (platform: string) => void;
 }
 
-export default function PlatformBarChart({ data, icon, title }: PlatformBarChartProps) {
+export default function PlatformBarChart({ data, icon, title, onSelect }: PlatformBarChartProps) {
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -92,7 +94,8 @@ export default function PlatformBarChart({ data, icon, title }: PlatformBarChart
                     return (
                         <div 
                             key={index} 
-                            className="w-full group"
+                            className={`w-full group ${onSelect ? 'cursor-pointer' : ''}`}
+                            {...selectableProps(onSelect && (() => onSelect(item.Platform)))}
                             style={{
                                 opacity: animationProgress > (index * 0.15) ? 1 : 0,
                                 transform: `translateY(${animationProgress > (index * 0.15) ? 0 : 20}px)`,

@@ -1,11 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../components/ui/StatsCard';
 import StatusDistributionChart from '../../components/dashboard/StatusDistributionChart';
 import PlatformBarChart from '../../components/dashboard/PlatformBarChart';
 import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
-import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy, Euro, TrendingUp, Gift, DollarSign } from 'lucide-react';
-import { generatePlatformDistributionData, generateGenreDistributionData } from '../../utils/gamesUtils';
+import MonthlyChart from '../../components/dashboard/MonthlyChart';
+import GameHighlightList from '../../components/dashboard/GameHighlightList';
+import YearlyGoalCard from '../../components/dashboard/YearlyGoalCard';
+import { useDashboardSeries } from '../../hooks/useDashboardSeries';
+import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy, Euro, TrendingUp, Gift, DollarSign, Hourglass, Award, Library } from 'lucide-react';
+import { GameFilters } from '../../types/game';
+import { generatePlatformDistributionData, generateGenreDistributionData, findStalledGames, findNearPlatinum, countCompletedInYear } from '../../utils/gamesUtils';
 import { useGamesStats } from '../../store/hooks/gamesHooks';
 import { useAllGames } from '../../store/hooks/gamesHooks';
 import { useRecentActivities } from '../../store/hooks/activitiesHooks';
@@ -21,6 +27,16 @@ export default function DashboardPage() {
     const { activities: recentActivities, loading: recentLoading } = useRecentActivities(4);
     const StatusData = useStatusData();
     const [showAllActivities, setShowAllActivities] = React.useState(false);
+    const navigate = useNavigate();
+    const series = useDashboardSeries();
+
+    const year = new Date().getFullYear();
+    const completedThisYear = React.useMemo(() => countCompletedInYear(allGames, year), [allGames, year]);
+    const stalledGames = React.useMemo(() => findStalledGames(allGames), [allGames]);
+    const nearPlatinum = React.useMemo(() => findNearPlatinum(allGames), [allGames]);
+
+    // I grafici aprono la libreria già filtrata
+    const openLibrary = (filters: Partial<GameFilters>) => navigate('/library', { state: { filters } });
 
     // Usa la funzione centralizzata per la distribuzione piattaforme
     const PlatformData = generatePlatformDistributionData(allGames)
@@ -77,6 +93,7 @@ export default function DashboardPage() {
                         data={StatusData} 
                         icon={<PieChartIcon className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />} 
                         title="Distribuzione per Stato" 
+                        onSelect={status => openLibrary({ Status: [status as GameFilters['Status'][number]] })}
                     />
                 </div>
                 <div className="animate-fade-in-up delay-500">
@@ -103,13 +120,50 @@ export default function DashboardPage() {
                         />
                     </div>
                 </div>
-            </div>            {/* Grafici Secondari con animazioni */}
+            </div>
+            {/* Andamento nel tempo */}
+            {series && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 animate-fade-in-up">
+                    <MonthlyChart
+                        kind="bar"
+                        data={series.hoursPerMonth}
+                        unit="ore"
+                        title="Ore giocate per mese"
+                        icon={<Clock className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                        emptyMessage="Le ore si contano dalle sessioni registrate: appariranno dopo la prossima sincronizzazione o aggiornamento delle ore."
+                    />
+                    <MonthlyChart
+                        kind="line"
+                        data={series.backlogTrend}
+                        unit="giochi da iniziare"
+                        title="Andamento del backlog"
+                        icon={<Library className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                        emptyMessage="Nessun gioco da iniziare negli ultimi 12 mesi."
+                    />
+                </div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6 animate-fade-in-up">
+                <YearlyGoalCard completed={completedThisYear} year={year} />
+                <GameHighlightList
+                    title="Fermi da un po'"
+                    icon={<Hourglass className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                    items={stalledGames.slice(0, 5).map(({ game, daysIdle }) => ({ game, detail: `${daysIdle} giorni` }))}
+                    emptyMessage="Nessun gioco in corso è fermo da più di una settimana."
+                />
+                <GameHighlightList
+                    title="Vicini al Platino"
+                    icon={<Award className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                    items={nearPlatinum.map(({ game, percent }) => ({ game, detail: `${game.AchievementsUnlocked}/${game.AchievementsTotal} · ${percent}%` }))}
+                    emptyMessage="Nessun gioco Steam con achievement parziali."
+                />
+            </div>{/* Grafici Secondari con animazioni */}
             <div className="grid grid-cols-2 gap-5 mb-6">
                 <div className="animate-fade-in-up delay-600">
                     <GenreBarChart 
                         data={genreData} 
                         icon={<BarChart3 className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
                         title="Generi più giocati" 
+                        onSelect={genre => openLibrary({ genre: [genre] })}
                     />
                 </div>
                 <div className="animate-fade-in-up delay-700">
@@ -117,6 +171,7 @@ export default function DashboardPage() {
                         data={PlatformData} 
                         icon={<BarChartIcon className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
                         title="Piattaforme più utilizzate" 
+                        onSelect={platform => openLibrary({ Platform: [platform] })}
                     />
                 </div>
             </div>

@@ -172,6 +172,9 @@ namespace VideoGamesBacklogBackend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("HoursDelta")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
@@ -843,6 +846,9 @@ namespace VideoGamesBacklogBackend.Migrations
                             b1.Property<string>("Theme")
                                 .IsRequired()
                                 .HasColumnType("text");
+
+                            b1.Property<int?>("YearlyGoal")
+                                .HasColumnType("integer");
 
                             b1.HasKey("UserId");
 

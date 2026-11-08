@@ -1,4 +1,5 @@
 import React, { ReactNode, useState, useEffect } from 'react';
+import { selectableProps } from './selectableProps';
 
 interface GenreData {
     genre: string;
@@ -9,9 +10,10 @@ interface GenreBarChartProps {
     data: GenreData[];
     icon?: ReactNode;
     title: string;
+    onSelect?: (genre: string) => void;
 }
 
-export default function GenreBarChart({ data, icon, title }: GenreBarChartProps) {
+export default function GenreBarChart({ data, icon, title, onSelect }: GenreBarChartProps) {
     const [animationProgress, setAnimationProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -94,7 +96,8 @@ export default function GenreBarChart({ data, icon, title }: GenreBarChartProps)
                     return (
                         <div 
                             key={index} 
-                            className="w-full group cursor-pointer"
+                            className={`w-full group ${onSelect ? 'cursor-pointer' : ''}`}
+                            {...selectableProps(onSelect && (() => onSelect(item.genre)))}
                             style={{
                                 opacity: animationProgress > (index * 0.12) ? 1 : 0,
                                 transform: `translateX(${animationProgress > (index * 0.12) ? 0 : -30}px)`,

@@ -28,6 +28,9 @@ public class Activity
     public string GameTitle { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public string? AdditionalInfo { get; set; }
+    // Ore aggiunte da un'attività Played (negative se corrette al ribasso): alimenta il grafico ore per mese
+    [JsonIgnore]
+    public int HoursDelta { get; set; }
 
     [JsonIgnore]
     public List<ActivityReaction> Reactions { get; set; } = [];
