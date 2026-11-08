@@ -165,7 +165,7 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<string>("AdditionalInfo")
                         .HasColumnType("text");
 
-                    b.Property<int>("GameId")
+                    b.Property<int?>("GameId")
                         .HasColumnType("integer");
 
                     b.Property<string>("GameTitle")
@@ -175,15 +175,23 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.Property<int>("HoursDelta")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Activities");
                 });
@@ -669,10 +677,17 @@ namespace VideoGamesBacklogBackend.Migrations
                     b.HasOne("VideoGamesBacklogBackend.Entities.Game", "Game")
                         .WithMany("Activities")
                         .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VideoGamesBacklogBackend.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Game");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("VideoGamesBacklogBackend.Entities.ActivityComment", b =>

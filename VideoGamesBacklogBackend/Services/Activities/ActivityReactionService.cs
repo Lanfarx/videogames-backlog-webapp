@@ -18,9 +18,7 @@ public class ActivityReactionService(
 {
     public async Task<ActivityReactionDto?> AddReactionAsync(CreateActivityReactionDto createReactionDto, int userId)
     {
-        var activity = await context.Activities
-            .Include(a => a.Game)
-            .FirstOrDefaultAsync(a => a.Id == createReactionDto.ActivityId);
+        var activity = await context.Activities.FirstOrDefaultAsync(a => a.Id == createReactionDto.ActivityId);
         if (activity == null) return null;
 
         var existingReaction = await context.ActivityReactions
@@ -48,11 +46,11 @@ public class ActivityReactionService(
 
         var user = await context.Users.FindAsync(userId);
 
-        if (activity.Game == null || activity.Game.UserId == userId) return mapper.Map<ActivityReactionDto>(reaction);
+        if (activity.UserId == userId) return mapper.Map<ActivityReactionDto>(reaction);
         try
         {
             await notificationService.CreateActivityReactionNotificationAsync(
-                activity.Game.UserId,
+                activity.UserId,
                 userId,
                 user?.UserName ?? "Utente sconosciuto",
                 createReactionDto.Emoji,
@@ -85,16 +83,14 @@ public class ActivityReactionService(
 
     public async Task<List<ActivityReactionDto>> GetActivityReactionsAsync(int activityId, int userId)
     {
-        var activity = await context.Activities
-            .Include(a => a.Game)
-            .FirstOrDefaultAsync(a => a.Id == activityId);
+        var activity = await context.Activities.FirstOrDefaultAsync(a => a.Id == activityId);
 
         if (activity == null)
             throw new KeyNotFoundException("Attività non trovata.");
 
-        if (activity.Game != null && activity.Game.UserId != userId)
+        if (activity.UserId != userId)
         {
-            var canViewDiary = await activityService.CanViewUserDiary(activity.Game.UserId, userId);
+            var canViewDiary = await activityService.CanViewUserDiary(activity.UserId, userId);
             if (!canViewDiary)
             {
                 throw new UnauthorizedAccessException(

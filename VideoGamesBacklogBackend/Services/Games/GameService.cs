@@ -211,17 +211,17 @@ public class GameService(
         return mapper.Map<GameDto>(game);
     }
 
-    public async Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status)
+    public async Task<GameDto?> UpdateGameStatusAsync(int userId, int gameId, string status, ActivitySource source = ActivitySource.Manual)
     {
         var game = await dbContext.Games.GetByIdAndUserOrThrowAsync(gameId, userId);
 
-        await StatusChangeFunctionAsync(status, game, userId);
+        await StatusChangeFunctionAsync(status, game, userId, source);
         await dbContext.SaveChangesAsync();
         InvalidateUserStatsCache(userId);
         return mapper.Map<GameDto>(game);
     }
 
-    private async Task StatusChangeFunctionAsync(string status, Game game, int userId)
+    private async Task StatusChangeFunctionAsync(string status, Game game, int userId, ActivitySource source = ActivitySource.Manual)
     {
         var previousStatus = game.Status.ToString();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -252,7 +252,7 @@ public class GameService(
                     break;
             }
 
-            await activityService.CreateStatusChangeActivityAsync(game, newStatus, previousStatus, userId);
+            await activityService.CreateStatusChangeActivityAsync(game, newStatus, previousStatus, userId, source);
         }
     }
 
@@ -394,7 +394,7 @@ public class GameService(
         return true;
     }
 
-    public async Task<List<GameDto>> AddGamesBulkAsync(int userId, List<CreateGameDto> gamesDto)
+    public async Task<List<GameDto>> AddGamesBulkAsync(int userId, List<CreateGameDto> gamesDto, ActivitySource source = ActivitySource.Manual)
     {
         if (gamesDto == null || gamesDto.Count == 0) return [];
 
@@ -436,13 +436,13 @@ public class GameService(
             .Where(w => w.UserId == userId && normalizedTitles.Contains(w.NormalizedTitle))
             .ExecuteDeleteAsync();
 
-        await activityService.CreateAddGamesBulkActivityAsync(games, userId);
+        await activityService.CreateAddGamesBulkActivityAsync(games, userId, source);
 
         InvalidateUserStatsCache(userId);
         return mapper.Map<List<GameDto>>(games);
     }
 
-    public async Task UpdateGamesPlaytimeBulkAsync(int userId, List<(int GameId, int HoursPlayed)> updates)
+    public async Task UpdateGamesPlaytimeBulkAsync(int userId, List<(int GameId, int HoursPlayed)> updates, ActivitySource source = ActivitySource.Manual)
     {
         var gameIds = updates.Select(u => u.GameId).ToList();
         var games = await dbContext.Games.Where(g => g.UserId == userId && gameIds.Contains(g.Id)).ToListAsync();
@@ -460,7 +460,7 @@ public class GameService(
 
         await dbContext.SaveChangesAsync();
 
-        await activityService.CreatePlaytimeBulkActivityAsync(activityUpdates, userId);
+        await activityService.CreatePlaytimeBulkActivityAsync(activityUpdates, userId, source);
         InvalidateUserStatsCache(userId);
     }
     private void SetInitialGameStatusAndDates(Game game)

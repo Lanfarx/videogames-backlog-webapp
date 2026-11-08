@@ -11,6 +11,11 @@ public class ActivityConfiguration : IEntityTypeConfiguration<Activity>
         builder.HasOne(a => a.Game)
             .WithMany(g => g.Activities)
             .HasForeignKey(a => a.GameId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(a => a.User)
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

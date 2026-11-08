@@ -127,7 +127,7 @@ const activitySlice = createSlice({
         }
         // Aggiorna anche le attività per gioco se presenti
         const gameId = action.payload.gameId;
-        if (state.activitiesByGame[gameId]) {
+        if (gameId != null && state.activitiesByGame[gameId]) {
           state.activitiesByGame[gameId].unshift(action.payload);
         }
       })
@@ -165,7 +165,7 @@ const activitySlice = createSlice({
         
         // Aggiorna nelle attività per gioco
         const gameId2 = updatedActivity.gameId;
-        if (state.activitiesByGame[gameId2]) {
+        if (gameId2 != null && state.activitiesByGame[gameId2]) {
           const gameActivityIndex = state.activitiesByGame[gameId2].findIndex(a => a.id === updatedActivity.id);
           if (gameActivityIndex !== -1) {
             state.activitiesByGame[gameId2][gameActivityIndex] = updatedActivity;

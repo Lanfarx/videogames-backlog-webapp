@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Activity, ActivityFilters, ActivityType, ActivityWithReactions } from '../../types/activity';
+import { Activity, ActivityFilters, ActivitySource, ActivityType, ActivityWithReactions } from '../../types/activity';
 import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { getToken } from '../../utils/getToken';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
@@ -27,6 +27,8 @@ interface CreateActivityDtoApi {
 interface UpdateActivityDtoApi {
   type?: number;
   AdditionalInfo?: string;
+  HoursDelta?: number;
+  Timestamp?: string;
 }
 
 // Tipi DTO per il frontend (con stringhe ActivityType)
@@ -39,6 +41,8 @@ export interface CreateActivityDto {
 export interface UpdateActivityDto {
   type?: ActivityType;
   AdditionalInfo?: string;
+  HoursDelta?: number;  // solo attività Played: il testo si riscrive
+  Timestamp?: string;
 }
 
 export interface ActivityFiltersDto {
@@ -84,15 +88,22 @@ function mapActivityTypeToApi(frontendType: ActivityType): number {
   }
 }
 
+// ActivitySource lato backend: 0 = Manual, 1 = Steam
+const SOURCE_FROM_API: ActivitySource[] = ['Manual', 'Steam'];
+export const mapActivitySourceFromApi = (source: number): ActivitySource => SOURCE_FROM_API[source] ?? 'Manual';
+const SOURCE_TO_API: Record<ActivitySource, number> = { Manual: 0, Steam: 1 };
+
 // Mappatura da API response a tipo frontend
 function mapActivityFromApi(apiActivity: any): Activity {
   const baseActivity: Activity = {
     id: apiActivity.id,
     type: mapActivityTypeFromApi(apiActivity.type),
-    gameId: apiActivity.gameId,
+    gameId: apiActivity.gameId ?? null,
     gameTitle: apiActivity.gameTitle,
     timestamp: apiActivity.timestamp, // Mantieni come stringa per la serializzazione Redux
     additionalInfo: apiActivity.additionalInfo,
+    source: mapActivitySourceFromApi(apiActivity.source),
+    hoursDelta: apiActivity.hoursDelta ?? 0,
     gameImageUrl: apiActivity.gameImageUrl,
     // Includiamo i campi delle reazioni e commenti se presenti
     comments: apiActivity.comments || [],
@@ -132,6 +143,7 @@ export const getActivities = async (
   if (filters.Year !== undefined) params.Year = filters.Year;
   if (filters.Month !== undefined) params.Month = filters.Month;
   if (filters.GameId !== undefined) params.GameId = filters.GameId;
+  if (filters.Source !== undefined) params.Source = SOURCE_TO_API[filters.Source];
   if (filters.Limit !== undefined) params.Limit = filters.Limit;
   if (filters.SortDirection !== undefined) params.SortDirection = filters.SortDirection;
 
@@ -165,7 +177,9 @@ export const createActivity = async (activity: CreateActivityDto): Promise<Activ
 export const updateActivity = async (id: number, activity: UpdateActivityDto): Promise<Activity> => {
   const apiActivity: UpdateActivityDtoApi = {
     type: activity.type ? mapActivityTypeToApi(activity.type) : undefined,
-    AdditionalInfo: activity.AdditionalInfo
+    AdditionalInfo: activity.AdditionalInfo,
+    HoursDelta: activity.HoursDelta,
+    Timestamp: activity.Timestamp
   };
   const res = await apiClient.put(`${API_URL}/${id}`, apiActivity);
   return mapActivityFromApi(res.data);

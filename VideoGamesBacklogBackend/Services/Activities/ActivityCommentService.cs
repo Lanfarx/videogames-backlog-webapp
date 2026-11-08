@@ -29,9 +29,7 @@ public class ActivityCommentService(
 
     public async Task<ActivityCommentDto?> AddActivityCommentAsync(CreateActivityCommentDto createCommentDto, int authorId)
     {
-        var activity = await context.Activities
-            .Include(a => a.Game)
-            .FirstOrDefaultAsync(a => a.Id == createCommentDto.ActivityId);
+        var activity = await context.Activities.FirstOrDefaultAsync(a => a.Id == createCommentDto.ActivityId);
 
         if (activity == null)
             throw new KeyNotFoundException("Attività non trovata.");
@@ -53,12 +51,12 @@ public class ActivityCommentService(
 
         if (savedComment == null) return null;
 
-        if (activity is not { Game: not null, Type: ActivityType.Rated } ||
-            activity.Game.UserId == authorId) return mapper.Map<ActivityCommentDto>(savedComment);
+        if (activity is not { Type: ActivityType.Rated } ||
+            activity.UserId == authorId) return mapper.Map<ActivityCommentDto>(savedComment);
         try
         {
             await notificationService.CreateReviewCommentNotificationAsync(
-                activity.Game.UserId,
+                activity.UserId,
                 authorId,
                 savedComment.Author?.UserName ?? "Utente sconosciuto",
                 activity.GameTitle,
@@ -78,13 +76,12 @@ public class ActivityCommentService(
     {
         var comment = await context.ActivityComments
             .Include(ac => ac.Activity)
-            .ThenInclude(a => a!.Game)
             .FirstOrDefaultAsync(ac => ac.Id == commentId);
 
         if (comment == null)
             throw new KeyNotFoundException("Commento non trovato.");
 
-        if (comment.AuthorId != userId && (comment.Activity?.Game == null || comment.Activity.Game.UserId != userId))
+        if (comment.AuthorId != userId && comment.Activity?.UserId != userId)
             throw new UnauthorizedAccessException("Non sei autorizzato ad eliminare questo commento.");
 
         context.ActivityComments.Remove(comment);

@@ -9,10 +9,12 @@ public class ActivityDto
 {
     public int Id { get; set; }
     public ActivityType Type { get; set; }
-    public int GameId { get; set; }
+    public int? GameId { get; set; }
     public string GameTitle { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public string? AdditionalInfo { get; set; }
+    public ActivitySource Source { get; set; }
+    public int HoursDelta { get; set; }
     public object? GameImageUrl { get; internal set; }
         
     // Lista delle reazioni raggruppate per emoji
@@ -41,6 +43,9 @@ public class UpdateActivityDto
 {
     public ActivityType? Type { get; set; }
     public string? AdditionalInfo { get; set; }
+    // Solo per le attività Played: ore della sessione, il testo si riscrive di conseguenza
+    public int? HoursDelta { get; set; }
+    public DateTime? Timestamp { get; set; }
 }
 
 [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]

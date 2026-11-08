@@ -15,15 +15,30 @@ public enum ActivityType
     Abandoned
 }
 
+// Da dove nasce l'attività: azione dell'utente o sincronizzazione/importazione da Steam
+public enum ActivitySource
+{
+    Manual,
+    Steam
+}
+
 public class Activity
 {
     public int Id { get; set; }
     public ActivityType Type { get; set; }
 
+    // L'attività appartiene all'utente e sopravvive all'eliminazione del gioco (GameId diventa null, GameTitle resta)
+    [ForeignKey("User")]
+    public int UserId { get; set; }
+    [JsonIgnore]
+    public User? User { get; set; }
+
     [ForeignKey("Game")]
-    public int GameId { get; set; }
+    public int? GameId { get; set; }
     [JsonIgnore]
     public Game? Game { get; set; }
+
+    public ActivitySource Source { get; set; }
 
     public string GameTitle { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;

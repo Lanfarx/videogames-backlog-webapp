@@ -9,6 +9,7 @@ import {
 } from '../../types/activity';
 import { BackendPaginatedResponse, mapPaginatedResponse } from '../../types/pagination';
 import { API_CONFIG, buildApiUrl } from '../../config/api';
+import { mapActivitySourceFromApi } from './activityService';
 
 const API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY_REACTIONS);
 const ACTIVITY_API_URL = buildApiUrl(API_CONFIG.ENDPOINTS.ACTIVITY);
@@ -50,10 +51,12 @@ function mapActivityWithReactionsFromApi(apiActivity: any): ActivityWithReaction
   return {
     id: apiActivity.id,
     type: mapActivityTypeFromApi(apiActivity.type), // Applica il mapping del tipo
-    gameId: apiActivity.gameId,
+    gameId: apiActivity.gameId ?? null,
     gameTitle: apiActivity.gameTitle,
     timestamp: apiActivity.timestamp,
     additionalInfo: apiActivity.additionalInfo,
+    source: mapActivitySourceFromApi(apiActivity.source),
+    hoursDelta: apiActivity.hoursDelta ?? 0,
     gameImageUrl: apiActivity.gameImageUrl,
     reactions: apiActivity.reactions || [],
     reactionSummary: reactionSummary

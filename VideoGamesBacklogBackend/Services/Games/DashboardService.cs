@@ -30,7 +30,7 @@ public class DashboardService(AppDbContext dbContext) : IDashboardService
     {
         var from = months[0];
         var deltas = await dbContext.Activities
-            .Where(a => a.Type == ActivityType.Played && a.Game!.UserId == userId && a.Timestamp >= from)
+            .Where(a => a.Type == ActivityType.Played && a.UserId == userId && a.Timestamp >= from)
             .Select(a => new { a.Timestamp, a.HoursDelta })
             .ToListAsync();
 
@@ -51,7 +51,7 @@ public class DashboardService(AppDbContext dbContext) : IDashboardService
             .Select(g => new { g.Id, g.Status, g.PurchaseDate, g.AddedAt })
             .ToListAsync();
         var firstStarts = await dbContext.Activities
-            .Where(a => a.Type != ActivityType.Added && a.Game!.UserId == userId)
+            .Where(a => a.Type != ActivityType.Added && a.UserId == userId)
             .GroupBy(a => a.GameId)
             .Select(g => new { GameId = g.Key, Start = g.Min(a => a.Timestamp) })
             .ToDictionaryAsync(x => x.GameId, x => x.Start);

@@ -1,9 +1,10 @@
 import { useRef, useEffect, useState } from 'react';
 import { X, Filter, Calendar } from 'lucide-react';
-import { Activity, ActivityType } from '../../../types/activity';
+import { Activity, ActivitySource, ActivityType } from '../../../types/activity';
 import { getActivityColor } from '../../../constants/gameConstants';
 import { getActivities } from '../../../store/services/activityService';
-import ActivityTimelineItem from '../../game/ui/ActivityTimelineItem';
+import ActivityHistoryRow from './ActivityHistoryRow';
+import { groupActivitiesByDay } from '../../../utils/activityUtils';
 import { PaginationControls } from '../PaginationControls';
 
 interface ActivitiesHistoryPopoverProps {
@@ -23,6 +24,7 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
   const [selectedTypes, setSelectedTypes] = useState<ActivityType[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | undefined>();
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>();
+  const [selectedSource, setSelectedSource] = useState<ActivitySource | undefined>();
   
   const pageSize = 20;
 
@@ -34,6 +36,7 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
         Types: selectedTypes.length > 0 ? selectedTypes : undefined,
         Year: selectedYear,
         Month: selectedMonth,
+        Source: selectedSource,
         SortDirection: 'desc' as const
       };
       
@@ -51,7 +54,7 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
 
   useEffect(() => {
     loadActivities();
-  }, [gameId, currentPage, selectedTypes, selectedYear, selectedMonth]);
+  }, [gameId, currentPage, selectedTypes, selectedYear, selectedMonth, selectedSource]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -89,8 +92,11 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
     setSelectedTypes([]);
     setSelectedYear(undefined);
     setSelectedMonth(undefined);
+    setSelectedSource(undefined);
     setCurrentPage(1);
   };
+
+  const hasFilters = selectedTypes.length > 0 || !!selectedYear || !!selectedMonth || !!selectedSource;
 
   const activityTypes: ActivityType[] = ['Added', 'Played', 'Completed', 'Platinum', 'Abandoned'];
   const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
@@ -101,8 +107,8 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
     { value: 10, label: 'Ottobre' }, { value: 11, label: 'Novembre' }, { value: 12, label: 'Dicembre' }
   ];
   
-  const sortedActivities = [...activities].sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  const days = groupActivitiesByDay(
+    [...activities].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   );
 
   const title = gameTitle ? `Cronologia completa: ${gameTitle}` : `Cronologia completa attività`;
@@ -121,7 +127,7 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
             <button 
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-3 py-1 rounded-lg transition-colors ${
-                showFilters || selectedTypes.length > 0 || selectedYear || selectedMonth
+                showFilters || hasFilters
                   ? 'bg-accent-primary text-white' 
                   : 'text-text-secondary hover:text-accent-primary'
               }`}
@@ -140,7 +146,7 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
 
         {showFilters && (
           <div className="bg-secondary-bg border border-border-color rounded-lg p-4 mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">Tipo di attività</label>
                 <div className="space-y-2">
@@ -188,9 +194,22 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">Origine</label>
+                <select
+                  value={selectedSource || ''}
+                  onChange={(e) => { setSelectedSource((e.target.value || undefined) as ActivitySource | undefined); setCurrentPage(1); }}
+                  className="w-full p-2 border border-border-color rounded-lg bg-primary-bg text-text-primary"
+                >
+                  <option value="">Tutte</option>
+                  <option value="Steam">Da Steam</option>
+                  <option value="Manual">Manuali</option>
+                </select>
+              </div>
             </div>
 
-            {(selectedTypes.length > 0 || selectedYear || selectedMonth) && (
+            {hasFilters && (
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={clearFilters}
@@ -216,45 +235,24 @@ const ActivitiesHistoryPopover = ({ onClose, gameId, gameTitle }: ActivitiesHist
             <div className="flex items-center justify-center h-32">
               <div className="text-text-secondary">Caricamento attività...</div>
             </div>
-          ) : sortedActivities.length > 0 ? (
+          ) : days.length > 0 ? (
             <div className="space-y-4">
-              {sortedActivities.map((activity, i) => {
-                const prevActivity = i > 0 ? sortedActivities[i-1] : undefined;
-                const isLastActivity = i === sortedActivities.length - 1;
-                
-                const showDate =
-                  i === 0 || new Date(activity.timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) !==
-                    new Date(sortedActivities[i - 1].timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
-                
-                return (
-                  <div key={activity.id} className="pb-4 border-b border-border-color last:border-0 flex items-center">
-                    <div 
-                      className="w-3 h-3 rounded-full mr-3 shrink-0"
-                      style={{ backgroundColor: getActivityColor(activity.type) }}
-                    ></div>
-                    <div className="flex-1">
-                      {showDate && (
-                        <div className="text-xs text-text-secondary font-secondary mb-1 flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          <span>{new Date(activity.timestamp).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                          <span>{new Date(activity.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                      )}
-                      <ActivityTimelineItem 
-                        activity={activity}
-                        previousActivity={prevActivity}
-                        isLastActivity={isLastActivity}
-                        showDate={false}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+              {days.map(group => (
+                <section key={group.day}>
+                  <h4 className="sticky top-0 bg-primary-bg py-1 text-xs font-semibold text-text-secondary capitalize flex items-center gap-2 border-b border-border-color">
+                    <Calendar className="h-3 w-3" />
+                    {group.label}
+                  </h4>
+                  {group.activities.map(activity => (
+                    <ActivityHistoryRow key={activity.id} activity={activity} onChanged={loadActivities} />
+                  ))}
+                </section>
+              ))}
             </div>
           ) : (
             <div className="flex items-center justify-center h-32">
               <p className="text-text-secondary font-secondary text-sm">
-                {(selectedTypes.length > 0 || selectedYear || selectedMonth) 
+                {hasFilters
                   ? 'Nessuna attività trovata con i filtri selezionati.'
                   : gameId ? 'Nessuna attività registrata per questo gioco.' : 'Nessuna attività registrata.'}
               </p>

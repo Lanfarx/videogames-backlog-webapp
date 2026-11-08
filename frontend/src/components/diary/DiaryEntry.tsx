@@ -26,8 +26,8 @@ export default function DiaryEntry({
   showReactions = true,
   publicProfile 
 }: DiaryEntryProps) {
-  const localGame = useGameById(activity.gameId);
-  const { game: fetchedGame } = useGameByIdFetch(!localGame ? activity.gameId : null);
+  const localGame = useGameById(activity.gameId ?? -1);
+  const { game: fetchedGame } = useGameByIdFetch(!localGame && activity.gameId ? activity.gameId : null);
   
   const game = localGame || fetchedGame;
 

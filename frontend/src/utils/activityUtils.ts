@@ -133,6 +133,24 @@ export function sortActivitiesByDate(activities: Activity[]): Activity[] {
 }
 
 /**
+ * Raggruppa le attività per giorno (più recente prima), mantenendo l'ordine dato dentro ogni giorno
+ */
+export function groupActivitiesByDay(activities: Activity[]): { day: string; label: string; activities: Activity[] }[] {
+  const groups: { day: string; label: string; activities: Activity[] }[] = [];
+  activities.forEach(activity => {
+    const date = new Date(activity.timestamp);
+    const day = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const last = groups[groups.length - 1];
+    if (last?.day === day) {
+      last.activities.push(activity);
+    } else {
+      groups.push({ day, label: date.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), activities: [activity] });
+    }
+  });
+  return groups;
+}
+
+/**
  * Raggruppa le attività per mese e anno
  */
 export function groupActivitiesByMonth(activities: Activity[]): ActivityGroup[] {

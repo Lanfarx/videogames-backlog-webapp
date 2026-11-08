@@ -20,7 +20,7 @@ public class ActivityService(
 {
     public async Task<PaginatedResult<ActivityDto>> GetActivitiesAsync(int userId, ActivityQueryParameters queryParams)
     {
-        var query = context.Activities.AsNoTracking().Where(a => a.Game!.UserId == userId);
+        var query = context.Activities.AsNoTracking().Where(a => a.UserId == userId);
         return await GetPaginatedActivitiesInternalAsync(query, userId, queryParams);
     }
 
@@ -34,7 +34,7 @@ public class ActivityService(
             .ThenInclude(r => r.User)
             .Include(a => a.ActivityComments)
             .ThenInclude(c => c.Author)
-            .FirstOrDefaultAsync(a => a.Id == activityId && a.Game!.UserId == userId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && a.UserId == userId);
 
         return activity == null ? null : mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId);
     }
@@ -47,16 +47,7 @@ public class ActivityService(
         if (game == null)
             throw new UnauthorizedAccessException("Gioco non trovato o non autorizzato");
 
-        var activity = new Activity
-        {
-            Type = createActivityDto.Type,
-            GameId = createActivityDto.GameId,
-            GameTitle = game.Title,
-            AdditionalInfo = createActivityDto.AdditionalInfo,
-            Timestamp = DateTime.UtcNow,
-            Game = game
-        };
-        await SaveActivityEntityAsync(activity);
+        var activity = await AddActivityAsync(game, userId, createActivityDto.Type, createActivityDto.AdditionalInfo, ActivitySource.Manual);
 
         return mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId);
     }
@@ -71,7 +62,7 @@ public class ActivityService(
             .ThenInclude(r => r.User)
             .Include(a => a.ActivityComments)
             .ThenInclude(c => c.Author)
-            .FirstOrDefaultAsync(a => a.Id == activityId && a.Game!.UserId == userId);
+            .FirstOrDefaultAsync(a => a.Id == activityId && a.UserId == userId);
 
         if (activity == null)
             return null;
@@ -82,6 +73,17 @@ public class ActivityService(
         if (!string.IsNullOrEmpty(updateActivityDto.AdditionalInfo))
             activity.AdditionalInfo = updateActivityDto.AdditionalInfo;
 
+        if (updateActivityDto.Timestamp.HasValue)
+            activity.Timestamp = updateActivityDto.Timestamp.Value.ToUniversalTime();
+
+        // Le ore di una sessione si correggono qui: il testo segue (la sessione resta "iniziato" se lo era)
+        if (updateActivityDto.HoursDelta.HasValue && activity.Type == ActivityType.Played)
+        {
+            var wasInitiated = (activity.AdditionalInfo ?? "").Contains("iniziato");
+            activity.HoursDelta = updateActivityDto.HoursDelta.Value;
+            activity.AdditionalInfo = FormatPlaytimeDelta(activity.HoursDelta, wasInitiated);
+        }
+
         await context.SaveChangesAsync();
 
         return mapper.Map<ActivityDto>(activity, opt => opt.Items["CurrentUserId"] = userId);
@@ -89,9 +91,7 @@ public class ActivityService(
 
     public async Task<bool> DeleteActivityAsync(int activityId, int userId)
     {
-        var activity = await context.Activities
-            .Include(a => a.Game)
-            .FirstOrDefaultAsync(a => a.Id == activityId && a.Game!.UserId == userId);
+        var activity = await context.Activities.FirstOrDefaultAsync(a => a.Id == activityId && a.UserId == userId);
 
         if (activity == null)
             return false;
@@ -105,7 +105,7 @@ public class ActivityService(
     {
         var query = context.Activities
             .AsNoTracking()
-            .Where(a => a.Game!.UserId == userId)
+            .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.Timestamp)
             .Take(count);
 
@@ -116,7 +116,7 @@ public class ActivityService(
     {
         var query = context.Activities
             .AsNoTracking()
-            .Where(a => a.GameId == gameId && a.Game!.UserId == userId)
+            .Where(a => a.GameId == gameId && a.UserId == userId)
             .OrderByDescending(a => a.Timestamp);
 
         return await ProjectAndMapActivitiesAsync(query, userId);
@@ -127,7 +127,7 @@ public class ActivityService(
         var query = context.Activities
             .AsNoTracking()
             .Include(a => a.Game)
-            .Where(a => a.Game!.UserId == userId);
+            .Where(a => a.UserId == userId);
 
         if (year.HasValue)
         {
@@ -142,7 +142,7 @@ public class ActivityService(
     }
 
     public async Task CreateStatusChangeActivityAsync(Game game, GameStatus newStatus, string previousStatus,
-        int userId)
+        int userId, ActivitySource source = ActivitySource.Manual)
     {
         var activityType = ActivityType.Played;
         string? additionalInfo = null;
@@ -177,7 +177,7 @@ public class ActivityService(
 
         var threshold = DateTime.UtcNow.AddHours(-2);
         var recentActivity = await context.Activities
-            .Where(a => a.GameId == game.Id && a.Type == activityType && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .Where(a => a.GameId == game.Id && a.Type == activityType && a.UserId == userId && a.Timestamp >= threshold)
             .OrderByDescending(a => a.Timestamp)
             .FirstOrDefaultAsync();
 
@@ -189,24 +189,17 @@ public class ActivityService(
             return;
         }
 
-        var createActivityDto = new CreateActivityDto
-        {
-            Type = activityType,
-            GameId = game.Id,
-            AdditionalInfo = additionalInfo
-        };
-
-        await CreateActivityAsync(userId, createActivityDto);
+        await AddActivityAsync(game, userId, activityType, additionalInfo, source);
     }
 
 
     public async Task CreatePlaytimeActivityAsync(Game game, int newHours, int previousHours, bool wasNotStarted,
-        int userId)
+        int userId, ActivitySource source = ActivitySource.Manual)
     {
         var hoursDifference = newHours - previousHours;
         var threshold = DateTime.UtcNow.AddHours(-2);
         var recentActivity = await context.Activities
-            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Played && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Played && a.UserId == userId && a.Timestamp >= threshold)
             .OrderByDescending(a => a.Timestamp)
             .FirstOrDefaultAsync();
 
@@ -232,15 +225,7 @@ public class ActivityService(
 
         if (hoursDifference == 0) return;
 
-        await SaveActivityEntityAsync(new Activity
-        {
-            Type = ActivityType.Played,
-            GameId = game.Id,
-            GameTitle = game.Title,
-            AdditionalInfo = FormatPlaytimeDelta(hoursDifference, wasNotStarted),
-            HoursDelta = hoursDifference,
-            Timestamp = DateTime.UtcNow
-        });
+        await AddActivityAsync(game, userId, ActivityType.Played, FormatPlaytimeDelta(hoursDifference, wasNotStarted), source, hoursDifference);
     }
 
     private static int ExtractPlaytimeDelta(string? additionalInfo)
@@ -270,7 +255,7 @@ public class ActivityService(
 
         var threshold = DateTime.UtcNow.AddHours(-2);
         var recentActivity = await context.Activities
-            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Rated && a.Game!.UserId == userId && a.Timestamp >= threshold)
+            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Rated && a.UserId == userId && a.Timestamp >= threshold)
             .OrderByDescending(a => a.Timestamp)
             .FirstOrDefaultAsync();
 
@@ -285,16 +270,10 @@ public class ActivityService(
             return;
         }
 
-        var createActivityDto = new CreateActivityDto
-        {
-            Type = ActivityType.Rated,
-            GameId = game.Id,
-            AdditionalInfo = additionalInfo
-        };
-        await CreateActivityAsync(userId, createActivityDto);
+        await AddActivityAsync(game, userId, ActivityType.Rated, additionalInfo, ActivitySource.Manual);
     }
 
-    public async Task CreateAddGameActivityAsync(Game game, int userId)
+    public async Task CreateAddGameActivityAsync(Game game, int userId, ActivitySource source = ActivitySource.Manual)
     {
         var additionalInfoParts = new List<string>();
 
@@ -335,16 +314,7 @@ public class ActivityService(
             ? string.Join(" • ", additionalInfoParts)
             : null;
 
-        var createActivityDto = new CreateActivityDto
-        {
-            Type = ActivityType.Added,
-            GameId = game.Id,
-            AdditionalInfo = additionalInfo
-        };
-
-        await CreateActivityAsync(userId, createActivityDto);
-
-
+        await AddActivityAsync(game, userId, ActivityType.Added, additionalInfo, source);
     }
 
     public async Task<PaginatedResult<ActivityDto>> GetPublicActivitiesAsync(string userIdOrUsername, int currentUserId,
@@ -380,7 +350,7 @@ public class ActivityService(
             throw new UnauthorizedAccessException("Non hai i permessi per visualizzare il diario di questo utente");
         } 
 
-        var query = context.Activities.AsNoTracking().Where(a => a.Game!.UserId == targetUserId);
+        var query = context.Activities.AsNoTracking().Where(a => a.UserId == targetUserId);
         return await GetPaginatedActivitiesInternalAsync(query, currentUserId, queryParams);
     }
 
@@ -399,7 +369,9 @@ public class ActivityService(
     {
         public int Id { get; set; }
         public ActivityType Type { get; set; }
-        public int GameId { get; set; }
+        public int? GameId { get; set; }
+        public ActivitySource Source { get; set; }
+        public int HoursDelta { get; set; }
         public string GameTitle { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
         public string? AdditionalInfo { get; set; }
@@ -434,6 +406,8 @@ public class ActivityService(
             Id = a.Id,
             Type = a.Type,
             GameId = a.GameId,
+            Source = a.Source,
+            HoursDelta = a.HoursDelta,
             GameTitle = a.GameTitle,
             Timestamp = a.Timestamp,
             AdditionalInfo = a.AdditionalInfo,
@@ -451,6 +425,8 @@ public class ActivityService(
             Id = a.Id,
             Type = a.Type,
             GameId = a.GameId,
+            Source = a.Source,
+            HoursDelta = a.HoursDelta,
             GameTitle = a.GameTitle,
             Timestamp = a.Timestamp,
             AdditionalInfo = a.AdditionalInfo,
@@ -514,6 +490,11 @@ public class ActivityService(
             query = query.Where(a => a.GameId == queryParams.GameId.Value);
         }
 
+        if (queryParams.Source.HasValue)
+        {
+            query = query.Where(a => a.Source == queryParams.Source.Value);
+        }
+
         var sortedQuery = queryParams.SortOrder?.ToLower() == "asc"
             ? query.OrderBy(a => a.Timestamp).ThenBy(a => a.Id)
             : query.OrderByDescending(a => a.Timestamp).ThenByDescending(a => a.Id);
@@ -531,29 +512,21 @@ public class ActivityService(
         };
     }
 
-    public async Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId)
+    public async Task CreateAddGamesBulkActivityAsync(List<Game> games, int userId, ActivitySource source = ActivitySource.Manual)
     {
         if (games.Count == 0) return;
 
         if (games.Count == 1)
         {
-            await CreateAddGameActivityAsync(games[0], userId);
+            await CreateAddGameActivityAsync(games[0], userId, source);
             return;
         }
 
-        var activity = new Activity
-        {
-            Type = ActivityType.Added,
-            GameId = games[0].Id,
-            GameTitle = $"{games.Count} nuovi giochi aggiunti",
-            AdditionalInfo = $"Hai aggiunto {games.Count} giochi alla tua libreria da Steam",
-            Timestamp = DateTime.UtcNow
-        };
-        
-        await SaveActivityEntityAsync(activity);
+        await AddActivityAsync(games[0], userId, ActivityType.Added, $"Hai aggiunto {games.Count} giochi alla tua libreria", source,
+            title: $"{games.Count} nuovi giochi aggiunti");
     }
 
-    public async Task CreatePlaytimeBulkActivityAsync(List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)> updates, int userId)
+    public async Task CreatePlaytimeBulkActivityAsync(List<(Game Game, int NewHours, int PreviousHours, bool WasNotStarted)> updates, int userId, ActivitySource source = ActivitySource.Manual)
     {
         if (updates.Count == 0) return;
 
@@ -561,12 +534,27 @@ public class ActivityService(
         // così da mostrare il titolo reale, la copertina e il link corretto alla pagina della libreria
         foreach (var u in updates)
         {
-            await CreatePlaytimeActivityAsync(u.Game, u.NewHours, u.PreviousHours, u.WasNotStarted, userId);
+            await CreatePlaytimeActivityAsync(u.Game, u.NewHours, u.PreviousHours, u.WasNotStarted, userId, source);
         }
     }
-    private async Task SaveActivityEntityAsync(Activity activity)
+    // Unico punto di creazione: l'attività porta con sé utente e titolo, così sopravvive all'eliminazione del gioco
+    private async Task<Activity> AddActivityAsync(Game game, int userId, ActivityType type, string? additionalInfo,
+        ActivitySource source, int hoursDelta = 0, string? title = null)
     {
+        var activity = new Activity
+        {
+            Type = type,
+            UserId = userId,
+            GameId = game.Id,
+            Game = game,
+            GameTitle = title ?? game.Title,
+            AdditionalInfo = additionalInfo,
+            Source = source,
+            HoursDelta = hoursDelta,
+            Timestamp = DateTime.UtcNow
+        };
         context.Activities.Add(activity);
         await context.SaveChangesAsync();
+        return activity;
     }
 }

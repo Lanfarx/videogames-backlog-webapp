@@ -9,16 +9,20 @@ export type ActivityType =
   | 'Platinum'    // Ottenimento di tutti i trofei/achievement
   | 'Abandoned';  // Abbandono del gioco
 
+export type ActivitySource = 'Manual' | 'Steam';
+
 /**
  * Struttura base di un'attività
  */
 export interface Activity {
   id: number;               // Identificativo univoco
   type: ActivityType;       // Tipo di attività
-  gameId: number;           // ID del gioco collegato
+  gameId?: number | null;   // ID del gioco collegato, assente se il gioco è stato eliminato
   gameTitle: string;        // Titolo del gioco
   timestamp: string;        // Data e ora dell'attività (ISO string per serializzazione Redux)
   additionalInfo?: string;  // Informazioni aggiuntive (es. "5 ore", "dopo 2 ore")
+  source: ActivitySource;   // Azione dell'utente o sincronizzazione Steam
+  hoursDelta: number;       // Ore della sessione (solo attività Played)
   gameImageUrl?: string;    // URL dell'immagine del gioco (se disponibile)
   comments?: ActivityComment[];    // Lista dei commenti (opzionale)
   commentsCount?: number;          // Numero totale di commenti (opzionale)
@@ -107,6 +111,7 @@ export interface ActivityFilters {
   Year?: number;           // Anno di riferimento
   Month?: number;          // Mese di riferimento
   GameId?: number;         // Gioco specifico
+  Source?: ActivitySource; // Solo attività manuali o solo da Steam
   Limit?: number;          // Numero massimo di risultati
   SortDirection?: 'asc' | 'desc'; // Direzione di ordinamento
 }

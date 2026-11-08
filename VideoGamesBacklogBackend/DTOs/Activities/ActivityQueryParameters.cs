@@ -9,6 +9,7 @@ public class ActivityQueryParameters : PaginationQueryParameters
     public int? Year { get; set; }
     public int? Month { get; set; }
     public int? GameId { get; set; }
+    public ActivitySource? Source { get; set; }
 
     public ActivityQueryParameters()
     {

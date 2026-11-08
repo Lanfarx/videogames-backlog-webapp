@@ -103,7 +103,7 @@ public class SteamService(
         if (hourUpdates.Count > 0)
         {
             // Salva anche AppID e ultima sessione: stesso DbContext
-            await gameService.UpdateGamesPlaytimeBulkAsync(userId, hourUpdates);
+            await gameService.UpdateGamesPlaytimeBulkAsync(userId, hourUpdates, ActivitySource.Steam);
         }
 
         await FindMissingAppIdsAsync(library, cancellationToken);
@@ -115,7 +115,7 @@ public class SteamService(
             // Dei giochi non trovati Steam non dice né ore né ultima sessione: per loro vale solo il Platino
             if (!t.Matched && next != GameStatus.Platinum) continue;
             if (next != null && next != t.Game.Status)
-                await gameService.UpdateGameStatusAsync(userId, t.Game.Id, next.Value.ToString());
+                await gameService.UpdateGameStatusAsync(userId, t.Game.Id, next.Value.ToString(), ActivitySource.Steam);
         }
 
         var updatedGames = tracked
@@ -184,7 +184,7 @@ public class SteamService(
             })
             .ToList();
 
-        return games.Count > 0 ? (await gameService.AddGamesBulkAsync(userId, games)).Count : 0;
+        return games.Count > 0 ? (await gameService.AddGamesBulkAsync(userId, games, ActivitySource.Steam)).Count : 0;
     }
 
     public async Task SetIgnoredAsync(int userId, List<int> appIds, bool ignored, CancellationToken cancellationToken = default)
