@@ -60,7 +60,9 @@ public class SteamService(
         var ownedIds = owned.Select(o => o.Appid).ToHashSet();
         var steamGames = owned.Concat(recent.Where(r => !ownedIds.Contains(r.Appid))).ToList();
         var byAppId = steamGames.ToDictionary(g => g.Appid);
-        var byTitle = steamGames.GroupBy(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name)).ToDictionary(g => g.Key, g => g.First());
+        var byExactTitle = steamGames.GroupBy(g => g.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        // La normalizzazione toglie "Remastered", "HD", ecc.: un titolo normalizzato condiviso da più giochi Steam non identifica nessuno
+        var byUniqueTitle = steamGames.GroupBy(g => GameTitleMatcher.GetFullyNormalizedTitle(g.Name)).Where(g => g.Count() == 1).ToDictionary(g => g.Key, g => g.First());
 
         var library = await context.Games
             .Where(g => g.UserId == userId && g.Platform == "Steam")
@@ -73,15 +75,19 @@ public class SteamService(
 
         foreach (var game in library)
         {
-            var steamGame = game.SteamAppId is int appId
-                ? byAppId.GetValueOrDefault(appId)
-                : byTitle.GetValueOrDefault(game.NormalizedTitle);
+            // Il titolo esatto vince anche sull'AppID salvato: corregge gli AppID associati per errore da un titolo normalizzato ambiguo
+            var steamGame = byExactTitle.GetValueOrDefault(game.Title)
+                ?? (game.SteamAppId is int appId ? byAppId.GetValueOrDefault(appId) : byUniqueTitle.GetValueOrDefault(game.NormalizedTitle));
             if (steamGame == null) continue;
+            if (game.SteamAppId is int oldAppId && oldAppId != steamGame.Appid)
+            {
+                game.AchievementsUnlocked = game.AchievementsTotal = null; // erano quelli dell'altro gioco: si ricontrollano
+            }
 
             var hours = ToHours(steamGame.PlaytimeForever);
             var played = hours > game.HoursPlayed;
             tracked.Add((game, game.HoursPlayed, game.Status, played));
-            game.SteamAppId ??= steamGame.Appid;
+            game.SteamAppId = steamGame.Appid;
             // I giochi solo nei "giocati di recente" non hanno rtime: se le ore sono salite, la sessione è recente
             game.LastPlayedAt = ToDate(steamGame.RtimeLastPlayed) ?? (played ? now : game.LastPlayedAt);
             if (hours != game.HoursPlayed) hourUpdates.Add((game.Id, hours));
@@ -187,7 +193,8 @@ public class SteamService(
             .Select(g => new { g.SteamAppId, g.NormalizedTitle })
             .ToListAsync(cancellationToken);
         var appIds = library.Select(g => g.SteamAppId).ToHashSet();
-        var titles = library.Select(g => g.NormalizedTitle).ToHashSet();
+        // Per titolo solo i giochi senza AppID: altrimenti Oblivion Remastered in libreria nasconderebbe Oblivion
+        var titles = library.Where(g => g.SteamAppId == null).Select(g => g.NormalizedTitle).ToHashSet();
         var excluded = (await context.Users.Where(u => u.Id == userId).Select(u => u.ExcludedSteamAppIds).FirstAsync(cancellationToken)).ToHashSet();
         var now = DateTime.UtcNow;
 
@@ -303,7 +310,8 @@ public class SteamService(
         foreach (var game in games)
         {
             var search = await catalogService.SearchGamesAsync(game.Title, cancellationToken);
-            var match = search.Results.FirstOrDefault(r => GameTitleMatcher.GetFullyNormalizedTitle(r.Title) == game.NormalizedTitle);
+            var match = search.Results.FirstOrDefault(r => string.Equals(r.Title, game.Title, StringComparison.OrdinalIgnoreCase))
+                ?? search.Results.FirstOrDefault(r => GameTitleMatcher.GetFullyNormalizedTitle(r.Title) == game.NormalizedTitle);
             if (match == null)
             {
                 // Non riprovare a ogni sync: resta il pulsante manuale nella pagina del gioco

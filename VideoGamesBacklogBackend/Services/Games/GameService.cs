@@ -428,15 +428,20 @@ public class GameService(
     {
         if (gamesDto == null || gamesDto.Count == 0) return [];
 
-        var existingGamesTitles = await dbContext.Games
+        var existingGames = await dbContext.Games
             .AsNoTracking()
             .Where(g => g.UserId == userId)
-            .Select(g => g.NormalizedTitle)
+            .Select(g => new { g.SteamAppId, g.NormalizedTitle })
             .ToListAsync();
+        var existingAppIds = existingGames.Select(g => g.SteamAppId).ToHashSet();
+        var existingTitles = existingGames.Where(g => g.SteamAppId == null).Select(g => g.NormalizedTitle).ToHashSet();
 
+        // Con l'AppID si deduplica per AppID: il titolo normalizzato confonderebbe Oblivion e Oblivion Remastered
         var gamesToProcess = gamesDto
-            .Where(dto => !existingGamesTitles.Contains(GameTitleMatcher.GetFullyNormalizedTitle(dto.Title)))
-            .GroupBy(dto => GameTitleMatcher.GetFullyNormalizedTitle(dto.Title))
+            .Where(dto => dto.SteamAppId is int appId
+                ? !existingAppIds.Contains(appId)
+                : !existingTitles.Contains(GameTitleMatcher.GetFullyNormalizedTitle(dto.Title)))
+            .GroupBy(dto => dto.SteamAppId?.ToString() ?? GameTitleMatcher.GetFullyNormalizedTitle(dto.Title))
             .Select(group => group.First())
             .ToList();
 
