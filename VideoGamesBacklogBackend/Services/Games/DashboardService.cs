@@ -51,8 +51,8 @@ public class DashboardService(AppDbContext dbContext) : IDashboardService
             .Select(g => new { g.Id, g.Status, g.PurchaseDate, g.AddedAt })
             .ToListAsync();
         var firstStarts = await dbContext.Activities
-            .Where(a => a.Type != ActivityType.Added && a.UserId == userId)
-            .GroupBy(a => a.GameId)
+            .Where(a => a.Type != ActivityType.Added && a.UserId == userId && a.GameId != null) // null = gioco eliminato
+            .GroupBy(a => a.GameId!.Value)
             .Select(g => new { GameId = g.Key, Start = g.Min(a => a.Timestamp) })
             .ToDictionaryAsync(x => x.GameId, x => x.Start);
 

@@ -92,11 +92,13 @@ public class SteamService(
             }
 
             var hours = ToHours(steamGame.PlaytimeForever);
-            var played = hours > game.HoursPlayed;
+            var lastPlayed = ToDate(steamGame.RtimeLastPlayed);
+            // Anche una sessione breve, che non sposta le ore arrotondate, conta come giocato
+            var played = hours > game.HoursPlayed || lastPlayed > game.LastPlayedAt;
             tracked.Add((game, game.HoursPlayed, game.Status, played, true));
             game.SteamAppId = steamGame.Appid;
             // I giochi solo nei "giocati di recente" non hanno rtime: se le ore sono salite, la sessione è recente
-            game.LastPlayedAt = ToDate(steamGame.RtimeLastPlayed) ?? (played ? now : game.LastPlayedAt);
+            game.LastPlayedAt = lastPlayed ?? (played ? now : game.LastPlayedAt);
             if (hours != game.HoursPlayed) hourUpdates.Add((game.Id, hours));
         }
 

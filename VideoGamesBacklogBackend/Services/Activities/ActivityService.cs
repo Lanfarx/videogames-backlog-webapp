@@ -169,21 +169,19 @@ public class ActivityService(
                     return;
                 }
                 break;
-            case GameStatus.NotStarted:
-                break;
             default:
-                return;
+                return; // Da iniziare non è un evento da diario
         }
 
         var threshold = DateTime.UtcNow.AddHours(-2);
+        // Stesso testo: "ripreso" non si fonde con una sessione "Played" che porta le ore
         var recentActivity = await context.Activities
-            .Where(a => a.GameId == game.Id && a.Type == activityType && a.UserId == userId && a.Timestamp >= threshold)
+            .Where(a => a.GameId == game.Id && a.Type == activityType && a.AdditionalInfo == additionalInfo && a.UserId == userId && a.Timestamp >= threshold)
             .OrderByDescending(a => a.Timestamp)
             .FirstOrDefaultAsync();
 
         if (recentActivity != null)
         {
-            recentActivity.AdditionalInfo = additionalInfo;
             recentActivity.Timestamp = DateTime.UtcNow;
             await context.SaveChangesAsync();
             return;
@@ -199,14 +197,13 @@ public class ActivityService(
         var hoursDifference = newHours - previousHours;
         var threshold = DateTime.UtcNow.AddHours(-2);
         var recentActivity = await context.Activities
-            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Played && a.UserId == userId && a.Timestamp >= threshold)
+            .Where(a => a.GameId == game.Id && a.Type == ActivityType.Played && a.HoursDelta != 0 && a.UserId == userId && a.Timestamp >= threshold)
             .OrderByDescending(a => a.Timestamp)
             .FirstOrDefaultAsync();
 
         if (recentActivity != null)
         {
-            var previousDelta = ExtractPlaytimeDelta(recentActivity.AdditionalInfo);
-            var totalDifference = previousDelta + hoursDifference;
+            var totalDifference = recentActivity.HoursDelta + hoursDifference;
             
             if (totalDifference == 0)
             {
@@ -226,17 +223,6 @@ public class ActivityService(
         if (hoursDifference == 0) return;
 
         await AddActivityAsync(game, userId, ActivityType.Played, FormatPlaytimeDelta(hoursDifference, wasNotStarted), source, hoursDifference);
-    }
-
-    private static int ExtractPlaytimeDelta(string? additionalInfo)
-    {
-        var input = additionalInfo ?? "";
-        var match = System.Text.RegularExpressions.Regex.Match(input, @"(-?\d+)\s*or[ea]");
-        if (match.Success && int.TryParse(match.Groups[1].Value, out var val))
-            return val;
-            
-        var fallbackMatch = System.Text.RegularExpressions.Regex.Match(input, @"-?\d+");
-        return fallbackMatch.Success && int.TryParse(fallbackMatch.Value, out val) ? val : 0;
     }
 
     private static string FormatPlaytimeDelta(int delta, bool wasInitiated)

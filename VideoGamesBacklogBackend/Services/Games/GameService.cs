@@ -107,14 +107,12 @@ public class GameService(
         game.UserId = userId;
         game.NormalizedTitle = GameTitleMatcher.GetFullyNormalizedTitle(game.Title);
 
-        var existingGame = await dbContext.Games
-            .AsNoTracking()
-            .FirstOrDefaultAsync(g => g.UserId == userId && g.NormalizedTitle == game.NormalizedTitle);
-
-        if (existingGame != null)
-        {
-            throw new InvalidOperationException("Hai già questo gioco nel tuo backlog.");
-        }
+        // Stessa deduplica di AddGamesBulkAsync: per titolo solo contro i giochi senza AppID (Oblivion vs Oblivion Remastered)
+        var userGames = dbContext.Games.Where(g => g.UserId == userId);
+        var exists = game.SteamAppId is int appId
+            ? await userGames.AnyAsync(g => g.SteamAppId == appId)
+            : await userGames.AnyAsync(g => g.SteamAppId == null && g.NormalizedTitle == game.NormalizedTitle);
+        if (exists) throw new InvalidOperationException("Hai già questo gioco nel tuo backlog.");
 
         if (gameDto.Review != null)
         {
@@ -226,7 +224,8 @@ public class GameService(
         var previousStatus = game.Status.ToString();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        if (Enum.TryParse<GameStatus>(status, out var newStatus))
+        // Lo stesso stato non è un cambio: riscriverebbe le date di completamento e duplicherebbe l'attività
+        if (Enum.TryParse<GameStatus>(status, out var newStatus) && newStatus != game.Status)
         {
             game.Status = newStatus;
 
@@ -315,7 +314,7 @@ public class GameService(
         if (!Enum.TryParse<GameStatus>(status, out var newStatus) || !Enum.IsDefined(newStatus))
             throw new ArgumentException("Stato non valido.");
 
-        // Chi ha già lo stato richiesto si salta: richiederlo di nuovo riscriverebbe le date di completamento
+        // Chi ha già lo stato richiesto non cambia: non si carica nemmeno
         var games = await dbContext.Games
             .Where(g => g.UserId == userId && gameIds.Contains(g.Id) && g.Status != newStatus)
             .ToListAsync();
