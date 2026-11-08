@@ -198,9 +198,15 @@ export interface MonthValue {
   value: number;
 }
 
+export interface DayValue {
+  date: string; // yyyy-MM-dd
+  value: number;
+}
+
 export interface DashboardSeries {
   hoursPerMonth: MonthValue[];
   backlogTrend: MonthValue[];
+  hoursPerDay: DayValue[];
 }
 
 export const getDashboardSeries = async (): Promise<DashboardSeries> => {

@@ -11,6 +11,22 @@ interface YearlyGoalCardProps {
     year: number;
 }
 
+const DAY_MS = 86_400_000;
+
+// Ritmo attuale proiettato a fine anno. shortcut: lineare e muto nel primo mese (pochi dati), non pesa le uscite stagionali
+function describePace(completed: number, goal: number, year: number): string | null {
+    const now = new Date();
+    if (completed >= goal || now.getFullYear() !== year) return null;
+    const daysInYear = (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / DAY_MS;
+    const dayOfYear = Math.floor((now.getTime() - Date.UTC(year, 0, 1)) / DAY_MS) + 1;
+    if (dayOfYear < 30 || completed === 0) return null;
+    const projected = Math.round((completed / dayOfYear) * daysInYear);
+    const perMonthNeeded = ((goal - completed) / Math.max(1, daysInYear - dayOfYear)) * 30.4;
+    return projected >= goal
+        ? `In linea: a questo ritmo ne completerai circa ${projected} entro fine anno.`
+        : `In ritardo: a questo ritmo ne completerai circa ${projected}. Per arrivare a ${goal} servono ${perMonthNeeded.toFixed(1)} giochi al mese.`;
+}
+
 // Obiettivo annuale di giochi completati, modificabile al volo
 export default function YearlyGoalCard({ completed, year }: YearlyGoalCardProps) {
     const dispatch = useDispatch();
@@ -41,6 +57,7 @@ export default function YearlyGoalCard({ completed, year }: YearlyGoalCardProps)
         }
     };
 
+    const pace = goal ? describePace(completed, goal, year) : null;
     const percent = goal ? Math.min(100, Math.round((completed / goal) * 100)) : 0;
 
     return (
@@ -79,6 +96,8 @@ export default function YearlyGoalCard({ completed, year }: YearlyGoalCardProps)
                     <div className="w-full bg-tertiary-bg h-3 rounded-full overflow-hidden" role="progressbar" aria-valuenow={completed} aria-valuemax={goal}>
                         <div className="h-full rounded-full bg-accent-primary transition-all duration-500" style={{ width: `${percent}%` }} />
                     </div>
+                    {completed >= goal && <p className="text-sm text-accent-primary mt-3">Obiettivo raggiunto!</p>}
+                    {pace && <p className="text-sm text-text-secondary mt-3">{pace}</p>}
                 </>
             ) : (
                 <button onClick={startEditing} className="text-sm text-accent-primary hover:underline">

@@ -4,6 +4,7 @@ import { Game } from '../../types/game';
 import RatingStars from '../ui/atoms/RatingStars';
 import StatusBadge from '../ui/atoms/StatusBadge';
 import PlaytimePopover from '../ui/PlaytimePopover';
+import SessionTimer from './SessionTimer';
 import EditGameInfoModal from './EditGameInfoModal';
 import { useGameById } from '../../store/hooks/gamesHooks';
 import { getGameRating, formatAchievements } from '../../utils/gamesUtils';
@@ -114,6 +115,7 @@ const GameInfoCard = ({ game, onEditInfo, onUpdatePlaytime }: GameInfoCardProps)
       <div className="flex justify-between items-center py-3 border-b border-border-color">
         <span className="font-secondary font-medium text-sm text-text-secondary">Tempo di gioco</span>
         <div className="flex items-center relative">
+          {onUpdatePlaytime && <span className="mr-3"><SessionTimer gameId={currentGame.id} hoursPlayed={disPlayedHours} /></span>}
           <span className="font-secondary font-semibold text-lg text-text-primary">
             {disPlayedHours} ore
           </span>

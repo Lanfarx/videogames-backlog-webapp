@@ -12,6 +12,7 @@ namespace VideoGamesBacklogBackend.Services.Games;
 public class DashboardService(AppDbContext dbContext) : IDashboardService
 {
     private const int MonthsShown = 12;
+    private const int DaysShown = 365;
 
     public async Task<DashboardDto> GetDashboardAsync(int userId)
     {
@@ -22,7 +23,8 @@ public class DashboardService(AppDbContext dbContext) : IDashboardService
         return new DashboardDto
         {
             HoursPerMonth = await GetHoursPerMonthAsync(userId, months),
-            BacklogTrend = await GetBacklogTrendAsync(userId, months)
+            BacklogTrend = await GetBacklogTrendAsync(userId, months),
+            HoursPerDay = await GetHoursPerDayAsync(userId, now.Date.AddDays(1 - DaysShown))
         };
     }
 
@@ -38,6 +40,22 @@ public class DashboardService(AppDbContext dbContext) : IDashboardService
         return months
             .Select(m => new MonthValueDto(FormatMonth(m),
                 Math.Max(0, deltas.Where(d => d.Timestamp.Year == m.Year && d.Timestamp.Month == m.Month).Sum(d => d.HoursDelta))))
+            .ToList();
+    }
+
+    // Ore per giorno dalle sessioni registrate: i giorni senza ore non compaiono.
+    // Le ore Steam sono attribuite al giorno della sincronizzazione, non a quello in cui si è giocato davvero.
+    private async Task<List<DayValueDto>> GetHoursPerDayAsync(int userId, DateTime from)
+    {
+        var deltas = await dbContext.Activities
+            .Where(a => a.Type == ActivityType.Played && a.UserId == userId && a.Timestamp >= from && a.HoursDelta > 0)
+            .Select(a => new { a.Timestamp, a.HoursDelta })
+            .ToListAsync();
+
+        return deltas
+            .GroupBy(d => d.Timestamp.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new DayValueDto(g.Key.ToString("yyyy-MM-dd"), g.Sum(d => d.HoursDelta)))
             .ToList();
     }
 

@@ -7,9 +7,10 @@ import GenreBarChart from '../../components/dashboard/GenreBarChart';
 import RecentActivitiesList from '../../components/dashboard/RecentActivitiesList';
 import MonthlyChart from '../../components/dashboard/MonthlyChart';
 import GameHighlightList from '../../components/dashboard/GameHighlightList';
+import PlayHeatmap from '../../components/dashboard/PlayHeatmap';
 import YearlyGoalCard from '../../components/dashboard/YearlyGoalCard';
 import { useDashboardSeries } from '../../hooks/useDashboardSeries';
-import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy, Euro, TrendingUp, Gift, DollarSign, Hourglass, Award, Library } from 'lucide-react';
+import { PieChartIcon, BarChartIcon, LayoutGrid, BarChart3, Clock, Trophy, Euro, TrendingUp, Gift, DollarSign, Hourglass, Award, Library, CalendarDays } from 'lucide-react';
 import { GameFilters } from '../../types/game';
 import { generatePlatformDistributionData, generateGenreDistributionData, findStalledGames, findNearPlatinum, countCompletedInYear } from '../../utils/gamesUtils';
 import { useGamesStats } from '../../store/hooks/gamesHooks';
@@ -123,6 +124,14 @@ export default function DashboardPage() {
             </div>
             {/* Andamento nel tempo */}
             {series && (
+                <>
+                <div className="mb-6 animate-fade-in-up">
+                    <PlayHeatmap
+                        data={series.hoursPerDay}
+                        title="Giorni giocati"
+                        icon={<CalendarDays className="h-5 w-5 text-accent-primary mr-2 drop-shadow-lg" />}
+                    />
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6 animate-fade-in-up">
                     <MonthlyChart
                         kind="bar"
@@ -141,6 +150,7 @@ export default function DashboardPage() {
                         emptyMessage="Nessun gioco da iniziare negli ultimi 12 mesi."
                     />
                 </div>
+                </>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6 animate-fade-in-up">
                 <YearlyGoalCard completed={completedThisYear} year={year} />
